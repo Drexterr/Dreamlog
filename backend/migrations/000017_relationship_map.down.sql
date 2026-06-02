@@ -1,0 +1,2 @@
+DROP TABLE IF EXISTS person_mentions;
+DROP TABLE IF EXISTS people;

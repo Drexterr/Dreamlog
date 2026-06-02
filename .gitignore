@@ -1,0 +1,48 @@
+# Environment variables — never commit real secrets
+.env
+.env.local
+.env.*.local
+
+# Keep the example file
+!.env.example
+
+# Go
+backend/bin/
+backend/*.exe
+backend/vendor/
+*.test
+*.out
+
+# Node / React Native / Expo
+node_modules/
+mobile/node_modules/
+therapist-portal/node_modules/
+web/node_modules/
+.expo/
+mobile/.expo/
+dist/
+build/
+.next/
+therapist-portal/.next/
+web/.next/
+*.tgz
+
+# IDE / OS
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# Claude Code internal
+.claude/
+.antigravitycli/
+
+# Logs
+*.log
+npm-debug.log*
+
+# Coverage
+coverage/
+coverage.out

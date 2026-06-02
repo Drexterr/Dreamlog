@@ -1,0 +1,133 @@
+services:
+  # ── PostgreSQL 16 ────────────────────────────────────────────────────────
+  postgres:
+    image: postgres:16-alpine
+    container_name: dreamlog_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-dreamlog}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-dreamlog_secret}
+      POSTGRES_DB: ${POSTGRES_DB:-dreamlog}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-dreamlog}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # ── Redis 7 ──────────────────────────────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: dreamlog_redis
+    restart: unless-stopped
+    command: >
+      redis-server
+      --requirepass ${REDIS_PASSWORD:-redis_secret}
+      --appendonly yes
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD:-redis_secret}", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # ── MinIO (local R2/S3 substitute) ───────────────────────────────────────
+  minio:
+    image: minio/minio:latest
+    container_name: dreamlog_minio
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minioadmin_secret}
+      MINIO_SERVER_URL: ${STORAGE_PUBLIC_BASE_URL:-}
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - minio_data:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Create the bucket on startup.
+  minio-init:
+    image: minio/mc:latest
+    container_name: dreamlog_minio_init
+    depends_on:
+      minio:
+        condition: service_healthy
+    entrypoint: >
+      /bin/sh -c "
+        mc alias set local http://minio:9000 ${MINIO_ROOT_USER:-minioadmin} ${MINIO_ROOT_PASSWORD:-minioadmin_secret};
+        mc mb --ignore-existing local/${STORAGE_BUCKET:-dreamlog-audio};
+        mc anonymous set none local/${STORAGE_BUCKET:-dreamlog-audio};
+        exit 0;
+      "
+
+  # ── Local Whisper (dev only) ──────────────────────────────────────────────
+  # OpenAI-compatible API, runs on CPU, no GPU needed.
+  # First start downloads the model (~150 MB for 'base') — takes ~60s.
+  whisper:
+    image: fedirz/faster-whisper-server:latest-cpu
+    container_name: dreamlog_whisper
+    restart: unless-stopped
+    environment:
+      WHISPER__MODEL: ${WHISPER_MODEL:-Systran/faster-whisper-base}
+      WHISPER__INFERENCE_DEVICE: cpu
+    ports:
+      - "9002:8000"
+    volumes:
+      - whisper_models:/root/.cache/huggingface
+    healthcheck:
+      test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 15s
+      timeout: 10s
+      retries: 10
+      start_period: 60s
+
+  # ── Go API ───────────────────────────────────────────────────────────────
+  api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: dreamlog_api
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    env_file:
+      - .env
+    ports:
+      - "8080:8080"
+
+  # ── Transcription Worker ──────────────────────────────────────────────────
+  # No container_name — lets Docker Compose scale with replicas freely.
+  worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.worker
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    env_file:
+      - .env
+
+volumes:
+  postgres_data:
+  redis_data:
+  minio_data:
+  whisper_models:

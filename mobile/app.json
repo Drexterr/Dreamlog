@@ -1,0 +1,54 @@
+{
+  "expo": {
+    "name": "DreamLog",
+    "slug": "dreamlog",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "dark",
+    "scheme": "dreamlog",
+    "icon": "./assets/icon.png",
+    "splash": {
+      "backgroundColor": "#0f0c1e"
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "single",
+      "favicon": "./assets/icon.png"
+    },
+    "experiments": {
+      "typedRoutes": true
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-av",
+        {
+          "microphonePermission": "Allow DreamLog to access your microphone to record voice journals."
+        }
+      ],
+      "expo-font",
+      "expo-secure-store"
+    ],
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.dreamlog.app",
+      "infoPlist": {
+        "NSMicrophoneUsageDescription": "Allow DreamLog to access your microphone to record voice journals.",
+        "NSHealthUpdateUsageDescription": "DreamLog writes a Mindful Session to Apple Health after each completed journal entry."
+      },
+      "entitlements": {
+        "com.apple.developer.healthkit": true
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/icon.png",
+        "backgroundColor": "#0f0c1e"
+      },
+      "package": "com.dreamlog.app",
+      "permissions": [
+        "RECORD_AUDIO"
+      ]
+    }
+  }
+}
