@@ -1,0 +1,36 @@
+app = "dreamlog-api"
+primary_region = "sin"
+
+[build]
+  dockerfile = "backend/Dockerfile"
+  dockerfile_context = "."
+
+[env]
+  PORT = "8080"
+  STUB_AI_ANALYSIS = "false"
+  STORAGE_USE_PATH_STYLE = "false"
+  STORAGE_REGION = "auto"
+  WORKER_CONCURRENCY = "4"
+  WORKER_MAX_RETRIES = "3"
+  WORKER_QUEUE_KEY = "dreamlog:transcription:queue"
+  WORKER_DLQ_KEY = "dreamlog:transcription:dlq"
+  WORKER_POLL_TIMEOUT = "5s"
+  DB_MAX_OPEN_CONNS = "25"
+  DB_MAX_IDLE_CONNS = "5"
+  DB_CONN_MAX_LIFETIME = "5m"
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  auto_stop_machines = false
+  auto_start_machines = true
+  min_machines_running = 1
+
+  [http_service.concurrency]
+    type = "requests"
+    hard_limit = 250
+    soft_limit = 200
+
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "256mb"

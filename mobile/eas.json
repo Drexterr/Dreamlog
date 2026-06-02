@@ -1,0 +1,33 @@
+{
+  "cli": {
+    "version": ">= 10.0.0"
+  },
+  "build": {
+    "development": {
+      "developmentClient": true,
+      "distribution": "internal",
+      "env": {
+        "EXPO_PUBLIC_API_URL": "http://localhost:8080"
+      }
+    },
+    "preview": {
+      "distribution": "internal",
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://dreamlog-api.fly.dev"
+      }
+    },
+    "production": {
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://dreamlog-api.fly.dev"
+      }
+    }
+  },
+  "submit": {
+    "production": {}
+  },
+  "update": {
+    "production": {
+      "channel": "production"
+    }
+  }
+}

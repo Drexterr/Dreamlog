@@ -1,0 +1,27 @@
+app = "dreamlog-worker"
+primary_region = "sin"
+
+[build]
+  dockerfile = "backend/Dockerfile.worker"
+  dockerfile_context = "."
+
+[env]
+  STUB_AI_ANALYSIS = "false"
+  STORAGE_USE_PATH_STYLE = "false"
+  STORAGE_REGION = "auto"
+  WORKER_CONCURRENCY = "4"
+  WORKER_MAX_RETRIES = "3"
+  WORKER_QUEUE_KEY = "dreamlog:transcription:queue"
+  WORKER_DLQ_KEY = "dreamlog:transcription:dlq"
+  WORKER_POLL_TIMEOUT = "5s"
+  DB_MAX_OPEN_CONNS = "10"
+  DB_MAX_IDLE_CONNS = "3"
+  DB_CONN_MAX_LIFETIME = "5m"
+
+# Worker has no HTTP service — it's a background process
+[processes]
+  app = "/worker"
+
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "256mb"
