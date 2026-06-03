@@ -41,6 +41,7 @@ type RedisConfig struct {
 	Addr     string
 	Password string
 	DB       int
+	TLS      bool // set true for Upstash and other TLS-only providers
 }
 
 type StorageConfig struct {
@@ -112,6 +113,7 @@ func Load() (*Config, error) {
 			Addr:     getEnv("REDIS_ADDR", "localhost:6379"),
 			Password: getEnv("REDIS_PASSWORD", ""),
 			DB:       parseInt("REDIS_DB", 0),
+			TLS:      parseBool("REDIS_TLS", false),
 		},
 		Storage: StorageConfig{
 			Endpoint:        requireEnv("STORAGE_ENDPOINT"),
@@ -129,7 +131,7 @@ func Load() (*Config, error) {
 			URL:       getEnv("SUPABASE_URL", ""),
 		},
 		OpenAI: OpenAIConfig{
-			APIKey:  requireEnv("OPENAI_API_KEY"),
+			APIKey:  getEnv("OPENAI_API_KEY", ""),
 			BaseURL: getEnv("OPENAI_BASE_URL", "https://api.openai.com/v1"),
 		},
 		Anthropic: AnthropicConfig{

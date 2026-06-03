@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"crypto/tls"
 	"errors"
 	"fmt"
 	"net/http"
@@ -68,11 +69,15 @@ func main() {
 	log.Info("migrations applied")
 
 	// ── Redis ─────────────────────────────────────────────────────────────────
-	rdb := redis.NewClient(&redis.Options{
+	redisOpts := &redis.Options{
 		Addr:     cfg.Redis.Addr,
 		Password: cfg.Redis.Password,
 		DB:       cfg.Redis.DB,
-	})
+	}
+	if cfg.Redis.TLS {
+		redisOpts.TLSConfig = &tls.Config{}
+	}
+	rdb := redis.NewClient(redisOpts)
 	if err := rdb.Ping(context.Background()).Err(); err != nil {
 		log.Fatal("redis ping", zap.Error(err))
 	}
