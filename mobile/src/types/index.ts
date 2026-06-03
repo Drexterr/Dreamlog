@@ -328,6 +328,7 @@ export interface TherapySessionMessage {
   role: 'user' | 'assistant';
   content: string;
   input_mode: 'voice' | 'text' | 'system';
+  tts_url?: string; // presigned GET URL to AI voice audio; present only on assistant messages when TTS is enabled
   created_at: string;
 }
 

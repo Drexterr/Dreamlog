@@ -94,7 +94,19 @@ Built:
 - Gratitude Mode: AI asks 3 specific gratitude follow-ups after listening
 - Decision Mode: Socratic follow-up for decisions
 - Processing Mode: current default
+- Dream Mode: dual-lens dream analysis (see 4f-i)
 - Mode selection on record screen
+
+### 4f-i — Dream Decoder (Dual Lens) ✅
+Migrations: `000016_dream_decoder.up.sql`, `000023_dream_lenses.up.sql`
+
+When a user records a dream entry (`mode = "dream"`), the analysis pipeline runs a specialized prompt that produces two interpretive lenses in addition to the standard reflection fields:
+
+**Psychological lens** (`psychological_lens`): Jungian / depth-psychology reading. Draws on Jungian archetypes (shadow, anima/animus, Self), universal dream symbols (water = unconscious, house = self, falling = loss of control, being chased = avoidance), and explores what the dream might be touching emotionally. Warm and exploratory, not diagnostic.
+
+**Vedic lens** (`vedic_lens`): Vedic Svapna Shastra / Hindu mythology reading. Draws on dream symbolism from the Atharva Veda, Brihadaranyaka Upanishad, and classical texts. Considers time-of-dream (pre-dawn = sattvic/significant), auspicious symbols (cows, elephants, white flowers, clear water, temples, deities), inauspicious symbols (corpses, teeth falling, darkness, oil), and recurring dreams as potential samskaric patterns. Presented as a cultural/spiritual perspective, not a prediction.
+
+Both lenses are stored in `entry_analysis.psychological_lens` and `entry_analysis.vedic_lens` (TEXT, NULL for non-dream entries). Both appear in `GET /entries/:id/analysis` when `mode = "dream"`.
 
 ### 4g — Life Graph ✅
 - 30 / 90 / 365 day mood trendline with range selector
@@ -186,9 +198,7 @@ Built:
 - All 6 therapy API functions in `src/api/client.ts`, all 11 therapy types in `src/types/index.ts`
 - Billing: first session free; Pro plan 2/month; ₹499/session otherwise (402 returned when no credits)
 
-**Not yet built:**
-- Voice input on mobile (presign API exists, `useRecorder` hook exists; wiring pending)
-- OpenAI TTS voice output (server plumbing ready; mobile audio playback not wired)
+**All Phase 6 features shipped.** Voice input and OpenAI TTS voice output are fully implemented.
 
 ### Cost Per Session (text mode)
 | | |
@@ -291,9 +301,7 @@ New two-stage behaviour:
 - "Journal" → existing record flow
 - "Start a Therapy Session" → persona picker → POST /therapy/sessions
 
-**Not in Phase 8:**
-- Voice input wiring on mobile (presign + useRecorder exists; wiring tracked separately)
-- OpenAI TTS audio playback on mobile (server maps persona→voice; playback pending)
+**All Phase 8 features shipped.** Voice input and TTS audio playback fully implemented.
 - Each person tracked with role (family/friend/colleague/romantic/other), mention count, positive/negative sentiment counts
 - `GET /relationships` — full map of all people mentioned; `GET /relationships/:id` — person + recent mention context
 - Claude extracts people during the worker pipeline (in `workers/transcription.go` after analysis)

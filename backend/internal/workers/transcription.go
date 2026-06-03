@@ -239,9 +239,11 @@ func (w *TranscriptionWorker) handle(ctx context.Context, job *models.Transcript
 		Summary:       claudeOut.Summary,
 		Reflection:    claudeOut.Reflection,
 		MorningNudge:  claudeOut.MorningNudge,
-		IsCrisis:      false,
-		DreamSymbols:  claudeOut.DreamSymbols,
-		DreamType:     claudeOut.DreamType,
+		IsCrisis:          false,
+		DreamSymbols:      claudeOut.DreamSymbols,
+		DreamType:         claudeOut.DreamType,
+		PsychologicalLens: claudeOut.PsychologicalLens,
+		VedicLens:         claudeOut.VedicLens,
 	}
 	if _, err := w.analysisRepo.Upsert(ctx, job.EntryID, analysis); err != nil {
 		return fmt.Errorf("store analysis: %w", err)

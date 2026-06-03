@@ -508,8 +508,10 @@ func stubDreamAnalysis(transcript string) *models.ClaudeAnalysisOutput {
 			"Symbols in dreams speak in feelings rather than facts. " +
 			"What feeling from this dream is still with you now?",
 		MorningNudge: "Notice if the feeling from this dream threads through your day.",
-		DreamSymbols: []string{"unknown space", "movement", "figures"},
-		DreamType:    "vivid",
+		DreamSymbols:      []string{"unknown space", "movement", "figures"},
+		DreamType:         "vivid",
+		PsychologicalLens: "The imagery of unknown space and moving figures may reflect the psyche exploring uncharted aspects of itself — a classic Jungian journey into the unconscious. The sense of movement without clear destination often signals a transition phase where something in you is shifting but has not yet found form.",
+		VedicLens:         "In the Vedic tradition, dreams of open spaces and movement are considered sattvic in nature when they carry a quality of expansiveness rather than fear. The figures appearing may represent ancestral presences (pitrus) or aspects of the dreamer's own subtle body (sukshma sharira) processing accumulated experience.",
 	}
 }
 

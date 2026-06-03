@@ -115,10 +115,11 @@ func main() {
 	convSvc := services.NewConversationService(convRepo, entryRepo, analysisRepo, claudeSvc)
 	subscriptionSvc := services.NewSubscriptionService(userRepo, shareRepo)
 	transcriptionSvc := services.NewTranscriptionService(&cfg.OpenAI)
+	ttsSvc := services.NewTTSService(&cfg.OpenAI, storageClient)
 	crisisDetector := services.NewCrisisDetector(claudeSvc)
 	therapySvc := services.NewTherapyService(
 		therapyRepo, analysisRepo, claudeSvc, transcriptionSvc, storageSvc,
-		crisisDetector, cfg.Anthropic.StubAnalysis,
+		crisisDetector, ttsSvc, cfg.Anthropic.StubAnalysis,
 	)
 
 	// ── HTTP Server ───────────────────────────────────────────────────────────

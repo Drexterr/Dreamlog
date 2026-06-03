@@ -151,6 +151,10 @@ entry_analysis                  -- 1:1 with entries
   reflection TEXT               -- warm 3-5 sentences + one open question
   morning_nudge TEXT            -- 1 sentence, specific to this entry
   is_crisis BOOLEAN DEFAULT false
+  dream_symbols TEXT[]          -- NULL for non-dream entries; 3-6 symbols extracted from the dream (migration 000016)
+  dream_type TEXT               -- NULL for non-dream entries; nightmare|lucid|recurring|vivid|surreal|mundane (migration 000016)
+  psychological_lens TEXT       -- NULL for non-dream entries; Jungian/depth-psychology reading (migration 000023)
+  vedic_lens TEXT               -- NULL for non-dream entries; Vedic Svapna Shastra reading (migration 000023)
   created_at, updated_at TIMESTAMPTZ
 
 conversations                   -- 1:1 with entries (one follow-up per entry)
@@ -354,6 +358,7 @@ All prompts live in `internal/services/prompts.go`. Never scatter prompt strings
 - System: fixed instructions, output schema, few-shot examples, forbidden words
 - User: user context (name, account age, emotion trend, topic trend) + last 5 entry summaries + current transcript
 - Output: strict JSON with 7 fields (emotional_tone, topics, mood_score, key_quotes, summary, reflection, morning_nudge)
+- When mode=dream: 4 additional fields — dream_symbols, dream_type, psychological_lens (Jungian), vedic_lens (Vedic Svapna Shastra)
 
 **Follow-up Conversation** — `buildFollowUpSystemPrompt(transcript, reflection)`
 - Injects original transcript + original reflection into system prompt

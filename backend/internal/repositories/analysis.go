@@ -31,27 +31,38 @@ func (r *AnalysisRepository) Upsert(ctx context.Context, entryID uuid.UUID, a *m
 
 	const q = `
 		INSERT INTO entry_analysis
-		    (entry_id, mood_score, emotional_tone, topics, key_quotes, summary, reflection, morning_nudge, is_crisis, dream_symbols, dream_type)
-		VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)
+		    (entry_id, mood_score, emotional_tone, topics, key_quotes, summary, reflection, morning_nudge, is_crisis, dream_symbols, dream_type, psychological_lens, vedic_lens)
+		VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)
 		ON CONFLICT (entry_id) DO UPDATE
-		    SET mood_score    = EXCLUDED.mood_score,
-		        emotional_tone = EXCLUDED.emotional_tone,
-		        topics        = EXCLUDED.topics,
-		        key_quotes    = EXCLUDED.key_quotes,
-		        summary       = EXCLUDED.summary,
-		        reflection    = EXCLUDED.reflection,
-		        morning_nudge = EXCLUDED.morning_nudge,
-		        is_crisis     = EXCLUDED.is_crisis,
-		        dream_symbols = EXCLUDED.dream_symbols,
-		        dream_type    = EXCLUDED.dream_type,
-		        updated_at    = NOW()
+		    SET mood_score         = EXCLUDED.mood_score,
+		        emotional_tone     = EXCLUDED.emotional_tone,
+		        topics             = EXCLUDED.topics,
+		        key_quotes         = EXCLUDED.key_quotes,
+		        summary            = EXCLUDED.summary,
+		        reflection         = EXCLUDED.reflection,
+		        morning_nudge      = EXCLUDED.morning_nudge,
+		        is_crisis          = EXCLUDED.is_crisis,
+		        dream_symbols      = EXCLUDED.dream_symbols,
+		        dream_type         = EXCLUDED.dream_type,
+		        psychological_lens = EXCLUDED.psychological_lens,
+		        vedic_lens         = EXCLUDED.vedic_lens,
+		        updated_at         = NOW()
 		RETURNING id, entry_id, mood_score, emotional_tone, topics, key_quotes,
-		          summary, reflection, morning_nudge, is_crisis, dream_symbols, dream_type, created_at, updated_at`
+		          summary, reflection, morning_nudge, is_crisis, dream_symbols, dream_type,
+		          psychological_lens, vedic_lens, created_at, updated_at`
 
 	dreamSymbols := a.DreamSymbols
 	var dreamType *string
 	if a.DreamType != "" {
 		dreamType = &a.DreamType
+	}
+	var psychLens *string
+	if a.PsychologicalLens != "" {
+		psychLens = &a.PsychologicalLens
+	}
+	var vedicLens *string
+	if a.VedicLens != "" {
+		vedicLens = &a.VedicLens
 	}
 
 	row := r.db.QueryRow(ctx, q,
@@ -66,6 +77,8 @@ func (r *AnalysisRepository) Upsert(ctx context.Context, entryID uuid.UUID, a *m
 		a.IsCrisis,
 		dreamSymbols,
 		dreamType,
+		psychLens,
+		vedicLens,
 	)
 	return scanAnalysis(row)
 }
@@ -74,7 +87,8 @@ func (r *AnalysisRepository) Upsert(ctx context.Context, entryID uuid.UUID, a *m
 func (r *AnalysisRepository) GetByEntryID(ctx context.Context, entryID uuid.UUID) (*models.EntryAnalysis, error) {
 	const q = `
 		SELECT id, entry_id, mood_score, emotional_tone, topics, key_quotes,
-		       summary, reflection, morning_nudge, is_crisis, dream_symbols, dream_type, created_at, updated_at
+		       summary, reflection, morning_nudge, is_crisis, dream_symbols, dream_type,
+		       psychological_lens, vedic_lens, created_at, updated_at
 		FROM entry_analysis
 		WHERE entry_id = $1`
 
@@ -914,13 +928,13 @@ func (r *AnalysisRepository) TopTopics(ctx context.Context, userID uuid.UUID, li
 func scanAnalysis(row pgx.Row) (*models.EntryAnalysis, error) {
 	a := &models.EntryAnalysis{}
 	var toneRaw []byte
-	var dreamType *string
+	var dreamType, psychLens, vedicLens *string
 
 	err := row.Scan(
 		&a.ID, &a.EntryID, &a.MoodScore, &toneRaw,
 		&a.Topics, &a.KeyQuotes, &a.Summary, &a.Reflection,
 		&a.MorningNudge, &a.IsCrisis, &a.DreamSymbols, &dreamType,
-		&a.CreatedAt, &a.UpdatedAt,
+		&psychLens, &vedicLens, &a.CreatedAt, &a.UpdatedAt,
 	)
 	if err != nil {
 		return nil, fmt.Errorf("scanAnalysis: %w", err)
@@ -931,6 +945,12 @@ func scanAnalysis(row pgx.Row) (*models.EntryAnalysis, error) {
 	}
 	if dreamType != nil {
 		a.DreamType = *dreamType
+	}
+	if psychLens != nil {
+		a.PsychologicalLens = *psychLens
+	}
+	if vedicLens != nil {
+		a.VedicLens = *vedicLens
 	}
 	return a, nil
 }

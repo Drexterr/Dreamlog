@@ -8,8 +8,10 @@
         db-migrate db-migrate-down db-reset db-psql \
         scale-worker \
         minio-console \
-        api worker tidy \
-        mobile-install mobile-start mobile-tunnel mobile-android mobile-ios mobile-web
+        api worker tidy vet lint \
+        test test-race test-cover test-crisis test-services test-handlers test-workers \
+        mobile-install mobile-start mobile-tunnel mobile-android mobile-ios mobile-web mobile-lint mobile-typecheck \
+        portal-install portal-dev portal-build portal-start portal-lint
 
 ifeq ($(OS),Windows_NT)
     COPY_ENV = if not exist .env copy .env.example .env
@@ -54,16 +56,27 @@ help:
 	@echo "  Database"
 	@echo "    make db-migrate       Apply pending migrations"
 	@echo "    make db-migrate-down  Roll back last migration"
-	@echo "    make db-reset         Drop DB + re-run all migrations"
+	@echo "    make db-reset         Drop DB + re-run all migrations (destructive)"
 	@echo "    make db-psql          Open psql session"
 	@echo ""
 	@echo "  Scaling"
 	@echo "    make scale-worker N=2 Scale worker to N replicas"
 	@echo ""
-	@echo "  Local Go (no Docker)"
+	@echo "  Backend — local Go (no Docker)"
 	@echo "    make api              go run ./cmd/api"
 	@echo "    make worker           go run ./cmd/worker"
 	@echo "    make tidy             go mod tidy"
+	@echo "    make vet              go vet ./..."
+	@echo "    make lint             golangci-lint run (requires golangci-lint)"
+	@echo ""
+	@echo "  Backend — tests"
+	@echo "    make test             go test ./..."
+	@echo "    make test-race        go test -race ./...  (always use in CI)"
+	@echo "    make test-cover       go test -coverprofile=coverage.out + open HTML"
+	@echo "    make test-crisis      Run only crisis detection tests (blocking)"
+	@echo "    make test-services    Run only internal/services tests"
+	@echo "    make test-handlers    Run only internal/handlers tests"
+	@echo "    make test-workers     Run only internal/workers tests"
 	@echo ""
 	@echo "  Mobile"
 	@echo "    make mobile-install   npm install"
@@ -72,6 +85,15 @@ help:
 	@echo "    make mobile-android   expo start --android"
 	@echo "    make mobile-ios       expo start --ios"
 	@echo "    make mobile-web       expo start --web"
+	@echo "    make mobile-lint      eslint + prettier check"
+	@echo "    make mobile-typecheck tsc --noEmit"
+	@echo ""
+	@echo "  Therapist Portal (Next.js)"
+	@echo "    make portal-install   npm install"
+	@echo "    make portal-dev       next dev  (http://localhost:3000)"
+	@echo "    make portal-build     next build"
+	@echo "    make portal-start     next start"
+	@echo "    make portal-lint      next lint"
 	@echo ""
 
 # ── Dev lifecycle ─────────────────────────────────────────────────────────────
@@ -79,7 +101,7 @@ dev:
 	@$(COPY_ENV)
 	docker compose up --build -d
 	@echo ""
-	@echo "✓ DreamLog running"
+	@echo "DreamLog running"
 	@echo "  API            http://localhost:8080/health"
 	@echo "  MinIO console  http://localhost:9001  (minioadmin / minioadmin_secret)"
 	@echo "  PostgreSQL     localhost:5432"
@@ -163,7 +185,7 @@ db-migrate-down:
 
 # Wipe and re-apply all migrations (DEV ONLY — destroys all data).
 db-reset:
-	@echo "⚠  This will drop and recreate the database. Ctrl-C to abort."
+	@echo "WARNING: This will drop and recreate the database. Ctrl-C to abort."
 	@sleep 3
 	docker compose exec api sh -c \
 	  'migrate -path /app/migrations -database "$$DATABASE_URL" drop -f && \
@@ -178,7 +200,7 @@ db-psql:
 N ?= 2
 scale-worker:
 	docker compose up -d --scale worker=$(N) --no-recreate
-	@echo "✓ Worker scaled to $(N) replicas"
+	@echo "Worker scaled to $(N) replicas"
 
 # ── MinIO ─────────────────────────────────────────────────────────────────────
 minio-console:
@@ -186,7 +208,7 @@ minio-console:
 	@echo "  user:     minioadmin"
 	@echo "  password: minioadmin_secret"
 
-# ── Local Go (without Docker) ─────────────────────────────────────────────────
+# ── Backend — local Go (no Docker) ───────────────────────────────────────────
 api:
 	cd backend && go run ./cmd/api
 
@@ -195,6 +217,44 @@ worker:
 
 tidy:
 	cd backend && go mod tidy
+
+vet:
+	cd backend && go vet ./...
+
+lint:
+	cd backend && golangci-lint run ./...
+
+# ── Backend — tests ───────────────────────────────────────────────────────────
+
+# Run all tests. Use test-race in CI.
+test:
+	cd backend && go test ./...
+
+# Run all tests with the race detector (required before any merge).
+test-race:
+	cd backend && go test -race ./...
+
+# Run tests with coverage, open the HTML report.
+test-cover:
+	cd backend && go test -coverprofile=coverage.out ./... && \
+	  go tool cover -html=coverage.out -o coverage.html
+	@echo "Coverage report: backend/coverage.html"
+
+# Safety-critical: crisis detection only. Blocks merges if these fail.
+test-crisis:
+	cd backend && go test -v -race ./internal/services/ -run "Crisis|crisis"
+
+# All service-layer unit tests.
+test-services:
+	cd backend && go test -race ./internal/services/...
+
+# All HTTP handler integration tests.
+test-handlers:
+	cd backend && go test -race ./internal/handlers/...
+
+# All worker tests (transcription pipeline, schedulers, nudge).
+test-workers:
+	cd backend && go test -race ./internal/workers/...
 
 # ── Mobile ────────────────────────────────────────────────────────────────────
 mobile-install:
@@ -214,3 +274,25 @@ mobile-ios:
 
 mobile-web:
 	cd mobile && npx expo start --web
+
+mobile-lint:
+	cd mobile && npx eslint . --ext .ts,.tsx
+
+mobile-typecheck:
+	cd mobile && npx tsc --noEmit
+
+# ── Therapist Portal (Next.js) ────────────────────────────────────────────────
+portal-install:
+	cd therapist-portal && npm install
+
+portal-dev:
+	cd therapist-portal && npm run dev
+
+portal-build:
+	cd therapist-portal && npm run build
+
+portal-start:
+	cd therapist-portal && npm run start
+
+portal-lint:
+	cd therapist-portal && npm run lint

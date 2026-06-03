@@ -94,6 +94,10 @@ type TherapySessionMessage struct {
 	Content   string    `json:"content"`
 	InputMode string    `json:"input_mode"` // "voice" | "text" | "system"
 	CreatedAt time.Time `json:"created_at"`
+
+	// TTSUrl is a short-lived presigned GET URL to the AI voice audio.
+	// Populated only on assistant messages in SendTherapyMessageResponse; not stored in DB.
+	TTSUrl *string `json:"tts_url,omitempty"`
 }
 
 // TherapySessionState is the session_state block returned on each message.

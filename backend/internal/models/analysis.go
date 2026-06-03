@@ -25,10 +25,12 @@ type EntryAnalysis struct {
 	MorningNudge  string          `json:"morning_nudge"`
 	IsCrisis      bool            `json:"is_crisis"`
 	// Dream Decoder fields — non-nil only when entry.mode = 'dream'.
-	DreamSymbols  []string        `json:"dream_symbols,omitempty"`
-	DreamType     string          `json:"dream_type,omitempty"`
-	CreatedAt     time.Time       `json:"created_at"`
-	UpdatedAt     time.Time       `json:"updated_at"`
+	DreamSymbols      []string `json:"dream_symbols,omitempty"`
+	DreamType         string   `json:"dream_type,omitempty"`
+	PsychologicalLens string   `json:"psychological_lens,omitempty"` // Jungian depth-psychology reading
+	VedicLens         string   `json:"vedic_lens,omitempty"`         // Vedic Svapna Shastra reading
+	CreatedAt         time.Time `json:"created_at"`
+	UpdatedAt         time.Time `json:"updated_at"`
 }
 
 // ClaudeAnalysisOutput is the JSON structure Claude must return.
@@ -42,8 +44,10 @@ type ClaudeAnalysisOutput struct {
 	Reflection    string          `json:"reflection"`
 	MorningNudge  string          `json:"morning_nudge"`
 	// Dream Decoder fields — populated only when mode = 'dream'.
-	DreamSymbols  []string        `json:"dream_symbols,omitempty"`
-	DreamType     string          `json:"dream_type,omitempty"`
+	DreamSymbols      []string `json:"dream_symbols,omitempty"`
+	DreamType         string   `json:"dream_type,omitempty"`
+	PsychologicalLens string   `json:"psychological_lens,omitempty"`
+	VedicLens         string   `json:"vedic_lens,omitempty"`
 }
 
 // ── Pattern Radar ────────────────────────────────────────────────────────────

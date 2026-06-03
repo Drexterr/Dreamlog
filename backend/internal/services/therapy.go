@@ -44,13 +44,14 @@ type therapyStorageClient interface {
 
 // TherapyService orchestrates therapy session lifecycle.
 type TherapyService struct {
-	repo         therapyRepo
-	analysisRepo therapyAnalysisRepo
-	claude       *ClaudeService
+	repo          therapyRepo
+	analysisRepo  therapyAnalysisRepo
+	claude        *ClaudeService
 	transcription *TranscriptionService
-	storage      therapyStorageClient
-	crisis       *CrisisDetector
-	stubBilling  bool // when true (dev), billing checks always pass
+	storage       therapyStorageClient
+	crisis        *CrisisDetector
+	tts           *TTSService
+	stubBilling   bool // when true (dev), billing checks always pass
 }
 
 func NewTherapyService(
@@ -60,6 +61,7 @@ func NewTherapyService(
 	transcription *TranscriptionService,
 	storage therapyStorageClient,
 	crisis *CrisisDetector,
+	tts *TTSService,
 	stubBilling bool,
 ) *TherapyService {
 	return &TherapyService{
@@ -69,6 +71,7 @@ func NewTherapyService(
 		transcription: transcription,
 		storage:       storage,
 		crisis:        crisis,
+		tts:           tts,
 		stubBilling:   stubBilling,
 	}
 }
@@ -182,6 +185,16 @@ func (s *TherapyService) SendMessage(ctx context.Context, sessionID, userID uuid
 	assistantMsg, err := s.repo.AddMessage(ctx, session.ID, "assistant", aiReply, "text")
 	if err != nil {
 		return nil, fmt.Errorf("therapySvc.SendMessage store assistant msg: %w", err)
+	}
+
+	// Generate TTS audio for the assistant reply (non-fatal: errors are logged and skipped).
+	if s.tts != nil {
+		ttsCtx, cancel := context.WithTimeout(ctx, 20*time.Second)
+		ttsURL, ttsErr := s.tts.Synthesize(ttsCtx, session.ID.String(), assistantMsg.ID.String(), aiReply, session.Persona)
+		cancel()
+		if ttsErr == nil && ttsURL != "" {
+			assistantMsg.TTSUrl = &ttsURL
+		}
 	}
 
 	// Increment turn counter.

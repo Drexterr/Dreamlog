@@ -15,6 +15,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import * as FileSystem from 'expo-file-system/legacy';
+import { Audio } from 'expo-av';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { api } from '../../src/api/client';
 import { useTheme } from '../../src/context/ThemeContext';
@@ -291,8 +292,27 @@ export default function TherapySessionScreen() {
 
   const scrollRef = useRef<ScrollView>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const ttsSound = useRef<Audio.Sound | null>(null);
   const recorder = useRecorder();
   const isRecording = recorder.state === 'recording';
+
+  // Unload TTS sound on unmount to avoid memory leaks.
+  useEffect(() => {
+    return () => {
+      ttsSound.current?.unloadAsync().catch(() => null);
+    };
+  }, []);
+
+  const playTTS = useCallback(async (url: string | undefined) => {
+    if (!url) return;
+    try {
+      await ttsSound.current?.unloadAsync().catch(() => null);
+      const { sound } = await Audio.Sound.createAsync({ uri: url }, { shouldPlay: true });
+      ttsSound.current = sound;
+    } catch {
+      // TTS playback failures are silent — text is always visible as fallback.
+    }
+  }, []);
 
   // Load session on mount
   useEffect(() => {
@@ -336,6 +356,7 @@ export default function TherapySessionScreen() {
       setStatus(resp.session_state.status);
       setTimeRemaining(resp.session_state.time_remaining_sec);
       setCrisisWarnings(resp.session_state.crisis_warnings ?? 0);
+      playTTS(resp.assistant_message.tts_url);
       // Switch back to voice mode after sending so orb is the focus again
       setInputMode('voice');
     } catch (err: any) {
@@ -370,6 +391,7 @@ export default function TherapySessionScreen() {
         setStatus(resp.session_state.status);
         setTimeRemaining(resp.session_state.time_remaining_sec);
         setCrisisWarnings(resp.session_state.crisis_warnings ?? 0);
+        playTTS(resp.assistant_message.tts_url);
       } catch (err: any) {
         if (err?.response?.status === 410) setStatus('expired');
         else Alert.alert('Error', 'Could not send voice message. Please try again.');
@@ -584,7 +606,7 @@ export default function TherapySessionScreen() {
                 : isBusy
                 ? 'thinking…'
                 : messages.length === 0
-                ? personaMeta?.description ?? 'I\'m here to listen'
+                ? personaMeta?.tagline ?? 'I\'m here to listen'
                 : 'tap to speak'}
             </Text>
           )}

@@ -260,6 +260,10 @@ Response `200`:
   "reflection": "string",                    // 3-5 sentences + open question
   "morning_nudge": "string",                 // 1 sentence
   "is_crisis": false,
+  "dream_symbols": ["snake", "river"],       // only present when entry.mode = "dream"; 3-6 symbols
+  "dream_type": "vivid",                     // only present when mode = "dream"; nightmare|lucid|recurring|vivid|surreal|mundane
+  "psychological_lens": "string",            // only present when mode = "dream"; Jungian / depth-psychology reading
+  "vedic_lens": "string",                    // only present when mode = "dream"; Vedic Svapna Shastra reading
   "created_at": "RFC3339"
 }
 ```

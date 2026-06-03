@@ -656,8 +656,10 @@ func validDreamAnalysisJSON() string {
 		Summary:      "The dreamer was being chased through an unfamiliar house.",
 		Reflection:   "This dream may be touching on feelings of being overwhelmed. What in your waking life feels inescapable right now?",
 		MorningNudge: "Notice if that feeling of being chased follows you today.",
-		DreamSymbols: []string{"house", "pursuit", "door"},
-		DreamType:    "nightmare",
+		DreamSymbols:      []string{"house", "pursuit", "door"},
+		DreamType:         "nightmare",
+		PsychologicalLens: "The house being chased through is a classic Jungian symbol of the self — its unfamiliar rooms suggesting unexplored or avoided aspects of the psyche. The pursuer likely represents something the dreamer is unwilling to confront.",
+		VedicLens:         "In Svapna Shastra, being chased in a dream is considered a tamasic sign associated with unresolved samskaras. The unfamiliar house may represent a past life setting or accumulated fears seeking release through the dream state.",
 	}
 	b, _ := json.Marshal(out)
 	return string(b)
@@ -691,6 +693,12 @@ func TestAnalyzeEntry_DreamMode_ParsesDreamFields(t *testing.T) {
 	if out.MoodScore != 28 {
 		t.Errorf("mood_score: want 28, got %d", out.MoodScore)
 	}
+	if out.PsychologicalLens == "" {
+		t.Error("psychological_lens must be non-empty for dream mode")
+	}
+	if out.VedicLens == "" {
+		t.Error("vedic_lens must be non-empty for dream mode")
+	}
 }
 
 func TestAnalyzeEntry_StandardMode_DreamFieldsEmpty(t *testing.T) {
@@ -715,6 +723,12 @@ func TestAnalyzeEntry_StandardMode_DreamFieldsEmpty(t *testing.T) {
 	if out.DreamType != "" {
 		t.Errorf("standard mode must have empty dream_type, got %q", out.DreamType)
 	}
+	if out.PsychologicalLens != "" {
+		t.Errorf("standard mode must have empty psychological_lens, got %q", out.PsychologicalLens)
+	}
+	if out.VedicLens != "" {
+		t.Errorf("standard mode must have empty vedic_lens, got %q", out.VedicLens)
+	}
 }
 
 func TestAnalyzeEntry_DreamMode_StubReturnsDreamFields(t *testing.T) {
@@ -735,5 +749,11 @@ func TestAnalyzeEntry_DreamMode_StubReturnsDreamFields(t *testing.T) {
 	}
 	if out.DreamType == "" {
 		t.Error("stub dream mode must return a non-empty dream_type")
+	}
+	if out.PsychologicalLens == "" {
+		t.Error("stub dream mode must return a non-empty psychological_lens")
+	}
+	if out.VedicLens == "" {
+		t.Error("stub dream mode must return a non-empty vedic_lens")
 	}
 }
