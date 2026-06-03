@@ -1,0 +1,54 @@
+name: Build APK
+
+on:
+  workflow_dispatch:
+    inputs:
+      profile:
+        description: 'EAS build profile'
+        required: true
+        default: 'preview-local'
+        type: choice
+        options:
+          - preview-local
+          - development-local
+
+jobs:
+  build:
+    name: Build Android APK
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: mobile/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+        working-directory: mobile
+
+      - uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Build APK locally on runner
+        run: |
+          mkdir -p build
+          npx eas build \
+            --profile ${{ github.event.inputs.profile }} \
+            --platform android \
+            --local \
+            --output ./build/dreamlog.apk \
+            --non-interactive
+        working-directory: mobile
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: dreamlog-${{ github.event.inputs.profile }}-${{ github.run_number }}
+          path: mobile/build/dreamlog.apk
+          retention-days: 14

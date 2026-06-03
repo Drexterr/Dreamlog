@@ -11,6 +11,8 @@
         api worker tidy vet lint \
         test test-race test-cover test-crisis test-services test-handlers test-workers \
         mobile-install mobile-start mobile-tunnel mobile-android mobile-ios mobile-web mobile-lint mobile-typecheck \
+        mobile-build-dev mobile-build-dev-local mobile-build-preview mobile-build-preview-local mobile-build-prod \
+        apk apk-debug apk-ci apk-download \
         portal-install portal-dev portal-build portal-start portal-lint
 
 ifeq ($(OS),Windows_NT)
@@ -78,15 +80,26 @@ help:
 	@echo "    make test-handlers    Run only internal/handlers tests"
 	@echo "    make test-workers     Run only internal/workers tests"
 	@echo ""
-	@echo "  Mobile"
-	@echo "    make mobile-install   npm install"
-	@echo "    make mobile-start     expo start"
-	@echo "    make mobile-tunnel    expo start --tunnel"
-	@echo "    make mobile-android   expo start --android"
-	@echo "    make mobile-ios       expo start --ios"
-	@echo "    make mobile-web       expo start --web"
-	@echo "    make mobile-lint      eslint + prettier check"
-	@echo "    make mobile-typecheck tsc --noEmit"
+	@echo "  Mobile — dev server"
+	@echo "    make mobile-install        npm install"
+	@echo "    make mobile-start          expo start"
+	@echo "    make mobile-tunnel         expo start --tunnel"
+	@echo "    make mobile-android        expo start --android"
+	@echo "    make mobile-ios            expo start --ios"
+	@echo "    make mobile-web            expo start --web"
+	@echo "    make mobile-lint           eslint check"
+	@echo "    make mobile-typecheck      tsc --noEmit"
+	@echo ""
+	@echo "  Mobile — EAS cloud builds (free tier = long queue)"
+	@echo "    make mobile-build-dev      EAS cloud, development profile"
+	@echo "    make mobile-build-preview  EAS cloud, preview profile"
+	@echo "    make mobile-build-prod     EAS cloud, production profile"
+	@echo ""
+	@echo "  Mobile — APK builds (Windows-native, no EAS/cloud)"
+	@echo "    make apk              Build release APK via Gradle (needs Android Studio)"
+	@echo "    make apk-debug        Build debug APK — faster, no signing"
+	@echo "    make apk-ci           Trigger build on GitHub Actions (fallback)"
+	@echo "    make apk-download     Download latest APK from GitHub Actions"
 	@echo ""
 	@echo "  Therapist Portal (Next.js)"
 	@echo "    make portal-install   npm install"
@@ -280,6 +293,52 @@ mobile-lint:
 
 mobile-typecheck:
 	cd mobile && npx tsc --noEmit
+
+# ── Mobile — EAS builds ───────────────────────────────────────────────────────
+# Cloud builds (EAS servers — free tier queues can take hours).
+mobile-build-dev:
+	cd mobile && npx eas build --profile development --platform android
+
+mobile-build-preview:
+	cd mobile && npx eas build --profile preview --platform android
+
+mobile-build-prod:
+	cd mobile && npx eas build --profile production --platform android
+
+# Local builds (runs on your machine — no queue, no wait).
+# Requires: Android SDK + JDK for Android; Xcode for iOS (macOS only).
+# Install prerequisite: npm install -g eas-cli
+mobile-build-dev-local:
+	cd mobile && npx eas build --profile development-local --platform android --local --output ./build/dreamlog-dev.apk
+
+mobile-build-preview-local:
+	cd mobile && npx eas build --profile preview-local --platform android --local --output ./build/dreamlog-preview.apk
+
+# Build APK directly using Gradle — works on Windows, no EAS/cloud needed.
+# Requires: Android Studio installed (includes JDK + Android SDK).
+# First run takes ~3 min (Gradle download); subsequent runs ~1 min.
+apk:
+	cd mobile && npx expo prebuild --platform android --clean
+	cd mobile/android && gradlew.bat assembleRelease
+	@echo ""
+	@echo "APK ready: mobile/android/app/build/outputs/apk/release/app-release.apk"
+
+# Debug APK (faster build, no signing needed — good for quick device testing).
+apk-debug:
+	cd mobile && npx expo prebuild --platform android --clean
+	cd mobile/android && gradlew.bat assembleDebug
+	@echo ""
+	@echo "APK ready: mobile/android/app/build/outputs/apk/debug/app-debug.apk"
+
+# Trigger build on GitHub Actions (fallback if Android Studio is not installed).
+apk-ci:
+	gh workflow run build-apk.yml --field profile=preview-local
+	@echo "Build triggered — download from the Actions tab when done."
+
+# Download the latest APK artifact from GitHub Actions.
+apk-download:
+	gh run download $$(gh run list --workflow=build-apk.yml --limit 1 --json databaseId -q '.[0].databaseId') --dir ./mobile/build
+	@echo "APK saved to: mobile/build/"
 
 # ── Therapist Portal (Next.js) ────────────────────────────────────────────────
 portal-install:

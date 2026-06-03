@@ -1,6 +1,7 @@
 {
   "cli": {
-    "version": ">= 10.0.0"
+    "version": ">= 10.0.0",
+    "appVersionSource": "remote"
   },
   "build": {
     "development": {
@@ -12,9 +13,32 @@
         "EXPO_PUBLIC_SUPABASE_URL": "https://rvmriuwxyxrpyoseqhci.supabase.co"
       }
     },
+    "development-local": {
+      "developmentClient": true,
+      "distribution": "internal",
+      "autoIncrement": true,
+      "android": {
+        "buildType": "apk"
+      },
+      "env": {
+        "EXPO_PUBLIC_API_URL": "http://10.0.2.2:8080",
+        "EXPO_PUBLIC_SUPABASE_URL": "https://rvmriuwxyxrpyoseqhci.supabase.co"
+      }
+    },
     "preview": {
       "distribution": "internal",
       "autoIncrement": true,
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://dreamlog-production-f9e2.up.railway.app",
+        "EXPO_PUBLIC_SUPABASE_URL": "https://rvmriuwxyxrpyoseqhci.supabase.co"
+      }
+    },
+    "preview-local": {
+      "distribution": "internal",
+      "autoIncrement": true,
+      "android": {
+        "buildType": "apk"
+      },
       "env": {
         "EXPO_PUBLIC_API_URL": "https://dreamlog-production-f9e2.up.railway.app",
         "EXPO_PUBLIC_SUPABASE_URL": "https://rvmriuwxyxrpyoseqhci.supabase.co"
