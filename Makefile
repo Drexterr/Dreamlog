@@ -314,21 +314,24 @@ mobile-build-dev-local:
 mobile-build-preview-local:
 	cd mobile && npx eas build --profile preview-local --platform android --local --output ./build/dreamlog-preview.apk
 
+JAVA_HOME ?= C:\Program Files\Android\Android Studio\jbr
+ANDROID_HOME ?= $(USERPROFILE)\AppData\Local\Android\Sdk
+
 # Build APK directly using Gradle — works on Windows, no EAS/cloud needed.
 # Requires: Android Studio installed (includes JDK + Android SDK).
 # First run takes ~3 min (Gradle download); subsequent runs ~1 min.
 apk:
 	cd mobile && npx expo prebuild --platform android --clean
-	cd mobile/android && gradlew.bat assembleRelease
-	@echo ""
-	@echo "APK ready: mobile/android/app/build/outputs/apk/release/app-release.apk"
+	set "JAVA_HOME=$(JAVA_HOME)" && set "ANDROID_HOME=$(ANDROID_HOME)" && cd mobile\android && gradlew.bat assembleRelease
+	@echo.
+	@echo APK ready: mobile\android\app\build\outputs\apk\release\app-release.apk
 
 # Debug APK (faster build, no signing needed — good for quick device testing).
 apk-debug:
 	cd mobile && npx expo prebuild --platform android --clean
-	cd mobile/android && gradlew.bat assembleDebug
-	@echo ""
-	@echo "APK ready: mobile/android/app/build/outputs/apk/debug/app-debug.apk"
+	set "JAVA_HOME=$(JAVA_HOME)" && set "ANDROID_HOME=$(ANDROID_HOME)" && cd mobile\android && gradlew.bat assembleDebug
+	@echo.
+	@echo APK ready: mobile\android\app\build\outputs\apk\debug\app-debug.apk
 
 # Trigger build on GitHub Actions (fallback if Android Studio is not installed).
 apk-ci:
