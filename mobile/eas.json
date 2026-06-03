@@ -6,28 +6,29 @@
     "development": {
       "developmentClient": true,
       "distribution": "internal",
+      "autoIncrement": true,
       "env": {
-        "EXPO_PUBLIC_API_URL": "http://localhost:8080"
+        "EXPO_PUBLIC_API_URL": "http://localhost:8080",
+        "EXPO_PUBLIC_SUPABASE_URL": "https://rvmriuwxyxrpyoseqhci.supabase.co"
       }
     },
     "preview": {
       "distribution": "internal",
+      "autoIncrement": true,
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://dreamlog-api.fly.dev"
+        "EXPO_PUBLIC_API_URL": "https://dreamlog-production-f9e2.up.railway.app",
+        "EXPO_PUBLIC_SUPABASE_URL": "https://rvmriuwxyxrpyoseqhci.supabase.co"
       }
     },
     "production": {
+      "autoIncrement": true,
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://dreamlog-api.fly.dev"
+        "EXPO_PUBLIC_API_URL": "https://dreamlog-production-f9e2.up.railway.app",
+        "EXPO_PUBLIC_SUPABASE_URL": "https://rvmriuwxyxrpyoseqhci.supabase.co"
       }
     }
   },
   "submit": {
     "production": {}
-  },
-  "update": {
-    "production": {
-      "channel": "production"
-    }
   }
 }

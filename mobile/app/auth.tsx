@@ -9,6 +9,7 @@ import {
   Platform,
   Alert,
   ScrollView,
+  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
@@ -168,9 +169,13 @@ export default function AuthScreen() {
               disabled={loading}
               activeOpacity={0.8}
             >
-              <Text style={styles.buttonText}>
-                {loading ? '…' : mode === 'login' ? 'Sign in' : 'Create account'}
-              </Text>
+              {loading ? (
+                <ActivityIndicator color="#fff" size="small" />
+              ) : (
+                <Text style={styles.buttonText}>
+                  {mode === 'login' ? 'Sign in' : 'Create account'}
+                </Text>
+              )}
             </TouchableOpacity>
           </View>
         </ScrollView>
