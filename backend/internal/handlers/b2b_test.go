@@ -62,7 +62,7 @@ func newB2BTestRouter(t *testing.T, repo *fakeCompanyRepo, testUser *models.User
 
 	r := gin.New()
 	r.Use(middleware.ErrorHandler(log))
-	r.Use(middleware.AuthMiddleware(b2bTestSecret, &fakeProvisioner{user: testUser}, log))
+	r.Use(middleware.AuthMiddleware(b2bTestSecret, "", &fakeProvisioner{user: testUser}, log))
 
 	h := NewB2BHandler(repo)
 	r.POST("/b2b/companies/:slug/join", h.Join)

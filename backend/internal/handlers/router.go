@@ -33,6 +33,7 @@ type Deps struct {
 	RelationshipRepo     *repositories.RelationshipRepository
 	ClaudeSvc            *services.ClaudeService
 	JWTSecret            string
+	SupabaseJWKSURL      string
 	AppBaseURL           string
 	StripeSecretKey      string
 	StripePublishableKey string
@@ -57,7 +58,7 @@ func NewRouter(deps Deps) http.Handler {
 	r.POST("/auth/register", authHandler.Register)
 	r.POST("/auth/login", authHandler.Login)
 
-	auth := r.Group("/", middleware.AuthMiddleware(deps.JWTSecret, deps.UserSvc, deps.Log))
+	auth := r.Group("/", middleware.AuthMiddleware(deps.JWTSecret, deps.SupabaseJWKSURL, deps.UserSvc, deps.Log))
 
 	// User
 	userHandler := NewUserHandler(deps.UserSvc)

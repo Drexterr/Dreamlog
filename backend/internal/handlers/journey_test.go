@@ -71,7 +71,7 @@ func newJourneyTestRouter(t *testing.T, svc journeyManager, testUser *models.Use
 
 	r := gin.New()
 	r.Use(middleware.ErrorHandler(log))
-	r.Use(middleware.AuthMiddleware(journeyTestSecret, &fakeProvisioner{user: testUser}, log))
+	r.Use(middleware.AuthMiddleware(journeyTestSecret, "", &fakeProvisioner{user: testUser}, log))
 
 	h := NewJourneyHandler(svc)
 	r.GET("/journeys", h.ListTemplates)

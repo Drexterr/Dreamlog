@@ -43,7 +43,7 @@ func newUserTestRouter(t *testing.T, svc userProfiler, testUser *models.User) *g
 
 	r := gin.New()
 	r.Use(middleware.ErrorHandler(log))
-	r.Use(middleware.AuthMiddleware(userTestSecret, &fakeProvisioner{user: testUser}, log))
+	r.Use(middleware.AuthMiddleware(userTestSecret, "", &fakeProvisioner{user: testUser}, log))
 
 	h := &UserHandler{svc: svc}
 	r.GET("/me", h.GetMe)

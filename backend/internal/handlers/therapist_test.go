@@ -143,7 +143,7 @@ func newTherapistTestRouter(
 
 	r := gin.New()
 	r.Use(middleware.ErrorHandler(log))
-	r.Use(middleware.AuthMiddleware(therapistTestSecret, &fakeProvisioner{user: testUser}, log))
+	r.Use(middleware.AuthMiddleware(therapistTestSecret, "", &fakeProvisioner{user: testUser}, log))
 
 	h := NewTherapistHandler(repo, aRepo, gen)
 	r.POST("/therapists/register", h.Register)

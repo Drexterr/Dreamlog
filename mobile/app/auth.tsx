@@ -12,7 +12,8 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
-import { api, storeToken } from '../src/api/client';
+import { supabase } from '../src/lib/supabase';
+import { api } from '../src/api/client';
 import { useTheme } from '../src/context/ThemeContext';
 
 type Mode = 'login' | 'register';
@@ -46,30 +47,49 @@ export default function AuthScreen() {
       Alert.alert('Missing fields', 'Name is required.');
       return;
     }
-    if (mode === 'register' && passwordTrimmed.length < 8) {
-      Alert.alert('Weak password', 'Password must be at least 8 characters.');
+    if (mode === 'register' && passwordTrimmed.length < 6) {
+      Alert.alert('Weak password', 'Password must be at least 6 characters.');
       return;
     }
 
     setLoading(true);
     try {
-      const result =
-        mode === 'register'
-          ? await api.register(emailTrimmed, nameTrimmed, passwordTrimmed)
-          : await api.login(emailTrimmed, passwordTrimmed);
-
-      await storeToken(result.token);
       if (mode === 'register') {
-        // New accounts always go through onboarding (goal not set yet).
+        const { data, error } = await supabase.auth.signUp({
+          email: emailTrimmed,
+          password: passwordTrimmed,
+          options: { data: { full_name: nameTrimmed } },
+        });
+
+        if (error) throw error;
+
+        if (!data.session) {
+          // Email confirmation required — Supabase sent a confirmation email.
+          Alert.alert(
+            'Check your email',
+            'We sent a confirmation link to ' + emailTrimmed + '. Click it to activate your account, then sign in.',
+          );
+          reset('login');
+          return;
+        }
+
+        // Session available immediately (email confirmation disabled in Supabase).
+        // onAuthStateChange already stored the token via storeToken().
         router.replace('/onboarding' as any);
       } else {
-        // Existing users — check if they somehow skipped onboarding.
+        const { error } = await supabase.auth.signInWithPassword({
+          email: emailTrimmed,
+          password: passwordTrimmed,
+        });
+
+        if (error) throw error;
+
+        // onAuthStateChange has stored the token — safe to call api.me() now.
         const user = await api.me();
         router.replace(user.goal ? '/(tabs)' : '/onboarding' as any);
       }
     } catch (err: any) {
-      const message =
-        err?.response?.data?.message ?? (mode === 'login' ? 'Invalid email or password.' : 'Registration failed.');
+      const message = err?.message ?? (mode === 'login' ? 'Invalid email or password.' : 'Registration failed.');
       Alert.alert('Error', message);
     } finally {
       setLoading(false);
@@ -133,7 +153,7 @@ export default function AuthScreen() {
               style={[styles.input, { backgroundColor: colors.cardSolid, borderColor: colors.borderFaint, color: colors.textPrimary }]}
               value={password}
               onChangeText={setPassword}
-              placeholder={mode === 'register' ? 'Password (min 8 characters)' : 'Password'}
+              placeholder={mode === 'register' ? 'Password (min 6 characters)' : 'Password'}
               placeholderTextColor={colors.textFaint}
               secureTextEntry
               autoCapitalize="none"

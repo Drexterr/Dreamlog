@@ -53,7 +53,7 @@ func newBillingTestRouter(t *testing.T, svc planManager, testUser *models.User) 
 
 	r := gin.New()
 	r.Use(middleware.ErrorHandler(log))
-	r.Use(middleware.AuthMiddleware(billingTestSecret, &fakeProvisioner{user: testUser}, log))
+	r.Use(middleware.AuthMiddleware(billingTestSecret, "", &fakeProvisioner{user: testUser}, log))
 
 	h := &BillingHandler{svc: svc}
 	r.GET("/billing/plan", h.GetPlan)

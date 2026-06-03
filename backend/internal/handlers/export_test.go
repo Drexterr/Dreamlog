@@ -74,7 +74,7 @@ func newExportTestRouter(t *testing.T, eRepo *fakeExportRepo, uRepo *fakeUserNam
 
 	r := gin.New()
 	r.Use(middleware.ErrorHandler(log))
-	r.Use(middleware.AuthMiddleware(exportTestSecret, &fakeProvisioner{user: testUser}, log))
+	r.Use(middleware.AuthMiddleware(exportTestSecret, "", &fakeProvisioner{user: testUser}, log))
 
 	h := NewExportHandler(eRepo, uRepo)
 	r.GET("/export/pdf", h.ExportPDF)

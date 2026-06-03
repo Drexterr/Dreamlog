@@ -46,7 +46,7 @@ func annualReviewTestRouter(repo annualReviewListRepo, plan models.Plan) (*gin.E
 
 	r := gin.New()
 	r.Use(middleware.ErrorHandler(log))
-	r.Use(middleware.AuthMiddleware(annualReviewTestSecret, &fakeProvisioner{user: testUser}, log))
+	r.Use(middleware.AuthMiddleware(annualReviewTestSecret, "", &fakeProvisioner{user: testUser}, log))
 
 	h := NewAnnualReviewHandler(repo)
 	r.GET("/reviews/annual", h.List)

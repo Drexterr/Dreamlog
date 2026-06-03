@@ -16,7 +16,8 @@ import {
   Nunito_600SemiBold,
   Nunito_700Bold,
 } from '@expo-google-fonts/nunito';
-import { api, getToken } from '../src/api/client';
+import { api, storeToken } from '../src/api/client';
+import { supabase } from '../src/lib/supabase';
 import { ThemeProvider } from '../src/context/ThemeContext';
 import { detectAndCacheRegion } from '../src/services/region';
 
@@ -46,19 +47,21 @@ export default function RootLayout() {
     Nunito_700Bold,
   });
 
-  // Check stored JWT and, if present, fetch profile to determine onboarding state.
+  // Check Supabase session and, if present, fetch profile to determine onboarding state.
   useEffect(() => {
     (async () => {
       try {
-        const token = await getToken();
-        if (!token) {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) {
           setHasToken(false);
           return;
         }
+        // Sync the JWT into SecureStore so the axios interceptor picks it up.
+        await storeToken(session.access_token);
         setHasToken(true);
         const [user] = await Promise.all([
           api.me(),
-          detectAndCacheRegion(), // fire-and-forget; result cached in AsyncStorage
+          detectAndCacheRegion(),
         ]);
         setNeedsOnboarding(!user.goal);
         if (user.goal) {

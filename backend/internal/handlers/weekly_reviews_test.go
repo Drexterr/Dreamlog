@@ -46,7 +46,7 @@ func weeklyReviewTestRouter(repo weeklyReviewListRepo) (*gin.Engine, *models.Use
 
 	r := gin.New()
 	r.Use(middleware.ErrorHandler(log))
-	r.Use(middleware.AuthMiddleware(weeklyReviewTestSecret, &fakeProvisioner{user: testUser}, log))
+	r.Use(middleware.AuthMiddleware(weeklyReviewTestSecret, "", &fakeProvisioner{user: testUser}, log))
 
 	h := NewWeeklyReviewHandler(repo)
 	r.GET("/reviews/weekly", h.List)
@@ -235,7 +235,7 @@ func weeklyReviewFreeUserRouter(repo weeklyReviewListRepo) *gin.Engine {
 	freeUser := &models.User{ID: uuid.New(), Email: "free@dreamlog.dev", Name: "Free", Plan: models.PlanFree}
 	r := gin.New()
 	r.Use(middleware.ErrorHandler(log))
-	r.Use(middleware.AuthMiddleware(weeklyReviewTestSecret, &fakeProvisioner{user: freeUser}, log))
+	r.Use(middleware.AuthMiddleware(weeklyReviewTestSecret, "", &fakeProvisioner{user: freeUser}, log))
 	h := NewWeeklyReviewHandler(repo)
 	r.GET("/reviews/weekly", h.List)
 	r.GET("/reviews/weekly/latest", h.GetLatest)

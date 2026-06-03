@@ -103,7 +103,7 @@ func newShareTestRouter(t *testing.T, repo *fakeShareRepo, testUser *models.User
 
 	// Auth-required group.
 	auth := r.Group("/")
-	auth.Use(middleware.AuthMiddleware(shareTestSecret, &fakeProvisioner{user: testUser}, log))
+	auth.Use(middleware.AuthMiddleware(shareTestSecret, "", &fakeProvisioner{user: testUser}, log))
 	auth.POST("/share", h.Create)
 	auth.GET("/share", h.List)
 	auth.DELETE("/share/:id", h.Revoke)
@@ -415,7 +415,7 @@ func newShareTestRouterWithQuota(t *testing.T, repo *fakeShareRepo, quota shareQ
 	h := NewShareHandler(repo, quota, "https://dreamlog.app")
 
 	auth := r.Group("/")
-	auth.Use(middleware.AuthMiddleware(shareTestSecret, &fakeProvisioner{user: testUser}, log))
+	auth.Use(middleware.AuthMiddleware(shareTestSecret, "", &fakeProvisioner{user: testUser}, log))
 	auth.POST("/share", h.Create)
 	auth.GET("/share", h.List)
 	auth.DELETE("/share/:id", h.Revoke)

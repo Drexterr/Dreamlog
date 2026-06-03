@@ -57,7 +57,7 @@ func newTestRouter(secret string, prov userProvisioner) *gin.Engine {
 	gin.SetMode(gin.TestMode)
 	r := gin.New()
 	log := zap.NewNop()
-	r.Use(AuthMiddleware(secret, prov, log))
+	r.Use(AuthMiddleware(secret, "", prov, log))
 	r.GET("/ping", func(c *gin.Context) {
 		c.Status(http.StatusOK)
 	})

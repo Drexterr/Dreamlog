@@ -75,7 +75,7 @@ func newEntryTestRouter(t *testing.T, svc entryServicer, store storageUploader, 
 
 	r := gin.New()
 	r.Use(middleware.ErrorHandler(log))
-	r.Use(middleware.AuthMiddleware(entryTestSecret, &fakeProvisioner{user: testUser}, log))
+	r.Use(middleware.AuthMiddleware(entryTestSecret, "", &fakeProvisioner{user: testUser}, log))
 
 	h := &EntryHandler{svc: svc, storage: store, subscription: &fakeEntryQuota{}}
 	entries := r.Group("/entries")

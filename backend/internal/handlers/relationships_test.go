@@ -45,7 +45,7 @@ func relTestRouter(repo relationshipMapRepo) *gin.Engine {
 
 	r := gin.New()
 	r.Use(middleware.ErrorHandler(log))
-	r.Use(middleware.AuthMiddleware(relTestSecret, &fakeProvisioner{user: testUser}, log))
+	r.Use(middleware.AuthMiddleware(relTestSecret, "", &fakeProvisioner{user: testUser}, log))
 
 	h := NewRelationshipHandler(repo)
 	r.GET("/relationships", h.GetMap)

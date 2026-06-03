@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 	"time"
 
@@ -139,6 +140,7 @@ func main() {
 		RelationshipRepo: relationshipRepo,
 		ClaudeSvc:        claudeSvc,
 		JWTSecret:            cfg.Supabase.JWTSecret,
+		SupabaseJWKSURL:      supabaseJWKSURL(cfg.Supabase.URL),
 		AppBaseURL:           cfg.App.BaseURL,
 		StripeSecretKey:      cfg.Stripe.SecretKey,
 		StripePublishableKey: cfg.Stripe.PublishableKey,
@@ -173,4 +175,13 @@ func main() {
 		log.Error("server forced shutdown", zap.Error(err))
 	}
 	log.Info("server stopped")
+}
+
+// supabaseJWKSURL builds the JWKS endpoint from the Supabase project URL.
+// Returns empty string when URL is not configured (dev environments using local auth only).
+func supabaseJWKSURL(supabaseURL string) string {
+	if supabaseURL == "" {
+		return ""
+	}
+	return strings.TrimRight(supabaseURL, "/") + "/auth/v1/.well-known/jwks.json"
 }

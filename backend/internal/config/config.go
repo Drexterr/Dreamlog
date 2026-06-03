@@ -57,6 +57,7 @@ type StorageConfig struct {
 
 type SupabaseConfig struct {
 	JWTSecret string
+	URL       string // e.g. https://xxxx.supabase.co — used to build JWKS URL for ES256 tokens
 }
 
 type OpenAIConfig struct {
@@ -125,6 +126,7 @@ func Load() (*Config, error) {
 		},
 		Supabase: SupabaseConfig{
 			JWTSecret: requireEnv("SUPABASE_JWT_SECRET"),
+			URL:       getEnv("SUPABASE_URL", ""),
 		},
 		OpenAI: OpenAIConfig{
 			APIKey:  requireEnv("OPENAI_API_KEY"),

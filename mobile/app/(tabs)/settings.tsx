@@ -17,6 +17,7 @@ import {
 import { BlurView } from 'expo-blur';
 import { useRouter } from 'expo-router';
 import { clearToken, api } from '../../src/api/client';
+import { supabase } from '../../src/lib/supabase';
 import { useTheme } from '../../src/context/ThemeContext';
 import type { AgeRange, Plan, User, UserGoal } from '../../src/types';
 
@@ -174,7 +175,8 @@ export default function SettingsScreen() {
         text: 'Sign out',
         style: 'destructive',
         onPress: async () => {
-          await clearToken();
+          await supabase.auth.signOut();
+          // clearToken() is called by the onAuthStateChange listener in supabase.ts
           router.replace('/auth');
         },
       },
@@ -203,7 +205,7 @@ export default function SettingsScreen() {
                     setDeleting(true);
                     try {
                       await api.deleteAccount();
-                      await clearToken();
+                      await supabase.auth.signOut();
                       router.replace('/auth');
                     } catch {
                       setDeleting(false);

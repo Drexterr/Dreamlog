@@ -113,7 +113,7 @@ func newAnalysisTestRouter(
 
 	r := gin.New()
 	r.Use(middleware.ErrorHandler(log))
-	r.Use(middleware.AuthMiddleware(analysisTestSecret, &fakeProvisioner{user: testUser}, log))
+	r.Use(middleware.AuthMiddleware(analysisTestSecret, "", &fakeProvisioner{user: testUser}, log))
 
 	h := NewAnalysisHandler(eq, aq, nil)
 	r.GET("/entries/:id/analysis", h.GetAnalysis)
@@ -134,7 +134,7 @@ func newMoodTestRouter(t *testing.T, aq analysisQuerier, dr deviceRegistrar, tes
 
 	r := gin.New()
 	r.Use(middleware.ErrorHandler(log))
-	r.Use(middleware.AuthMiddleware(analysisTestSecret, &fakeProvisioner{user: testUser}, log))
+	r.Use(middleware.AuthMiddleware(analysisTestSecret, "", &fakeProvisioner{user: testUser}, log))
 
 	h := NewMoodHandler(aq, dr, &fakeStreakFreezer{})
 	r.GET("/mood/weekly", h.WeeklyMood)

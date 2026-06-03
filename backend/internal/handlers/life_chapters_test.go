@@ -86,7 +86,7 @@ func chapterTestRouter(repo lifeChapterRepo, claude chapterSummarizer, plan mode
 
 	r := gin.New()
 	r.Use(middleware.ErrorHandler(log))
-	r.Use(middleware.AuthMiddleware(chapterTestSecret, &fakeProvisioner{user: testUser}, log))
+	r.Use(middleware.AuthMiddleware(chapterTestSecret, "", &fakeProvisioner{user: testUser}, log))
 
 	h := NewLifeChapterHandler(repo, claude)
 	r.GET("/chapters", h.List)

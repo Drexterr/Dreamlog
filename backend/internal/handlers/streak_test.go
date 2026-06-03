@@ -45,7 +45,7 @@ func streakTestRouter(t *testing.T, freezer streakFreezer, aq analysisQuerier, t
 
 	r := gin.New()
 	r.Use(middleware.ErrorHandler(log))
-	r.Use(middleware.AuthMiddleware(streakTestSecret, &fakeProvisioner{user: testUser}, log))
+	r.Use(middleware.AuthMiddleware(streakTestSecret, "", &fakeProvisioner{user: testUser}, log))
 
 	h := NewMoodHandler(aq, &fakeDeviceRegistrar{}, freezer)
 	r.GET("/mood/streak", h.Streak)

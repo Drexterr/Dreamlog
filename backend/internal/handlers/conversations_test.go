@@ -118,7 +118,7 @@ func newConvTestRouter(t *testing.T, cr services.ConvRepository, er services.Ent
 
 	r := gin.New()
 	r.Use(middleware.ErrorHandler(log))
-	r.Use(middleware.AuthMiddleware(convTestSecret, &fakeProvisioner{user: testUser}, log))
+	r.Use(middleware.AuthMiddleware(convTestSecret, "", &fakeProvisioner{user: testUser}, log))
 
 	h := NewConversationHandler(svc)
 	r.POST("/entries/:id/conversation", h.GetOrCreate)

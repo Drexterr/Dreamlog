@@ -61,7 +61,7 @@ func newInsightTestRouter(t *testing.T, repo insightRepo, streak insightStreakQu
 
 	r := gin.New()
 	r.Use(middleware.ErrorHandler(log))
-	r.Use(middleware.AuthMiddleware(insightTestSecret, &fakeProvisioner{user: testUser}, log))
+	r.Use(middleware.AuthMiddleware(insightTestSecret, "", &fakeProvisioner{user: testUser}, log))
 
 	h := NewInsightHandler(repo, streak)
 	r.GET("/insights/card", h.GetCard)
