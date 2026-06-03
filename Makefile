@@ -314,22 +314,29 @@ mobile-build-dev-local:
 mobile-build-preview-local:
 	cd mobile && npx eas build --profile preview-local --platform android --local --output ./build/dreamlog-preview.apk
 
-JAVA_HOME ?= C:\Program Files\Android\Android Studio\jbr
-ANDROID_HOME ?= $(USERPROFILE)\AppData\Local\Android\Sdk
+JAVA_HOME   = C:\Program Files\Android\Android Studio\jbr
+ANDROID_SDK = $(USERPROFILE)\AppData\Local\Android\Sdk
+
+# Write local.properties so Gradle can find the Android SDK.
+# Called after every prebuild because --clean wipes the android/ directory.
+write-local-props:
+	@echo sdk.dir=$(ANDROID_SDK:\=\\) > mobile\android\local.properties
 
 # Build APK directly using Gradle — works on Windows, no EAS/cloud needed.
 # Requires: Android Studio installed (includes JDK + Android SDK).
 # First run takes ~3 min (Gradle download); subsequent runs ~1 min.
-apk:
+apk: write-local-props
 	cd mobile && npx expo prebuild --platform android --clean
-	set "JAVA_HOME=$(JAVA_HOME)" && set "ANDROID_HOME=$(ANDROID_HOME)" && cd mobile\android && gradlew.bat assembleRelease
+	@echo sdk.dir=$(ANDROID_SDK:\=\\) > mobile\android\local.properties
+	set "JAVA_HOME=$(JAVA_HOME)" && cd mobile\android && gradlew.bat assembleRelease
 	@echo.
 	@echo APK ready: mobile\android\app\build\outputs\apk\release\app-release.apk
 
 # Debug APK (faster build, no signing needed — good for quick device testing).
 apk-debug:
 	cd mobile && npx expo prebuild --platform android --clean
-	set "JAVA_HOME=$(JAVA_HOME)" && set "ANDROID_HOME=$(ANDROID_HOME)" && cd mobile\android && gradlew.bat assembleDebug
+	@echo sdk.dir=$(ANDROID_SDK:\=\\) > mobile\android\local.properties
+	set "JAVA_HOME=$(JAVA_HOME)" && cd mobile\android && gradlew.bat assembleDebug
 	@echo.
 	@echo APK ready: mobile\android\app\build\outputs\apk\debug\app-debug.apk
 
