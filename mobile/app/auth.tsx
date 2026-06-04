@@ -7,7 +7,6 @@ import {
   StyleSheet,
   KeyboardAvoidingView,
   Platform,
-  Alert,
   ScrollView,
   ActivityIndicator,
 } from 'react-native';
@@ -25,12 +24,60 @@ GoogleSignin.configure({
 
 type Mode = 'login' | 'register';
 
+function GoogleLogo() {
+  return (
+    <View style={googleLogoStyles.container}>
+      <View style={googleLogoStyles.blue} />
+      <View style={googleLogoStyles.bar} />
+      <Text style={googleLogoStyles.letter}>G</Text>
+    </View>
+  );
+}
+
+const googleLogoStyles = StyleSheet.create({
+  container: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: '#fff',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  blue: {
+    position: 'absolute',
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    borderWidth: 3,
+    borderColor: '#4285F4',
+    borderRightColor: '#34A853',
+    borderBottomColor: '#FBBC05',
+    transform: [{ rotate: '-45deg' }],
+  },
+  bar: {
+    position: 'absolute',
+    right: 0,
+    top: '50%',
+    width: 8,
+    height: 3,
+    backgroundColor: '#4285F4',
+    marginTop: -1.5,
+  },
+  letter: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#4285F4',
+    lineHeight: 20,
+  },
+});
+
 export default function AuthScreen() {
   const [mode, setMode] = useState<Mode>('login');
   const [email, setEmail] = useState('');
   const [name, setName] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
   const router = useRouter();
   const { colors } = useTheme();
 
@@ -39,9 +86,11 @@ export default function AuthScreen() {
     setEmail('');
     setName('');
     setPassword('');
+    setError('');
   };
 
   const handleGoogleSignIn = async () => {
+    setError('');
     setLoading(true);
     try {
       await GoogleSignin.hasPlayServices();
@@ -51,17 +100,17 @@ export default function AuthScreen() {
       const idToken = response.data?.idToken;
       if (!idToken) throw new Error('No ID token from Google');
 
-      const { error } = await supabase.auth.signInWithIdToken({
+      const { error: signInError } = await supabase.auth.signInWithIdToken({
         provider: 'google',
         token: idToken,
       });
-      if (error) throw error;
+      if (signInError) throw signInError;
 
       const user = await api.me();
       router.replace(user.goal ? '/(tabs)' : '/onboarding' as any);
     } catch (err: any) {
       if (isErrorWithCode(err) && err.code === statusCodes.SIGN_IN_CANCELLED) return;
-      Alert.alert('Google Sign-In Failed', err?.message ?? 'Please try again.');
+      setError(err?.message ?? 'Google sign-in failed. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -73,22 +122,23 @@ export default function AuthScreen() {
     const nameTrimmed = name.trim();
 
     if (!emailTrimmed || !passwordTrimmed) {
-      Alert.alert('Missing fields', 'Email and password are required.');
+      setError('Email and password are required.');
       return;
     }
     if (mode === 'register' && !nameTrimmed) {
-      Alert.alert('Missing fields', 'Name is required.');
+      setError('Name is required.');
       return;
     }
     if (mode === 'register' && passwordTrimmed.length < 6) {
-      Alert.alert('Weak password', 'Password must be at least 6 characters.');
+      setError('Password must be at least 6 characters.');
       return;
     }
 
+    setError('');
     setLoading(true);
     try {
       if (mode === 'register') {
-        const { data, error } = await supabase.auth.signUp({
+        const { data, error: signUpError } = await supabase.auth.signUp({
           email: emailTrimmed,
           password: passwordTrimmed,
           options: {
@@ -97,36 +147,29 @@ export default function AuthScreen() {
           },
         });
 
-        if (error) throw error;
+        if (signUpError) throw signUpError;
 
         if (!data.session) {
-          // Email confirmation required — Supabase sent a confirmation email.
-          Alert.alert(
-            'Check your email',
-            'We sent a confirmation link to ' + emailTrimmed + '. Click it to activate your account, then sign in.',
-          );
+          // Email confirmation required — show inline info instead of Alert.
+          setError('Check your email — we sent a confirmation link to ' + emailTrimmed + '. Click it, then sign in here.');
           reset('login');
           return;
         }
 
-        // Session available immediately (email confirmation disabled in Supabase).
-        // onAuthStateChange already stored the token via storeToken().
         router.replace('/onboarding' as any);
       } else {
-        const { error } = await supabase.auth.signInWithPassword({
+        const { error: signInError } = await supabase.auth.signInWithPassword({
           email: emailTrimmed,
           password: passwordTrimmed,
         });
 
-        if (error) throw error;
+        if (signInError) throw signInError;
 
-        // onAuthStateChange has stored the token — safe to call api.me() now.
         const user = await api.me();
         router.replace(user.goal ? '/(tabs)' : '/onboarding' as any);
       }
     } catch (err: any) {
-      const message = err?.message ?? (mode === 'login' ? 'Invalid email or password.' : 'Registration failed.');
-      Alert.alert('Error', message);
+      setError(err?.message ?? (mode === 'login' ? 'Invalid email or password.' : 'Registration failed.'));
     } finally {
       setLoading(false);
     }
@@ -170,7 +213,7 @@ export default function AuthScreen() {
               <ActivityIndicator color={colors.textMuted} size="small" />
             ) : (
               <>
-                <Text style={styles.googleIcon}>G</Text>
+                <GoogleLogo />
                 <Text style={[styles.googleBtnText, { color: colors.textPrimary }]}>Continue with Google</Text>
               </>
             )}
@@ -186,9 +229,9 @@ export default function AuthScreen() {
           <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
             {mode === 'register' && (
               <TextInput
-                style={[styles.input, { backgroundColor: colors.cardSolid, borderColor: colors.borderFaint, color: colors.textPrimary }]}
+                style={[styles.input, { backgroundColor: colors.cardSolid, borderColor: error ? '#ef4444' : colors.borderFaint, color: colors.textPrimary }]}
                 value={name}
-                onChangeText={setName}
+                onChangeText={v => { setName(v); setError(''); }}
                 placeholder="Your name"
                 placeholderTextColor={colors.textFaint}
                 autoCapitalize="words"
@@ -198,9 +241,9 @@ export default function AuthScreen() {
             )}
 
             <TextInput
-              style={[styles.input, { backgroundColor: colors.cardSolid, borderColor: colors.borderFaint, color: colors.textPrimary }]}
+              style={[styles.input, { backgroundColor: colors.cardSolid, borderColor: error ? '#ef4444' : colors.borderFaint, color: colors.textPrimary }]}
               value={email}
-              onChangeText={setEmail}
+              onChangeText={v => { setEmail(v); setError(''); }}
               placeholder="Email"
               placeholderTextColor={colors.textFaint}
               keyboardType="email-address"
@@ -210,9 +253,9 @@ export default function AuthScreen() {
             />
 
             <TextInput
-              style={[styles.input, { backgroundColor: colors.cardSolid, borderColor: colors.borderFaint, color: colors.textPrimary }]}
+              style={[styles.input, { backgroundColor: colors.cardSolid, borderColor: error ? '#ef4444' : colors.borderFaint, color: colors.textPrimary }]}
               value={password}
-              onChangeText={setPassword}
+              onChangeText={v => { setPassword(v); setError(''); }}
               placeholder={mode === 'register' ? 'Password (min 6 characters)' : 'Password'}
               placeholderTextColor={colors.textFaint}
               secureTextEntry
@@ -221,6 +264,10 @@ export default function AuthScreen() {
               returnKeyType="done"
               onSubmitEditing={handleSubmit}
             />
+
+            {!!error && (
+              <Text style={styles.errorText}>{error}</Text>
+            )}
 
             <TouchableOpacity
               style={[styles.button, { backgroundColor: colors.purple600, shadowColor: colors.purple500 }, loading && styles.buttonLoading]}
@@ -325,11 +372,6 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     width: '100%',
   },
-  googleIcon: {
-    fontSize: 18,
-    fontFamily: 'Nunito_700Bold',
-    color: '#4285F4',
-  },
   googleBtnText: {
     fontSize: 15,
     fontFamily: 'Nunito_600SemiBold',
@@ -361,6 +403,12 @@ const styles = StyleSheet.create({
     elevation: 6,
   },
   buttonLoading: { opacity: 0.6 },
+  errorText: {
+    fontSize: 13,
+    fontFamily: 'Nunito_400Regular',
+    color: '#ef4444',
+    lineHeight: 18,
+  },
   buttonText: {
     color: '#fff',
     fontSize: 16,

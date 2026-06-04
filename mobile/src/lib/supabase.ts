@@ -33,12 +33,15 @@ supabase.auth.onAuthStateChange(async (_event, session) => {
 async function handleDeepLink(url: string) {
   const fragment = url.split('#')[1] ?? url.split('?')[1] ?? '';
   if (!fragment) return;
-  const params = Object.fromEntries(
-    fragment.split('&').map(pair => {
-      const [k = '', v = ''] = pair.split('=');
-      return [decodeURIComponent(k), decodeURIComponent(v)];
-    })
-  );
+  // Split at the FIRST '=' only so base64-padded tokens are preserved.
+  const params: Record<string, string> = {};
+  fragment.split('&').forEach(pair => {
+    const eqIdx = pair.indexOf('=');
+    if (eqIdx === -1) return;
+    const k = decodeURIComponent(pair.slice(0, eqIdx));
+    const v = decodeURIComponent(pair.slice(eqIdx + 1));
+    params[k] = v;
+  });
   if (params.access_token && params.refresh_token) {
     await supabase.auth.setSession({
       access_token: params.access_token,
@@ -49,7 +52,12 @@ async function handleDeepLink(url: string) {
   }
 }
 
-// Handle app launched directly from the email confirmation link.
-Linking.getInitialURL().then(url => { if (url) handleDeepLink(url); });
-// Handle confirmation link while the app is already running.
+// Resolves once the initial deep link (if any) has been fully processed.
+// _layout.tsx awaits this before calling getSession() so the session is
+// guaranteed to be set before we decide where to navigate.
+export const deepLinkReady: Promise<void> = Linking.getInitialURL()
+  .then(url => { if (url) return handleDeepLink(url); })
+  .catch(() => {});
+
+// Handle confirmation link while the app is already running in the background.
 Linking.addEventListener('url', ({ url }) => { handleDeepLink(url); });

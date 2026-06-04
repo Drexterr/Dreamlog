@@ -17,7 +17,7 @@ import {
   Nunito_700Bold,
 } from '@expo-google-fonts/nunito';
 import { api, storeToken } from '../src/api/client';
-import { supabase } from '../src/lib/supabase';
+import { supabase, deepLinkReady } from '../src/lib/supabase';
 import { ThemeProvider } from '../src/context/ThemeContext';
 import { detectAndCacheRegion } from '../src/services/region';
 
@@ -51,6 +51,10 @@ export default function RootLayout() {
   useEffect(() => {
     (async () => {
       try {
+        // Wait for any deep link to be processed first so setSession() completes
+        // before we read the session — avoids the race where a confirmation link
+        // opens the app but getSession() runs before the tokens are stored.
+        await deepLinkReady;
         const { data: { session } } = await supabase.auth.getSession();
         if (!session) {
           setHasToken(false);
