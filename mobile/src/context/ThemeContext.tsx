@@ -46,24 +46,16 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     if (isAnimating) return;
     setIsAnimating(true);
 
-    const targetColors = THEMES[newTheme];
-    setBubbleColor(targetColors.bg);
-    
-    // Set tap coordinates
+    setBubbleColor(THEMES[newTheme].bg);
     bubblePosition.x = tapX;
     bubblePosition.y = tapY;
 
-    // Reset and start animations
     bubbleScale.setValue(0);
     bubbleOpacity.setValue(1);
 
-    // Calculate maximum distance to a screen corner to cover the screen
-    // The screen coordinates range from [0, SW] and [0, SH]
     const dx = Math.max(tapX, SW - tapX);
     const dy = Math.max(tapY, SH - tapY);
     const maxDistance = Math.sqrt(dx * dx + dy * dy);
-    
-    // Target scale needs to expand BUBBLE_RADIUS * scale to cover the screen
     const targetScale = (maxDistance / BUBBLE_RADIUS) * 1.2;
 
     Animated.timing(bubbleScale, {
@@ -72,24 +64,14 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
       easing: Easing.bezier(0.16, 1, 0.3, 1),
       useNativeDriver: true,
     }).start(() => {
-      // Fade out after completion
-      Animated.timing(bubbleOpacity, {
-        toValue: 0,
-        duration: 300,
-        easing: Easing.out(Easing.quad),
-        useNativeDriver: true,
-      }).start(() => {
-        bubbleScale.setValue(0);
-        setIsAnimating(false);
-      });
-    });
-
-    // Switch theme halfway through expansion when screen is covered
-    setTimeout(() => {
+      // Bubble has fully covered the screen behind the content.
+      // Switch theme now — new bg matches bubble color so it's seamless.
       setTheme(newTheme);
-      // Persist theme to database in background
       api.updateMe({ goal: newTheme }).catch(() => {});
-    }, 380);
+      bubbleScale.setValue(0);
+      bubbleOpacity.setValue(0);
+      setIsAnimating(false);
+    });
   };
 
   const ThemeBubbleOverlay = useCallback(() => {
@@ -129,8 +111,9 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
         ThemeBubbleOverlay,
       }}
     >
-      {children}
+      {/* Bubble renders BEFORE children so it sits behind all screen content */}
       <ThemeBubbleOverlay />
+      {children}
     </ThemeContext.Provider>
   );
 }
@@ -145,7 +128,7 @@ export function useTheme() {
 
 const styles = StyleSheet.create({
   overlay: {
-    zIndex: 99999,
+    // No zIndex — rendered before children so it naturally sits behind them
   },
   bubble: {
     position: 'absolute',

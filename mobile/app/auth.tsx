@@ -297,7 +297,7 @@ export default function AuthScreen() {
         onRequestClose={() => setEmailModal('')}
       >
         <View style={styles.modalOverlay}>
-          <View style={[styles.modalCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+          <View style={[styles.modalCard, { backgroundColor: colors.cardSolid, borderColor: colors.border }]}>
             <View style={[styles.modalIconWrap, { backgroundColor: colors.purple600 + '33' }]}>
               <Text style={styles.modalIcon}>✉️</Text>
             </View>
