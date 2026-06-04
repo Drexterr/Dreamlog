@@ -15,6 +15,7 @@
     "@expo-google-fonts/nunito": "0.4.2",
     "@react-native-async-storage/async-storage": "2.2.0",
     "@react-native-community/netinfo": "11.4.1",
+    "@react-native-google-signin/google-signin": "^16.1.2",
     "@stripe/stripe-react-native": "^0.50.3",
     "@supabase/supabase-js": "^2.107.0",
     "axios": "^1.7.2",

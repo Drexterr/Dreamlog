@@ -13,9 +13,15 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
+import { GoogleSignin, statusCodes, isErrorWithCode } from '@react-native-google-signin/google-signin';
 import { supabase } from '../src/lib/supabase';
 import { api } from '../src/api/client';
 import { useTheme } from '../src/context/ThemeContext';
+
+GoogleSignin.configure({
+  webClientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID,
+  scopes: ['email', 'profile'],
+});
 
 type Mode = 'login' | 'register';
 
@@ -33,6 +39,32 @@ export default function AuthScreen() {
     setEmail('');
     setName('');
     setPassword('');
+  };
+
+  const handleGoogleSignIn = async () => {
+    setLoading(true);
+    try {
+      await GoogleSignin.hasPlayServices();
+      const response = await GoogleSignin.signIn();
+      if (response.type === 'cancelled') return;
+
+      const idToken = response.data?.idToken;
+      if (!idToken) throw new Error('No ID token from Google');
+
+      const { error } = await supabase.auth.signInWithIdToken({
+        provider: 'google',
+        token: idToken,
+      });
+      if (error) throw error;
+
+      const user = await api.me();
+      router.replace(user.goal ? '/(tabs)' : '/onboarding' as any);
+    } catch (err: any) {
+      if (isErrorWithCode(err) && err.code === statusCodes.SIGN_IN_CANCELLED) return;
+      Alert.alert('Google Sign-In Failed', err?.message ?? 'Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleSubmit = async () => {
@@ -125,6 +157,30 @@ export default function AuthScreen() {
             >
               <Text style={[styles.tabText, { color: colors.textMuted }, mode === 'register' && styles.tabTextActive]}>Create account</Text>
             </TouchableOpacity>
+          </View>
+
+          {/* Google Sign-In */}
+          <TouchableOpacity
+            style={[styles.googleBtn, { backgroundColor: colors.card, borderColor: colors.border }]}
+            onPress={handleGoogleSignIn}
+            disabled={loading}
+            activeOpacity={0.8}
+          >
+            {loading ? (
+              <ActivityIndicator color={colors.textMuted} size="small" />
+            ) : (
+              <>
+                <Text style={styles.googleIcon}>G</Text>
+                <Text style={[styles.googleBtnText, { color: colors.textPrimary }]}>Continue with Google</Text>
+              </>
+            )}
+          </TouchableOpacity>
+
+          {/* Divider */}
+          <View style={styles.divider}>
+            <View style={[styles.dividerLine, { backgroundColor: colors.border }]} />
+            <Text style={[styles.dividerText, { color: colors.textMuted }]}>or</Text>
+            <View style={[styles.dividerLine, { backgroundColor: colors.border }]} />
           </View>
 
           <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
@@ -257,6 +313,41 @@ const styles = StyleSheet.create({
     padding: 14,
     fontFamily: 'Nunito_400Regular',
     fontSize: 15,
+  },
+
+  googleBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 10,
+    borderRadius: 14,
+    borderWidth: 1,
+    paddingVertical: 14,
+    width: '100%',
+  },
+  googleIcon: {
+    fontSize: 18,
+    fontFamily: 'Nunito_700Bold',
+    color: '#4285F4',
+  },
+  googleBtnText: {
+    fontSize: 15,
+    fontFamily: 'Nunito_600SemiBold',
+  },
+  divider: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    width: '100%',
+    gap: 10,
+    marginVertical: 4,
+  },
+  dividerLine: {
+    flex: 1,
+    height: 1,
+  },
+  dividerText: {
+    fontSize: 12,
+    fontFamily: 'Nunito_400Regular',
   },
 
   button: {

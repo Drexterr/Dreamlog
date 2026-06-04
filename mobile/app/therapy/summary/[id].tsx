@@ -5,10 +5,11 @@ import {
   ScrollView,
   TouchableOpacity,
   StyleSheet,
-  SafeAreaView,
+  
   ActivityIndicator,
   Share,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { api } from '../../../src/api/client';
 import { useTheme } from '../../../src/context/ThemeContext';

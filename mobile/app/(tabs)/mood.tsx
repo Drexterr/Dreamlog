@@ -4,7 +4,6 @@ import {
   Text,
   ScrollView,
   StyleSheet,
-  SafeAreaView,
   StatusBar,
   ActivityIndicator,
   TouchableOpacity,
@@ -12,6 +11,7 @@ import {
   Alert,
   Modal,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { api } from '../../src/api/client';
 import { useTheme } from '../../src/context/ThemeContext';
 import type { AnnualReview, DailyMood, MoodArcDay, MoodHistoryResponse, StreakInfo, WeeklyReview } from '../../src/types';
