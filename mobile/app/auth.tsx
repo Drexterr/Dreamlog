@@ -9,6 +9,7 @@ import {
   Platform,
   ScrollView,
   ActivityIndicator,
+  Modal,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
@@ -78,6 +79,7 @@ export default function AuthScreen() {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [emailModal, setEmailModal] = useState('');
   const router = useRouter();
   const { colors } = useTheme();
 
@@ -150,8 +152,7 @@ export default function AuthScreen() {
         if (signUpError) throw signUpError;
 
         if (!data.session) {
-          // Email confirmation required — show inline info instead of Alert.
-          setError('Check your email — we sent a confirmation link to ' + emailTrimmed + '. Click it, then sign in here.');
+          setEmailModal(emailTrimmed);
           reset('login');
           return;
         }
@@ -286,6 +287,40 @@ export default function AuthScreen() {
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
+
+      {/* Email verification modal */}
+      <Modal
+        visible={!!emailModal}
+        transparent
+        animationType="fade"
+        statusBarTranslucent
+        onRequestClose={() => setEmailModal('')}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+            <View style={[styles.modalIconWrap, { backgroundColor: colors.purple600 + '33' }]}>
+              <Text style={styles.modalIcon}>✉️</Text>
+            </View>
+            <Text style={[styles.modalTitle, { color: colors.textPrimary }]}>Check your email</Text>
+            <Text style={[styles.modalBody, { color: colors.textSecondary }]}>
+              We sent a verification link to
+            </Text>
+            <Text style={[styles.modalEmail, { color: colors.purple500 ?? '#a78bfa' }]} numberOfLines={1}>
+              {emailModal}
+            </Text>
+            <Text style={[styles.modalBody, { color: colors.textSecondary }]}>
+              Click the link to activate your account, then sign in here.
+            </Text>
+            <TouchableOpacity
+              style={[styles.modalBtn, { backgroundColor: colors.purple600, shadowColor: colors.purple500 }]}
+              onPress={() => setEmailModal('')}
+              activeOpacity={0.85}
+            >
+              <Text style={styles.modalBtnText}>OK, got it</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -403,6 +438,65 @@ const styles = StyleSheet.create({
     elevation: 6,
   },
   buttonLoading: { opacity: 0.6 },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.7)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 32,
+  },
+  modalCard: {
+    width: '100%',
+    borderRadius: 24,
+    borderWidth: 1,
+    padding: 28,
+    alignItems: 'center',
+    gap: 8,
+  },
+  modalIconWrap: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 4,
+  },
+  modalIcon: {
+    fontSize: 30,
+  },
+  modalTitle: {
+    fontSize: 22,
+    fontFamily: 'CormorantGaramond_500Medium',
+    marginBottom: 4,
+  },
+  modalBody: {
+    fontSize: 14,
+    fontFamily: 'Nunito_400Regular',
+    textAlign: 'center',
+    lineHeight: 20,
+  },
+  modalEmail: {
+    fontSize: 14,
+    fontFamily: 'Nunito_700Bold',
+    textAlign: 'center',
+  },
+  modalBtn: {
+    marginTop: 12,
+    width: '100%',
+    paddingVertical: 16,
+    borderRadius: 14,
+    alignItems: 'center',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.4,
+    shadowRadius: 12,
+    elevation: 6,
+  },
+  modalBtnText: {
+    color: '#fff',
+    fontSize: 16,
+    fontFamily: 'Nunito_600SemiBold',
+    letterSpacing: 0.5,
+  },
   errorText: {
     fontSize: 13,
     fontFamily: 'Nunito_400Regular',
