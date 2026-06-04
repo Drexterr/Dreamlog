@@ -7,20 +7,33 @@ const STORAGE_KEY = 'dreamlog_region_currency';
 
 // Detects whether the user's device is set to India's region.
 // Result is cached so subsequent reads are instant.
+// Detection checks both regionCode and currencyCode — many Indian Android devices
+// use "English (US)" as their language (regionCode: 'US') but still report
+// currencyCode: 'INR', so checking currency is more reliable.
 export async function detectAndCacheRegion(): Promise<RegionCurrency> {
   const cached = await AsyncStorage.getItem(STORAGE_KEY);
   if (cached === 'inr' || cached === 'usd') return cached;
 
   try {
     const locales = getLocales();
-    // getLocales() returns locales in preference order; first entry is the primary locale
-    const regionCode = locales[0]?.regionCode ?? '';
-    const currency: RegionCurrency = regionCode === 'IN' ? 'inr' : 'usd';
+    const primary = locales[0];
+    const isIndia =
+      primary?.regionCode === 'IN' ||
+      primary?.currencyCode === 'INR' ||
+      locales.some((l) => l.regionCode === 'IN' || l.currencyCode === 'INR');
+    const currency: RegionCurrency = isIndia ? 'inr' : 'usd';
     await AsyncStorage.setItem(STORAGE_KEY, currency);
     return currency;
   } catch {
     return 'usd';
   }
+}
+
+// Force re-detection and overwrite the cached value.
+// Call this if the cached value is known to be stale.
+export async function resetAndDetectRegion(): Promise<RegionCurrency> {
+  await AsyncStorage.removeItem(STORAGE_KEY);
+  return detectAndCacheRegion();
 }
 
 export async function getCachedRegion(): Promise<RegionCurrency | null> {

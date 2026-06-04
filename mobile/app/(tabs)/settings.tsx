@@ -116,6 +116,7 @@ export default function SettingsScreen() {
   const { colors } = useTheme();
 
   const [user, setUser] = useState<User | null>(null);
+  const [loadError, setLoadError] = useState(false);
   const [entryCount, setEntryCount] = useState(0);
   const [currentPlan, setCurrentPlan] = useState<Plan>('free');
   const [nudgeEnabled, setNudgeEnabled] = useState(true);
@@ -126,21 +127,24 @@ export default function SettingsScreen() {
   const [savingHour, setSavingHour] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
-  useEffect(() => {
+  const loadProfile = () => {
+    setLoadError(false);
     api.me()
       .then((u) => {
         setUser(u);
         setNudgeEnabled(u.nudge_enabled ?? true);
         setNudgeHour(u.fcm_nudge_hour ?? 8);
       })
-      .catch(() => {});
+      .catch(() => setLoadError(true));
     api.getBillingPlan()
       .then((b) => setCurrentPlan(b.plan))
       .catch(() => {});
     api.listEntries(1, 1)
       .then((r) => setEntryCount(r.total))
       .catch(() => {});
-  }, []);
+  };
+
+  useEffect(() => { loadProfile(); }, []);
 
   const handleNudgeToggle = async (value: boolean) => {
     setNudgeEnabled(value);
@@ -227,9 +231,11 @@ export default function SettingsScreen() {
 
   const displayName = user?.preferred_name || user?.name || '—';
   const avatarText = user ? initials(user.preferred_name || user.name || '?') : '?';
-  const profileSub = user
-    ? `${entryCount} ${entryCount === 1 ? 'entry' : 'entries'} · ${PLAN_LABELS[currentPlan]}`
-    : 'Loading…';
+  const profileSub = loadError
+    ? 'Could not load profile — tap to retry'
+    : user
+      ? `${entryCount} ${entryCount === 1 ? 'entry' : 'entries'} · ${PLAN_LABELS[currentPlan]}`
+      : 'Loading…';
 
   if (deleting) {
     return (
@@ -253,8 +259,8 @@ export default function SettingsScreen() {
 
           {/* Profile card */}
           <TouchableOpacity
-            style={[styles.profileCard, { backgroundColor: colors.card, borderColor: colors.border }]}
-            onPress={() => setShowProfileModal(true)}
+            style={[styles.profileCard, { backgroundColor: colors.card, borderColor: loadError ? colors.danger : colors.border }]}
+            onPress={() => loadError ? loadProfile() : setShowProfileModal(true)}
             activeOpacity={0.75}
           >
             <View style={[styles.avatar, { backgroundColor: colors.brand }]}>

@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Linking } from 'react-native';
 import { storeToken, clearToken } from '../api/client';
 
 const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL!;
@@ -23,3 +24,32 @@ supabase.auth.onAuthStateChange(async (_event, session) => {
     await clearToken();
   }
 });
+
+// Parse auth tokens from a Supabase deep link callback URL and establish the session.
+// Supabase sends tokens in the URL fragment for implicit flow:
+//   dreamlog://#access_token=...&refresh_token=...&type=signup
+// or a code param for PKCE flow:
+//   dreamlog://?code=...
+async function handleDeepLink(url: string) {
+  const fragment = url.split('#')[1] ?? url.split('?')[1] ?? '';
+  if (!fragment) return;
+  const params = Object.fromEntries(
+    fragment.split('&').map(pair => {
+      const [k = '', v = ''] = pair.split('=');
+      return [decodeURIComponent(k), decodeURIComponent(v)];
+    })
+  );
+  if (params.access_token && params.refresh_token) {
+    await supabase.auth.setSession({
+      access_token: params.access_token,
+      refresh_token: params.refresh_token,
+    });
+  } else if (params.code) {
+    await supabase.auth.exchangeCodeForSession(params.code);
+  }
+}
+
+// Handle app launched directly from the email confirmation link.
+Linking.getInitialURL().then(url => { if (url) handleDeepLink(url); });
+// Handle confirmation link while the app is already running.
+Linking.addEventListener('url', ({ url }) => { handleDeepLink(url); });

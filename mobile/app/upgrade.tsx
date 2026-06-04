@@ -14,7 +14,7 @@ import { useRouter } from 'expo-router';
 import { useStripe } from '@stripe/stripe-react-native';
 import { api } from '../src/api/client';
 import { useTheme } from '../src/context/ThemeContext';
-import { detectAndCacheRegion } from '../src/services/region';
+import { resetAndDetectRegion } from '../src/services/region';
 import type { Plan, BillingPlanResponse } from '../src/types';
 
 type Currency = 'inr' | 'usd';
@@ -94,7 +94,7 @@ export default function UpgradeScreen() {
   useEffect(() => {
     Promise.all([
       api.getBillingPlan(),
-      detectAndCacheRegion(),
+      resetAndDetectRegion(),
     ]).then(([plan, region]) => {
       setBilling(plan);
       setCurrency(region);

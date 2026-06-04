@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useTheme } from '../../src/context/ThemeContext';
-import { detectAndCacheRegion } from '../../src/services/region';
+import { resetAndDetectRegion } from '../../src/services/region';
 import type { RegionCurrency } from '../../src/services/region';
 
 // ── Pricing data ──────────────────────────────────────────────────────────────
@@ -290,7 +290,7 @@ export default function TherapyPricingScreen() {
   const [currency, setCurrency] = useState<RegionCurrency | null>(null);
 
   useEffect(() => {
-    detectAndCacheRegion().then(setCurrency).catch(() => setCurrency('usd'));
+    resetAndDetectRegion().then(setCurrency).catch(() => setCurrency('usd'));
   }, []);
 
   const activeCurrency: RegionCurrency = currency ?? 'usd';

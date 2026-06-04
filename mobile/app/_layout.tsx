@@ -104,6 +104,32 @@ export default function RootLayout() {
     }
   }, [ready, fontsLoaded, fontError]);
 
+  // After startup, listen for auth state changes triggered by deep links (e.g. email
+  // confirmation). This handles the case where the user taps the confirmation link and
+  // Supabase fires SIGNED_IN after the initial redirect logic has already run.
+  useEffect(() => {
+    if (!ready) return;
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === 'SIGNED_IN' && session) {
+        try {
+          await storeToken(session.access_token);
+          const user = await api.me();
+          if (!user.goal) {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            router.replace('/onboarding' as any);
+          } else {
+            router.replace('/(tabs)');
+          }
+        } catch {
+          // ignore — startup effect will handle recovery on next launch
+        }
+      } else if (event === 'SIGNED_OUT') {
+        router.replace('/auth');
+      }
+    });
+    return () => subscription.unsubscribe();
+  }, [ready]);
+
   if (!ready || (!fontsLoaded && !fontError)) {
     return <View style={{ flex: 1, backgroundColor: '#0f0c1e' }} />;
   }

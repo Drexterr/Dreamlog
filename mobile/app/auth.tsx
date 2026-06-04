@@ -59,7 +59,10 @@ export default function AuthScreen() {
         const { data, error } = await supabase.auth.signUp({
           email: emailTrimmed,
           password: passwordTrimmed,
-          options: { data: { full_name: nameTrimmed } },
+          options: {
+            data: { full_name: nameTrimmed },
+            emailRedirectTo: 'dreamlog://auth/callback',
+          },
         });
 
         if (error) throw error;

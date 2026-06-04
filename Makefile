@@ -322,17 +322,17 @@ JAVA_HOME = C:\Program Files\Android\Android Studio\jbr
 apk:
 	cd mobile && npx expo prebuild --platform android --clean
 	powershell -ExecutionPolicy Bypass -File scripts\write-local-props.ps1
-	set "JAVA_HOME=$(JAVA_HOME)" && cd mobile\android && gradlew.bat assembleRelease
-	@echo.
-	@echo APK ready: mobile\android\app\build\outputs\apk\release\app-release.apk
+	powershell -ExecutionPolicy Bypass -File scripts\run-gradle.ps1 -Task assembleRelease
+	@echo ""
+	@echo "APK ready: mobile\android\app\build\outputs\apk\release\app-release.apk"
 
 # Debug APK (faster build, no signing needed — good for quick device testing).
 apk-debug:
 	cd mobile && npx expo prebuild --platform android --clean
 	powershell -ExecutionPolicy Bypass -File scripts\write-local-props.ps1
-	set "JAVA_HOME=$(JAVA_HOME)" && cd mobile\android && gradlew.bat assembleDebug
-	@echo.
-	@echo APK ready: mobile\android\app\build\outputs\apk\debug\app-debug.apk
+	powershell -ExecutionPolicy Bypass -File scripts\run-gradle.ps1 -Task assembleDebug
+	@echo ""
+	@echo "APK ready: mobile\android\app\build\outputs\apk\debug\app-debug.apk"
 
 # Trigger build on GitHub Actions (fallback if Android Studio is not installed).
 apk-ci:
