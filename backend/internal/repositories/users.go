@@ -21,7 +21,7 @@ func NewUserRepository(db *pgxpool.Pool) *UserRepository {
 	return &UserRepository{db: db}
 }
 
-const userColumns = `id, supabase_id, email, name, timezone, fcm_nudge_hour, nudge_enabled, goal, preferred_name, streak_freeze_count, plan, plan_expires_at, age_range, created_at, updated_at`
+const userColumns = `id, supabase_id, email, name, timezone, fcm_nudge_hour, nudge_enabled, goal, preferred_name, streak_freeze_count, plan, plan_expires_at, age_range, country, is_deleted, deleted_at, first_joined_at, reregistered_at, reregistration_count, created_at, updated_at`
 
 // rowScanner is satisfied by both pgx.Row and pgx.Rows — avoids a direct pgx type in the signature.
 type rowScanner interface {
@@ -36,7 +36,8 @@ func scanUser(row rowScanner) (*models.User, error) {
 		&u.Goal, &u.PreferredName,
 		&u.StreakFreezeCount,
 		&u.Plan, &u.PlanExpiresAt,
-		&u.AgeRange,
+		&u.AgeRange, &u.Country,
+		&u.IsDeleted, &u.DeletedAt, &u.FirstJoinedAt, &u.ReregisteredAt, &u.ReregistrationCount,
 		&u.CreatedAt, &u.UpdatedAt,
 	)
 	if err != nil {
@@ -54,6 +55,7 @@ type ProfileUpdate struct {
 	NudgeEnabled  *bool
 	Goal          *string
 	AgeRange      *string
+	Country       *string
 }
 
 // UpdateProfile applies whichever fields are non-nil in a single UPDATE.
@@ -95,6 +97,11 @@ func (r *UserRepository) UpdateProfile(ctx context.Context, id uuid.UUID, p Prof
 	if p.AgeRange != nil {
 		setClauses = append(setClauses, fmt.Sprintf("age_range = $%d", idx))
 		args = append(args, *p.AgeRange)
+		idx++
+	}
+	if p.Country != nil {
+		setClauses = append(setClauses, fmt.Sprintf("country = $%d", idx))
+		args = append(args, *p.Country)
 		idx++
 	}
 
@@ -179,15 +186,53 @@ func (r *UserRepository) UpdateName(ctx context.Context, id uuid.UUID, name stri
 	return u, nil
 }
 
-// GetByEmail fetches a user by email address.
+// GetByEmail fetches an active (non-deleted) user by email address.
 func (r *UserRepository) GetByEmail(ctx context.Context, email string) (*models.User, error) {
-	q := `SELECT ` + userColumns + ` FROM users WHERE email = $1`
+	q := `SELECT ` + userColumns + ` FROM users WHERE email = $1 AND is_deleted = false`
 	u, err := scanUser(r.db.QueryRow(ctx, q, email))
 	if errors.Is(err, pgx.ErrNoRows) {
 		return nil, nil
 	}
 	if err != nil {
 		return nil, fmt.Errorf("users.GetByEmail: %w", err)
+	}
+	return u, nil
+}
+
+// GetByEmailIncDeleted fetches a user by email regardless of deletion status.
+// Used during re-registration to detect and reactivate soft-deleted accounts.
+func (r *UserRepository) GetByEmailIncDeleted(ctx context.Context, email string) (*models.User, error) {
+	q := `SELECT ` + userColumns + ` FROM users WHERE email = $1`
+	u, err := scanUser(r.db.QueryRow(ctx, q, email))
+	if errors.Is(err, pgx.ErrNoRows) {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, fmt.Errorf("users.GetByEmailIncDeleted: %w", err)
+	}
+	return u, nil
+}
+
+// Reactivate restores a soft-deleted account for the given user ID and updates credentials.
+func (r *UserRepository) Reactivate(ctx context.Context, id uuid.UUID, name, passwordHash string) (*models.User, error) {
+	q := `
+		UPDATE users
+		SET is_deleted           = false,
+		    deleted_at           = NULL,
+		    name                 = $2,
+		    password_hash        = $3,
+		    reregistered_at      = NOW(),
+		    reregistration_count = reregistration_count + 1,
+		    updated_at           = NOW()
+		WHERE id = $1
+		RETURNING ` + userColumns
+
+	u, err := scanUser(r.db.QueryRow(ctx, q, id, name, passwordHash))
+	if errors.Is(err, pgx.ErrNoRows) {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, fmt.Errorf("users.Reactivate: %w", err)
 	}
 	return u, nil
 }
@@ -327,14 +372,18 @@ func (r *UserRepository) UpdatePlan(ctx context.Context, id uuid.UUID, plan mode
 	return u, nil
 }
 
-// Delete permanently removes the user and all cascading data (entries, analyses, conversations, etc.).
+// Delete soft-deletes the user by setting is_deleted=true and recording deleted_at.
+// Data is retained for audit and re-registration purposes.
 func (r *UserRepository) Delete(ctx context.Context, id uuid.UUID) error {
-	tag, err := r.db.Exec(ctx, `DELETE FROM users WHERE id = $1`, id)
+	tag, err := r.db.Exec(ctx,
+		`UPDATE users SET is_deleted = true, deleted_at = NOW(), updated_at = NOW() WHERE id = $1 AND is_deleted = false`,
+		id,
+	)
 	if err != nil {
 		return fmt.Errorf("users.Delete: %w", err)
 	}
 	if tag.RowsAffected() == 0 {
-		return fmt.Errorf("users.Delete: not found")
+		return fmt.Errorf("users.Delete: not found or already deleted")
 	}
 	return nil
 }

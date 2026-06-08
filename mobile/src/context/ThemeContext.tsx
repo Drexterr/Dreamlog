@@ -8,6 +8,7 @@ interface ThemeContextProps {
   theme: ThemeKey;
   colors: typeof THEMES[ThemeKey];
   moodToColor: (score: number) => string;
+  setTheme: (theme: ThemeKey) => void;
   setThemeWithBubble: (theme: ThemeKey, tapX: number, tapY: number) => void;
   ThemeBubbleOverlay: React.FC;
 }
@@ -107,6 +108,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
         theme,
         colors: currentColors,
         moodToColor: (score) => moodToColor(score, currentColors),
+        setTheme,
         setThemeWithBubble,
         ThemeBubbleOverlay,
       }}

@@ -80,9 +80,14 @@ export interface User {
   nudge_enabled: boolean;
   goal?: UserGoal;
   age_range?: AgeRange;
+  country?: string;            // ISO 3166-1 alpha-2 (e.g. "IN", "US", "DE")
   streak_freeze_count: number;
   plan: Plan;
-  plan_expires_at?: string; // RFC3339, null if no expiry
+  plan_expires_at?: string;    // RFC3339, null if no expiry
+  is_deleted: boolean;
+  first_joined_at?: string;    // RFC3339 — original registration date
+  reregistered_at?: string;    // RFC3339 — set if account was deleted and re-registered
+  reregistration_count: number;
   created_at: string;
   updated_at: string;
 }

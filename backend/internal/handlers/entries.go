@@ -57,7 +57,11 @@ func (h *EntryHandler) Create(c *gin.Context) {
 		return
 	}
 
-	entry, err := h.svc.Create(c.Request.Context(), user.ID, &input)
+	userCountry := ""
+	if user.Country != nil {
+		userCountry = *user.Country
+	}
+	entry, err := h.svc.Create(c.Request.Context(), user.ID, &input, userCountry)
 	if err != nil {
 		c.Error(apierr.BadRequest(err.Error()))
 		return

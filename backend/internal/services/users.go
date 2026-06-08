@@ -56,6 +56,7 @@ func (s *UserService) UpdateProfile(ctx context.Context, userID uuid.UUID, input
 		NudgeEnabled:  input.NudgeEnabled,
 		Goal:          input.Goal,
 		AgeRange:      input.AgeRange,
+		Country:       input.Country,
 	}
 	user, err := s.repo.UpdateProfile(ctx, userID, p)
 	if err != nil {

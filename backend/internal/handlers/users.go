@@ -37,7 +37,8 @@ func (h *UserHandler) UpdateMe(c *gin.Context) {
 	}
 
 	if input.Name == nil && input.PreferredName == nil && input.Timezone == nil &&
-		input.FCMNudgeHour == nil && input.NudgeEnabled == nil && input.Goal == nil && input.AgeRange == nil {
+		input.FCMNudgeHour == nil && input.NudgeEnabled == nil && input.Goal == nil &&
+		input.AgeRange == nil && input.Country == nil {
 		c.Error(apierr.BadRequest("at least one field must be provided"))
 		return
 	}

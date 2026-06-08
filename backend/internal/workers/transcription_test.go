@@ -151,7 +151,7 @@ type fakeCrisisScreener struct {
 	err    error
 }
 
-func (s *fakeCrisisScreener) Screen(_ context.Context, _ string) (*services.CrisisResult, error) {
+func (s *fakeCrisisScreener) Screen(_ context.Context, _, _ string) (*services.CrisisResult, error) {
 	return s.result, s.err
 }
 

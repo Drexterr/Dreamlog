@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -12,14 +12,22 @@ import {
   FlatList,
   Linking,
   ActivityIndicator,
+  Animated,
+  Easing,
+  Dimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { BlurView } from 'expo-blur';
 import { useRouter } from 'expo-router';
 import { clearToken, api } from '../../src/api/client';
 import { supabase } from '../../src/lib/supabase';
+import { THEMES } from '../../src/theme';
 import { useTheme } from '../../src/context/ThemeContext';
 import type { AgeRange, Plan, User, UserGoal } from '../../src/types';
+
+const { width: SW, height: SH } = Dimensions.get('window');
+const FLOOD_D = 100;
+const FLOOD_R = FLOOD_D / 2;
 
 const GOAL_META: Record<UserGoal, { label: string; emoji: string }> = {
   anxiety:       { label: 'Working through anxiety',     emoji: '🌱' },
@@ -111,9 +119,20 @@ function initials(name: string): string {
 
 const NUDGE_HOURS = Array.from({ length: 18 }, (_, i) => i + 6);
 
+const GOALS_LIST: { key: UserGoal; label: string; description: string; emoji: string }[] = [
+  { key: 'anxiety',       label: 'Working through anxiety',     description: 'Worry, uncertainty, restless thoughts',               emoji: '🌱' },
+  { key: 'stress',        label: 'Managing stress',             description: 'Overwhelm, pressure, too much on my plate',           emoji: '🌊' },
+  { key: 'grief',         label: 'Processing grief',            description: "Loss, endings, things that can't be undone",          emoji: '🕊️' },
+  { key: 'depression',    label: 'Lifting low mood',            description: 'Sadness, low motivation, feeling flat',               emoji: '☀️' },
+  { key: 'relationships', label: 'Understanding relationships', description: 'Connection, conflict, how I show up for others',      emoji: '❤️' },
+  { key: 'career',        label: 'Career & purpose',            description: "Work, direction, what I'm building toward",           emoji: '🌲' },
+  { key: 'trauma',        label: 'Processing past / trauma',    description: 'Difficult memories, healing, working through trauma', emoji: '🩹' },
+  { key: 'curious',       label: 'Just exploring',              description: "No agenda — I'm curious about my inner life",         emoji: '🌌' },
+];
+
 export default function SettingsScreen() {
   const router = useRouter();
-  const { colors } = useTheme();
+  const { theme, colors, setTheme } = useTheme();
 
   const [user, setUser] = useState<User | null>(null);
   const [loadError, setLoadError] = useState(false);
@@ -124,8 +143,16 @@ export default function SettingsScreen() {
   const [showHourPicker, setShowHourPicker] = useState(false);
   const [showCrisisModal, setShowCrisisModal] = useState(false);
   const [showProfileModal, setShowProfileModal] = useState(false);
+  const [showGoalModal, setShowGoalModal] = useState(false);
   const [savingHour, setSavingHour] = useState(false);
   const [deleting, setDeleting] = useState(false);
+
+  // ── Flood fill animation ─────────────────────────────────────────────────────
+  const floodAnim    = useRef(new Animated.Value(0)).current;
+  const floodActive  = useRef(false);
+  const [floodColor,   setFloodColor]   = useState(colors.bg);
+  const [floodOriginX, setFloodOriginX] = useState(SW / 2);
+  const [floodOriginY, setFloodOriginY] = useState(SH / 2);
 
   const loadProfile = () => {
     setLoadError(false);
@@ -225,6 +252,41 @@ export default function SettingsScreen() {
     );
   };
 
+  // ── Goal selection: flood fill in-place, no navigation ─────────────────────
+  const handleGoalSelectFromModal = (goal: UserGoal, pageX: number, pageY: number) => {
+    setShowGoalModal(false);
+
+    if (goal === theme) return;
+
+    // Wait for the modal slide-down to finish before starting the fill.
+    setTimeout(() => {
+      if (floodActive.current) return;
+      floodActive.current = true;
+
+      setFloodColor(THEMES[goal].bg);
+      setFloodOriginX(pageX > 0 ? pageX : SW / 2);
+      setFloodOriginY(pageY > 0 ? pageY : SH / 2);
+
+      floodAnim.setValue(0);
+
+      const dx = Math.max(pageX, SW - pageX);
+      const dy = Math.max(pageY, SH - pageY);
+      const targetScale = (Math.sqrt(dx * dx + dy * dy) / FLOOD_R) * 1.15;
+
+      Animated.timing(floodAnim, {
+        toValue: targetScale,
+        duration: 1250,
+        easing: Easing.bezier(0.35, 0.01, 0.08, 1),
+        useNativeDriver: true,
+      }).start(() => {
+        setTheme(goal);
+        setUser(prev => prev ? { ...prev, goal } : prev);
+        api.updateMe({ goal }).catch(() => {});
+        floodActive.current = false;
+      });
+    }, 320);
+  };
+
   const goalMeta = user?.goal
     ? (GOAL_META[user.goal] ?? { label: 'Just exploring', emoji: '🌌' })
     : { label: 'Not set', emoji: '🌌' };
@@ -252,8 +314,22 @@ export default function SettingsScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.bg }]}>
+      {/* Flood fill circle — behind all content, changes background on goal select */}
+      <Animated.View
+        pointerEvents="none"
+        style={[
+          styles.floodCircle,
+          {
+            backgroundColor: floodColor,
+            left: floodOriginX - FLOOD_R,
+            top:  floodOriginY - FLOOD_R,
+            transform: [{ scale: floodAnim }],
+          },
+        ]}
+      />
+
       <StatusBar barStyle="light-content" />
-      <SafeAreaView style={{ flex: 1 }}>
+      <SafeAreaView style={{ flex: 1, zIndex: 2 }}>
         <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
           <Text style={[styles.title, { color: colors.textPrimary }]}>Settings</Text>
 
@@ -320,7 +396,7 @@ export default function SettingsScreen() {
               label={`${goalMeta.emoji}  ${goalMeta.label}`}
               sub="Shapes how your reflections are written"
               colors={colors}
-              onPress={() => router.push('/change-goal' as never)}
+              onPress={() => setShowGoalModal(true)}
             />
           </View>
 
@@ -492,6 +568,62 @@ export default function SettingsScreen() {
         </BlurView>
       </Modal>
 
+      {/* Goal picker modal */}
+      <Modal
+        visible={showGoalModal}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setShowGoalModal(false)}
+      >
+        <BlurView intensity={55} tint="dark" style={styles.modalOverlay}>
+          <TouchableOpacity
+            style={styles.modalDismiss}
+            activeOpacity={1}
+            onPress={() => setShowGoalModal(false)}
+          />
+          <View
+            style={[styles.modalSheet, styles.goalSheet, { backgroundColor: colors.cardSolid, borderColor: colors.border }]}
+            onStartShouldSetResponder={() => true}
+          >
+            <View style={[styles.modalHandle, { backgroundColor: colors.border }]} />
+            <Text style={[styles.modalTitle, { color: colors.textPrimary }]}>Emotional Goal</Text>
+            <Text style={[styles.modalSub, { color: colors.textMuted }]}>
+              Shapes how your reflections are written.
+            </Text>
+            <ScrollView showsVerticalScrollIndicator={false} style={styles.goalScrollList}>
+              {GOALS_LIST.map((g) => {
+                const isSelected = theme === g.key;
+                return (
+                  <TouchableOpacity
+                    key={g.key}
+                    style={[
+                      styles.goalPickerCard,
+                      {
+                        backgroundColor: isSelected ? colors.brandGlow : colors.card,
+                        borderColor: isSelected ? colors.brand : colors.border,
+                      },
+                    ]}
+                    onPress={(e) => handleGoalSelectFromModal(g.key, e.nativeEvent.pageX, e.nativeEvent.pageY)}
+                    activeOpacity={0.7}
+                  >
+                    <View style={styles.goalPickerRow}>
+                      <Text style={[styles.goalPickerLabel, { color: isSelected ? colors.purple300 : colors.textPrimary }]}>
+                        {g.label}
+                      </Text>
+                      {isSelected
+                        ? <Text style={[styles.goalPickerCheck, { color: colors.brand }]}>✓</Text>
+                        : <Text style={{ fontSize: 15 }}>{g.emoji}</Text>
+                      }
+                    </View>
+                    <Text style={[styles.goalPickerDesc, { color: colors.textMuted }]}>{g.description}</Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </ScrollView>
+          </View>
+        </BlurView>
+      </Modal>
+
       {/* Profile info modal */}
       <Modal
         visible={showProfileModal}
@@ -580,6 +712,47 @@ export default function SettingsScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   scroll: { padding: 20, paddingBottom: 60 },
+
+  floodCircle: {
+    position: 'absolute',
+    width: FLOOD_D,
+    height: FLOOD_D,
+    borderRadius: FLOOD_R,
+    zIndex: 1,
+  },
+
+  goalSheet: {
+    maxHeight: '80%',
+  },
+  goalScrollList: {
+    flexGrow: 0,
+  },
+  goalPickerCard: {
+    borderWidth: 1,
+    borderRadius: 12,
+    padding: 14,
+    marginBottom: 8,
+  },
+  goalPickerRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 3,
+  },
+  goalPickerLabel: {
+    fontFamily: 'Nunito_600SemiBold',
+    fontSize: 14,
+    flex: 1,
+  },
+  goalPickerCheck: {
+    fontSize: 15,
+    fontFamily: 'Nunito_600SemiBold',
+  },
+  goalPickerDesc: {
+    fontFamily: 'Nunito_400Regular',
+    fontSize: 12,
+    lineHeight: 17,
+  },
 
   title: {
     fontSize: 26,

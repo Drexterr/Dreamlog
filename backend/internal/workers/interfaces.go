@@ -40,7 +40,7 @@ type audioTranscriber interface {
 }
 
 type crisisScreener interface {
-	Screen(ctx context.Context, transcript string) (*services.CrisisResult, error)
+	Screen(ctx context.Context, transcript, country string) (*services.CrisisResult, error)
 }
 
 type contextAssembler interface {

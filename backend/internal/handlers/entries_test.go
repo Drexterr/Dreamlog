@@ -36,7 +36,7 @@ func (f *fakeEntryServicer) PresignUpload(_ context.Context, _ uuid.UUID) (*mode
 	return f.presignResp, f.presignErr
 }
 
-func (f *fakeEntryServicer) Create(_ context.Context, _ uuid.UUID, _ *models.CreateEntryInput) (*models.Entry, error) {
+func (f *fakeEntryServicer) Create(_ context.Context, _ uuid.UUID, _ *models.CreateEntryInput, _ string) (*models.Entry, error) {
 	return f.createResp, f.createErr
 }
 

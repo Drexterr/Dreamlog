@@ -32,6 +32,14 @@ func newHandlerFakeStore() *handlerFakeUserStore {
 }
 
 func (s *handlerFakeUserStore) GetByEmail(_ context.Context, email string) (*models.User, error) {
+	u := s.users[email]
+	if u != nil && u.IsDeleted {
+		return nil, nil
+	}
+	return u, nil
+}
+
+func (s *handlerFakeUserStore) GetByEmailIncDeleted(_ context.Context, email string) (*models.User, error) {
 	return s.users[email], nil
 }
 
@@ -47,6 +55,21 @@ func (s *handlerFakeUserStore) CreateLocal(_ context.Context, email, name, hash 
 
 func (s *handlerFakeUserStore) GetPasswordHash(_ context.Context, email string) (string, error) {
 	return s.hashes[email], nil
+}
+
+func (s *handlerFakeUserStore) Reactivate(_ context.Context, id uuid.UUID, name, hash string) (*models.User, error) {
+	if s.createErr != nil {
+		return nil, s.createErr
+	}
+	for email, u := range s.users {
+		if u.ID == id {
+			u.IsDeleted = false
+			u.Name = name
+			s.hashes[email] = hash
+			return u, nil
+		}
+	}
+	return nil, nil
 }
 
 // ── Router builder ────────────────────────────────────────────────────────────

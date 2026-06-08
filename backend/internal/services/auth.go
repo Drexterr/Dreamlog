@@ -23,12 +23,14 @@ func NewAuthService(users UserStore, jwtSecret string) *AuthService {
 }
 
 // Register creates a new local user and returns the user + signed JWT.
+// If the email belongs to a soft-deleted account, the account is reactivated
+// with the new name and password while preserving first_joined_at and history.
 func (s *AuthService) Register(ctx context.Context, email, name, password string) (*models.User, string, error) {
-	existing, err := s.users.GetByEmail(ctx, email)
+	existing, err := s.users.GetByEmailIncDeleted(ctx, email)
 	if err != nil {
 		return nil, "", err
 	}
-	if existing != nil {
+	if existing != nil && !existing.IsDeleted {
 		return nil, "", ErrEmailTaken
 	}
 
@@ -37,7 +39,13 @@ func (s *AuthService) Register(ctx context.Context, email, name, password string
 		return nil, "", err
 	}
 
-	user, err := s.users.CreateLocal(ctx, email, name, string(hash))
+	var user *models.User
+	if existing != nil && existing.IsDeleted {
+		// Reactivate the soft-deleted account.
+		user, err = s.users.Reactivate(ctx, existing.ID, name, string(hash))
+	} else {
+		user, err = s.users.CreateLocal(ctx, email, name, string(hash))
+	}
 	if err != nil {
 		return nil, "", err
 	}

@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DreamLog — Goal Selection Animation Demo</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --bg:          #0f0c1e;
+      --card:        rgba(139, 92, 246, 0.06);
+      --border:      rgba(139, 92, 246, 0.15);
+      --brand:       #7B6FA0;
+      --brand-glow:  rgba(139, 92, 246, 0.22);
+      --text-primary:   #e8e0f0;
+      --text-secondary: rgba(196, 181, 253, 0.6);
+      --text-muted:     rgba(196, 181, 253, 0.35);
+      --accent:      #c4b5fd;
+      --trans: 0.25s ease;
+    }
+
+    html, body {
+      height: 100%;
+      background: var(--bg);
+      color: var(--text-primary);
+      font-family: 'Nunito', sans-serif;
+      overflow-x: hidden;
+    }
+
+    /* ── Phone frame ── */
+    .phone-wrap {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 40px 20px;
+      gap: 60px;
+      flex-wrap: wrap;
+    }
+
+    .phone-frame {
+      width: 390px;
+      height: 844px;
+      border-radius: 44px;
+      background: var(--bg);
+      border: 2px solid rgba(255,255,255,0.08);
+      box-shadow:
+        0 0 0 8px rgba(0,0,0,0.4),
+        0 40px 100px rgba(0,0,0,0.7),
+        inset 0 0 60px rgba(139,92,246,0.03);
+      position: relative;
+      overflow: hidden;
+      transition: background var(--trans);
+    }
+
+    /* Notch */
+    .phone-frame::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 50%;
+      transform: translateX(-50%);
+      width: 120px; height: 30px;
+      background: rgba(0,0,0,0.6);
+      border-radius: 0 0 20px 20px;
+      z-index: 999;
+    }
+
+    /* ── Flood fill layer — sits between phone bg and content ── */
+    .flood-fill {
+      position: absolute;
+      inset: 0;
+      z-index: 5;
+      pointer-events: none;
+      will-change: clip-path;
+    }
+
+
+    /* ── Screen content — always on top ── */
+    .screen {
+      position: absolute;
+      inset: 0;
+      z-index: 10;
+      overflow-y: auto;
+      padding: 60px 24px 48px;
+      scrollbar-width: none;
+    }
+    .screen::-webkit-scrollbar { display: none; }
+
+    .wordmark {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 20px;
+      font-weight: 300;
+      letter-spacing: 2px;
+      color: var(--accent);
+      margin-bottom: 36px;
+      transition: color var(--trans);
+    }
+
+    .heading {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 30px;
+      font-weight: 300;
+      line-height: 1.3;
+      margin-bottom: 10px;
+      color: var(--text-primary);
+      transition: color var(--trans);
+    }
+
+    .subtitle {
+      font-size: 14px;
+      line-height: 1.55;
+      color: var(--text-secondary);
+      margin-bottom: 28px;
+      transition: color var(--trans);
+    }
+
+    .goal-list {
+      display: flex;
+      flex-direction: column;
+      gap: 9px;
+    }
+
+    .goal-card {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px 16px;
+      cursor: pointer;
+      background: var(--card);
+      transition: border-color 0.2s, background 0.2s, transform 0.08s;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .goal-card:hover {
+      border-color: var(--brand);
+      background: var(--brand-glow);
+    }
+
+    .goal-card:active {
+      transform: scale(0.975);
+    }
+
+    .goal-card.selected {
+      border-color: var(--brand);
+      background: var(--brand-glow);
+    }
+
+    .goal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 3px;
+    }
+
+    .goal-label {
+      font-weight: 600;
+      font-size: 14px;
+      color: var(--text-primary);
+      transition: color 0.35s;
+    }
+
+    .goal-card.selected .goal-label {
+      color: var(--accent);
+    }
+
+    .goal-emoji { font-size: 15px; }
+
+    .goal-desc {
+      font-size: 12px;
+      color: var(--text-muted);
+      line-height: 1.45;
+      transition: color var(--trans);
+    }
+
+    /* ── Step 2 overlay ── */
+    .step2 {
+      position: absolute;
+      inset: 0;
+      z-index: 20;
+      padding: 60px 24px 48px;
+      display: flex;
+      flex-direction: column;
+      opacity: 0;
+      transform: translateY(12px);
+      pointer-events: none;
+      transition: opacity 0.4s ease, transform 0.4s ease;
+    }
+
+    .step2.visible {
+      opacity: 1;
+      transform: translateY(0);
+      pointer-events: all;
+    }
+
+    .back-btn {
+      font-family: 'Nunito', sans-serif;
+      font-size: 13px;
+      color: var(--text-muted);
+      cursor: pointer;
+      background: none;
+      border: none;
+      padding: 4px 0;
+      margin-bottom: 24px;
+      align-self: flex-start;
+      transition: color 0.2s;
+    }
+    .back-btn:hover { color: var(--text-primary); }
+
+    .text-input {
+      width: 100%;
+      padding: 14px 16px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: var(--card);
+      color: var(--text-primary);
+      font-family: 'Nunito', sans-serif;
+      font-size: 15px;
+      outline: none;
+      margin-bottom: 20px;
+      margin-top: 28px;
+      transition: border-color 0.2s;
+    }
+    .text-input:focus { border-color: var(--brand); }
+    .text-input::placeholder { color: var(--text-muted); }
+
+    .continue-btn {
+      width: 100%;
+      padding: 15px;
+      background: var(--brand);
+      border: none;
+      border-radius: 12px;
+      color: white;
+      font-family: 'Nunito', sans-serif;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: opacity 0.2s, background var(--trans);
+    }
+    .continue-btn:hover { opacity: 0.85; }
+
+    /* ── Sidebar explainer ── */
+    .explainer {
+      width: 300px;
+      color: rgba(255,255,255,0.55);
+      font-size: 14px;
+      line-height: 1.7;
+    }
+
+    .explainer h2 {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 22px;
+      font-weight: 300;
+      color: rgba(255,255,255,0.8);
+      margin-bottom: 16px;
+    }
+
+    .explainer .tag {
+      display: inline-block;
+      background: rgba(139,92,246,0.2);
+      color: #c4b5fd;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      padding: 3px 8px;
+      border-radius: 4px;
+      margin-bottom: 16px;
+    }
+
+    .explainer ul {
+      margin-top: 16px;
+      padding-left: 16px;
+    }
+    .explainer ul li { margin-bottom: 8px; }
+
+    .hint {
+      margin-top: 24px;
+      padding: 14px;
+      border: 1px solid rgba(139,92,246,0.2);
+      border-radius: 10px;
+      background: rgba(139,92,246,0.05);
+      font-size: 13px;
+      color: rgba(196,181,253,0.6);
+    }
+
+    /* ── Ambient glow behind phone ── */
+    .glow {
+      position: absolute;
+      width: 600px;
+      height: 600px;
+      border-radius: 50%;
+      filter: blur(120px);
+      opacity: 0.12;
+      pointer-events: none;
+      z-index: -1;
+      background: var(--brand);
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      transition: background 1s ease;
+    }
+  </style>
+</head>
+<body>
+
+<div class="phone-wrap">
+
+  <!-- Ambient glow -->
+  <div class="glow" id="ambientGlow"></div>
+
+  <!-- ── Phone ── -->
+  <div class="phone-frame" id="phoneFrame">
+
+    <!-- Flood fill layer (between bg and content) -->
+    <div class="flood-fill" id="floodFill"></div>
+
+    <!-- Step 1: Goal selection -->
+    <div class="screen" id="step1">
+      <div class="wordmark">DreamLog</div>
+      <h1 class="heading">What brings you here?</h1>
+      <p class="subtitle">Tap any goal — it shapes how we reflect your words back to you.</p>
+      <div class="goal-list" id="goalList"></div>
+    </div>
+
+    <!-- Step 2: Name -->
+    <div class="step2" id="step2">
+      <button class="back-btn" id="backBtn">← Back</button>
+      <h1 class="heading">What name should I call you?</h1>
+      <p class="subtitle">Optional — leave it blank and I'll use whatever's on your account.</p>
+      <input type="text" class="text-input" placeholder="e.g. Alex, or just skip this" autofocus />
+      <button class="continue-btn">Continue</button>
+    </div>
+
+  </div>
+
+  <!-- ── Explainer sidebar ── -->
+  <div class="explainer">
+    <span class="tag">Animation Preview</span>
+    <h2>Goal Selection<br/>Flood Fill Effect</h2>
+    <p>When a user taps a goal, the new theme colour floods outward from the tap point, filling the entire background while the cards remain fully visible on top.</p>
+    <ul>
+      <li>Colour originates from the tapped card</li>
+      <li>All other goal cards stay readable throughout</li>
+      <li>Background fills with smooth circular reveal</li>
+      <li>Step 2 appears after the fill completes</li>
+      <li>Each goal has a distinct dark-toned palette</li>
+    </ul>
+    <div class="hint">
+      👆 Click any goal card in the phone to see the animation. Try different goals to see each theme.
+    </div>
+  </div>
+
+</div>
+
+<script>
+  const GOALS = [
+    { key: 'anxiety',       label: 'Working through anxiety',     desc: 'Worry, uncertainty, restless thoughts',                   emoji: '🌱' },
+    { key: 'stress',        label: 'Managing stress',              desc: 'Overwhelm, pressure, too much on my plate',               emoji: '🌊' },
+    { key: 'grief',         label: 'Processing grief',             desc: "Loss, endings, things that can't be undone",              emoji: '🕊️' },
+    { key: 'depression',    label: 'Lifting low mood',             desc: 'Sadness, low motivation, feeling flat',                   emoji: '☀️' },
+    { key: 'relationships', label: 'Understanding relationships',  desc: 'Connection, conflict, how I show up for others',          emoji: '❤️' },
+    { key: 'career',        label: 'Career & purpose',             desc: "Work, direction, what I'm building toward",               emoji: '🌲' },
+    { key: 'trauma',        label: 'Processing past / trauma',     desc: 'Difficult memories, healing, working through trauma',     emoji: '🩹' },
+    { key: 'curious',       label: 'Just exploring',               desc: "No agenda — I'm curious about my inner life",             emoji: '🌌' },
+  ];
+
+  const THEMES = {
+    anxiety:       { bg: '#1A2B20', brand: '#7B9E87', glow: 'rgba(123,158,135,0.22)', border: 'rgba(123,158,135,0.22)', accent: '#A8C5B0', textSec: 'rgba(168,197,176,0.65)', textMuted: 'rgba(168,197,176,0.38)' },
+    stress:        { bg: '#0F1E2E', brand: '#5B8DB8', glow: 'rgba(91,141,184,0.22)',  border: 'rgba(91,141,184,0.22)',  accent: '#7AAECC', textSec: 'rgba(122,174,204,0.65)', textMuted: 'rgba(122,174,204,0.38)' },
+    grief:         { bg: '#1A2535', brand: '#8FA8C4', glow: 'rgba(143,168,196,0.22)', border: 'rgba(143,168,196,0.22)', accent: '#B5A8C8', textSec: 'rgba(181,168,200,0.65)', textMuted: 'rgba(181,168,200,0.38)' },
+    depression:    { bg: '#201A12', brand: '#C8965A', glow: 'rgba(200,150,90,0.22)',  border: 'rgba(200,150,90,0.22)',  accent: '#E8C878', textSec: 'rgba(232,200,120,0.65)', textMuted: 'rgba(232,200,120,0.38)' },
+    relationships: { bg: '#221518', brand: '#C87F7F', glow: 'rgba(200,127,127,0.22)', border: 'rgba(200,127,127,0.22)', accent: '#EED0C8', textSec: 'rgba(238,208,200,0.65)', textMuted: 'rgba(238,208,200,0.38)' },
+    career:        { bg: '#181D15', brand: '#5C7A62', glow: 'rgba(92,122,98,0.22)',   border: 'rgba(92,122,98,0.22)',   accent: '#C0A880', textSec: 'rgba(192,168,128,0.65)', textMuted: 'rgba(192,168,128,0.38)' },
+    trauma:        { bg: '#1C1A18', brand: '#A09080', glow: 'rgba(160,144,128,0.22)', border: 'rgba(160,144,128,0.22)', accent: '#C8B898', textSec: 'rgba(200,184,152,0.65)', textMuted: 'rgba(200,184,152,0.38)' },
+    curious:       { bg: '#0f0c1e', brand: '#7B6FA0', glow: 'rgba(139,92,246,0.22)',  border: 'rgba(139,92,246,0.15)',  accent: '#c4b5fd', textSec: 'rgba(196,181,253,0.60)', textMuted: 'rgba(196,181,253,0.35)' },
+  };
+
+  let currentTheme = THEMES.curious;
+  let isAnimating = false;
+
+  // ── Build goal cards ──
+  const goalList = document.getElementById('goalList');
+  GOALS.forEach(g => {
+    const card = document.createElement('div');
+    card.className = 'goal-card';
+    card.dataset.key = g.key;
+    card.innerHTML = `
+      <div class="goal-header">
+        <span class="goal-label">${g.label}</span>
+        <span class="goal-emoji">${g.emoji}</span>
+      </div>
+      <div class="goal-desc">${g.desc}</div>
+    `;
+    card.addEventListener('click', e => handleGoalClick(g.key, e));
+    goalList.appendChild(card);
+  });
+
+  // ── Click handler ──
+  function handleGoalClick(key, event) {
+    if (isAnimating) return;
+    isAnimating = true;
+
+    const theme = THEMES[key];
+    const phone = document.getElementById('phoneFrame');
+    const flood = document.getElementById('floodFill');
+
+    // Position inside the phone frame
+    const phoneRect = phone.getBoundingClientRect();
+    const localX = event.clientX - phoneRect.left;
+    const localY = event.clientY - phoneRect.top;
+    const xPct   = ((localX / phoneRect.width)  * 100).toFixed(2) + '%';
+    const yPct   = ((localY / phoneRect.height) * 100).toFixed(2) + '%';
+
+    // Mark selected card immediately
+    document.querySelectorAll('.goal-card').forEach(c => c.classList.remove('selected'));
+    event.currentTarget.classList.add('selected');
+
+    // Update CSS vars so selected card shows new accent colour right away
+    applyThemeCSSVars(theme);
+
+    // ── Flood fill animation ──
+    flood.style.backgroundColor = theme.bg;
+    flood.style.transition       = 'none';
+    flood.style.clipPath          = `circle(0% at ${xPct} ${yPct})`;
+
+    // Force reflow so the reset actually applies before the transition
+    void flood.offsetWidth;
+
+    // Animate: circle expands from tap point to cover entire phone.
+    // cubic-bezier(0.35, 0.01, 0.08, 1) — starts gently, builds momentum,
+    // settles softly at the edges. 1.25s gives it room to breathe.
+    flood.style.transition = 'clip-path 1.25s cubic-bezier(0.35, 0.01, 0.08, 1)';
+    flood.style.clipPath    = `circle(150% at ${xPct} ${yPct})`;
+
+    // Step 1 cards very gently fade as the flood fill progresses
+    // (delayed so cards stay fully readable for most of the animation)
+    setTimeout(() => {
+      document.getElementById('step1').style.transition = 'opacity 0.45s ease';
+      document.getElementById('step1').style.opacity    = '0';
+    }, 800);
+
+    // After fill completes: swap bg, reveal step 2
+    setTimeout(() => {
+      // Phone bg now matches flood colour — hide flood layer seamlessly
+      phone.style.background  = theme.bg;
+      flood.style.transition   = 'none';
+      flood.style.clipPath      = 'circle(0% at 50% 50%)';
+      document.documentElement.style.setProperty('--bg', theme.bg);
+
+      // Update ambient glow
+      document.getElementById('ambientGlow').style.background = theme.brand;
+
+      const s1 = document.getElementById('step1');
+      s1.style.display    = 'none';
+      s1.style.opacity    = '1';   // reset for back-navigation
+      s1.style.transition = '';
+
+      document.getElementById('step2').classList.add('visible');
+      currentTheme = theme;
+      isAnimating  = false;
+
+    }, 1350); // 1250ms animation + 100ms buffer
+  }
+
+  // ── Apply CSS variables ──
+  function applyThemeCSSVars(t) {
+    const r = document.documentElement.style;
+    r.setProperty('--brand',      t.brand);
+    r.setProperty('--brand-glow', t.glow);
+    r.setProperty('--border',     t.border);
+    r.setProperty('--accent',     t.accent);
+    r.setProperty('--text-secondary', t.textSec);
+    r.setProperty('--text-muted',     t.textMuted);
+  }
+
+  // ── Back button ──
+  document.getElementById('backBtn').addEventListener('click', () => {
+    const step2 = document.getElementById('step2');
+    const step1 = document.getElementById('step1');
+    step2.classList.remove('visible');
+    setTimeout(() => {
+      step1.style.display       = '';
+      step1.style.opacity       = '1';
+      step1.style.pointerEvents = '';
+      // Reset selected card highlight for a fresh attempt
+      document.querySelectorAll('.goal-card').forEach(c => c.classList.remove('selected'));
+    }, 420);
+  });
+</script>
+</body>
+</html>

@@ -38,7 +38,8 @@ func (s *EntryService) PresignUpload(ctx context.Context, userID uuid.UUID) (*mo
 }
 
 // Create validates the upload exists, writes the entry row, and enqueues a transcription job.
-func (s *EntryService) Create(ctx context.Context, userID uuid.UUID, input *models.CreateEntryInput) (*models.Entry, error) {
+// userCountry is the ISO 3166-1 alpha-2 code from the user's profile; empty string is fine.
+func (s *EntryService) Create(ctx context.Context, userID uuid.UUID, input *models.CreateEntryInput, userCountry string) (*models.Entry, error) {
 	// Validate max duration.
 	if input.DurationSec > models.MaxRecordingSeconds {
 		return nil, fmt.Errorf("entryService.Create: recording exceeds 30-minute limit")
@@ -61,10 +62,11 @@ func (s *EntryService) Create(ctx context.Context, userID uuid.UUID, input *mode
 
 	// Enqueue transcription job.
 	job := &models.TranscriptionJob{
-		EntryID:  entry.ID,
-		AudioKey: entry.AudioKey,
-		UserID:   userID,
-		Attempt:  0,
+		EntryID:     entry.ID,
+		AudioKey:    entry.AudioKey,
+		UserID:      userID,
+		UserCountry: userCountry,
+		Attempt:     0,
 	}
 	if err := s.queue.Enqueue(ctx, job); err != nil {
 		// Entry is created but not queued — the worker can recover these via a reconciler (Phase 2).

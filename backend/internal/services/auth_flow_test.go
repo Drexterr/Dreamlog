@@ -28,7 +28,32 @@ func (s *fakeUserStore) GetByEmail(_ context.Context, email string) (*models.Use
 		return nil, s.getErr
 	}
 	u := s.users[email]
+	if u != nil && u.IsDeleted {
+		return nil, nil
+	}
 	return u, nil
+}
+
+func (s *fakeUserStore) GetByEmailIncDeleted(_ context.Context, email string) (*models.User, error) {
+	if s.getErr != nil {
+		return nil, s.getErr
+	}
+	return s.users[email], nil
+}
+
+func (s *fakeUserStore) Reactivate(_ context.Context, id uuid.UUID, name, passwordHash string) (*models.User, error) {
+	if s.createErr != nil {
+		return nil, s.createErr
+	}
+	for email, u := range s.users {
+		if u.ID == id {
+			u.IsDeleted = false
+			u.Name = name
+			s.hashes[email] = passwordHash
+			return u, nil
+		}
+	}
+	return nil, nil
 }
 
 func (s *fakeUserStore) CreateLocal(_ context.Context, email, name, passwordHash string) (*models.User, error) {

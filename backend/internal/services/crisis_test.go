@@ -78,7 +78,7 @@ func TestCrisisStage1_AllHighCertaintyPhrases(t *testing.T) {
 
 	for _, phrase := range highCertaintyPhrases {
 		transcript := "Today I thought about how I want to " + phrase + " because life is hard."
-		result, err := detector.Screen(ctx, transcript)
+		result, err := detector.Screen(ctx, transcript, "IN")
 		if err != nil {
 			t.Errorf("phrase %q: unexpected error: %v", phrase, err)
 			continue
@@ -103,7 +103,7 @@ func TestCrisisStage1_CaseInsensitive(t *testing.T) {
 		"Hurt Myself",
 	}
 	for _, phrase := range phrases {
-		result, err := detector.Screen(ctx, phrase)
+		result, err := detector.Screen(ctx, phrase, "IN")
 		if err != nil {
 			t.Fatalf("unexpected error for %q: %v", phrase, err)
 		}
@@ -128,7 +128,7 @@ func TestCrisisStage1_NormalText_NoMatch(t *testing.T) {
 	}
 
 	for _, transcript := range benign {
-		result, err := detector.Screen(ctx, transcript)
+		result, err := detector.Screen(ctx, transcript, "IN")
 		if err != nil {
 			t.Fatalf("unexpected error for %q: %v", transcript, err)
 		}
@@ -147,7 +147,7 @@ func TestCrisisStage1_EmbeddedPhrase(t *testing.T) {
 		"I just want to kill myself sometimes when everything feels overwhelming." +
 		strings.Repeat(" I don't know what to do.", 10)
 
-	result, err := detector.Screen(ctx, transcript)
+	result, err := detector.Screen(ctx, transcript, "IN")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -167,7 +167,7 @@ func TestCrisisStage2_ClaudeConfirmsYes(t *testing.T) {
 
 	// ambiguous phrase triggers Stage 2
 	transcript := "I feel like it's not worth living anymore."
-	result, err := detector.Screen(ctx, transcript)
+	result, err := detector.Screen(ctx, transcript, "IN")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -188,7 +188,7 @@ func TestCrisisStage2_ClaudeConfirmsNo(t *testing.T) {
 
 	// ambiguous phrase, but Claude says no
 	transcript := "I feel like I can't go on with this project anymore, it's too much."
-	result, err := detector.Screen(ctx, transcript)
+	result, err := detector.Screen(ctx, transcript, "IN")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -205,7 +205,7 @@ func TestCrisisStage2_ClaudeUnreachable_DefaultsToCrisis(t *testing.T) {
 	ctx := context.Background()
 
 	transcript := "I feel like nobody cares if I live or die."
-	result, err := detector.Screen(ctx, transcript)
+	result, err := detector.Screen(ctx, transcript, "IN")
 	// Screen itself must NOT return an error — it absorbs the Claude error and fails safe.
 	if err != nil {
 		t.Fatalf("Screen must not surface Claude errors: %v", err)
@@ -227,7 +227,7 @@ func TestCrisisStage2_ContextCancelled_DefaultsToCrisis(t *testing.T) {
 	cancel() // cancel immediately
 
 	transcript := "I feel like I can't go on."
-	result, err := detector.Screen(ctx, transcript)
+	result, err := detector.Screen(ctx, transcript, "IN")
 	if err != nil {
 		t.Fatalf("Screen must not surface context errors: %v", err)
 	}
@@ -261,7 +261,7 @@ func TestCrisisStage2_OnlyCallsClaudeOnce(t *testing.T) {
 
 	// Multiple ambiguous phrases — Claude should only be called once.
 	transcript := "I feel like I can't go on and it's not worth living and better off without me."
-	_, err := detector.Screen(ctx, transcript)
+	_, err := detector.Screen(ctx, transcript, "IN")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -273,7 +273,7 @@ func TestCrisisStage2_OnlyCallsClaudeOnce(t *testing.T) {
 // ── Crisis response content test ─────────────────────────────────────────────
 
 func TestCrisisResponse_ContainsCrisisResources(t *testing.T) {
-	resp := crisisResponse()
+	resp := buildCrisisResponse("US")
 	if !strings.Contains(resp, "988") {
 		t.Error("crisis response must contain US crisis line 988")
 	}

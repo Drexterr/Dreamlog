@@ -11,8 +11,10 @@ import (
 // Satisfied by *repositories.UserRepository in production.
 type UserStore interface {
 	GetByEmail(ctx context.Context, email string) (*models.User, error)
+	GetByEmailIncDeleted(ctx context.Context, email string) (*models.User, error)
 	CreateLocal(ctx context.Context, email, name, passwordHash string) (*models.User, error)
 	GetPasswordHash(ctx context.Context, email string) (string, error)
+	Reactivate(ctx context.Context, id uuid.UUID, name, passwordHash string) (*models.User, error)
 }
 
 // ConvRepository is the minimal conversation-repository interface required by ConversationService.

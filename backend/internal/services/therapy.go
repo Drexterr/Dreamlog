@@ -81,7 +81,7 @@ func NewTherapyService(
 //   - First session ever → free (acquisition hook)
 //   - Pro plan → up to 2 sessions/month free
 //   - Otherwise → ₹499 (stub in dev: allow with billing_amount_paise set)
-func (s *TherapyService) StartSession(ctx context.Context, userID uuid.UUID, userPlan models.Plan, persona models.TherapyPersona) (*models.TherapySession, error) {
+func (s *TherapyService) StartSession(ctx context.Context, userID uuid.UUID, userPlan models.Plan, persona models.TherapyPersona, userCountry string) (*models.TherapySession, error) {
 	billingPaise, err := s.computeBilling(ctx, userID, userPlan)
 	if err != nil {
 		return nil, err
@@ -92,6 +92,7 @@ func (s *TherapyService) StartSession(ctx context.Context, userID uuid.UUID, use
 		// Non-fatal: proceed without context rather than failing the session.
 		snapshot = models.TherapyContextSnapshot{}
 	}
+	snapshot.Country = userCountry
 
 	session, err := s.repo.Create(ctx, userID, persona, snapshot, billingPaise)
 	if err != nil {
@@ -138,7 +139,7 @@ func (s *TherapyService) SendMessage(ctx context.Context, sessionID, userID uuid
 	}
 
 	// Crisis detection runs on every message (ADR-013).
-	crisisResult, err := s.crisis.Screen(ctx, userContent)
+	crisisResult, err := s.crisis.Screen(ctx, userContent, session.ContextSnapshot.Country)
 	if err != nil {
 		// Screen absorbs errors internally and fails safe; this path is never reached.
 		return nil, fmt.Errorf("therapySvc.SendMessage crisis: %w", err)

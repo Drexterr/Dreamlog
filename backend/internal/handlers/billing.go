@@ -107,8 +107,8 @@ func (h *BillingHandler) CreatePaymentIntent(c *gin.Context) {
 		return
 	}
 
-	if req.Currency != "inr" && req.Currency != "usd" {
-		_ = c.Error(apierr.BadRequest("currency must be inr or usd"))
+	if req.Currency != "inr" && req.Currency != "usd" && req.Currency != "eur" {
+		_ = c.Error(apierr.BadRequest("currency must be inr, eur, or usd"))
 		return
 	}
 
@@ -153,21 +153,30 @@ func (h *BillingHandler) CreatePaymentIntent(c *gin.Context) {
 	})
 }
 
-// planAmount returns the payment amount in the smallest currency unit (paise / cents).
+// planAmount returns the payment amount in the smallest currency unit (paise / euro cents / cents).
 func planAmount(plan models.Plan, currency string) int64 {
-	if currency == "inr" {
+	switch currency {
+	case "inr":
 		switch plan {
 		case models.PlanPlus:
 			return 19900 // ₹199
 		case models.PlanPro:
 			return 49900 // ₹499
 		}
-	}
-	switch plan {
-	case models.PlanPlus:
-		return 799 // $7.99
-	case models.PlanPro:
-		return 1499 // $14.99
+	case "eur":
+		switch plan {
+		case models.PlanPlus:
+			return 699 // €6.99
+		case models.PlanPro:
+			return 1299 // €12.99
+		}
+	default: // usd
+		switch plan {
+		case models.PlanPlus:
+			return 799 // $7.99
+		case models.PlanPro:
+			return 1499 // $14.99
+		}
 	}
 	return 0
 }

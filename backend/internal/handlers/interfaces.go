@@ -14,7 +14,7 @@ import (
 // Satisfied by *services.EntryService in production.
 type entryServicer interface {
 	PresignUpload(ctx context.Context, userID uuid.UUID) (*models.PresignResponse, error)
-	Create(ctx context.Context, userID uuid.UUID, input *models.CreateEntryInput) (*models.Entry, error)
+	Create(ctx context.Context, userID uuid.UUID, input *models.CreateEntryInput, userCountry string) (*models.Entry, error)
 	Get(ctx context.Context, id, userID uuid.UUID) (*models.Entry, error)
 	List(ctx context.Context, userID uuid.UUID, page, pageSize int) (*models.ListEntriesResponse, error)
 }

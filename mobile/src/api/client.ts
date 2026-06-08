@@ -81,6 +81,7 @@ export const api = {
     nudge_enabled?: boolean;
     goal?: UserGoal;
     age_range?: AgeRange;
+    country?: string;
   }): Promise<User> =>
     http.put<User>('/me', fields).then((r) => r.data),
 

@@ -58,14 +58,14 @@ func GetPlanLimits(p Plan) *PlanLimits {
 			Plan: PlanPlus, MonthlyEntries: -1, MonthlyShares: PlusMonthlyShares,
 			HasPDFExport: false, HasWeeklyReview: true, HasMoodHistory: true,
 			HasHindi: true, HasAllModes: true, HasStreakFreeze: true, HasTherapistShare: true,
-			DisplayName: "DreamLog+", Price: "₹199/month · $7.99/month",
+			DisplayName: "DreamLog+", Price: "₹199/month · €6.99/month · $7.99/month",
 		}
 	case PlanPro:
 		return &PlanLimits{
 			Plan: PlanPro, MonthlyEntries: -1, MonthlyShares: -1,
 			HasPDFExport: true, HasWeeklyReview: true, HasMoodHistory: true,
 			HasHindi: true, HasAllModes: true, HasStreakFreeze: true, HasTherapistShare: true,
-			DisplayName: "DreamLog Pro", Price: "₹499/month · $14.99/month",
+			DisplayName: "DreamLog Pro", Price: "₹499/month · €12.99/month · $14.99/month",
 		}
 	case PlanB2B:
 		return &PlanLimits{
@@ -85,21 +85,27 @@ func GetPlanLimits(p Plan) *PlanLimits {
 }
 
 type User struct {
-	ID                uuid.UUID  `json:"id"`
-	SupabaseID        string     `json:"supabase_id"`
-	Email             string     `json:"email"`
-	Name              string     `json:"name"`
-	PreferredName     *string    `json:"preferred_name,omitempty"`
-	Timezone          string     `json:"timezone"`
-	FCMNudgeHour      int        `json:"fcm_nudge_hour"` // 0-23
-	NudgeEnabled      bool       `json:"nudge_enabled"`
-	Goal              *string    `json:"goal,omitempty"`
-	AgeRange          *string    `json:"age_range,omitempty"`
-	StreakFreezeCount int        `json:"streak_freeze_count"`
-	Plan              Plan       `json:"plan"`
-	PlanExpiresAt     *time.Time `json:"plan_expires_at,omitempty"`
-	CreatedAt         time.Time  `json:"created_at"`
-	UpdatedAt         time.Time  `json:"updated_at"`
+	ID                  uuid.UUID  `json:"id"`
+	SupabaseID          string     `json:"supabase_id"`
+	Email               string     `json:"email"`
+	Name                string     `json:"name"`
+	PreferredName       *string    `json:"preferred_name,omitempty"`
+	Timezone            string     `json:"timezone"`
+	FCMNudgeHour        int        `json:"fcm_nudge_hour"` // 0-23
+	NudgeEnabled        bool       `json:"nudge_enabled"`
+	Goal                *string    `json:"goal,omitempty"`
+	AgeRange            *string    `json:"age_range,omitempty"`
+	Country             *string    `json:"country,omitempty"`
+	StreakFreezeCount   int        `json:"streak_freeze_count"`
+	Plan                Plan       `json:"plan"`
+	PlanExpiresAt       *time.Time `json:"plan_expires_at,omitempty"`
+	IsDeleted           bool       `json:"is_deleted"`
+	DeletedAt           *time.Time `json:"deleted_at,omitempty"`
+	FirstJoinedAt       *time.Time `json:"first_joined_at,omitempty"`
+	ReregisteredAt      *time.Time `json:"reregistered_at,omitempty"`
+	ReregistrationCount int        `json:"reregistration_count"`
+	CreatedAt           time.Time  `json:"created_at"`
+	UpdatedAt           time.Time  `json:"updated_at"`
 }
 
 type UpdateUserInput struct {
@@ -110,4 +116,5 @@ type UpdateUserInput struct {
 	NudgeEnabled  *bool   `json:"nudge_enabled"`
 	Goal          *string `json:"goal" binding:"omitempty,oneof=stress anxiety grief depression trauma relationships career curious"`
 	AgeRange      *string `json:"age_range" binding:"omitempty,oneof=under_18 18_24 25_34 35_44 45_plus"`
+	Country       *string `json:"country" binding:"omitempty,min=2,max=2"`
 }

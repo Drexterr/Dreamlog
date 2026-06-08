@@ -45,11 +45,12 @@ func ValidPersona(p string) bool {
 
 // TherapyContextSnapshot is stored as JSONB at session start; never re-fetched mid-session.
 type TherapyContextSnapshot struct {
-	MoodAvg30d          *float64 `json:"mood_avg_30d"`           // null if no data
-	TopEmotions         []string `json:"top_emotions"`
-	TopTopics           []string `json:"top_topics"`
-	RecentSummaries     []string `json:"recent_summaries"`       // last 5 entry summaries, oldest first
-	PastSessionSummaries []string `json:"past_session_summaries"` // last 3 completed session summaries, oldest first
+	MoodAvg30d           *float64 `json:"mood_avg_30d"`            // null if no data
+	TopEmotions          []string `json:"top_emotions"`
+	TopTopics            []string `json:"top_topics"`
+	RecentSummaries      []string `json:"recent_summaries"`        // last 5 entry summaries, oldest first
+	PastSessionSummaries []string `json:"past_session_summaries"`  // last 3 completed session summaries, oldest first
+	Country              string   `json:"country"`                 // user's country at session start (ISO 3166-1 alpha-2)
 }
 
 // TherapySessionAnalysis is the structured output Claude generates at session end.
