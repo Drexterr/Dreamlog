@@ -1,6 +1,10 @@
 # Android SDK local path — machine-specific, never commit
 mobile/android/local.properties
 
+# Firebase config — contains API keys, inject via CI/CD
+mobile/google-services.json
+mobile/android/app/google-services.json
+
 # Environment variables — never commit real secrets
 .env
 .env.local
