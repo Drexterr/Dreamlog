@@ -1,6 +1,6 @@
 # Privacy Policy
 
-**DreamLog — Voice Journaling App**
+**DreamLog - Voice Journaling App**
 **Effective Date:** 29 May 2026
 **Last Updated:** 29 May 2026
 
@@ -14,7 +14,7 @@ Before the legal detail: here is what actually happens to your data, in plain En
 - Your transcript is stored **encrypted** on our servers. We cannot read it without your account credentials.
 - To generate your AI reflection, your transcript is sent to **Anthropic** (makers of Claude). Anthropic does not use your data to train their models and does not retain it after processing under our zero-retention agreement.
 - Your mood scores, reflections, and journal history are stored encrypted on our servers and **auto-deleted after 180 days** unless you choose to keep them longer.
-- We will never sell your data. We will never show you ads. We will never share your journal with your employer, insurer, or any third party — including in our B2B corporate wellness product.
+- We will never sell your data. We will never show you ads. We will never share your journal with your employer, insurer, or any third party - including in our B2B corporate wellness product.
 - You can delete everything, permanently, at any time from Settings → Delete my account.
 
 ---
@@ -34,8 +34,8 @@ For privacy questions, contact us at: **privacy@dreamlog.app**
 | Data | Purpose | Retained Until |
 |---|---|---|
 | Name and email address | Account creation and identification | Account deletion |
-| Password (bcrypt hashed — we cannot reverse it) | Authentication | Account deletion |
-| Audio recordings | Transcription only — deleted immediately after | **Deleted within minutes of upload** |
+| Password (bcrypt hashed - we cannot reverse it) | Authentication | Account deletion |
+| Audio recordings | Transcription only - deleted immediately after | **Deleted within minutes of upload** |
 | Voice journal transcripts | AI analysis and your personal history | 180 days (configurable) or account deletion |
 | Follow-up conversation messages | AI responses and your conversation history | 180 days or account deletion |
 | User goal and preferences | Personalising AI reflections | Account deletion |
@@ -65,13 +65,13 @@ For privacy questions, contact us at: **privacy@dreamlog.app**
 
 We use your data **only** for the following purposes:
 
-1. **Providing the service** — transcribing your recordings, generating AI reflections, storing your journal history
-2. **Safety** — detecting crisis signals in transcripts and providing emergency resources (see Section 8)
-3. **Personalisation** — using your past entries and stated goal to make reflections feel relevant to you
-4. **Push notifications** — morning nudges you opt into; you can disable these at any time
-5. **Customer support** — responding to requests you initiate
-6. **Legal compliance** — meeting obligations under applicable law
-7. **Security** — detecting and preventing unauthorised access
+1. **Providing the service** - transcribing your recordings, generating AI reflections, storing your journal history
+2. **Safety** - detecting crisis signals in transcripts and providing emergency resources (see Section 8)
+3. **Personalisation** - using your past entries and stated goal to make reflections feel relevant to you
+4. **Push notifications** - morning nudges you opt into; you can disable these at any time
+5. **Customer support** - responding to requests you initiate
+6. **Legal compliance** - meeting obligations under applicable law
+7. **Security** - detecting and preventing unauthorised access
 
 We do not use your data for advertising, profiling for third-party sale, or automated decisions that have legal or significant effects on you.
 
@@ -133,7 +133,7 @@ Subscription payments are processed by [Razorpay / Stripe]. We do not store card
 
 ### 5.3 Where Data Is Stored
 
-Your data is stored on servers located in [India / Singapore]. We do not transfer personal data outside of these jurisdictions except as described in Section 4 (Anthropic, OpenAI, Google Firebase — which operate under their own compliance frameworks).
+Your data is stored on servers located in [India / Singapore]. We do not transfer personal data outside of these jurisdictions except as described in Section 4 (Anthropic, OpenAI, Google Firebase - which operate under their own compliance frameworks).
 
 ### 5.4 Access Controls
 
@@ -160,19 +160,19 @@ We will respond to verifiable data requests within **30 days**.
 
 ---
 
-## 7. B2B Corporate Wellness — Special Provisions
+## 7. B2B Corporate Wellness - Special Provisions
 
 If you use DreamLog through an employer's corporate wellness program:
 
 - **Your employer cannot read your journal.** They receive only anonymised, aggregated mood statistics across teams of 5 or more people. Individual entries are never exposed.
 - **You choose to participate.** Enrollment is voluntary and self-initiated.
 - **Your employer cannot identify you** from any data they receive. The aggregation is designed to make individual identification impossible.
-- **Leaving a company program** does not delete your account or journal data — it only removes you from the anonymised team aggregate.
+- **Leaving a company program** does not delete your account or journal data - it only removes you from the anonymised team aggregate.
 - Crisis entries are **always excluded** from corporate dashboards.
 
 ---
 
-## 8. Crisis Detection — How It Works and Its Limits
+## 8. Crisis Detection - How It Works and Its Limits
 
 DreamLog uses automated crisis detection on your transcripts as a safety feature. This is not a substitute for emergency services.
 
@@ -184,7 +184,7 @@ DreamLog uses automated crisis detection on your transcripts as a safety feature
 **What it does not do:**
 - Contact anyone on your behalf
 - Alert your employer, family, or any third party
-- Guarantee detection of all crisis situations — it is a best-effort safety screen
+- Guarantee detection of all crisis situations - it is a best-effort safety screen
 
 **If you are in immediate danger:** call your local emergency services (India: **112**, mental health: **iCall 9152987821**, Vandrevala Foundation **1860-2662-345**).
 
@@ -192,7 +192,7 @@ Crisis entries are **excluded from all sharing features**, mood analytics shared
 
 ---
 
-## 9. Therapist Dashboard — Special Provisions
+## 9. Therapist Dashboard - Special Provisions
 
 If you link your account to a registered therapist on DreamLog:
 

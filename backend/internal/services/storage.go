@@ -29,7 +29,7 @@ func AudioKey(userID, entryID uuid.UUID) string {
 
 // PresignUpload generates a PUT URL and the corresponding object key.
 // When STORAGE_PROXY_BASE_URL is set, returns a backend proxy URL instead of a
-// direct MinIO presigned URL — used in dev where MinIO isn't reachable from the device.
+// direct MinIO presigned URL - used in dev where MinIO isn't reachable from the device.
 func (s *StorageService) PresignUpload(ctx context.Context, userID uuid.UUID) (uploadURL, key string, err error) {
 	entryID := uuid.New()
 	key = AudioKey(userID, entryID)

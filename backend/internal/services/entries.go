@@ -69,7 +69,7 @@ func (s *EntryService) Create(ctx context.Context, userID uuid.UUID, input *mode
 		Attempt:     0,
 	}
 	if err := s.queue.Enqueue(ctx, job); err != nil {
-		// Entry is created but not queued — the worker can recover these via a reconciler (Phase 2).
+		// Entry is created but not queued - the worker can recover these via a reconciler (Phase 2).
 		// Log the error and return the entry so the client knows the upload succeeded.
 		// Do not roll back: the entry row is the source of truth.
 		return entry, fmt.Errorf("entryService.Create: enqueue (entry created, will retry): %w", err)

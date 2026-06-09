@@ -45,7 +45,7 @@ type fcmNotification struct {
 // SendToToken sends a single push notification to one device token.
 func (s *FCMService) SendToToken(ctx context.Context, token, title, body string, data map[string]string) error {
 	if s.cfg.ProjectID == "" || s.cfg.CredentialsJSON == "" {
-		// FCM not configured — skip silently in dev.
+		// FCM not configured - skip silently in dev.
 		return nil
 	}
 
@@ -117,5 +117,5 @@ func (s *FCMService) getAccessToken(ctx context.Context) (string, error) {
 	//
 	// The stub below returns an error so FCM is skipped in dev without credentials.
 	_ = sa
-	return "", fmt.Errorf("fcm: production credentials required — add golang.org/x/oauth2/google")
+	return "", fmt.Errorf("fcm: production credentials required - add golang.org/x/oauth2/google")
 }

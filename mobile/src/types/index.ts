@@ -25,7 +25,7 @@ export interface Entry {
 export interface EntryAnalysis {
   id: string;
   entry_id: string;
-  mood_score: number;        // 1-100 — shown only as color, never as number
+  mood_score: number;        // 1-100 - shown only as color, never as number
   emotional_tone: EmotionalTone[];
   topics: string[];
   key_quotes: string[];
@@ -85,8 +85,8 @@ export interface User {
   plan: Plan;
   plan_expires_at?: string;    // RFC3339, null if no expiry
   is_deleted: boolean;
-  first_joined_at?: string;    // RFC3339 — original registration date
-  reregistered_at?: string;    // RFC3339 — set if account was deleted and re-registered
+  first_joined_at?: string;    // RFC3339 - original registration date
+  reregistered_at?: string;    // RFC3339 - set if account was deleted and re-registered
   reregistration_count: number;
   created_at: string;
   updated_at: string;

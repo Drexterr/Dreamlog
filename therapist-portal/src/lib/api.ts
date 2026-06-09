@@ -72,6 +72,11 @@ export const api = {
       '/auth/login', { email, password }
     ).then(r => r.data),
 
+  authRegister: (email: string, password: string, name: string) =>
+    http.post<{ token: string; user: { id: string; name: string; email: string } }>(
+      '/auth/register', { email, password, name }
+    ).then(r => r.data),
+
   registerTherapist: (name: string, email: string, credentials: string) =>
     http.post<Therapist>('/therapists/register', { name, email, credentials }).then(r => r.data),
 

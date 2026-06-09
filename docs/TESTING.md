@@ -9,7 +9,7 @@ Run specific package: `go test ./internal/services/...`
 
 ---
 
-## Priority 1 — Safety-Critical (Build First)
+## Priority 1 - Safety-Critical (Build First)
 
 ### Crisis Detection (`internal/services/crisis.go`)
 
@@ -30,7 +30,7 @@ Use a mock Claude client for Stage 2 tests. The mock should be injectable via in
 
 ---
 
-## Priority 2 — Core Pipeline (`internal/workers/transcription.go`)
+## Priority 2 - Core Pipeline (`internal/workers/transcription.go`)
 
 The entire app's value runs through this file.
 
@@ -48,7 +48,7 @@ Use table-driven tests. Mock Whisper, Claude, and storage clients via interfaces
 
 ---
 
-## Priority 3 — Claude Service (`internal/services/claude.go`)
+## Priority 3 - Claude Service (`internal/services/claude.go`)
 
 ```go
 TestAnalyzeEntry_ParsesAllFields       // valid JSON → all 7 fields populated in AnalysisResult
@@ -63,7 +63,7 @@ TestFollowUp_ContextInjected           // original transcript + reflection in sy
 
 ---
 
-## Priority 4 — HTTP Handlers (Integration Tests)
+## Priority 4 - HTTP Handlers (Integration Tests)
 
 Use `net/http/httptest` with Gin in test mode. Use a real test PostgreSQL instance (see below) or mock repositories.
 
@@ -81,7 +81,7 @@ TestSearch_FullText                    // GET /entries/search?q=anxiety → matc
 TestAuth_InvalidJWT                    // missing or malformed Authorization → 401
 TestAuth_ExpiredJWT                    // expired token → 401
 
-// User profile — age_range
+// User profile - age_range
 TestUpdateMe_AgeRange_Valid            // PUT /me { age_range: "25_34" } → 200, field persisted
 TestUpdateMe_AgeRange_InvalidValue     // PUT /me { age_range: "22_30" } → 400
 TestUpdateMe_AgeRange_Omitted          // PUT /me without age_range → age_range unchanged (null stays null)
@@ -91,14 +91,14 @@ TestUpdateMe_AllFieldsEmpty            // PUT /me with no fields → 400 "at lea
 
 ---
 
-## Priority 5 — Auth (`internal/services/auth.go`)
+## Priority 5 - Auth (`internal/services/auth.go`)
 
 ```go
 TestRegister_HashesPassword            // stored hash != plaintext
 TestRegister_DuplicateEmail            // second register with same email → error
 TestLogin_CorrectPassword              // returns valid JWT
 TestLogin_WrongPassword                // returns error
-TestLogin_UnknownEmail                 // returns error (same message as wrong password — no enumeration)
+TestLogin_UnknownEmail                 // returns error (same message as wrong password - no enumeration)
 TestJWT_ValidToken                     // minted token passes middleware validation
 TestJWT_ExpiredToken                   // expired token rejected
 TestJWT_WrongSecret                    // token signed with wrong secret rejected
@@ -106,7 +106,7 @@ TestJWT_WrongSecret                    // token signed with wrong secret rejecte
 
 ---
 
-## Priority 6 — Context Builder (`internal/services/context_builder.go`)
+## Priority 6 - Context Builder (`internal/services/context_builder.go`)
 
 ```go
 TestContextBuilder_NewUser             // 0 past entries → empty trends, no panic
@@ -118,7 +118,7 @@ TestContextBuilder_TopicTrend          // correctly aggregates top topics across
 
 ---
 
-## Priority 7 — Nudge Scheduler (`internal/workers/nudge_scheduler.go`)
+## Priority 7 - Nudge Scheduler (`internal/workers/nudge_scheduler.go`)
 
 ```go
 TestNudge_SendsPendingNudges           // nudge with scheduled_at in past → FCM called, status=sent
@@ -139,7 +139,7 @@ Use a real PostgreSQL instance for integration tests. Options:
 1. **Docker in CI**: `docker run -e POSTGRES_PASSWORD=test -p 5433:5432 postgres:16`
 2. **`testcontainers-go`**: spin up a Postgres container per test suite (preferred)
 
-Never mock the database in integration tests — mocked DB tests have failed to catch real bugs.
+Never mock the database in integration tests - mocked DB tests have failed to catch real bugs.
 
 Pattern for test DB setup:
 ```go
@@ -195,7 +195,7 @@ go tool cover -html=coverage.out
 
 ---
 
-## Priority 8 — Therapy Mode (`internal/services/therapy.go`, `internal/handlers/therapy.go`)
+## Priority 8 - Therapy Mode (`internal/services/therapy.go`, `internal/handlers/therapy.go`)
 
 ### Safety-Critical (same bar as Priority 1)
 
@@ -241,7 +241,7 @@ TestTherapy_ProPlan_AllowsTwoSessions          // Pro user gets 2 free sessions/
 ### Mock Interfaces for Therapy Tests
 
 ```go
-// services/therapy.go — add to AIClient interface
+// services/therapy.go - add to AIClient interface
 type AIClient interface {
     AnalyzeEntry(ctx context.Context, input AnalyzeEntryInput) (*AnalysisResult, error)
     SendMessage(ctx context.Context, input ConversationInput) (string, error)
@@ -257,12 +257,12 @@ type TTSClient interface {
 
 ---
 
-## Priority 9 — Enhanced Therapy Mode (Phase 8)
+## Priority 9 - Enhanced Therapy Mode (Phase 8)
 
-### Safety-Critical — Layered Crisis (blocking, same bar as Priority 1 and 8)
+### Safety-Critical - Layered Crisis (blocking, same bar as Priority 1 and 8)
 
 ```go
-// Layered crisis — de-escalate first, then hard stop
+// Layered crisis - de-escalate first, then hard stop
 TestTherapy_LayeredCrisis_FirstDetection_DeEscalates         // first crisis → session stays active, crisis_warnings=1, de-escalation sent
 TestTherapy_LayeredCrisis_SecondDetection_HardStop           // second crisis → status=crisis_detected, helpline resources returned, no further messages
 TestTherapy_LayeredCrisis_FailSafe_ClaudeUnreachableOnFirst  // Claude unreachable on first detection → treat as hard stop immediately (fail safe)
@@ -305,11 +305,11 @@ TestTherapy_WindDown_TimeRemainingAccurate         // time_remaining_sec in sess
 
 ---
 
-## Priority 10 — User Profile & UX (`app/(tabs)/settings.tsx`, `app/_layout.tsx`, `app/onboarding.tsx`)
+## Priority 10 - User Profile & UX (`app/(tabs)/settings.tsx`, `app/_layout.tsx`, `app/onboarding.tsx`)
 
 These are mobile-only. Verify manually with Expo dev server; no backend tests required.
 
-### Onboarding — Age Range Step
+### Onboarding - Age Range Step
 
 ```
 OnboardingAgeRange_StepAppearsAfterName   // step 3 shown after preferred name step
@@ -322,7 +322,7 @@ OnboardingAgeRange_BackNavigatesToName    // Back button returns to step 2 (name
 OnboardingAgeRange_ContinuesToModeGate    // continuing advances to step 4 (Journal/Therapy)
 ```
 
-### Settings — Profile Card & Modal
+### Settings - Profile Card & Modal
 
 ```
 Settings_ProfileCard_ShowsNameNotEmail    // card sub-text shows "N entries · Plan" not email
@@ -348,7 +348,7 @@ Greeting_NotShown_WhenNoToken            // no greeting on auth screen
 Greeting_DoesNotBlockInteraction         // overlay gone after animation; tabs are fully interactive
 ```
 
-### Therapy Index — Hero Redesign (`app/therapy/index.tsx`)
+### Therapy Index - Hero Redesign (`app/therapy/index.tsx`)
 
 ```
 TherapyIndex_AmbientGlow_Visible              // pulsating purple glow renders behind hero, not on top of content
@@ -364,7 +364,7 @@ TherapyIndex_SessionCard_StatusBadge          // status badge visible on each se
 TherapyIndex_StartCTA_NavigatesToPersonaPicker // "Start a Session" CTA → persona picker screen
 ```
 
-### Therapy Session Screen — Voice-First Redesign (`app/therapy/session.tsx`)
+### Therapy Session Screen - Voice-First Redesign (`app/therapy/session.tsx`)
 
 ```
 TherapySession_OrbVisible_VoiceMode           // SessionOrb visible in center when inputMode=voice
@@ -398,7 +398,7 @@ TherapyPricing_EverySessionIncludes_Visible      // info box with 5 included fea
 TherapyPricing_SafetyDisclaimer_Visible          // crisis/not-therapy disclaimer text at bottom
 ```
 
-### Therapy — 402 Credit Redirect
+### Therapy - 402 Credit Redirect
 
 ```
 TherapyPersonaPicker_402_RedirectsToPricing      // starting session with no credits → navigates to /therapy/pricing
@@ -412,7 +412,7 @@ TherapyPersonaPicker_OtherError_ShowsAlert       // non-402 errors still show Al
 Before any PR is merged:
 - `go test -race ./...` must pass
 - `go vet ./...` must pass
-- Crisis detection tests must pass (blocking — no merges if these fail)
+- Crisis detection tests must pass (blocking - no merges if these fail)
 - Coverage for `internal/services/crisis.go` must be ≥ 90%
-- Therapy mode crisis tests must pass (blocking — same severity as Priority 1)
-- Layered crisis tests (Priority 9) must pass (blocking — same severity)
+- Therapy mode crisis tests must pass (blocking - same severity as Priority 1)
+- Layered crisis tests (Priority 9) must pass (blocking - same severity)

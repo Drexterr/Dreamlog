@@ -58,7 +58,7 @@ type StorageConfig struct {
 
 type SupabaseConfig struct {
 	JWTSecret string
-	URL       string // e.g. https://xxxx.supabase.co — used to build JWKS URL for ES256 tokens
+	URL       string // e.g. https://xxxx.supabase.co - used to build JWKS URL for ES256 tokens
 }
 
 type OpenAIConfig struct {
@@ -79,7 +79,7 @@ type FCMConfig struct {
 }
 
 type AppConfig struct {
-	BaseURL string // e.g. "https://dreamlog.app" — used to build share URLs
+	BaseURL string // e.g. "https://dreamlog.app" - used to build share URLs
 }
 
 type StripeConfig struct {

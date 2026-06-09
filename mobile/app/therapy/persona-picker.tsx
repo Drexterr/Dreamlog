@@ -38,7 +38,7 @@ export default function PersonaPickerScreen() {
     } catch (err: any) {
       const status = err?.response?.status;
       if (status === 402) {
-        // No session credits — send straight to the therapy pricing screen.
+        // No session credits - send straight to the therapy pricing screen.
         router.replace('/therapy/pricing' as any);
       } else {
         Alert.alert('Could not start session', 'Please try again in a moment.');

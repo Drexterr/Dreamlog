@@ -26,7 +26,7 @@ func ErrorHandler(log *zap.Logger) gin.HandlerFunc {
 			return
 		}
 
-		// Unknown error — do not leak internals.
+		// Unknown error - do not leak internals.
 		log.Error("unhandled error", zap.Error(err),
 			zap.String("path", c.Request.URL.Path),
 			zap.String("method", c.Request.Method),

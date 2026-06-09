@@ -73,7 +73,7 @@ export async function flush(
       if (updated.attempts < MAX_ITEM_ATTEMPTS) {
         remaining.push(updated);
       }
-      // Else: silently drop — too many failures, avoid infinite accumulation.
+      // Else: silently drop - too many failures, avoid infinite accumulation.
     }
   }
 

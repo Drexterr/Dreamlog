@@ -465,7 +465,7 @@ func TestTherapy_PaymentRequired_NonStubbedMode(t *testing.T) {
 	}
 }
 
-// ── Phase 8: Layered Crisis (ADR-014) — blocking, same bar as Priority 1 ─────
+// ── Phase 8: Layered Crisis (ADR-014) - blocking, same bar as Priority 1 ─────
 
 func TestTherapy_LayeredCrisis_FirstDetection_DeEscalates(t *testing.T) {
 	repo := newFakeTherapyRepo()
@@ -503,7 +503,7 @@ func TestTherapy_LayeredCrisis_SessionOpenAfterFirstWarning(t *testing.T) {
 
 	session := startSession(t, svc, userID)
 
-	// First crisis — de-escalate.
+	// First crisis - de-escalate.
 	_, err := svc.SendMessage(context.Background(), session.ID, userID, models.SendTherapyMessageRequest{
 		Content: "I want to kill myself", InputMode: "text",
 	})
@@ -527,12 +527,12 @@ func TestTherapy_LayeredCrisis_SecondDetection_HardStop(t *testing.T) {
 
 	session := startSession(t, svc, userID)
 
-	// First detection — de-escalate.
+	// First detection - de-escalate.
 	_, _ = svc.SendMessage(context.Background(), session.ID, userID, models.SendTherapyMessageRequest{
 		Content: "I want to kill myself", InputMode: "text",
 	})
 
-	// Second detection — hard stop.
+	// Second detection - hard stop.
 	resp, err := svc.SendMessage(context.Background(), session.ID, userID, models.SendTherapyMessageRequest{
 		Content: "I want to end my life", InputMode: "text",
 	})
@@ -590,7 +590,7 @@ func TestTherapy_LayeredCrisis_FailSafe_ClaudeUnreachableOnFirst(t *testing.T) {
 	if err != nil {
 		t.Fatalf("must not error even when Claude is unreachable during de-escalation: %v", err)
 	}
-	// Must hard-stop immediately — not attempt de-escalation then leave open.
+	// Must hard-stop immediately - not attempt de-escalation then leave open.
 	if resp.SessionState.Status != models.TherapyStatusCrisisDetected {
 		t.Errorf("Claude unreachable on first crisis + de-escalation must hard-stop; got %s", resp.SessionState.Status)
 	}
@@ -610,7 +610,7 @@ func TestTherapy_LayeredCrisis_FailSafe_TimeoutOnFirst(t *testing.T) {
 	session := startSession(t, svc, userID)
 
 	ctx, cancel := context.WithCancel(context.Background())
-	cancel() // cancel immediately — forces timeout path
+	cancel() // cancel immediately - forces timeout path
 
 	resp, err := svc.SendMessage(ctx, session.ID, userID, models.SendTherapyMessageRequest{
 		Content: "I feel like nobody cares if I live or die", InputMode: "text",
@@ -809,7 +809,7 @@ func TestTherapy_PastSummariesFromSnapshotNotLive(t *testing.T) {
 
 	session := startSession(t, svc, userID)
 
-	// Change repo data after session started — should NOT affect this session.
+	// Change repo data after session started - should NOT affect this session.
 	repo.pastSummaries = []string{"New summary added after start."}
 
 	got, err := svc.GetSession(context.Background(), session.ID, userID)

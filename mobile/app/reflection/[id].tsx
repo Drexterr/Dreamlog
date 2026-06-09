@@ -50,7 +50,7 @@ function CrisisCareView({
         You're not alone.
       </Text>
       <Text style={[styles.crisisSubtext, { color: colors.textSecondary }]}>
-        What you're feeling is real — and support is available right now.
+        What you're feeling is real - and support is available right now.
         Please reach out to someone who can help.
       </Text>
 
@@ -92,7 +92,7 @@ function CrisisCareView({
         onPress={() => openURL('https://yourdost.com/?utm_source=dreamlog&utm_medium=crisis')}
         activeOpacity={0.8}
       >
-        <Text style={[styles.onlineBtnText, { color: colors.textPrimary }]}>Talk online — YourDOST</Text>
+        <Text style={[styles.onlineBtnText, { color: colors.textPrimary }]}>Talk online - YourDOST</Text>
         <Text style={[styles.onlineBtnSub, { color: colors.textMuted }]}>Anonymous · Available now</Text>
       </TouchableOpacity>
 

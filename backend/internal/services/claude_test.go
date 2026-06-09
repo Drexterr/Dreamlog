@@ -177,7 +177,7 @@ func TestAnalyzeEntry_MarkdownFencedJSON_StillParses(t *testing.T) {
 }
 
 func TestAnalyzeEntry_StubMode_ReturnsValidStub(t *testing.T) {
-	// No HTTP server — stub mode must never make a network call.
+	// No HTTP server - stub mode must never make a network call.
 	svc := NewClaudeService(&appconfig.AnthropicConfig{
 		StubAnalysis: true,
 		Model:        "m",
@@ -209,7 +209,7 @@ func TestAnalyzeEntry_StubMode_ReturnsValidStub(t *testing.T) {
 
 func TestAnalyzeEntry_EmptyAPIKey_ReturnsError(t *testing.T) {
 	svc := NewClaudeService(&appconfig.AnthropicConfig{
-		APIKey:       "", // blank — no stub either
+		APIKey:       "", // blank - no stub either
 		StubAnalysis: false,
 		Model:        "m",
 	})
@@ -261,7 +261,7 @@ func TestAnalyzeEntry_WithGoal_GoalGuidanceInSystemMessage(t *testing.T) {
 		t.Fatalf("unexpected error: %v", err)
 	}
 
-	// The captured body is the JSON sent to the API — verify it contains goal guidance.
+	// The captured body is the JSON sent to the API - verify it contains goal guidance.
 	if !strings.Contains(captured, "stress") {
 		t.Error("API request must contain goal guidance when UserGoal is set")
 	}
@@ -658,7 +658,7 @@ func validDreamAnalysisJSON() string {
 		MorningNudge: "Notice if that feeling of being chased follows you today.",
 		DreamSymbols:      []string{"house", "pursuit", "door"},
 		DreamType:         "nightmare",
-		PsychologicalLens: "The house being chased through is a classic Jungian symbol of the self — its unfamiliar rooms suggesting unexplored or avoided aspects of the psyche. The pursuer likely represents something the dreamer is unwilling to confront.",
+		PsychologicalLens: "The house being chased through is a classic Jungian symbol of the self - its unfamiliar rooms suggesting unexplored or avoided aspects of the psyche. The pursuer likely represents something the dreamer is unwilling to confront.",
 		VedicLens:         "In Svapna Shastra, being chased in a dream is considered a tamasic sign associated with unresolved samskaras. The unfamiliar house may represent a past life setting or accumulated fears seeking release through the dream state.",
 	}
 	b, _ := json.Marshal(out)

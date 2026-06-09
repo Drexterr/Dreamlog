@@ -25,7 +25,7 @@ func NewCrisisDetector(claude *ClaudeService) *CrisisDetector {
 	return &CrisisDetector{claude: claude}
 }
 
-// highCertaintyPhrases trigger crisis response immediately — no ambiguity.
+// highCertaintyPhrases trigger crisis response immediately - no ambiguity.
 var highCertaintyPhrases = []string{
 	"kill myself", "killing myself",
 	"end my life", "ending my life",
@@ -44,7 +44,7 @@ var highCertaintyPhrases = []string{
 	"kill him", "kill her", "kill them",
 }
 
-// ambiguousPhrases need Claude to decide — may be metaphorical.
+// ambiguousPhrases need Claude to decide - may be metaphorical.
 var ambiguousPhrases = []string{
 	"not worth living",
 	"can't go on",
@@ -208,13 +208,13 @@ func buildCrisisResponse(country string) string {
 	helplines, ok := countryHelplines[strings.ToUpper(country)]
 	if !ok {
 		helplines = `International:
-  findahelpline.com — resources in 200+ countries
+  findahelpline.com - resources in 200+ countries
   International Association for Suicide Prevention: iasp.info/resources/Crisis_Centres/
 
 Emergency: call your local emergency number`
 	}
 
-	return `What you're feeling right now is real, and it matters — and so do you.
+	return `What you're feeling right now is real, and it matters - and so do you.
 
 You don't have to carry this alone. Please reach out to someone who can help right now.
 

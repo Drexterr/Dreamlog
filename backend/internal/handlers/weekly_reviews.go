@@ -18,7 +18,7 @@ func NewWeeklyReviewHandler(repo weeklyReviewListRepo) *WeeklyReviewHandler {
 }
 
 // GetLatest returns the most recent completed weekly review for the authenticated user.
-// GET /reviews/weekly/latest — requires DreamLog+ or higher.
+// GET /reviews/weekly/latest - requires DreamLog+ or higher.
 func (h *WeeklyReviewHandler) GetLatest(c *gin.Context) {
 	user := middleware.UserFromCtx(c.Request.Context())
 	if user == nil {
@@ -42,7 +42,7 @@ func (h *WeeklyReviewHandler) GetLatest(c *gin.Context) {
 }
 
 // List returns the most recent completed weekly reviews for the authenticated user.
-// GET /reviews/weekly — requires DreamLog+ or higher.
+// GET /reviews/weekly - requires DreamLog+ or higher.
 func (h *WeeklyReviewHandler) List(c *gin.Context) {
 	user := middleware.UserFromCtx(c.Request.Context())
 	if user == nil {

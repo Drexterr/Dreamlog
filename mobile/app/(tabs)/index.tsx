@@ -1,10 +1,10 @@
 /**
- * Home screen — the first thing the user sees.
+ * Home screen - the first thing the user sees.
  *
  * Features:
  * - Greeting based on time of day
  * - Streak badge (top right)
- * - Breathing orb (center) — tap to start recording
+ * - Breathing orb (center) - tap to start recording
  * - Mini mood bar for the current week (bottom)
  * - Star field background
  */
@@ -205,7 +205,7 @@ export default function HomeScreen() {
       <StarField />
 
       <SafeAreaView style={styles.safe}>
-        {/* Streak badge — absolute in top-right, within safe area */}
+        {/* Streak badge - absolute in top-right, within safe area */}
         {streak && streak.current_streak > 0 && (
           <View style={[styles.streakBadge, { borderColor: colors.border, backgroundColor: colors.card }]}>
             <Text style={styles.streakEmoji}>🔥</Text>
@@ -213,7 +213,7 @@ export default function HomeScreen() {
           </View>
         )}
 
-        {/* Centered content — grows to fill available space */}
+        {/* Centered content - grows to fill available space */}
         <Animated.View style={[styles.centerContent, { opacity: fadeAnim }]}>
           <View style={styles.greetingWrap}>
             <Text style={[styles.greetingSub, { color: colors.textSecondary }]}>{greeting}</Text>
@@ -239,7 +239,7 @@ export default function HomeScreen() {
           </View>
         </Animated.View>
 
-        {/* Mini mood bar — always below center content, never overlaps */}
+        {/* Mini mood bar - always below center content, never overlaps */}
         <Animated.View style={[styles.moodSection, { opacity: fadeAnim }]}>
           <MiniMoodBar days={weekMoods} />
         </Animated.View>
@@ -280,7 +280,7 @@ const styles = StyleSheet.create({
     fontFamily: 'Nunito_600SemiBold',
   },
 
-  // Center content — fills available vertical space, centres children
+  // Center content - fills available vertical space, centres children
   centerContent: {
     flex: 1,
     alignItems: 'center',
@@ -374,7 +374,7 @@ const styles = StyleSheet.create({
     letterSpacing: 0.3,
   },
 
-  // Mini mood bar — always below the orb section, no absolute positioning
+  // Mini mood bar - always below the orb section, no absolute positioning
   moodSection: {
     width: '100%',
     paddingTop: 16,

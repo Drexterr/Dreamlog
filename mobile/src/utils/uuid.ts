@@ -1,6 +1,6 @@
 /**
  * Cross-platform UUID v4 generator.
- * Uses Math.random — suitable for local IDs only, not for security purposes.
+ * Uses Math.random - suitable for local IDs only, not for security purposes.
  */
 export function uuid(): string {
   return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {

@@ -331,7 +331,7 @@ export default function TherapyPricingScreen() {
             A space to talk,{'\n'}grounded in your journal
           </Text>
           <Text style={[styles.subheading, { color: colors.textSecondary }]}>
-            AI-assisted voice conversations that know your emotional history. Not a therapy replacement — a thoughtful companion that meets you where you are.
+            AI-assisted voice conversations that know your emotional history. Not a therapy replacement - a thoughtful companion that meets you where you are.
           </Text>
 
           {/* Free trial badge */}
@@ -372,7 +372,7 @@ export default function TherapyPricingScreen() {
             {[
               'Up to 60 minutes of conversation',
               'AI companion aware of your journal history',
-              'Voice or text — your choice, any turn',
+              'Voice or text - your choice, any turn',
               'Two-stage crisis detection throughout',
               'Post-session summary you can revisit',
             ].map((item) => (

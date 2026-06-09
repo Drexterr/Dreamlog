@@ -141,7 +141,7 @@ func TestEnforceTokenBudget_AllSummariesDroppedIfNeeded(t *testing.T) {
 	enforceTokenBudget(input)
 
 	// If budget is still exceeded after dropping all summaries,
-	// transcript itself gets trimmed. Either way — no panic.
+	// transcript itself gets trimmed. Either way - no panic.
 }
 
 // ── trimChars ─────────────────────────────────────────────────────────────────
@@ -175,7 +175,7 @@ func TestTrimChars_LongString_TruncatesWithEllipsis(t *testing.T) {
 }
 
 func TestTrimChars_MultiByte_CountsRunes(t *testing.T) {
-	// Each Hindi char is 3 bytes but 1 rune — trimChars must count runes, not bytes.
+	// Each Hindi char is 3 bytes but 1 rune - trimChars must count runes, not bytes.
 	s := strings.Repeat("आ", 200) // 200 runes, 600 bytes
 	result := trimChars(s, 100)
 	runes := []rune(result)

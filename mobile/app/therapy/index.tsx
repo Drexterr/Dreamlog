@@ -20,7 +20,7 @@ import { getCachedRegion, THERAPY_SESSION_PRICE } from '../../src/services/regio
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 function formatDuration(sec?: number): string {
-  if (!sec) return '—';
+  if (!sec) return '-';
   const m = Math.floor(sec / 60);
   const s = sec % 60;
   return m > 0 ? `${m}m ${s}s` : `${s}s`;
@@ -245,7 +245,7 @@ export default function TherapyIndexScreen() {
               A space to talk,{'\n'}grounded in your{'\n'}journal
             </Text>
             <Text style={[styles.heroSub, { color: colors.textSecondary }]}>
-              An AI companion that already knows your emotional history — so you don't have to start from scratch.
+              An AI companion that already knows your emotional history - so you don't have to start from scratch.
             </Text>
           </View>
 

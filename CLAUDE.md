@@ -6,12 +6,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Always read these files before touching code. They define contracts, invariants, and decisions that must not be broken silently.
 
-- @docs/ARCHITECTURE.md — system design, data flow, full layer map, DB schema
-- @docs/API_CONTRACT.md — request/response shapes for every endpoint
-- @docs/DECISIONS.md — why things are built the way they are (read before proposing changes to core patterns)
-- @docs/TESTING.md — what must be tested, how to structure tests
-- @docs/ROADMAP.md — phase status and what's planned next
-- @ANTIGRAVITY.md — rules, guidelines, and commands for the Antigravity AI coding assistant
+- @docs/ARCHITECTURE.md - system design, data flow, full layer map, DB schema
+- @docs/API_CONTRACT.md - request/response shapes for every endpoint
+- @docs/DECISIONS.md - why things are built the way they are (read before proposing changes to core patterns)
+- @docs/TESTING.md - what must be tested, how to structure tests
+- @docs/ROADMAP.md - phase status and what's planned next
+- @ANTIGRAVITY.md - rules, guidelines, and commands for the Antigravity AI coding assistant
 
 When working in the backend: also read @backend/CLAUDE.md
 When working in the mobile: also read @mobile/CLAUDE.md
@@ -59,7 +59,7 @@ make mobile-android
 make mobile-ios
 ```
 
-Copy `.env.example` to `.env` before running — it's pre-filled for local dev (no external API keys required).
+Copy `.env.example` to `.env` before running - it's pre-filled for local dev (no external API keys required).
 
 ## Architecture
 
@@ -77,45 +77,45 @@ Mobile → POST /entries/:id/conversation + POST /conversations/:id/messages (ma
 
 ### Backend (`backend/`)
 
-- **`cmd/api`** — Gin HTTP server entry point; runs migrations on startup
-- **`cmd/worker`** — Long-running worker; BRPOPs from Redis, processes entries sequentially
-- **`internal/handlers/`** — Thin HTTP handlers (router.go wires everything via DI)
-- **`internal/services/`** — All business logic; key files:
-  - `claude.go` — Anthropic API calls (entry analysis + conversation turns)
-  - `transcription.go` — Whisper API (or local faster-whisper-server in dev)
-  - `crisis.go` — Two-stage detection: keyword match → Claude confirmation; fails safe (treats uncertain as crisis)
-  - `context_builder.go` — Fetches last 5 entries to inject into Claude prompts
-  - `prompts.go` — All Claude system prompts live here
-  - `auth.go` — Local email/password auth: bcrypt hashing + JWT minting (separate from Supabase path)
-  - `fcm.go` — Firebase Cloud Messaging via HTTP v1 API; skips gracefully when credentials absent
-  - `nudge.go` — Morning nudge scheduling logic (timezone-aware, uses `users.fcm_nudge_hour`)
-- **`internal/workers/transcription.go`** — Full processing pipeline per entry
-- **`internal/workers/nudge_scheduler.go`** — Separate goroutine; polls every minute for due nudges and dispatches FCM
-- **`internal/repositories/`** — pgx queries; entries use PostgreSQL `tsvector` + GIN index for full-text search; `nudges.go` handles device tokens and nudge lifecycle
-- **`pkg/queue/`** — Redis LPUSH/BRPOP abstraction
-- **`pkg/storage/`** — S3-compatible client (MinIO locally, Cloudflare R2 in prod)
-- **`migrations/`** — SQL files managed by golang-migrate; run automatically on startup
+- **`cmd/api`** - Gin HTTP server entry point; runs migrations on startup
+- **`cmd/worker`** - Long-running worker; BRPOPs from Redis, processes entries sequentially
+- **`internal/handlers/`** - Thin HTTP handlers (router.go wires everything via DI)
+- **`internal/services/`** - All business logic; key files:
+  - `claude.go` - Anthropic API calls (entry analysis + conversation turns)
+  - `transcription.go` - Whisper API (or local faster-whisper-server in dev)
+  - `crisis.go` - Two-stage detection: keyword match → Claude confirmation; fails safe (treats uncertain as crisis)
+  - `context_builder.go` - Fetches last 5 entries to inject into Claude prompts
+  - `prompts.go` - All Claude system prompts live here
+  - `auth.go` - Local email/password auth: bcrypt hashing + JWT minting (separate from Supabase path)
+  - `fcm.go` - Firebase Cloud Messaging via HTTP v1 API; skips gracefully when credentials absent
+  - `nudge.go` - Morning nudge scheduling logic (timezone-aware, uses `users.fcm_nudge_hour`)
+- **`internal/workers/transcription.go`** - Full processing pipeline per entry
+- **`internal/workers/nudge_scheduler.go`** - Separate goroutine; polls every minute for due nudges and dispatches FCM
+- **`internal/repositories/`** - pgx queries; entries use PostgreSQL `tsvector` + GIN index for full-text search; `nudges.go` handles device tokens and nudge lifecycle
+- **`pkg/queue/`** - Redis LPUSH/BRPOP abstraction
+- **`pkg/storage/`** - S3-compatible client (MinIO locally, Cloudflare R2 in prod)
+- **`migrations/`** - SQL files managed by golang-migrate; run automatically on startup
 
 **Auth:** Two paths coexist. `POST /auth/register` and `POST /auth/login` use local bcrypt + JWT (`internal/services/auth.go`). All other routes use `internal/middleware/auth.go` which validates Supabase JWTs (HS256) and auto-provisions users on first request.
 
 ### Mobile (`mobile/`)
 
-- **`app/`** — expo-router file-based routes; `(tabs)/` is the bottom tab group
-- **`src/api/client.ts`** — Typed Axios instance; reads JWT from expo-secure-store and injects `Authorization` header
-- **`src/hooks/useRecorder.ts`** — Audio recording state machine (expo-av); AAC 44.1kHz mono, max 30 min
-- **`src/services/upload.ts`** — Orchestrates presign → PUT → POST with 3-attempt exponential backoff
-- **`src/services/offlineQueue.ts`** — AsyncStorage-based queue; auto-flushes on reconnect, max 5 retries
-- **`src/theme.ts`** — Design tokens (dark purple palette, CormorantGaramond + Nunito fonts)
+- **`app/`** - expo-router file-based routes; `(tabs)/` is the bottom tab group
+- **`src/api/client.ts`** - Typed Axios instance; reads JWT from expo-secure-store and injects `Authorization` header
+- **`src/hooks/useRecorder.ts`** - Audio recording state machine (expo-av); AAC 44.1kHz mono, max 30 min
+- **`src/services/upload.ts`** - Orchestrates presign → PUT → POST with 3-attempt exponential backoff
+- **`src/services/offlineQueue.ts`** - AsyncStorage-based queue; auto-flushes on reconnect, max 5 retries
+- **`src/theme.ts`** - Design tokens (dark purple palette, CormorantGaramond + Nunito fonts)
 
-No Redux or global state manager — component state via React hooks, persistence via AsyncStorage or SecureStore.
+No Redux or global state manager - component state via React hooks, persistence via AsyncStorage or SecureStore.
 
 ## Key Design Decisions
 
-- **Workers are stateless and horizontally scalable** — Redis queue handles coordination; audio is deleted from storage after processing.
-- **Crisis detection fails safe** — If Claude can't confirm non-crisis, the entry is treated as a crisis.
-- **Dev environment requires no external APIs** — Claude calls are stubbed, local Whisper server is used, MinIO replaces R2.
+- **Workers are stateless and horizontally scalable** - Redis queue handles coordination; audio is deleted from storage after processing.
+- **Crisis detection fails safe** - If Claude can't confirm non-crisis, the entry is treated as a crisis.
+- **Dev environment requires no external APIs** - Claude calls are stubbed, local Whisper server is used, MinIO replaces R2.
 - **Follow-up conversations are capped at 3 user turns** (`is_closed` flag on `conversations` table).
-- **Typed routes** — `experiments.typedRoutes: true` in `app.json`; use typed `href` from `expo-router`.
+- **Typed routes** - `experiments.typedRoutes: true` in `app.json`; use typed `href` from `expo-router`.
 
 ## Environment
 

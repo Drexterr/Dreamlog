@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>DreamLog — Goal Selection Animation Demo</title>
+  <title>DreamLog - Goal Selection Animation Demo</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet" />
@@ -69,7 +69,7 @@
       z-index: 999;
     }
 
-    /* ── Flood fill layer — sits between phone bg and content ── */
+    /* ── Flood fill layer - sits between phone bg and content ── */
     .flood-fill {
       position: absolute;
       inset: 0;
@@ -79,7 +79,7 @@
     }
 
 
-    /* ── Screen content — always on top ── */
+    /* ── Screen content - always on top ── */
     .screen {
       position: absolute;
       inset: 0;
@@ -321,7 +321,7 @@
     <div class="screen" id="step1">
       <div class="wordmark">DreamLog</div>
       <h1 class="heading">What brings you here?</h1>
-      <p class="subtitle">Tap any goal — it shapes how we reflect your words back to you.</p>
+      <p class="subtitle">Tap any goal - it shapes how we reflect your words back to you.</p>
       <div class="goal-list" id="goalList"></div>
     </div>
 
@@ -329,7 +329,7 @@
     <div class="step2" id="step2">
       <button class="back-btn" id="backBtn">← Back</button>
       <h1 class="heading">What name should I call you?</h1>
-      <p class="subtitle">Optional — leave it blank and I'll use whatever's on your account.</p>
+      <p class="subtitle">Optional - leave it blank and I'll use whatever's on your account.</p>
       <input type="text" class="text-input" placeholder="e.g. Alex, or just skip this" autofocus />
       <button class="continue-btn">Continue</button>
     </div>
@@ -364,7 +364,7 @@
     { key: 'relationships', label: 'Understanding relationships',  desc: 'Connection, conflict, how I show up for others',          emoji: '❤️' },
     { key: 'career',        label: 'Career & purpose',             desc: "Work, direction, what I'm building toward",               emoji: '🌲' },
     { key: 'trauma',        label: 'Processing past / trauma',     desc: 'Difficult memories, healing, working through trauma',     emoji: '🩹' },
-    { key: 'curious',       label: 'Just exploring',               desc: "No agenda — I'm curious about my inner life",             emoji: '🌌' },
+    { key: 'curious',       label: 'Just exploring',               desc: "No agenda - I'm curious about my inner life",             emoji: '🌌' },
   ];
 
   const THEMES = {
@@ -430,7 +430,7 @@
     void flood.offsetWidth;
 
     // Animate: circle expands from tap point to cover entire phone.
-    // cubic-bezier(0.35, 0.01, 0.08, 1) — starts gently, builds momentum,
+    // cubic-bezier(0.35, 0.01, 0.08, 1) - starts gently, builds momentum,
     // settles softly at the edges. 1.25s gives it room to breathe.
     flood.style.transition = 'clip-path 1.25s cubic-bezier(0.35, 0.01, 0.08, 1)';
     flood.style.clipPath    = `circle(150% at ${xPct} ${yPct})`;
@@ -444,7 +444,7 @@
 
     // After fill completes: swap bg, reveal step 2
     setTimeout(() => {
-      // Phone bg now matches flood colour — hide flood layer seamlessly
+      // Phone bg now matches flood colour - hide flood layer seamlessly
       phone.style.background  = theme.bg;
       flood.style.transition   = 'none';
       flood.style.clipPath      = 'circle(0% at 50% 50%)';

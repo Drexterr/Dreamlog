@@ -317,7 +317,7 @@ func TestBuildSystemPromptForMode_RantMode(t *testing.T) {
 	if !strings.Contains(prompt, "emotional_tone") {
 		t.Error("rant mode prompt must include JSON output schema")
 	}
-	// Rant mode should not deep-analyze — no mention of patterns/insights
+	// Rant mode should not deep-analyze - no mention of patterns/insights
 	if strings.Contains(prompt, "JOURNALING GOAL CONTEXT") {
 		t.Error("rant mode must not inject goal context")
 	}
@@ -354,7 +354,7 @@ func TestBuildSystemPromptForMode_DecisionMode(t *testing.T) {
 }
 
 func TestBuildSystemPromptForMode_NonProcessingModesIgnoreLanguage(t *testing.T) {
-	// Rant/gratitude/decision ignore the language parameter — always English for now
+	// Rant/gratitude/decision ignore the language parameter - always English for now
 	rantEN := buildSystemPromptForModeAndLanguage("", "en", "rant")
 	rantHI := buildSystemPromptForModeAndLanguage("", "hi", "rant")
 	if rantEN != rantHI {
@@ -464,7 +464,7 @@ func TestBuildPersonExtractionUserPrompt_ContainsTranscript(t *testing.T) {
 
 func TestBuildTherapistBriefPrompt_NoJSONInstructions(t *testing.T) {
 	prompt := BuildTherapistBriefPrompt("Alice", "summaries", "improving", nil)
-	// Brief prompt must not ask for JSON — response is plain text.
+	// Brief prompt must not ask for JSON - response is plain text.
 	if strings.Contains(prompt, "OUTPUT FORMAT") {
 		t.Error("therapist brief prompt must not include OUTPUT FORMAT (plain text, not JSON)")
 	}

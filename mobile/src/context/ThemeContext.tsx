@@ -1,5 +1,5 @@
-import React, { createContext, useContext, useState, useRef, useEffect, useCallback } from 'react';
-import { StyleSheet, View, Animated, Dimensions, Easing } from 'react-native';
+import React, { createContext, useContext, useState, useRef, useEffect } from 'react';
+import { StyleSheet, Animated, Dimensions, Easing } from 'react-native';
 import { THEMES, moodToColor } from '../theme';
 import type { ThemeKey } from '../theme';
 import { api } from '../api/client';
@@ -9,26 +9,27 @@ interface ThemeContextProps {
   colors: typeof THEMES[ThemeKey];
   moodToColor: (score: number) => string;
   setTheme: (theme: ThemeKey) => void;
-  setThemeWithBubble: (theme: ThemeKey, tapX: number, tapY: number) => void;
+  /** Expand a flood-fill circle from (tapX, tapY), swap theme when it covers the screen. */
+  setThemeWithBubble: (theme: ThemeKey, tapX: number, tapY: number, onComplete?: () => void) => void;
+  /** @deprecated No longer needed - overlay is rendered at the provider root. */
   ThemeBubbleOverlay: React.FC;
 }
 
 const ThemeContext = createContext<ThemeContextProps | undefined>(undefined);
 
 const { width: SW, height: SH } = Dimensions.get('window');
-const BUBBLE_RADIUS = 50; // Initial radius of the bubble
+const BUBBLE_RADIUS = 50;
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [theme, setTheme] = useState<ThemeKey>('curious');
   const [bubbleColor, setBubbleColor] = useState<string>(THEMES.curious.bg);
-  
-  // Animation values
-  const bubbleScale = useRef(new Animated.Value(0)).current;
-  const bubbleOpacity = useRef(new Animated.Value(0)).current;
-  const bubblePosition = useRef({ x: 0, y: 0 }).current;
   const [isAnimating, setIsAnimating] = useState(false);
 
-  // Fetch current user goal on mount to align active theme
+  const bubbleScale    = useRef(new Animated.Value(0)).current;
+  const bubbleOpacity  = useRef(new Animated.Value(0)).current;
+  const bubblePosition = useRef({ x: SW / 2, y: SH / 2 });
+
+  // Align theme with persisted goal on mount.
   useEffect(() => {
     (async () => {
       try {
@@ -37,68 +38,47 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
           setTheme(user.goal as ThemeKey);
           setBubbleColor(THEMES[user.goal as ThemeKey].bg);
         }
-      } catch {
-        // Fallback to default
-      }
+      } catch { /* keep default */ }
     })();
   }, []);
 
-  const setThemeWithBubble = (newTheme: ThemeKey, tapX: number, tapY: number) => {
+  const setThemeWithBubble = (
+    newTheme: ThemeKey,
+    tapX: number,
+    tapY: number,
+    onComplete?: () => void,
+  ) => {
     if (isAnimating) return;
     setIsAnimating(true);
 
+    const ox = tapX > 0 ? tapX : SW / 2;
+    const oy = tapY > 0 ? tapY : SH / 2;
+
     setBubbleColor(THEMES[newTheme].bg);
-    bubblePosition.x = tapX;
-    bubblePosition.y = tapY;
+    bubblePosition.current = { x: ox, y: oy };
 
     bubbleScale.setValue(0);
     bubbleOpacity.setValue(1);
 
-    const dx = Math.max(tapX, SW - tapX);
-    const dy = Math.max(tapY, SH - tapY);
-    const maxDistance = Math.sqrt(dx * dx + dy * dy);
-    const targetScale = (maxDistance / BUBBLE_RADIUS) * 1.2;
+    const dx = Math.max(ox, SW - ox);
+    const dy = Math.max(oy, SH - oy);
+    const targetScale = (Math.sqrt(dx * dx + dy * dy) / BUBBLE_RADIUS) * 1.15;
 
     Animated.timing(bubbleScale, {
       toValue: targetScale,
-      duration: 600,
-      easing: Easing.bezier(0.16, 1, 0.3, 1),
+      duration: 1250,
+      easing: Easing.bezier(0.35, 0.01, 0.08, 1),
       useNativeDriver: true,
     }).start(() => {
-      // Bubble has fully covered the screen behind the content.
-      // Switch theme now — new bg matches bubble color so it's seamless.
+      // Circle fully covers screen - swap theme while hidden, then collapse.
       setTheme(newTheme);
       api.updateMe({ goal: newTheme }).catch(() => {});
       bubbleScale.setValue(0);
       bubbleOpacity.setValue(0);
       setIsAnimating(false);
+      onComplete?.();
     });
   };
-
-  const ThemeBubbleOverlay = useCallback(() => {
-    if (!isAnimating) return null;
-
-    return (
-      <View style={[StyleSheet.absoluteFill, styles.overlay]} pointerEvents="none">
-        <Animated.View
-          style={[
-            styles.bubble,
-            {
-              backgroundColor: bubbleColor,
-              left: bubblePosition.x - BUBBLE_RADIUS,
-              top: bubblePosition.y - BUBBLE_RADIUS,
-              width: BUBBLE_RADIUS * 2,
-              height: BUBBLE_RADIUS * 2,
-              borderRadius: BUBBLE_RADIUS,
-              transform: [{ scale: bubbleScale }],
-              opacity: bubbleOpacity,
-            },
-          ]}
-        />
-      </View>
-    );
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isAnimating, bubbleColor]);
 
   const currentColors = THEMES[theme];
 
@@ -110,27 +90,51 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
         moodToColor: (score) => moodToColor(score, currentColors),
         setTheme,
         setThemeWithBubble,
-        ThemeBubbleOverlay,
+        ThemeBubbleOverlay: () => null,
       }}
     >
-      {/* Bubble renders BEFORE children so it sits behind all screen content */}
-      <ThemeBubbleOverlay />
       {children}
+
+      {/*
+        Rendered AFTER children so it sits above EVERYTHING - tab bar, modals,
+        navigation headers. This ensures the flood fill covers the full screen
+        with no jarring snap when setTheme fires.
+      */}
+      {isAnimating && (
+        <Animated.View
+          pointerEvents="none"
+          style={[StyleSheet.absoluteFill, styles.overlayContainer]}
+        >
+          <Animated.View
+            style={[
+              styles.bubble,
+              {
+                backgroundColor: bubbleColor,
+                left: bubblePosition.current.x - BUBBLE_RADIUS,
+                top:  bubblePosition.current.y - BUBBLE_RADIUS,
+                width:  BUBBLE_RADIUS * 2,
+                height: BUBBLE_RADIUS * 2,
+                borderRadius: BUBBLE_RADIUS,
+                transform: [{ scale: bubbleScale }],
+                opacity: bubbleOpacity,
+              },
+            ]}
+          />
+        </Animated.View>
+      )}
     </ThemeContext.Provider>
   );
 }
 
 export function useTheme() {
   const context = useContext(ThemeContext);
-  if (!context) {
-    throw new Error('useTheme must be used within a ThemeProvider');
-  }
+  if (!context) throw new Error('useTheme must be used within a ThemeProvider');
   return context;
 }
 
 const styles = StyleSheet.create({
-  overlay: {
-    // No zIndex — rendered before children so it naturally sits behind them
+  overlayContainer: {
+    zIndex: 9999,
   },
   bubble: {
     position: 'absolute',

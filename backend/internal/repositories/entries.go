@@ -65,7 +65,7 @@ func (r *EntryRepository) GetByID(ctx context.Context, id, userID uuid.UUID) (*m
 	return e, nil
 }
 
-// GetByIDInternal bypasses user ownership — used by background worker.
+// GetByIDInternal bypasses user ownership - used by background worker.
 func (r *EntryRepository) GetByIDInternal(ctx context.Context, id uuid.UUID) (*models.Entry, error) {
 	const q = `
 		SELECT id, user_id, audio_key, audio_size_bytes, duration_sec,

@@ -26,9 +26,9 @@ var journeyTemplates = []models.JourneyTemplate{
 		EstimatedMinutes: 8,
 		Tags:             []string{"stress", "anxiety"},
 		Prompts: []string{
-			"What's weighing on you most right now? Don't filter — just speak.",
+			"What's weighing on you most right now? Don't filter - just speak.",
 			"Where do you feel this in your body, and what does it feel like physically?",
-			"What is one small thing — however tiny — that could ease this today?",
+			"What is one small thing - however tiny - that could ease this today?",
 		},
 	},
 	{
@@ -54,7 +54,7 @@ var journeyTemplates = []models.JourneyTemplate{
 		Prompts: []string{
 			"What decision are you facing right now? Describe the situation fully.",
 			"What's pulling you toward each option? Be honest about both logic and emotion.",
-			"If you imagine yourself one year from now — what would you regret not choosing?",
+			"If you imagine yourself one year from now - what would you regret not choosing?",
 			"Setting everything aside, what does your gut actually say?",
 		},
 	},
@@ -66,7 +66,7 @@ var journeyTemplates = []models.JourneyTemplate{
 		EstimatedMinutes: 8,
 		Tags:             []string{"planning", "focus"},
 		Prompts: []string{
-			"Looking at this week ahead, what matters most to you — what would make it meaningful?",
+			"Looking at this week ahead, what matters most to you - what would make it meaningful?",
 			"What might get in the way of that? Be specific.",
 			"What is one commitment you can make to yourself this week?",
 		},
@@ -79,7 +79,7 @@ var journeyTemplates = []models.JourneyTemplate{
 		EstimatedMinutes: 8,
 		Tags:             []string{"grief", "closure"},
 		Prompts: []string{
-			"What is something you're holding onto — a feeling, a situation, a version of yourself — that it's time to release?",
+			"What is something you're holding onto - a feeling, a situation, a version of yourself - that it's time to release?",
 			"What has holding onto this cost you? What has it protected you from?",
 			"What would it feel like to genuinely let this go? Describe that feeling.",
 		},

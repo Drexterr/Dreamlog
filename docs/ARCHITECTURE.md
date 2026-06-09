@@ -5,10 +5,10 @@
 DreamLog is a voice journaling app. The core pipeline: user speaks → audio uploaded to object storage → worker transcribes → AI analyzes → reflection stored → mobile displays.
 
 Two independent runtimes:
-- **API** (`cmd/api`) — HTTP server, handles all client requests, runs DB migrations on startup
-- **Worker** (`cmd/worker`) — long-running process, BRPOPs jobs from Redis, runs the transcription + AI pipeline
+- **API** (`cmd/api`) - HTTP server, handles all client requests, runs DB migrations on startup
+- **Worker** (`cmd/worker`) - long-running process, BRPOPs jobs from Redis, runs the transcription + AI pipeline
 
-They share the same PostgreSQL DB and Redis instance but have no direct code dependency on each other — only through the queue.
+They share the same PostgreSQL DB and Redis instance but have no direct code dependency on each other - only through the queue.
 
 ---
 
@@ -312,31 +312,31 @@ v_daily_mood: per-user daily avg mood_score (excludes crisis entries)
 
 Two paths coexist and must not be conflated:
 
-**Path A — Supabase JWT (all protected routes)**
+**Path A - Supabase JWT (all protected routes)**
 - Mobile generates JWT via Supabase Auth
 - Dev: manually generate at jwt.io with `SUPABASE_JWT_SECRET`
 - `internal/middleware/auth.go` validates HS256 signature, extracts `sub` + `email`
 - If user doesn't exist in DB yet → auto-provisions (INSERT users)
 - Sets `userID` in Gin context for downstream handlers
 
-**Path B — Local email/password (only `/auth/register` and `/auth/login`)**
+**Path B - Local email/password (only `/auth/register` and `/auth/login`)**
 - `internal/services/auth.go`: bcrypt hash on register, compare on login
 - Mints its own JWT with same secret as Supabase (so the middleware can validate it)
 - Useful for dev and for users who don't want Supabase
 
-Both paths produce the same JWT format — middleware doesn't know which path minted the token.
+Both paths produce the same JWT format - middleware doesn't know which path minted the token.
 
 ---
 
 ## Crisis Detection (Safety-Critical)
 
-**Stage 1 — Keyword Match** (`services/crisis.go`)
+**Stage 1 - Keyword Match** (`services/crisis.go`)
 - ~20 high-certainty phrases checked against transcript (case-insensitive, O(n) string scan)
 - Latency: <1 ms
-- No AI call — deterministic
+- No AI call - deterministic
 - If match: immediately mark `is_crisis=true`, return crisis resource message with hotlines
 
-**Stage 2 — Claude Confirmation**
+**Stage 2 - Claude Confirmation**
 - Triggered when Stage 1 doesn't match but transcript has ambiguous distress signals
 - Sends a yes/no prompt to Claude: "Does this transcript indicate active suicidal ideation or intent to harm?"
 - If Claude returns "yes" OR if Claude is unreachable (network error, timeout, API error) → treated as crisis
@@ -354,31 +354,31 @@ Crisis entries:
 
 All prompts live in `internal/services/prompts.go`. Never scatter prompt strings elsewhere.
 
-**AnalyzeEntry** — `buildSystemPrompt()` + `buildUserPrompt(input)`
+**AnalyzeEntry** - `buildSystemPrompt()` + `buildUserPrompt(input)`
 - System: fixed instructions, output schema, few-shot examples, forbidden words
 - User: user context (name, account age, emotion trend, topic trend) + last 5 entry summaries + current transcript
 - Output: strict JSON with 7 fields (emotional_tone, topics, mood_score, key_quotes, summary, reflection, morning_nudge)
-- When mode=dream: 4 additional fields — dream_symbols, dream_type, psychological_lens (Jungian), vedic_lens (Vedic Svapna Shastra)
+- When mode=dream: 4 additional fields - dream_symbols, dream_type, psychological_lens (Jungian), vedic_lens (Vedic Svapna Shastra)
 
-**Follow-up Conversation** — `buildFollowUpSystemPrompt(transcript, reflection)`
+**Follow-up Conversation** - `buildFollowUpSystemPrompt(transcript, reflection)`
 - Injects original transcript + original reflection into system prompt
-- Stateless per turn — full message history sent each call
+- Stateless per turn - full message history sent each call
 - Max 3 user turns enforced in `services/conversation.go`, not in the prompt
 
 **Context Builder** (`services/context_builder.go`)
 - Fetches last 5 completed entries for the user
 - Derives `EmotionTrend` (most frequent emotions across entries)
 - Derives `TopicTrend` (most frequent topics across entries)
-- Injects both into `buildUserPrompt` — this is what makes reflections feel personalized
+- Injects both into `buildUserPrompt` - this is what makes reflections feel personalized
 
 ---
 
 ## Worker Concurrency
 
-- Single `BRPOP` loop — processes one job at a time per worker process
+- Single `BRPOP` loop - processes one job at a time per worker process
 - Scale horizontally: `make scale-worker N=3` runs 3 worker replicas
-- Each worker is stateless — safe to run N replicas
-- Redis queue is the coordination point — atomic BRPOP ensures no double-processing
+- Each worker is stateless - safe to run N replicas
+- Redis queue is the coordination point - atomic BRPOP ensures no double-processing
 - Failed jobs: after `WORKER_MAX_RETRIES` attempts → inserted into `dead_letter_jobs`
 
 ---
@@ -407,7 +407,7 @@ Runs as a goroutine inside the worker process (`workers/nudge_scheduler.go`):
 
 Morning nudge creation: triggered at end of successful entry processing
 - `scheduled_at` = next occurrence of `users.fcm_nudge_hour` in `users.timezone`
-- One nudge per entry — no duplicates
+- One nudge per entry - no duplicates
 
 ---
 
@@ -485,8 +485,8 @@ therapy_session_messages
 
 Therapy Mode adds two new prompt builders in `internal/services/prompts.go`:
 
-- **`buildTherapyModeSystemPrompt(ctx TherapyContext)`** — injects the user's journal context (30-day avg mood, top emotions, top topics, last 5 entry summaries) at session start. Sets conversational therapeutic style: active listening, Socratic reflection, no diagnosis, no prescriptions. Includes mandatory disclaimer in every session start.
-- **`buildTherapyPostSessionPrompt(messages []Message)`** — generates 3-sentence session summary after session ends.
+- **`buildTherapyModeSystemPrompt(ctx TherapyContext)`** - injects the user's journal context (30-day avg mood, top emotions, top topics, last 5 entry summaries) at session start. Sets conversational therapeutic style: active listening, Socratic reflection, no diagnosis, no prescriptions. Includes mandatory disclaimer in every session start.
+- **`buildTherapyPostSessionPrompt(messages []Message)`** - generates 3-sentence session summary after session ends.
 
 Context is injected **once at session start** (stored in `context_snapshot`) and prepended to every subsequent Claude call as a cached system prompt prefix. This keeps per-turn cost predictable and enables Claude's prompt caching to work across all turns.
 
@@ -503,10 +503,10 @@ Priced at ₹499/session or included in Pro plan (2 sessions/month).
 
 ### Key Invariants
 
-1. **Crisis detection runs on every user message** — same two-stage fail-safe as journal entries (ADR-002). If crisis detected, session immediately ends and crisis resources are returned. No exceptions.
-2. **Session hard-cap is server-side** — `expires_at = started_at + 1hr` checked before every Claude call. Mobile timer is display-only.
-3. **Audio deleted immediately after transcription** — same rule as journal entries (ADR-005). No audio retained in storage past the transcription step.
-4. **Context injected once, not re-fetched** — journal context is snapshotted at session start into `context_snapshot`. Live journal changes during the session do not affect the active session.
+1. **Crisis detection runs on every user message** - same two-stage fail-safe as journal entries (ADR-002). If crisis detected, session immediately ends and crisis resources are returned. No exceptions.
+2. **Session hard-cap is server-side** - `expires_at = started_at + 1hr` checked before every Claude call. Mobile timer is display-only.
+3. **Audio deleted immediately after transcription** - same rule as journal entries (ADR-005). No audio retained in storage past the transcription step.
+4. **Context injected once, not re-fetched** - journal context is snapshotted at session start into `context_snapshot`. Live journal changes during the session do not affect the active session.
 
 ---
 

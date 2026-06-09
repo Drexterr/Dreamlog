@@ -67,7 +67,7 @@ func (h *TherapistHandler) Register(c *gin.Context) {
 }
 
 // POST /therapists/clients/link
-// Body: { "client_id": "uuid" }  — client must have shared their UUID out-of-band.
+// Body: { "client_id": "uuid" }  - client must have shared their UUID out-of-band.
 func (h *TherapistHandler) LinkClient(c *gin.Context) {
 	userID := middleware.UserIDFromCtx(c.Request.Context())
 

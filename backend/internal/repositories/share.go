@@ -191,7 +191,7 @@ func (r *ShareRepository) ShareView(ctx context.Context, userID uuid.UUID) (*mod
 		topEmotions = append(topEmotions, em)
 	}
 
-	// Per-entry summaries — summary only, no transcript or reflection
+	// Per-entry summaries - summary only, no transcript or reflection
 	const sumQ = `
 		SELECT TO_CHAR(DATE(e.created_at AT TIME ZONE 'UTC'), 'YYYY-MM-DD') AS day,
 		       ea.summary,

@@ -25,7 +25,7 @@ type CompanyMember struct {
 	JoinedAt  time.Time `json:"joined_at"`
 }
 
-// TeamDailyMood is one row from v_team_daily_mood — fully anonymised.
+// TeamDailyMood is one row from v_team_daily_mood - fully anonymised.
 type TeamDailyMood struct {
 	Day           string `json:"day"`            // YYYY-MM-DD
 	AvgMood       int    `json:"avg_mood"`

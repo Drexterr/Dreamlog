@@ -1,9 +1,9 @@
 /**
- * ReflectionScreen — displayed after processing completes.
+ * ReflectionScreen - displayed after processing completes.
  *
  * Features:
  * - Dark calming UI
- * - Smooth fade-in animation (via Animated API — no reanimated dep required for this)
+ * - Smooth fade-in animation (via Animated API - no reanimated dep required for this)
  * - Mood color indicator (no numeric score shown to user)
  * - "Goodnight" / "Tell me more" CTA pair
  */
@@ -57,13 +57,13 @@ export function ReflectionScreen({ entry, onGoodnight, onTellMeMore }: Props) {
         }),
       ]).start();
     } catch {
-      // Entry may not have analysis yet — silently show minimal UI.
+      // Entry may not have analysis yet - silently show minimal UI.
     } finally {
       setLoading(false);
     }
   };
 
-  // Map mood_score to a calming color hue — never shown as a number.
+  // Map mood_score to a calming color hue - never shown as a number.
   const moodColor = analysis ? moodToColor(analysis.mood_score) : '#4a5568';
 
   return (
@@ -97,7 +97,7 @@ export function ReflectionScreen({ entry, onGoodnight, onTellMeMore }: Props) {
           )}
         </View>
 
-        {/* Reflection text — core content */}
+        {/* Reflection text - core content */}
         {analysis ? (
           <Animated.View
             style={[
@@ -171,11 +171,11 @@ export function ReflectionScreen({ entry, onGoodnight, onTellMeMore }: Props) {
 
 // Map 1-100 mood score to a color without showing the number to the user.
 function moodToColor(score: number): string {
-  if (score <= 20) return '#7f1d1d'; // deep red — heavy
-  if (score <= 40) return '#92400e'; // amber-brown — struggling
-  if (score <= 60) return '#1e3a5f'; // deep blue — neutral/processing
-  if (score <= 80) return '#1e4035'; // forest green — hopeful
-  return '#1a3a2a';                  // deep emerald — uplifted
+  if (score <= 20) return '#7f1d1d'; // deep red - heavy
+  if (score <= 40) return '#92400e'; // amber-brown - struggling
+  if (score <= 60) return '#1e3a5f'; // deep blue - neutral/processing
+  if (score <= 80) return '#1e4035'; // forest green - hopeful
+  return '#1a3a2a';                  // deep emerald - uplifted
 }
 
 const styles = StyleSheet.create({

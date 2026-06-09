@@ -1,10 +1,10 @@
-# Mobile — Claude Guidance
+# Mobile - Claude Guidance
 
 Read this before touching any React Native / Expo code in this directory.
 
 Also read:
-- `../docs/API_CONTRACT.md` — backend API shapes the mobile consumes
-- `../docs/ROADMAP.md` — Phase 4 features planned for mobile
+- `../docs/API_CONTRACT.md` - backend API shapes the mobile consumes
+- `../docs/ROADMAP.md` - Phase 4 features planned for mobile
 
 ---
 
@@ -12,10 +12,10 @@ Also read:
 
 ```
 app/                        expo-router file-based routes
-  _layout.tsx               root layout — fonts, auth guard, theme provider
+  _layout.tsx               root layout - fonts, auth guard, theme provider
   auth.tsx                  JWT paste screen (dev) / Supabase auth screen (prod)
   record.tsx                audio recording UI
-  processing/[id].tsx       polling screen — waits for status=completed
+  processing/[id].tsx       polling screen - waits for status=completed
   reflection/[id].tsx       displays AI reflection
   followup/[id].tsx         3-turn follow-up conversation UI
   (tabs)/
@@ -26,11 +26,11 @@ app/                        expo-router file-based routes
     settings.tsx            user preferences
 
 src/
-  api/client.ts             typed Axios instance — USE THIS for all API calls
-  hooks/useRecorder.ts      audio recording state machine — do not re-implement recording logic
+  api/client.ts             typed Axios instance - USE THIS for all API calls
+  hooks/useRecorder.ts      audio recording state machine - do not re-implement recording logic
   services/upload.ts        presign → PUT → POST orchestration with backoff
   services/offlineQueue.ts  AsyncStorage-based retry queue
-  theme.ts                  design tokens — always import from here
+  theme.ts                  design tokens - always import from here
   types/index.ts            shared TypeScript types
   screens/                  screen-level components (used by app/ routes)
   components/               reusable UI components
@@ -38,22 +38,22 @@ src/
 
 ---
 
-## Rules — Always Follow
+## Rules - Always Follow
 
 ### API Calls
-- ALWAYS use `src/api/client.ts` for API calls — never import Axios directly
+- ALWAYS use `src/api/client.ts` for API calls - never import Axios directly
 - The client reads JWT from expo-secure-store and injects the Authorization header automatically
 - Add new typed API functions to `src/api/client.ts`, not inline in screens
 
 ### Navigation
-- Use expo-router's typed `href` — `experiments.typedRoutes: true` is enabled in `app.json`
-- Do NOT use `router.push('/some-string')` — use the typed form
+- Use expo-router's typed `href` - `experiments.typedRoutes: true` is enabled in `app.json`
+- Do NOT use `router.push('/some-string')` - use the typed form
 - File-based routing: adding a screen means adding a file in `app/`, not registering anything manually
 
 ### Styling & Theme
 - ALWAYS import colors, fonts, and spacing from `src/theme.ts`
 - Never hardcode hex colors or font names inline
-- Dark purple palette — do not introduce new colors without adding them to `theme.ts` first
+- Dark purple palette - do not introduce new colors without adding them to `theme.ts` first
 - Fonts: Cormorant Garamond (serif, headings) + Nunito (sans, body)
 
 ### State Management
@@ -63,20 +63,20 @@ src/
 - If a new feature seems to need global state, first try lifting state to the nearest common parent
 
 ### Audio Recording
-- `src/hooks/useRecorder.ts` is the single recording state machine — do not add recording logic elsewhere
+- `src/hooks/useRecorder.ts` is the single recording state machine - do not add recording logic elsewhere
 - Format: AAC, 44.1 kHz, mono
 - Max duration: 30 minutes (enforced in useRecorder)
-- Do not use `expo-av` directly in screens — go through the hook
+- Do not use `expo-av` directly in screens - go through the hook
 
 ### Upload Flow
 - Audio upload is a 3-step sequence: presign → PUT to storage → POST to /entries
 - This lives in `src/services/upload.ts` with 3-attempt exponential backoff
 - Do not re-implement this inline in screens
-- Failed uploads queue in `src/services/offlineQueue.ts` — auto-flush on reconnect
+- Failed uploads queue in `src/services/offlineQueue.ts` - auto-flush on reconnect
 
 ### TypeScript
-- All API response types are defined in `src/types/index.ts` — keep them in sync with `../docs/API_CONTRACT.md`
-- Never use `any` — use `unknown` and narrow if needed
+- All API response types are defined in `src/types/index.ts` - keep them in sync with `../docs/API_CONTRACT.md`
+- Never use `any` - use `unknown` and narrow if needed
 - All new screens and components need proper TypeScript typing
 
 ---
@@ -84,7 +84,7 @@ src/
 ## Adding a New Screen
 
 1. Create file in `app/` (or `app/(tabs)/` for tab screens)
-2. expo-router auto-registers it — no manual registration
+2. expo-router auto-registers it - no manual registration
 3. Use typed `href` from expo-router for navigation to it
 4. Pull data via `src/api/client.ts`
 5. Style using `src/theme.ts` tokens
@@ -141,7 +141,7 @@ Auth in dev: generate JWT at jwt.io with payload `{"sub":"test-user-001","email"
 ## What Not To Do
 
 - Do not `import axios from 'axios'` directly in any screen or component
-- Do not hardcode `http://localhost:8080` anywhere — always read from `EXPO_PUBLIC_API_URL`
-- Do not use `StyleSheet.create` with hardcoded color values — use theme tokens
+- Do not hardcode `http://localhost:8080` anywhere - always read from `EXPO_PUBLIC_API_URL`
+- Do not use `StyleSheet.create` with hardcoded color values - use theme tokens
 - Do not add a global state library without a concrete case that hooks can't solve
-- Do not skip TypeScript types for API responses — they catch API contract breakage at compile time
+- Do not skip TypeScript types for API responses - they catch API contract breakage at compile time

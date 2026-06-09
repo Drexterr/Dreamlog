@@ -108,7 +108,7 @@ func newShareTestRouter(t *testing.T, repo *fakeShareRepo, testUser *models.User
 	auth.GET("/share", h.List)
 	auth.DELETE("/share/:id", h.Revoke)
 
-	// Public endpoint — no auth.
+	// Public endpoint - no auth.
 	r.GET("/view/:token", h.View)
 	return r
 }
@@ -132,7 +132,7 @@ func shareTestUser() *models.User {
 	return &models.User{ID: uuid.New(), Email: "share@test.com", Name: "Share User", Plan: models.PlanPro}
 }
 
-// bcryptHash returns a bcrypt hash at minimum cost — fast for unit tests.
+// bcryptHash returns a bcrypt hash at minimum cost - fast for unit tests.
 func bcryptHash(t *testing.T, plain string) string {
 	t.Helper()
 	hash, err := bcrypt.GenerateFromPassword([]byte(plain), bcrypt.MinCost)

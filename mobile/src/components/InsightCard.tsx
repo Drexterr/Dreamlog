@@ -1,5 +1,5 @@
 /**
- * InsightCard — the shareable weekly insight card.
+ * InsightCard - the shareable weekly insight card.
  * Captured via react-native-view-shot and shared through the native share sheet.
  * Shows only anonymized data: mood arc + top emotions + streak. No journal content.
  *

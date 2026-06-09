@@ -278,7 +278,7 @@ func TestEntryHandler_Get_NotFound_Returns404(t *testing.T) {
 }
 
 func TestEntryHandler_Get_WrongUser_Returns404(t *testing.T) {
-	// Ownership check is in the service — nil return means not found or wrong user.
+	// Ownership check is in the service - nil return means not found or wrong user.
 	svc := &fakeEntryServicer{getResp: nil}
 	r := newEntryTestRouter(t, svc, &fakeStorageUploader{}, entryTestUser())
 	w := httptest.NewRecorder()

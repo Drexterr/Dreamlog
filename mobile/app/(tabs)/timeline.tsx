@@ -1,5 +1,5 @@
 /**
- * Timeline screen — list of journal entries with analysis.
+ * Timeline screen - list of journal entries with analysis.
  * Matches the dark card aesthetic from DreamLog_UI.jsx TimelineScreen.
  */
 

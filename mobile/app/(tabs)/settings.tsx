@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -12,22 +12,14 @@ import {
   FlatList,
   Linking,
   ActivityIndicator,
-  Animated,
-  Easing,
-  Dimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { BlurView } from 'expo-blur';
 import { useRouter } from 'expo-router';
 import { clearToken, api } from '../../src/api/client';
 import { supabase } from '../../src/lib/supabase';
-import { THEMES } from '../../src/theme';
 import { useTheme } from '../../src/context/ThemeContext';
 import type { AgeRange, Plan, User, UserGoal } from '../../src/types';
-
-const { width: SW, height: SH } = Dimensions.get('window');
-const FLOOD_D = 100;
-const FLOOD_R = FLOOD_D / 2;
 
 const GOAL_META: Record<UserGoal, { label: string; emoji: string }> = {
   anxiety:       { label: 'Working through anxiety',     emoji: '🌱' },
@@ -127,12 +119,12 @@ const GOALS_LIST: { key: UserGoal; label: string; description: string; emoji: st
   { key: 'relationships', label: 'Understanding relationships', description: 'Connection, conflict, how I show up for others',      emoji: '❤️' },
   { key: 'career',        label: 'Career & purpose',            description: "Work, direction, what I'm building toward",           emoji: '🌲' },
   { key: 'trauma',        label: 'Processing past / trauma',    description: 'Difficult memories, healing, working through trauma', emoji: '🩹' },
-  { key: 'curious',       label: 'Just exploring',              description: "No agenda — I'm curious about my inner life",         emoji: '🌌' },
+  { key: 'curious',       label: 'Just exploring',              description: "No agenda - I'm curious about my inner life",         emoji: '🌌' },
 ];
 
 export default function SettingsScreen() {
   const router = useRouter();
-  const { theme, colors, setTheme } = useTheme();
+  const { theme, colors, setThemeWithBubble } = useTheme();
 
   const [user, setUser] = useState<User | null>(null);
   const [loadError, setLoadError] = useState(false);
@@ -146,13 +138,6 @@ export default function SettingsScreen() {
   const [showGoalModal, setShowGoalModal] = useState(false);
   const [savingHour, setSavingHour] = useState(false);
   const [deleting, setDeleting] = useState(false);
-
-  // ── Flood fill animation ─────────────────────────────────────────────────────
-  const floodAnim    = useRef(new Animated.Value(0)).current;
-  const floodActive  = useRef(false);
-  const [floodColor,   setFloodColor]   = useState(colors.bg);
-  const [floodOriginX, setFloodOriginX] = useState(SW / 2);
-  const [floodOriginY, setFloodOriginY] = useState(SH / 2);
 
   const loadProfile = () => {
     setLoadError(false);
@@ -252,49 +237,30 @@ export default function SettingsScreen() {
     );
   };
 
-  // ── Goal selection: flood fill in-place, no navigation ─────────────────────
+  // ── Goal selection: full-screen flood fill via ThemeContext ─────────────────
   const handleGoalSelectFromModal = (goal: UserGoal, pageX: number, pageY: number) => {
     setShowGoalModal(false);
-
     if (goal === theme) return;
 
-    // Wait for the modal slide-down to finish before starting the fill.
+    // Optimistically update the goal label immediately.
+    setUser(prev => prev ? { ...prev, goal } : prev);
+
+    // Wait for the modal slide-down, then trigger the global flood fill.
+    // ThemeContext's overlay renders above everything (tab bar included), so
+    // no element snaps when setTheme fires at the end of the animation.
     setTimeout(() => {
-      if (floodActive.current) return;
-      floodActive.current = true;
-
-      setFloodColor(THEMES[goal].bg);
-      setFloodOriginX(pageX > 0 ? pageX : SW / 2);
-      setFloodOriginY(pageY > 0 ? pageY : SH / 2);
-
-      floodAnim.setValue(0);
-
-      const dx = Math.max(pageX, SW - pageX);
-      const dy = Math.max(pageY, SH - pageY);
-      const targetScale = (Math.sqrt(dx * dx + dy * dy) / FLOOD_R) * 1.15;
-
-      Animated.timing(floodAnim, {
-        toValue: targetScale,
-        duration: 1250,
-        easing: Easing.bezier(0.35, 0.01, 0.08, 1),
-        useNativeDriver: true,
-      }).start(() => {
-        setTheme(goal);
-        setUser(prev => prev ? { ...prev, goal } : prev);
-        api.updateMe({ goal }).catch(() => {});
-        floodActive.current = false;
-      });
-    }, 320);
+      setThemeWithBubble(goal, pageX, pageY);
+    }, 300);
   };
 
   const goalMeta = user?.goal
     ? (GOAL_META[user.goal] ?? { label: 'Just exploring', emoji: '🌌' })
     : { label: 'Not set', emoji: '🌌' };
 
-  const displayName = user?.preferred_name || user?.name || '—';
+  const displayName = user?.preferred_name || user?.name || '-';
   const avatarText = user ? initials(user.preferred_name || user.name || '?') : '?';
   const profileSub = loadError
-    ? 'Could not load profile — tap to retry'
+    ? 'Could not load profile - tap to retry'
     : user
       ? `${entryCount} ${entryCount === 1 ? 'entry' : 'entries'} · ${PLAN_LABELS[currentPlan]}`
       : 'Loading…';
@@ -314,22 +280,8 @@ export default function SettingsScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.bg }]}>
-      {/* Flood fill circle — behind all content, changes background on goal select */}
-      <Animated.View
-        pointerEvents="none"
-        style={[
-          styles.floodCircle,
-          {
-            backgroundColor: floodColor,
-            left: floodOriginX - FLOOD_R,
-            top:  floodOriginY - FLOOD_R,
-            transform: [{ scale: floodAnim }],
-          },
-        ]}
-      />
-
       <StatusBar barStyle="light-content" />
-      <SafeAreaView style={{ flex: 1, zIndex: 2 }}>
+      <SafeAreaView style={{ flex: 1 }}>
         <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
           <Text style={[styles.title, { color: colors.textPrimary }]}>Settings</Text>
 
@@ -656,7 +608,7 @@ export default function SettingsScreen() {
               <View style={styles.profileInfoRow}>
                 <Text style={[styles.profileInfoLabel, { color: colors.textMuted }]}>Email</Text>
                 <Text style={[styles.profileInfoValue, { color: colors.textPrimary }]} numberOfLines={1}>
-                  {user?.email ?? '—'}
+                  {user?.email ?? '-'}
                 </Text>
               </View>
 
@@ -665,7 +617,7 @@ export default function SettingsScreen() {
               <View style={styles.profileInfoRow}>
                 <Text style={[styles.profileInfoLabel, { color: colors.textMuted }]}>Name</Text>
                 <Text style={[styles.profileInfoValue, { color: colors.textPrimary }]}>
-                  {user?.name ?? '—'}
+                  {user?.name ?? '-'}
                 </Text>
               </View>
 
@@ -712,14 +664,6 @@ export default function SettingsScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   scroll: { padding: 20, paddingBottom: 60 },
-
-  floodCircle: {
-    position: 'absolute',
-    width: FLOOD_D,
-    height: FLOOD_D,
-    borderRadius: FLOOD_R,
-    zIndex: 1,
-  },
 
   goalSheet: {
     maxHeight: '80%',

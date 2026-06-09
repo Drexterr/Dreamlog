@@ -190,7 +190,7 @@ func TestInsightHandler_GetCard_MissingAuth_Returns401(t *testing.T) {
 }
 
 func TestInsightHandler_GetCard_AvailableToFreeUsers(t *testing.T) {
-	// No plan gate — free users can access the card.
+	// No plan gate - free users can access the card.
 	user := insightTestUser()
 	user.Plan = models.PlanFree
 	repo := &fakeInsightRepo{cardData: sampleCardData()}
@@ -277,7 +277,7 @@ func TestInsightHandler_RecordShare_RepoError_Returns500(t *testing.T) {
 }
 
 func TestInsightHandler_RecordShare_CountError_StillReturns201WithZero(t *testing.T) {
-	// CountByUser failure is non-critical — return 201 with total=0.
+	// CountByUser failure is non-critical - return 201 with total=0.
 	shareRecord := &models.InsightShare{ID: uuid.New(), WeekStart: "2026-05-26"}
 	repo := &fakeInsightRepo{shareResult: shareRecord, countErr: errors.New("count failed")}
 	r := newInsightTestRouter(t, repo, &fakeInsightStreak{}, insightTestUser())

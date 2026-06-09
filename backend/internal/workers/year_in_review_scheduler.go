@@ -16,7 +16,7 @@ import (
 // then generating any past-due pending reviews via Claude.
 type YearInReviewScheduler struct {
 	reviewRepo   annualReviewRepo
-	userRepo     weeklyReviewUserRepo // same interface — reuse
+	userRepo     weeklyReviewUserRepo // same interface - reuse
 	analysisRepo annualReviewAnalysisRepo
 	claude       annualReviewAI
 	nudgeRepo    nudgeDispatcher

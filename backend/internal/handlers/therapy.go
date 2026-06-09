@@ -49,7 +49,7 @@ func (h *TherapyHandler) StartSession(c *gin.Context) {
 	userID := middleware.UserIDFromCtx(c.Request.Context())
 
 	var req models.StartSessionRequest
-	// Body is optional — ignore binding error; persona defaults to "comforting"
+	// Body is optional - ignore binding error; persona defaults to "comforting"
 	_ = c.ShouldBindJSON(&req)
 
 	persona := models.TherapyPersona(req.Persona)

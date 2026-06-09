@@ -23,7 +23,7 @@ func NewUserRepository(db *pgxpool.Pool) *UserRepository {
 
 const userColumns = `id, supabase_id, email, name, timezone, fcm_nudge_hour, nudge_enabled, goal, preferred_name, streak_freeze_count, plan, plan_expires_at, age_range, country, is_deleted, deleted_at, first_joined_at, reregistered_at, reregistration_count, created_at, updated_at`
 
-// rowScanner is satisfied by both pgx.Row and pgx.Rows — avoids a direct pgx type in the signature.
+// rowScanner is satisfied by both pgx.Row and pgx.Rows - avoids a direct pgx type in the signature.
 type rowScanner interface {
 	Scan(dest ...any) error
 }

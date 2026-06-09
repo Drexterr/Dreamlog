@@ -1,8 +1,8 @@
 /**
- * PatternRadar — emotional pattern visualization for the Mood screen.
+ * PatternRadar - emotional pattern visualization for the Mood screen.
  * Shows the top emotions as scored bars (frequency × intensity) with a
  * mood-distribution summary (high / neutral / low).
- * No external dependencies — pure React Native Views.
+ * No external dependencies - pure React Native Views.
  */
 
 import { useState, useCallback, useEffect } from 'react';

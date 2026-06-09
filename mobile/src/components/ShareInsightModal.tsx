@@ -1,5 +1,5 @@
 /**
- * ShareInsightModal — shows a preview of InsightCard and handles capture + share.
+ * ShareInsightModal - shows a preview of InsightCard and handles capture + share.
  * Uses react-native-view-shot to capture the card as a PNG, then shares via native sheet.
  *
  * Requires a dev build (not Expo Go). See InsightCard.tsx for details.
@@ -27,7 +27,7 @@ export interface ShareInsightModalProps {
   visible: boolean;
   onClose: () => void;
   weekLabel: string;
-  weekStart?: string;   // YYYY-MM-DD — passed to backend share tracking
+  weekStart?: string;   // YYYY-MM-DD - passed to backend share tracking
   moodArc: MoodArcDay[];
   topEmotions: string[];
   streak: number;
@@ -65,7 +65,7 @@ export default function ShareInsightModal({
         shared = result.action !== Share.dismissedAction;
       } else {
         const result = await Share.share({
-          message: `My week in review — ${weekLabel} — via DreamLog`,
+          message: `My week in review - ${weekLabel} - via DreamLog`,
         });
         shared = result.action !== Share.dismissedAction;
       }
@@ -75,7 +75,7 @@ export default function ShareInsightModal({
         api.trackInsightShare(weekStart).catch(() => undefined);
       }
     } catch {
-      // User cancelled or share failed — no-op.
+      // User cancelled or share failed - no-op.
     } finally {
       setSharing(false);
     }
@@ -93,7 +93,7 @@ export default function ShareInsightModal({
           <Text style={styles.sheetTitle}>Your Week in Review</Text>
           <Text style={styles.sheetSub}>Preview your shareable insight card</Text>
 
-          {/* Card preview — scrollable if screen is small */}
+          {/* Card preview - scrollable if screen is small */}
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}

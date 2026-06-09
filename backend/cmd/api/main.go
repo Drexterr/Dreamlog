@@ -150,6 +150,7 @@ func main() {
 		AppBaseURL:           cfg.App.BaseURL,
 		StripeSecretKey:      cfg.Stripe.SecretKey,
 		StripePublishableKey: cfg.Stripe.PublishableKey,
+		StorageProxyBaseURL:  cfg.Storage.ProxyBaseURL,
 		Log:                  log,
 	})
 

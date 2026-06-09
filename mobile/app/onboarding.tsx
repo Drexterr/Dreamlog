@@ -21,7 +21,7 @@ import type { AgeRange, UserGoal } from '../src/types';
 
 const { width: SW, height: SH } = Dimensions.get('window');
 
-// Flood fill circle — starts at this diameter and scales up.
+// Flood fill circle - starts at this diameter and scales up.
 const FLOOD_D = 100;
 const FLOOD_R = FLOOD_D / 2;
 
@@ -41,7 +41,7 @@ const GOALS: { key: UserGoal; label: string; description: string; emoji: string 
   { key: 'relationships', label: 'Understanding relationships', description: 'Connection, conflict, how I show up for others', emoji: '❤️' },
   { key: 'career',        label: 'Career & purpose',      description: "Work, direction, what I'm building toward", emoji: '🌲' },
   { key: 'trauma',        label: 'Processing past / trauma', description: 'Difficult memories, healing, working through trauma', emoji: '🩹' },
-  { key: 'curious',       label: 'Just exploring',         description: "No agenda — I'm curious about my inner life", emoji: '🌌' },
+  { key: 'curious',       label: 'Just exploring',         description: "No agenda - I'm curious about my inner life", emoji: '🌌' },
 ];
 
 const COUNTRIES: { code: string; name: string; flag: string }[] = [
@@ -127,7 +127,7 @@ export default function OnboardingScreen() {
     const targetScale = (maxDist / FLOOD_R) * 1.15;
 
     Animated.parallel([
-      // Flood circle expands — starts gently, builds momentum, settles softly.
+      // Flood circle expands - starts gently, builds momentum, settles softly.
       Animated.timing(floodAnim, {
         toValue: targetScale,
         duration: 1250,
@@ -145,7 +145,7 @@ export default function OnboardingScreen() {
         }),
       ]),
     ]).start(() => {
-      // Apply theme now — bg already matches floodColor, seamless swap.
+      // Apply theme now - bg already matches floodColor, seamless swap.
       setTheme(goal);
       api.updateMe({ goal }).catch(() => {});
       contentOpacity.setValue(1);
@@ -191,7 +191,7 @@ export default function OnboardingScreen() {
       {step === 1 && (
         <View style={styles.floodContainer}>
           {/*
-            Flood fill circle — rendered BEFORE the ScrollView so it sits
+            Flood fill circle - rendered BEFORE the ScrollView so it sits
             behind the card content (later siblings paint on top in RN).
             pointerEvents="none" so taps pass through to the cards.
           */}
@@ -208,7 +208,7 @@ export default function OnboardingScreen() {
             ]}
           />
 
-          {/* Cards layer — higher zIndex so they always render above the flood */}
+          {/* Cards layer - higher zIndex so they always render above the flood */}
           <Animated.ScrollView
             contentContainerStyle={styles.scroll}
             keyboardShouldPersistTaps="handled"
@@ -217,7 +217,7 @@ export default function OnboardingScreen() {
             <Text style={[styles.wordmark, { color: colors.purple300 }]}>DreamLog</Text>
             <Text style={[styles.heading, { color: colors.textPrimary }]}>What brings you here?</Text>
             <Text style={[styles.sub, { color: colors.textSecondary }]}>
-              Tap any goal — it shapes how we reflect your words back to you.
+              Tap any goal - it shapes how we reflect your words back to you.
             </Text>
 
             <View style={styles.goalList}>
@@ -255,8 +255,123 @@ export default function OnboardingScreen() {
         </View>
       )}
 
-      {/* ── Steps 2-5: plain scroll, no flood animation needed ── */}
-      {step !== 1 && (
+      {/* ── Step 4: Country - custom layout so dropdown can overlay freely ── */}
+      {step === 4 && (
+        <View style={styles.countryStep}>
+          {/* Top: wordmark + back + heading + subtitle + search + dropdown */}
+          <View style={styles.countryTop}>
+            <Text style={[styles.wordmark, { color: colors.purple300 }]}>DreamLog</Text>
+            <TouchableOpacity style={styles.backTop} onPress={() => setStep(3)}>
+              <Text style={[styles.backTopText, { color: colors.textMuted }]}>← Back</Text>
+            </TouchableOpacity>
+
+            <Text style={[styles.heading, { color: colors.textPrimary }]}>Where are you based?</Text>
+            <Text style={[styles.sub, { color: colors.textSecondary }]}>
+              Used to show local support resources and pricing in your currency.
+            </Text>
+
+            {/* Search input + dropdown container */}
+            <View style={styles.countrySearchWrap}>
+              <View style={styles.countryInputRow}>
+                <TextInput
+                  style={[
+                    styles.countryInput,
+                    {
+                      backgroundColor: colors.card,
+                      borderColor: selectedCountry ? colors.brand : colors.border,
+                      color: colors.textPrimary,
+                    },
+                  ]}
+                  placeholder="Search country…"
+                  placeholderTextColor={colors.textMuted}
+                  value={countrySearch}
+                  onChangeText={(t) => {
+                    setCountrySearch(t);
+                    if (selectedCountry) setSelectedCountry(null);
+                  }}
+                  autoFocus
+                  returnKeyType="search"
+                />
+                {/* Checkmark when selected, clear × when typing */}
+                {selectedCountry ? (
+                  <TouchableOpacity
+                    style={styles.inputAccessory}
+                    onPress={() => { setSelectedCountry(null); setCountrySearch(''); }}
+                  >
+                    <Text style={[styles.inputAccessoryText, { color: colors.brand }]}>✓</Text>
+                  </TouchableOpacity>
+                ) : countrySearch.length > 0 ? (
+                  <TouchableOpacity
+                    style={styles.inputAccessory}
+                    onPress={() => setCountrySearch('')}
+                  >
+                    <Text style={[styles.inputAccessoryText, { color: colors.textMuted }]}>×</Text>
+                  </TouchableOpacity>
+                ) : null}
+              </View>
+
+              {/* Dropdown - absolutely positioned below input */}
+              {!selectedCountry && countrySearch.trim().length > 0 && filteredCountries.length > 0 && (
+                <View style={[
+                  styles.dropdown,
+                  { backgroundColor: colors.cardSolid, borderColor: colors.border },
+                ]}>
+                  <ScrollView
+                    keyboardShouldPersistTaps="handled"
+                    showsVerticalScrollIndicator={false}
+                    style={{ maxHeight: 260 }}
+                  >
+                    {filteredCountries.map((c, i) => (
+                      <TouchableOpacity
+                        key={c.code}
+                        style={[
+                          styles.dropdownItem,
+                          { borderBottomColor: colors.borderFaint },
+                          i === filteredCountries.length - 1 && { borderBottomWidth: 0 },
+                        ]}
+                        onPress={() => { setSelectedCountry(c.code); setCountrySearch(c.name); }}
+                        activeOpacity={0.7}
+                      >
+                        <Text style={styles.dropdownFlag}>{c.flag}</Text>
+                        <Text style={[styles.dropdownName, { color: colors.textPrimary }]}>{c.name}</Text>
+                      </TouchableOpacity>
+                    ))}
+                  </ScrollView>
+                </View>
+              )}
+
+              {/* No results */}
+              {!selectedCountry && countrySearch.trim().length > 0 && filteredCountries.length === 0 && (
+                <View style={[styles.dropdown, styles.dropdownEmpty, { backgroundColor: colors.cardSolid, borderColor: colors.border }]}>
+                  <Text style={[styles.dropdownEmptyText, { color: colors.textMuted }]}>No match - you can skip this step</Text>
+                </View>
+              )}
+            </View>
+          </View>
+
+          {/* Bottom: error + Continue/Skip button */}
+          <View style={styles.countryFooter}>
+            {error ? <Text style={[styles.error, { color: colors.danger }]}>{error}</Text> : null}
+            <TouchableOpacity
+              style={[styles.btn, { backgroundColor: colors.brand }, loading && styles.btnDisabled]}
+              onPress={handleSaveAndContinue}
+              disabled={loading}
+              activeOpacity={0.8}
+            >
+              {loading ? (
+                <ActivityIndicator color={colors.textPrimary} />
+              ) : (
+                <Text style={[styles.btnText, { color: colors.textPrimary }]}>
+                  {selectedCountry ? 'Continue' : 'Skip'}
+                </Text>
+              )}
+            </TouchableOpacity>
+          </View>
+        </View>
+      )}
+
+      {/* ── Steps 2, 3, 5: plain scroll ── */}
+      {(step === 2 || step === 3 || step === 5) && (
         <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
           <Text style={[styles.wordmark, { color: colors.purple300 }]}>DreamLog</Text>
 
@@ -269,7 +384,7 @@ export default function OnboardingScreen() {
 
               <Text style={[styles.heading, { color: colors.textPrimary }]}>What name should I call you?</Text>
               <Text style={[styles.sub, { color: colors.textSecondary }]}>
-                Optional — leave it blank and I'll use whatever's on your account.
+                Optional - leave it blank and I'll use whatever's on your account.
               </Text>
 
               <TextInput
@@ -310,7 +425,7 @@ export default function OnboardingScreen() {
 
               <Text style={[styles.heading, { color: colors.textPrimary }]}>How old are you?</Text>
               <Text style={[styles.sub, { color: colors.textSecondary }]}>
-                Optional — helps us understand who uses DreamLog. We never share individual data.
+                Optional - helps us understand who uses DreamLog. We never share individual data.
               </Text>
 
               <View style={styles.ageList}>
@@ -350,85 +465,12 @@ export default function OnboardingScreen() {
             </>
           )}
 
-          {/* ── Step 4: Country ── */}
-          {step === 4 && (
-            <>
-              <TouchableOpacity style={styles.backTop} onPress={() => setStep(3)}>
-                <Text style={[styles.backTopText, { color: colors.textMuted }]}>← Back</Text>
-              </TouchableOpacity>
-
-              <Text style={[styles.heading, { color: colors.textPrimary }]}>Where are you based?</Text>
-              <Text style={[styles.sub, { color: colors.textSecondary }]}>
-                Used to show local support resources and pricing in your currency.
-              </Text>
-
-              <TextInput
-                style={[
-                  styles.searchInput,
-                  {
-                    backgroundColor: colors.card,
-                    borderColor: colors.border,
-                    color: colors.textPrimary,
-                  },
-                ]}
-                placeholder="Search country…"
-                placeholderTextColor={colors.textMuted}
-                value={countrySearch}
-                onChangeText={setCountrySearch}
-                returnKeyType="search"
-              />
-
-              <View style={styles.countryList}>
-                {filteredCountries.map((c) => {
-                  const isSelected = selectedCountry === c.code;
-                  return (
-                    <TouchableOpacity
-                      key={c.code}
-                      style={[
-                        styles.countryCard,
-                        {
-                          backgroundColor: colors.card,
-                          borderColor: isSelected ? colors.brand : colors.border,
-                        },
-                        isSelected && { backgroundColor: colors.brandGlow },
-                      ]}
-                      onPress={() => setSelectedCountry(isSelected ? null : c.code)}
-                      activeOpacity={0.7}
-                    >
-                      <Text style={styles.countryFlag}>{c.flag}</Text>
-                      <Text style={[styles.countryName, { color: isSelected ? colors.purple300 : colors.textPrimary }]}>
-                        {c.name}
-                      </Text>
-                    </TouchableOpacity>
-                  );
-                })}
-              </View>
-
-              {error ? <Text style={[styles.error, { color: colors.danger }]}>{error}</Text> : null}
-
-              <TouchableOpacity
-                style={[styles.btn, { backgroundColor: colors.brand }, loading && styles.btnDisabled]}
-                onPress={handleSaveAndContinue}
-                disabled={loading}
-                activeOpacity={0.8}
-              >
-                {loading ? (
-                  <ActivityIndicator color={colors.textPrimary} />
-                ) : (
-                  <Text style={[styles.btnText, { color: colors.textPrimary }]}>
-                    {selectedCountry ? 'Continue' : 'Skip'}
-                  </Text>
-                )}
-              </TouchableOpacity>
-            </>
-          )}
-
           {/* ── Step 5: Journal vs Therapy gate ── */}
           {step === 5 && (
             <>
               <Text style={[styles.heading, { color: colors.textPrimary }]}>How would you like to begin?</Text>
               <Text style={[styles.sub, { color: colors.textSecondary }]}>
-                You can always switch later — both live in the app.
+                You can always switch later - both live in the app.
               </Text>
 
               <View style={styles.modeCards}>
@@ -440,7 +482,7 @@ export default function OnboardingScreen() {
                   <Text style={styles.modeEmoji}>📓</Text>
                   <Text style={[styles.modeLabel, { color: colors.textPrimary }]}>Journal</Text>
                   <Text style={[styles.modeDesc, { color: colors.textSecondary }]}>
-                    Record a voice entry and get a personalised AI reflection. Async — do it at your own pace.
+                    Record a voice entry and get a personalised AI reflection. Async - do it at your own pace.
                   </Text>
                 </TouchableOpacity>
 
@@ -579,6 +621,89 @@ const styles = StyleSheet.create({
     fontSize: 13,
     marginBottom: 16,
   },
+
+  // ── Country step layout ──────────────────────────────────────────────────────
+  countryStep: {
+    flex: 1,
+    paddingHorizontal: 24,
+    paddingTop: 64,
+    justifyContent: 'space-between',
+  },
+  countryTop: {
+    flex: 1,
+  },
+  countryFooter: {
+    paddingBottom: 48,
+    paddingTop: 12,
+  },
+  // search input row (input + accessory icon)
+  countrySearchWrap: {
+    position: 'relative',
+    zIndex: 10,
+  },
+  countryInputRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    position: 'relative',
+  },
+  countryInput: {
+    flex: 1,
+    borderWidth: 1,
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    paddingRight: 44,
+    fontFamily: Fonts.sans,
+    fontSize: 15,
+  },
+  inputAccessory: {
+    position: 'absolute',
+    right: 14,
+    padding: 4,
+  },
+  inputAccessoryText: {
+    fontSize: 18,
+    fontFamily: Fonts.sansSB,
+  },
+  // dropdown
+  dropdown: {
+    position: 'absolute',
+    top: 54,
+    left: 0,
+    right: 0,
+    borderWidth: 1,
+    borderRadius: 12,
+    overflow: 'hidden',
+    zIndex: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.35,
+    shadowRadius: 12,
+    elevation: 10,
+  },
+  dropdownItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderBottomWidth: 1,
+  },
+  dropdownFlag: {
+    fontSize: 20,
+  },
+  dropdownName: {
+    fontFamily: Fonts.sansSB,
+    fontSize: 14,
+  },
+  dropdownEmpty: {
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+  },
+  dropdownEmptyText: {
+    fontFamily: Fonts.sans,
+    fontSize: 13,
+  },
   ageList: {
     gap: 10,
     marginBottom: 32,
@@ -591,26 +716,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   ageLabel: {
-    fontFamily: Fonts.sansSB,
-    fontSize: 15,
-  },
-  countryList: {
-    gap: 8,
-    marginBottom: 24,
-  },
-  countryCard: {
-    borderWidth: 1,
-    borderRadius: 12,
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
-  countryFlag: {
-    fontSize: 22,
-  },
-  countryName: {
     fontFamily: Fonts.sansSB,
     fontSize: 15,
   },

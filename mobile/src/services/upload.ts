@@ -67,7 +67,7 @@ export async function uploadRecording(
 
       onProgress?.({ phase: 'uploading', uploadedBytes: sizeBytes, totalBytes: sizeBytes });
 
-      // Step 3: Notify backend — creates DB row + queues transcription job.
+      // Step 3: Notify backend - creates DB row + queues transcription job.
       onProgress?.({ phase: 'registering' });
       const entry = await api.createEntry({
         audio_key,

@@ -1,4 +1,4 @@
-// DreamLog design tokens — dark purple night aesthetic
+// DreamLog design tokens - dark purple night aesthetic
 
 export type ThemeKey = 'stress' | 'anxiety' | 'grief' | 'depression' | 'relationships' | 'career' | 'trauma' | 'curious';
 
@@ -268,7 +268,7 @@ export function moodToColor(score: number, currentColors: ThemeColors = Colors):
   return currentColors.moodRed;
 }
 
-// Font families — loaded via expo-font in _layout.tsx
+// Font families - loaded via expo-font in _layout.tsx
 export const Fonts = {
   serif:  'CormorantGaramond_300Light',
   sans:   'Nunito_400Regular',

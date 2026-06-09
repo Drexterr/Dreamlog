@@ -64,7 +64,7 @@ func (s *NudgeScheduler) tick(ctx context.Context) {
 		}
 
 		if len(tokens) == 0 {
-			// No device registered — mark sent anyway to avoid repeated attempts.
+			// No device registered - mark sent anyway to avoid repeated attempts.
 			_ = s.nudgeRepo.MarkSent(ctx, n.ID)
 			continue
 		}

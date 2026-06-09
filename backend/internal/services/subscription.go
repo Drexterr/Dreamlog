@@ -80,7 +80,7 @@ func (s *SubscriptionService) CheckShareQuota(ctx context.Context, userID uuid.U
 	}
 }
 
-// sentinel errors — checked by handlers via errors.Is.
+// sentinel errors - checked by handlers via errors.Is.
 var (
 	errEntryQuotaExceeded = fmt.Errorf("monthly entry limit reached; upgrade to DreamLog+ for unlimited entries")
 	errShareNotAllowed    = fmt.Errorf("therapist share links require DreamLog+ or higher")

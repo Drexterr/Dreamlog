@@ -80,7 +80,7 @@ func (s *ConversationService) SendMessage(ctx context.Context, convID, userID uu
 	history := make([]anthropicMessage, 0, len(prior))
 	for i, m := range prior {
 		if i == 0 && m.Role == "assistant" {
-			// Skip — this is the opening question, already passed to Claude separately.
+			// Skip - this is the opening question, already passed to Claude separately.
 			continue
 		}
 		history = append(history, anthropicMessage{Role: m.Role, Content: m.Content})

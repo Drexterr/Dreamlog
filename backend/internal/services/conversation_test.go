@@ -313,7 +313,7 @@ func TestConvService_SendMessage_WrongUser_ReturnsError(t *testing.T) {
 }
 
 func TestConvService_MaxConversationTurns_IsThree(t *testing.T) {
-	// Explicitly assert the product invariant — do not change without a product decision.
+	// Explicitly assert the product invariant - do not change without a product decision.
 	if models.MaxConversationTurns != 3 {
 		t.Errorf("MaxConversationTurns must be 3 (ADR-006), got %d", models.MaxConversationTurns)
 	}

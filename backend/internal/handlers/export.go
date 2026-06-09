@@ -162,7 +162,7 @@ func buildPDF(data *models.ExportData) *fpdf.Fpdf {
 	pdf.SetMargins(margin, margin, margin)
 	pdf.SetAutoPageBreak(true, margin)
 
-	// Use built-in Helvetica — no external font files needed.
+	// Use built-in Helvetica - no external font files needed.
 	pdf.SetFont("Helvetica", "", 12)
 
 	// ── Cover page ────────────────────────────────────────────────────────────
@@ -208,7 +208,7 @@ func buildPDF(data *models.ExportData) *fpdf.Fpdf {
 
 	// Summary stats row.
 	drawStatBox(pdf, "Entries", fmt.Sprintf("%d", data.EntryCount), margin, pdf.GetY())
-	avgStr := "—"
+	avgStr := "-"
 	if data.AvgMood != nil {
 		avgStr = fmt.Sprintf("%d / 100", *data.AvgMood)
 	}
@@ -250,7 +250,7 @@ func buildPDF(data *models.ExportData) *fpdf.Fpdf {
 			if data.AvgMood != nil {
 				return fmt.Sprintf("%d", *data.AvgMood)
 			}
-			return "—"
+			return "-"
 		}(),
 		func() string {
 			if data.AvgMood != nil {
@@ -274,7 +274,7 @@ func buildPDF(data *models.ExportData) *fpdf.Fpdf {
 				}
 				return fmt.Sprintf("%d", *data.MoodDelta)
 			}
-			return "—"
+			return "-"
 		}(),
 		func() string {
 			if data.MoodDelta != nil && *data.MoodDelta >= 0 {

@@ -83,7 +83,7 @@ export default function ProcessingScreen() {
           setFailed(true);
         }
       } catch {
-        // network blip — keep trying
+        // network blip - keep trying
       }
     }, POLL_INTERVAL_MS);
 

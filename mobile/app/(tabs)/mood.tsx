@@ -32,9 +32,9 @@ function getMilestoneLabel(streak: number): string | null {
 
 function getMilestoneMessage(streak: number): string {
   if (streak === 7) return "You've journaled every day for a week. Your consistency is building something real.";
-  if (streak === 21) return "21 days. You've made this a habit. The research is clear — this is when it becomes part of you.";
+  if (streak === 21) return "21 days. You've made this a habit. The research is clear - this is when it becomes part of you.";
   if (streak === 50) return "50 days of showing up. That's not luck or motivation. That's character.";
-  if (streak === 100) return "100 days. You are exceptional. What you've built here — this discipline, this self-awareness — is rare.";
+  if (streak === 100) return "100 days. You are exceptional. What you've built here - this discipline, this self-awareness - is rare.";
   return '';
 }
 
@@ -139,7 +139,7 @@ function YearInReviewCard({ review }: { review: AnnualReview }) {
       </View>
       <Text style={styles.reviewNarrative}>{review.narrative}</Text>
 
-      {/* Monthly mood arc — compact bar chart */}
+      {/* Monthly mood arc - compact bar chart */}
       {review.mood_arc.length > 0 && (
         <View style={styles.yearArcWrap}>
           {review.mood_arc.map((d) => {

@@ -1,6 +1,6 @@
 # DreamLog
 
-A production-grade voice journaling app. Speak your day — DreamLog transcribes it, reflects back what it hears, and tracks your emotional patterns over time.
+A production-grade voice journaling app. Speak your day - DreamLog transcribes it, reflects back what it hears, and tracks your emotional patterns over time.
 
 ---
 
@@ -45,12 +45,12 @@ dream/
 |---|---|
 | API | Go 1.23, Gin, `pgx/v5`, `go-redis/v9`, `aws-sdk-go-v2` |
 | Auth | Supabase JWT (HS256), `golang-jwt/jwt/v5` |
-| DB | PostgreSQL 16 — migrations via `golang-migrate` |
-| Queue | Redis list (`BRPOP` / `LPUSH`) — async job pipeline |
-| Storage | MinIO (dev) / Cloudflare R2 (prod) — pre-signed PUT URLs |
+| DB | PostgreSQL 16 - migrations via `golang-migrate` |
+| Queue | Redis list (`BRPOP` / `LPUSH`) - async job pipeline |
+| Storage | MinIO (dev) / Cloudflare R2 (prod) - pre-signed PUT URLs |
 | Transcription | faster-whisper-server (local dev) / OpenAI Whisper (prod) |
 | AI analysis | Claude Sonnet 4.6 via Anthropic Messages API (stub mode in dev) |
-| TTS | OpenAI TTS — Therapy Mode AI voice output (optional, skipped in dev) |
+| TTS | OpenAI TTS - Therapy Mode AI voice output (optional, skipped in dev) |
 | Mobile | React Native 0.74, Expo 51, expo-router, expo-av |
 | Fonts | Cormorant Garamond (serif) + Nunito (sans) |
 
@@ -89,10 +89,10 @@ POST /conversations/:id/messages → send user turn, get Claude reply
 
 ### Therapy Mode (Phase 6)
 
-Real-time AI-assisted voice/text conversation. Unlike journal entries (async, worker-processed), therapy sessions are synchronous — response comes back in the same HTTP request. Sessions are pre-loaded with the user's journal history (mood trends, top emotions, recent entry summaries) so Claude starts with context.
+Real-time AI-assisted voice/text conversation. Unlike journal entries (async, worker-processed), therapy sessions are synchronous - response comes back in the same HTTP request. Sessions are pre-loaded with the user's journal history (mood trends, top emotions, recent entry summaries) so Claude starts with context.
 
 ```
-Mobile                     API (synchronous — no worker)
+Mobile                     API (synchronous - no worker)
   │                           │
   ├─ POST /therapy/sessions ─►│ INSERT session, load journal context
   │                           │ ← { session_id, expires_at }
@@ -123,7 +123,7 @@ Mobile                     API (synchronous — no worker)
 - Node.js 20+ (for mobile)
 - Expo Go app on your phone **or** Android/iOS simulator
 
-### 1 — Clone and configure
+### 1 - Clone and configure
 
 ```bash
 git clone <repo>
@@ -131,7 +131,7 @@ cd dream
 cp .env.example .env   # already pre-filled for local dev
 ```
 
-### 2 — Start the stack
+### 2 - Start the stack
 
 ```bash
 make dev
@@ -149,7 +149,7 @@ Services that start:
 | Redis | localhost:6379 | |
 | Whisper | localhost:9002 | downloads model on first start (~60 s) |
 
-### 3 — Run the mobile app
+### 3 - Run the mobile app
 
 ```bash
 make mobile-install   # npm install
@@ -168,7 +168,7 @@ EXPO_PUBLIC_API_URL=http://10.0.2.2:8080
 # EXPO_PUBLIC_API_URL=http://localhost:8080
 ```
 
-### 4 — Authenticate (dev mode)
+### 4 - Authenticate (dev mode)
 
 The app opens a JWT paste screen. Generate a test token at **[jwt.io](https://jwt.io)**:
 
@@ -210,12 +210,12 @@ STORAGE_USE_PATH_STYLE=true       # required for MinIO
 # Auth
 SUPABASE_JWT_SECRET=<your-secret>
 
-# Transcription — points to local Whisper in dev
+# Transcription - points to local Whisper in dev
 OPENAI_API_KEY=ignored
 OPENAI_BASE_URL=http://whisper:8000/v1
 WHISPER_MODEL=Systran/faster-whisper-base
 
-# AI analysis — stub mode = no API calls, zero cost in dev
+# AI analysis - stub mode = no API calls, zero cost in dev
 ANTHROPIC_API_KEY=                # leave blank in dev
 STUB_AI_ANALYSIS=true             # set false + add key for real analysis
 
@@ -384,15 +384,15 @@ To enable real AI analysis: set `ANTHROPIC_API_KEY=<key>` and `STUB_AI_ANALYSIS=
 ## Database schema (summary)
 
 ```
-users                    — supabase_id, email, name, timezone, fcm_nudge_hour
-entries                  — user_id, audio_key, duration_sec, status, transcript, search_vector
-entry_analysis           — entry_id, mood_score, emotional_tone (JSONB), topics[], reflection, is_crisis
-conversations            — entry_id, user_id, turn_count, is_closed
-conversation_messages    — conversation_id, role, content
-therapy_sessions         — user_id, status, started_at, expires_at, context_snapshot (JSONB), post_session_summary
-therapy_session_messages — session_id, role, content, input_mode
-user_devices             — user_id, fcm_token, platform
-nudges                   — user_id, entry_id, message, status, scheduled_for
+users                    - supabase_id, email, name, timezone, fcm_nudge_hour
+entries                  - user_id, audio_key, duration_sec, status, transcript, search_vector
+entry_analysis           - entry_id, mood_score, emotional_tone (JSONB), topics[], reflection, is_crisis
+conversations            - entry_id, user_id, turn_count, is_closed
+conversation_messages    - conversation_id, role, content
+therapy_sessions         - user_id, status, started_at, expires_at, context_snapshot (JSONB), post_session_summary
+therapy_session_messages - session_id, role, content, input_mode
+user_devices             - user_id, fcm_token, platform
+nudges                   - user_id, entry_id, message, status, scheduled_for
 ```
 
 Migrations are in `backend/migrations/` and run automatically on API startup.
@@ -401,9 +401,9 @@ Migrations are in `backend/migrations/` and run automatically on API startup.
 
 ## Crisis detection
 
-Two-stage pipeline — fast and safe:
+Two-stage pipeline - fast and safe:
 
-1. **Stage 1 — keyword match** (`<1 ms`): 20+ high-certainty phrases → immediate crisis response with hotline numbers
-2. **Stage 2 — Claude confirmation** (`~1 s`): ambiguous phrases → Claude yes/no prompt; fail-safe defaults to crisis if Claude is unreachable
+1. **Stage 1 - keyword match** (`<1 ms`): 20+ high-certainty phrases → immediate crisis response with hotline numbers
+2. **Stage 2 - Claude confirmation** (`~1 s`): ambiguous phrases → Claude yes/no prompt; fail-safe defaults to crisis if Claude is unreachable
 
 Crisis entries skip the regular reflection flow and are never included in mood statistics.

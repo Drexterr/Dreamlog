@@ -1,10 +1,10 @@
-# DreamLog — 5-Phase Development Plan
+# DreamLog - 5-Phase Development Plan
 
 **From Zero to Working Prototype to Full Product**  
 Phase 1: Foundation → Phase 2: Working Prototype → Phase 3: Launchable MVP  
 Phase 4: Growth Engine → Phase 5: Scale & Monetize
 
-*Version 2.0 · May 2026 · Solo Developer Build Plan — Enhanced with Strategic Analysis*
+*Version 2.0 · May 2026 · Solo Developer Build Plan - Enhanced with Strategic Analysis*
 
 ---
 
@@ -30,13 +30,13 @@ By the end of Phase 2, you have a working prototype you use every night. By the 
 
 ## Strategic Context
 
-> Stop thinking of DreamLog as a "voice journaling app." That category is crowded and underfunded. Reposition as: **"Longitudinal Emotional Intelligence — the first app that understands how you feel across months and years, not just today."**
+> Stop thinking of DreamLog as a "voice journaling app." That category is crowded and underfunded. Reposition as: **"Longitudinal Emotional Intelligence - the first app that understands how you feel across months and years, not just today."**
 
-Every other journaling app shows you today's reflection. DreamLog shows you March 2025 you vs. May 2026 you. The data across time is the product. The context builder is the seed of this — water it aggressively.
+Every other journaling app shows you today's reflection. DreamLog shows you March 2025 you vs. May 2026 you. The data across time is the product. The context builder is the seed of this - water it aggressively.
 
 **Core Competitive Edges (Do Not Dilute):**
-1. Context builder (last 5 entries) — embryonic longitudinal intelligence
-2. Two-stage crisis detection that fails safe — better than anything Rosebud or Rocket Journal has
+1. Context builder (last 5 entries) - embryonic longitudinal intelligence
+2. Two-stage crisis detection that fails safe - better than anything Rosebud or Rocket Journal has
 3. 3-turn follow-up conversations grounded in the original entry
 4. Clean, scalable architecture with worker scaling, dead letter queue, full-text search
 
@@ -45,7 +45,7 @@ Every other journaling app shows you today's reflection. DreamLog shows you Marc
 ## PHASE 1: FOUNDATION
 
 **Timeline: Weeks 1–2 (14 days)**  
-**Goal:** Set up the entire backend, get voice recording and transcription working end-to-end. No UI polish — just the engine.
+**Goal:** Set up the entire backend, get voice recording and transcription working end-to-end. No UI polish - just the engine.
 
 ### 1.1 Backend Infrastructure
 
@@ -54,7 +54,7 @@ Everything starts here. Build the server, database, and storage layer that will 
 1. Initialize Go project with Gin framework. Set up project structure: `cmd/api/`, `internal/handlers/`, `internal/services/`, `internal/models/`, `internal/middleware/`, `pkg/`.
 2. Design and implement the PostgreSQL database schema. Core tables: `users` (id, email, name, timezone, preferences, created_at), `entries` (id, user_id, audio_url, transcript, duration_secs, recorded_at), `entry_analysis` (entry_id, emotional_tone, topics, mood_score, reflection_text, summary), `emotional_metrics` (user_id, date, mood_score, dominant_emotions).
 3. Set up Cloudflare R2 (or AWS S3) bucket for audio file storage. Configure: private bucket, server-side encryption enabled, pre-signed upload URLs (15 min expiry), pre-signed download URLs for playback.
-4. Set up Redis for session caching and background job queue. Async AI processing — user records audio, uploads it, and the transcription + analysis happens in a background worker, not blocking the request.
+4. Set up Redis for session caching and background job queue. Async AI processing - user records audio, uploads it, and the transcription + analysis happens in a background worker, not blocking the request.
 5. Create Docker Compose file for local development: Go API server, PostgreSQL 16, Redis 7, MinIO (local S3-compatible storage for testing without cloud costs).
 6. Build core API endpoints (all behind auth middleware): `POST /entries`, `GET /entries`, `GET /entries/:id`, `GET /me`, `PUT /me`.
 7. Write database migration scripts. Use golang-migrate for version-controlled schema changes.
@@ -66,7 +66,7 @@ Everything starts here. Build the server, database, and storage layer that will 
 3. Build sign-up/sign-in flow in React Native using `@supabase/supabase-js`. Support Google sign-in (both platforms), Apple sign-in (iOS), and email + magic link (fallback).
 4. Implement auto-creation of user record in PostgreSQL on first sign-in (triggered on first API call).
 
-**Two auth paths coexist:** Supabase JWT (production mobile app) + Local bcrypt/JWT (dev environment, no Supabase required). Both paths produce identical JWT tokens — middleware doesn't know which path minted the token.
+**Two auth paths coexist:** Supabase JWT (production mobile app) + Local bcrypt/JWT (dev environment, no Supabase required). Both paths produce identical JWT tokens - middleware doesn't know which path minted the token.
 
 ### 1.3 React Native Project Setup
 
@@ -93,12 +93,12 @@ This is the core technical pipeline. By the end of this section, a user can reco
 ## PHASE 2: WORKING PROTOTYPE
 
 **Timeline: Weeks 3–5 (21 days)**  
-**Goal:** Add the AI brain — reflections that reference your history, a browsable timeline of past entries, and basic mood tracking. By the end of this phase, you use the app every night and it feels valuable.
+**Goal:** Add the AI brain - reflections that reference your history, a browsable timeline of past entries, and basic mood tracking. By the end of this phase, you use the app every night and it feels valuable.
 
 ### 2.1 AI Analysis Engine
 
 1. Build the Claude API integration service in Go. Use Claude Sonnet for all nightly analysis. Structured JSON response fields: `emotional_tone` (array with intensity 0–1), `topics` (key subjects), `mood_score` (1–100), `key_quotes` (2–3 notable phrases), `summary` (2–3 sentences), `reflection` (3–5 sentence personalized reflection).
-2. Design and iterate on the master analysis prompt — the most important piece of engineering in the entire product. Instruct Claude to: analyze emotional content, identify key themes, reference previous entries, write warmly but not patronizingly, never diagnose or prescribe, ask exactly one thought-provoking question at the end. **Spend real time on this.**
+2. Design and iterate on the master analysis prompt - the most important piece of engineering in the entire product. Instruct Claude to: analyze emotional content, identify key themes, reference previous entries, write warmly but not patronizingly, never diagnose or prescribe, ask exactly one thought-provoking question at the end. **Spend real time on this.**
 3. Implement entry summarization: 2–3 sentence summary per entry. Stored alongside full transcript. These summaries become the context building blocks.
 4. Build the context assembly pipeline: user profile (name, account age), summaries of last 5 entries, full transcript of last entry (continuity), notable patterns. Keep total context under 4,000 tokens at this stage.
 5. Implement crisis detection (non-negotiable, must be present from first user version). Before generating reflection: run a screening pass. Check for mentions of self-harm, suicidal ideation, harm to others, severe substance abuse crisis. If detected: skip normal reflection, show compassionate message + localized crisis resources (988 Lifeline in US, iCall/Vandrevala in India).
@@ -106,10 +106,10 @@ This is the core technical pipeline. By the end of this section, a user can reco
 
 ### 2.2 Reflection Display & Goodnight Flow
 
-1. Build the reflection screen. Dark calming background, reflection text in a clean readable font, gentle fade-in animation. Show mood score as a subtle color indicator (not a number — keep it emotional, not clinical).
+1. Build the reflection screen. Dark calming background, reflection text in a clean readable font, gentle fade-in animation. Show mood score as a subtle color indicator (not a number - keep it emotional, not clinical).
 2. Add two action buttons below reflection: "Goodnight" (closes app with gentle animation + optional sleep sound) and "Tell me more" (opens a brief 2–3 exchange follow-up conversation).
-3. Implement the "Tell me more" flow — a short, focused conversation, not an open-ended chatbot. AI continues from the reflection's closing question. User replies via voice (preferred) or text. After 2–3 exchanges, AI gently wraps up: "Something to sit with tonight. Sleep well."
-4. Build the "processing" waiting screen shown while AI analyzes. Show a calming animation (breathing circle, gentle pulse, stars) — not a loading spinner. The wait should feel intentional.
+3. Implement the "Tell me more" flow - a short, focused conversation, not an open-ended chatbot. AI continues from the reflection's closing question. User replies via voice (preferred) or text. After 2–3 exchanges, AI gently wraps up: "Something to sit with tonight. Sleep well."
+4. Build the "processing" waiting screen shown while AI analyzes. Show a calming animation (breathing circle, gentle pulse, stars) - not a loading spinner. The wait should feel intentional.
 
 ### 2.3 Entry Timeline
 
@@ -142,22 +142,22 @@ This is the core technical pipeline. By the end of this section, a user can reco
 
 First impression determines whether users stay. The onboarding must be fast (under 90 seconds), warm, and lead to an immediate "aha" moment with their first reflection.
 
-1. **Screen 1 — Welcome:** "DreamLog is your nightly companion. Talk, and it listens. Over time, it'll understand you better than you understand yourself." Calming animation.
-2. **Screen 2 — Sign In:** Google / Apple / email. One tap, no friction.
-3. **Screen 3 — Quick Setup:** Name (pre-filled from auth), timezone (auto-detected), usual bedtime, preferred morning nudge time (default 7:30am).
-4. **Screen 4 — Goal Selection + Adaptive Theme** *(see Section 3.1a below)*
-5. **Screen 5 — Emotional Baseline:** "In one sentence, how would you describe where you are in life right now?" Voice or text input. Seeds the AI's initial context so even the first reflection feels personal.
-6. **Screen 6 — First Recording:** "Take a moment. How was your day? What's on your mind tonight?" Soft prompt to reduce blank-canvas anxiety.
-7. **Screen 7 — First Reflection:** Show the AI's reflection for their first entry. **This is the make-or-break moment.** The AI must reference their baseline statement to feel personal even on Day 1.
-8. **Screen 8 — Habit Setup:** Confirm notification permissions. Explain 7-day free trial of Pro. Done.
+1. **Screen 1 - Welcome:** "DreamLog is your nightly companion. Talk, and it listens. Over time, it'll understand you better than you understand yourself." Calming animation.
+2. **Screen 2 - Sign In:** Google / Apple / email. One tap, no friction.
+3. **Screen 3 - Quick Setup:** Name (pre-filled from auth), timezone (auto-detected), usual bedtime, preferred morning nudge time (default 7:30am).
+4. **Screen 4 - Goal Selection + Adaptive Theme** *(see Section 3.1a below)*
+5. **Screen 5 - Emotional Baseline:** "In one sentence, how would you describe where you are in life right now?" Voice or text input. Seeds the AI's initial context so even the first reflection feels personal.
+6. **Screen 6 - First Recording:** "Take a moment. How was your day? What's on your mind tonight?" Soft prompt to reduce blank-canvas anxiety.
+7. **Screen 7 - First Reflection:** Show the AI's reflection for their first entry. **This is the make-or-break moment.** The AI must reference their baseline statement to feel personal even on Day 1.
+8. **Screen 8 - Habit Setup:** Confirm notification permissions. Explain 7-day free trial of Pro. Done.
 
 ---
 
 ### 3.1a Adaptive Color Theming by Emotional Goal
 
-**Feature:** When a user selects their primary reason for using the app, the entire app UI dynamically transitions to a color palette that is psychologically optimized for their specific emotional condition — based on established research in color psychology, chromotherapy, and therapeutic environment design.
+**Feature:** When a user selects their primary reason for using the app, the entire app UI dynamically transitions to a color palette that is psychologically optimized for their specific emotional condition - based on established research in color psychology, chromotherapy, and therapeutic environment design.
 
-**Why this matters:** Color has measurable physiological and psychological effects. Hospital environments, therapy rooms, and crisis centers all use evidence-based color selection. No journaling app has brought this level of intentionality to their UI. This is a visible, felt differentiation from day one — users will notice the app "feels right" for them without knowing why.
+**Why this matters:** Color has measurable physiological and psychological effects. Hospital environments, therapy rooms, and crisis centers all use evidence-based color selection. No journaling app has brought this level of intentionality to their UI. This is a visible, felt differentiation from day one - users will notice the app "feels right" for them without knowing why.
 
 **How it works:**
 1. User selects their primary focus during onboarding.
@@ -178,7 +178,7 @@ First impression determines whether users stay. The onboarding must be fast (und
 
 | Role | Color | Hex | Notes |
 |---|---|---|---|
-| Background | Deep Slate Blue | `#1A2535` | Replaces default deep purple — quieter, more still |
+| Background | Deep Slate Blue | `#1A2535` | Replaces default deep purple - quieter, more still |
 | Surface | Muted Blue-Grey | `#253347` | Cards and panels |
 | Primary Accent | Soft Periwinkle | `#8FA8C4` | Interactive elements, highlights |
 | Secondary Accent | Muted Lavender | `#B5A8C8` | Secondary actions, tags |
@@ -193,11 +193,11 @@ First impression determines whether users stay. The onboarding must be fast (und
 #### Anxiety
 > *Managing worry, overthinking, nervousness, or general anxious tendencies.*
 
-**Psychological basis:** Green is the most extensively researched color for anxiety reduction. Studies in environmental psychology (Ulrich 1984, subsequent replications) show that green environments measurably reduce cortisol and stimulate the parasympathetic nervous system. Sage green in particular — unlike bright greens — triggers the nervous system's "rest and digest" mode rather than alertness. Soft mint accents add freshness without over-stimulation.
+**Psychological basis:** Green is the most extensively researched color for anxiety reduction. Studies in environmental psychology (Ulrich 1984, subsequent replications) show that green environments measurably reduce cortisol and stimulate the parasympathetic nervous system. Sage green in particular - unlike bright greens - triggers the nervous system's "rest and digest" mode rather than alertness. Soft mint accents add freshness without over-stimulation.
 
 | Role | Color | Hex | Notes |
 |---|---|---|---|
-| Background | Deep Forest Night | `#1A2B20` | Dark green base — grounding |
+| Background | Deep Forest Night | `#1A2B20` | Dark green base - grounding |
 | Surface | Deep Sage | `#233428` | Cards and panels |
 | Primary Accent | Sage Green | `#7B9E87` | Interactive elements |
 | Secondary Accent | Soft Mint | `#A8C5B0` | Secondary actions |
@@ -216,7 +216,7 @@ First impression determines whether users stay. The onboarding must be fast (und
 
 | Role | Color | Hex | Notes |
 |---|---|---|---|
-| Background | Deep Warm Brown | `#201A12` | Very dark amber — warm cocoon |
+| Background | Deep Warm Brown | `#201A12` | Very dark amber - warm cocoon |
 | Surface | Dark Ochre | `#2E2318` | Cards and panels |
 | Primary Accent | Warm Amber | `#C8965A` | Interactive elements |
 | Secondary Accent | Golden Wheat | `#E8C878` | Secondary actions |
@@ -231,11 +231,11 @@ First impression determines whether users stay. The onboarding must be fast (und
 #### Stress / Burnout
 > *Managing work pressure, overwhelm, exhaustion from doing too much.*
 
-**Psychological basis:** Cool blues have the most documented physiological stress-reduction effects of any color — measurably reducing heart rate, blood pressure, and respiratory rate in multiple controlled studies. Blue light therapy is used clinically. For an app used at the end of a stressful day, a blue-dominant palette creates an immediate psychological signal of relief and decompression. Ocean-inspired blues (vs. clinical blues) add depth and avoid the sterility of healthcare environments.
+**Psychological basis:** Cool blues have the most documented physiological stress-reduction effects of any color - measurably reducing heart rate, blood pressure, and respiratory rate in multiple controlled studies. Blue light therapy is used clinically. For an app used at the end of a stressful day, a blue-dominant palette creates an immediate psychological signal of relief and decompression. Ocean-inspired blues (vs. clinical blues) add depth and avoid the sterility of healthcare environments.
 
 | Role | Color | Hex | Notes |
 |---|---|---|---|
-| Background | Deep Ocean | `#0F1E2E` | Dark navy — deep water calm |
+| Background | Deep Ocean | `#0F1E2E` | Dark navy - deep water calm |
 | Surface | Steel Blue-Grey | `#1A2D40` | Cards and panels |
 | Primary Accent | Ocean Blue | `#5B8DB8` | Interactive elements |
 | Secondary Accent | Sky Blue | `#7AAECC` | Secondary actions |
@@ -250,11 +250,11 @@ First impression determines whether users stay. The onboarding must be fast (und
 #### Relationship Issues / Loneliness
 > *Processing relationship dynamics, social pain, disconnection, or loneliness.*
 
-**Psychological basis:** Pink and rose tones are associated with nurturing, empathy, and social connection. Research in behavioral psychology (notably the Baker-Miller Pink / "drunk tank pink" studies) shows that pink environments reduce aggressive arousal and promote calm connectedness. Dusty/muted pinks — unlike saturated hot pinks — provide a sense of warmth and being held, which directly counteracts the emotional experience of loneliness and social pain.
+**Psychological basis:** Pink and rose tones are associated with nurturing, empathy, and social connection. Research in behavioral psychology (notably the Baker-Miller Pink / "drunk tank pink" studies) shows that pink environments reduce aggressive arousal and promote calm connectedness. Dusty/muted pinks - unlike saturated hot pinks - provide a sense of warmth and being held, which directly counteracts the emotional experience of loneliness and social pain.
 
 | Role | Color | Hex | Notes |
 |---|---|---|---|
-| Background | Deep Rose-Brown | `#221518` | Dark warm rose — intimate |
+| Background | Deep Rose-Brown | `#221518` | Dark warm rose - intimate |
 | Surface | Deep Dusty Rose | `#32201E` | Cards and panels |
 | Primary Accent | Dusty Rose | `#C87F7F` | Interactive elements |
 | Secondary Accent | Peach Coral | `#E0A898` | Secondary actions |
@@ -269,11 +269,11 @@ First impression determines whether users stay. The onboarding must be fast (und
 #### Career / Work Pressure
 > *Navigating professional stress, ambition, career transitions, or purpose questions.*
 
-**Psychological basis:** Earth tones and forest greens create a "grounding" effect — reducing the existential weightlessness of career anxiety. Warm browns and muted greens are used in executive coaching and leadership therapy environments because they convey stability, reliability, and organic growth. The contrast with stress blues is intentional: where stress blues create distance from activation, earth tones create a feeling of standing on solid ground.
+**Psychological basis:** Earth tones and forest greens create a "grounding" effect - reducing the existential weightlessness of career anxiety. Warm browns and muted greens are used in executive coaching and leadership therapy environments because they convey stability, reliability, and organic growth. The contrast with stress blues is intentional: where stress blues create distance from activation, earth tones create a feeling of standing on solid ground.
 
 | Role | Color | Hex | Notes |
 |---|---|---|---|
-| Background | Dark Earth | `#181D15` | Very dark forest — grounded |
+| Background | Dark Earth | `#181D15` | Very dark forest - grounded |
 | Surface | Deep Forest | `#222B1C` | Cards and panels |
 | Primary Accent | Forest Green | `#5C7A62` | Interactive elements |
 | Secondary Accent | Warm Brown | `#8C7055` | Secondary actions |
@@ -288,7 +288,7 @@ First impression determines whether users stay. The onboarding must be fast (und
 #### Trauma / Difficult Past
 > *Processing past experiences, working through difficult memories, healing.*
 
-**Psychological basis:** Soft warm neutrals are recommended in trauma-informed design. Research in trauma therapy environments (SAMHSA guidelines, PTSD treatment centers) emphasizes non-triggering sensory environments — avoiding high-contrast, high-saturation colors which can stimulate hypervigilance. Warm taupes and soft greys with warm undertones create psychological safety: low arousal, non-threatening, and deeply calming without coldness.
+**Psychological basis:** Soft warm neutrals are recommended in trauma-informed design. Research in trauma therapy environments (SAMHSA guidelines, PTSD treatment centers) emphasizes non-triggering sensory environments - avoiding high-contrast, high-saturation colors which can stimulate hypervigilance. Warm taupes and soft greys with warm undertones create psychological safety: low arousal, non-threatening, and deeply calming without coldness.
 
 | Role | Color | Hex | Notes |
 |---|---|---|---|
@@ -305,9 +305,9 @@ First impression determines whether users stay. The onboarding must be fast (und
 ---
 
 #### Just Curious / Self-Discovery
-> *No specific issue — using the app for introspection, self-understanding, or growth.*
+> *No specific issue - using the app for introspection, self-understanding, or growth.*
 
-**Psychological basis:** Purples and indigos are culturally and psychologically associated with introspection, wisdom, and the search for meaning. This is the DreamLog default theme (dark purple palette). Purple is used across meditation apps, spiritual practices, and self-reflection tools because it occupies a middle position between the physical warmth of reds and the cool clarity of blues — the perfect tonal space for turning inward.
+**Psychological basis:** Purples and indigos are culturally and psychologically associated with introspection, wisdom, and the search for meaning. This is the DreamLog default theme (dark purple palette). Purple is used across meditation apps, spiritual practices, and self-reflection tools because it occupies a middle position between the physical warmth of reds and the cool clarity of blues - the perfect tonal space for turning inward.
 
 | Role | Color | Hex | Notes |
 |---|---|---|---|
@@ -328,7 +328,7 @@ First impression determines whether users stay. The onboarding must be fast (und
 - `src/theme.ts` exports `THEMES: Record<GoalKey, ThemeColors>` and `getTheme(goal: GoalKey): ThemeColors`
 - Use React Context (`ThemeContext`) to make active theme available throughout the app
 - All hardcoded colors in components must be replaced with `theme.background`, `theme.accent`, etc.
-- The transition animation (300ms ease-in-out) should be visible and intentional — let the user feel the app change for them
+- The transition animation (300ms ease-in-out) should be visible and intentional - let the user feel the app change for them
 - In Settings, allow re-selection with a description of what each theme is for (without being clinical)
 
 ---
@@ -343,7 +343,7 @@ First impression determines whether users stay. The onboarding must be fast (und
 
 ### 3.3 Notification System (Full)
 
-1. Build complete notification system with all types: evening reminder (30 min before bedtime), morning nudge (personalized to last entry), streak-at-risk (if no entry for 2 days — gentle, never guilt-inducing), weekly report ready (Sunday evening), milestone celebrations (7, 30, 90, 365 days).
+1. Build complete notification system with all types: evening reminder (30 min before bedtime), morning nudge (personalized to last entry), streak-at-risk (if no entry for 2 days - gentle, never guilt-inducing), weekly report ready (Sunday evening), milestone celebrations (7, 30, 90, 365 days).
 2. Implement smart evening reminders that vary nightly. Rotate between: a question, a gentle nudge, a pattern tease. Repetitive notifications get ignored; varied ones get opened.
 3. Build notification preferences screen: toggle each type, set custom times for evening and morning, choose quiet days.
 
@@ -363,7 +363,7 @@ As users accumulate entries, you need a smarter system for giving the AI relevan
 3. Build the paywall screen. Clear comparison of Free vs Pro vs Premium. Include price, what's included, annual savings, "Start 7-day free trial" button. Clean, not aggressive.
 4. Implement smart trial trigger: 7-day Pro trial appears after user's **2nd entry** (not at sign-up). User has experienced the core loop before being asked to pay. Much higher conversion.
 5. Build feature gating. Free tier: 5 entries/month, basic reflection (no history references), 7-day mood chart only. Pro tier: unlimited entries, deep reflections with full history, full Mood Map, Pattern Radar, weekly reports. Premium tier: everything in Pro plus Dream Decoder, Relationship Map, unlimited deep dives, therapist reports.
-6. Implement trial-end conversion screen: personalized summary — "In 7 days, DreamLog tracked your mood across X entries, learned about [topics], and gave you N personalized reflections. Want to keep going?" Include mood chart from trial period.
+6. Implement trial-end conversion screen: personalized summary - "In 7 days, DreamLog tracked your mood across X entries, learned about [topics], and gave you N personalized reflections. Want to keep going?" Include mood chart from trial period.
 7. Set up regional pricing: India/SEA/LATAM at ~40% of US price. Student discount at 50% off.
 8. Build subscription management screen. Make cancellation easy and non-guilt-inducing.
 
@@ -373,7 +373,7 @@ As users accumulate entries, you need a smarter system for giving the AI relevan
 2. Record App Store preview video (30 seconds): show the core loop.
 3. Write App Store listing optimized for: journaling, mental health, mood tracker, AI journal, voice journal.
 4. Add required legal: privacy policy (audio deletion policy, encryption), terms of service, mental health disclaimer ("DreamLog is a wellness companion, not a replacement for professional care").
-5. Implement "Get Help Now" button accessible from all screens — links to crisis hotlines. Required for App Store approval.
+5. Implement "Get Help Now" button accessible from all screens - links to crisis hotlines. Required for App Store approval.
 6. Submit to both App Store and Google Play.
 
 > **✅ MILESTONE:** DreamLog is LIVE on the App Store and Google Play. Users can download, sign up, use the free tier, start a Pro trial, and subscribe. You have a real product generating real revenue.
@@ -383,19 +383,19 @@ As users accumulate entries, you need a smarter system for giving the AI relevan
 ## PHASE 4: GROWTH ENGINE
 
 **Timeline: Weeks 10–15 (42 days)**  
-**Goal:** Add the features that make DreamLog genuinely irreplaceable — Pattern Radar, Life Chapters, weekly reports, Hindi support, and viral sharing mechanics.
+**Goal:** Add the features that make DreamLog genuinely irreplaceable - Pattern Radar, Life Chapters, weekly reports, Hindi support, and viral sharing mechanics.
 
 ### 4.1 Pattern Radar
 
 The single most differentiating feature in the product. After 2–3 weeks of entries, the AI starts surfacing emotional patterns the user cannot see themselves.
 
 1. Build the pattern detection pipeline. Weekly background job for each user with 10+ entries. Sends full history (monthly profiles + weekly digests + recent entry summaries) to Claude Opus. Identify patterns across 6 categories:
-   - **Recurring triggers:** "You feel most anxious on Sunday evenings — 6 of the last 8 Sundays"
+   - **Recurring triggers:** "You feel most anxious on Sunday evenings - 6 of the last 8 Sundays"
    - **People patterns:** "You consistently feel drained after interactions with [person]"
    - **Contradictions:** "You say you're over the breakup but you've mentioned your ex in 9 of 12 entries"
    - **Avoidance:** "You've mentioned wanting to confront your manager 7 times but always change the subject"
    - **Growth moments:** "One month ago you were paralyzed about the move. This week you're actively planning it."
-   - **Cyclical:** "Your mood dips in the last week of every month — could be deadline-related or hormonal"
+   - **Cyclical:** "Your mood dips in the last week of every month - could be deadline-related or hormonal"
 2. Store detected patterns in `patterns` table: type, description, confidence score, evidence (array of entry IDs), detected_at, status (new/seen/dismissed).
 3. Build the Pattern Radar screen: card-based feed of detected patterns. Pattern type icon, description, "Evidence: based on X entries over Y weeks", "See entries" link. New patterns have a glowing indicator.
 4. Add pattern push notification: "I found a new pattern in your recent entries." Pro/Premium only. Highest open rate of any notification because it triggers curiosity.
@@ -427,15 +427,15 @@ This is your moat. Build a visualization that shows:
 4. Add **month-over-month narrative**: "Comparing this month to last month: your average mood is up 8 points. Anxiety appeared 40% less often. The topic 'family' appeared for the first time since October."
 5. New API endpoint: `GET /mood/history?range=90d`
 
-This is what no one else does. Rosebud shows weekly summaries. Day One shows nothing. You can show someone 2 years of their emotional life. That's not a journaling app — that's a personal longitudinal emotional health record.
+This is what no one else does. Rosebud shows weekly summaries. Day One shows nothing. You can show someone 2 years of their emotional life. That's not a journaling app - that's a personal longitudinal emotional health record.
 
 ### 4.5 Hindi + Regional Language Support
 
 India has 300M+ Hindi speakers on smartphones. Rocket Journal is English-only for now. DreamLog can own this wedge.
 
-1. Whisper already detects language and returns it in `entries.language` — no new infrastructure needed.
+1. Whisper already detects language and returns it in `entries.language` - no new infrastructure needed.
 2. Build Hindi system prompts in `internal/services/prompts.go`: same emotional intelligence, different language. Add `buildHindiSystemPrompt()` and `buildHinglishSystemPrompt()`.
-3. Add Hinglish detection (mixed Hindi-English, extremely common — 200M Indians use it daily). Auto-detect from language field, no user setting required.
+3. Add Hinglish detection (mixed Hindi-English, extremely common - 200M Indians use it daily). Auto-detect from language field, no user setting required.
 4. Language auto-selected for all Claude calls based on detected transcript language.
 5. This is a 2–3 week build with outsized strategic impact. Rocket Journal will take 3–6 months to catch up because their therapist network thinks in English.
 
@@ -444,7 +444,7 @@ India has 300M+ Hindi speakers on smartphones. Rocket Journal is English-only fo
 Current streaks are punishing. People miss one day and they're done.
 
 1. Add **Streak Freeze**: one automatic per week, two more purchasable. Duolingo's most important retention mechanic.
-2. Add **"Comeback" language** when streak breaks — not guilt, encouragement. "You're back. That matters more than the number."
+2. Add **"Comeback" language** when streak breaks - not guilt, encouragement. "You're back. That matters more than the number."
 3. Add **milestone celebrations** at 7, 21, 50, 100 days with a shareable card (this is the viral hook).
 4. Store `streak_freezes_remaining` and `streak_freeze_used_this_week` in `users` table.
 
@@ -514,13 +514,13 @@ Mode selection on the record screen. Each mode is 2–3 days to build well with 
 2. Launch initial journeys: "Processing Grief" (8 weeks), "Career Clarity" (6 weeks), "Relationship Audit" (4 weeks), "Anxiety Toolkit" (4 weeks), "New Parent Adjustment" (6 weeks). Each designed with input from psychological frameworks.
 3. Monetize as one-time purchases ($4.99 each) or included in Premium tier.
 
-**Note:** Guided Journeys tie directly into the Adaptive Color Theming feature from Phase 3 — users in the "Processing Grief" journey should be offered the Grief theme automatically, creating a cohesive therapeutic environment.
+**Note:** Guided Journeys tie directly into the Adaptive Color Theming feature from Phase 3 - users in the "Processing Grief" journey should be offered the Grief theme automatically, creating a cohesive therapeutic environment.
 
 ### 5.5 Year in Review
 
 1. Build the annual review generator: comprehensive AI-written narrative of the user's year. Life chapters timeline, emotional arc visualization, top patterns discovered, growth milestones, relationship shifts, and a personalized letter from the AI.
 2. Offer as beautifully designed digital PDF ($9.99) or printed hardcover book shipped to the user ($29.99 via Lulu or Blurb).
-3. This is DreamLog's "Spotify Wrapped" moment — an annual event that drives massive social sharing and re-engagement. Launch in December.
+3. This is DreamLog's "Spotify Wrapped" moment - an annual event that drives massive social sharing and re-engagement. Launch in December.
 
 ### 5.6 Crisis → Care Bridge
 
@@ -530,7 +530,7 @@ Right now, when you detect a crisis, you show hotline numbers. That's the legall
 2. Integration with Practo, MindPeers, YourDOST, or Rocket Health via affiliate link.
 3. Revenue share: ₹200–500 per successful therapy booking.
 
-This converts safety infrastructure into a revenue line. You're not just detecting crisis — you're bridging to care.
+This converts safety infrastructure into a revenue line. You're not just detecting crisis - you're bridging to care.
 
 ### 5.7 Voice Tone Analysis
 
@@ -560,7 +560,7 @@ This converts safety infrastructure into a revenue line. You're not just detecti
 
 ### 5.11 Export & Data Portability
 
-- **PDF export:** Monthly/yearly "Emotional Journal" — beautiful formatted PDF with mood graphs, top quotes, key moments. Charge ₹49/export or include in premium.
+- **PDF export:** Monthly/yearly "Emotional Journal" - beautiful formatted PDF with mood graphs, top quotes, key moments. Charge ₹49/export or include in premium.
 - **Apple Health / Google Fit integration:** Write MindfulSession events after each entry. Gets you into the health ecosystem and Apple's mental wellness narrative.
 - **CSV export** of mood scores + dates for power users.
 
@@ -576,7 +576,7 @@ This converts safety infrastructure into a revenue line. You're not just detecti
 - 7-day mood chart
 - 3-turn follow-up
 
-**DreamLog Plus — ₹199/month India | $7.99/month Global**
+**DreamLog Plus - ₹199/month India | $7.99/month Global**
 - Unlimited entries
 - Deep reflections with full history context
 - Hindi + regional language support
@@ -587,7 +587,7 @@ This converts safety infrastructure into a revenue line. You're not just detecti
 - Therapist share link (5/month)
 - Adaptive Color Themes
 
-**DreamLog Pro — ₹499/month India | $14.99/month Global**
+**DreamLog Pro - ₹499/month India | $14.99/month Global**
 - Everything in Plus
 - Pattern Radar
 - Life Chapters
@@ -597,7 +597,7 @@ This converts safety infrastructure into a revenue line. You're not just detecti
 - Priority processing (faster Claude response)
 - Early access to new features
 
-**B2B Wellness — ₹199/employee/month (min 50 employees)**
+**B2B Wellness - ₹199/employee/month (min 50 employees)**
 - All Pro features for employees
 - HR dashboard (aggregated only, never individual)
 - Monthly wellness report
@@ -621,7 +621,7 @@ Every task across all 5 phases. Priority: P0 = required for that phase, P1 = hig
 | 1.8 | Supabase Auth setup + JWT middleware | P0 | 4 hrs | Proto | Google + Apple + email sign-in |
 | 1.9 | React Native Expo project init + nav | P0 | 3 hrs | Proto | Tabs, screens, dark theme |
 | 1.10 | EAS Build config (iOS + Android) | P1 | 2 hrs | Proto | Dev builds for testing |
-| 1.11 | Recording screen + waveform visualization | P0 | 6 hrs | Proto | Core UX — make it beautiful |
+| 1.11 | Recording screen + waveform visualization | P0 | 6 hrs | Proto | Core UX - make it beautiful |
 | 1.12 | Audio recording (expo-av, AAC mono 64kbps) | P0 | 4 hrs | Proto | Test across 5+ devices |
 | 1.13 | Background upload with retry + offline queue | P0 | 4 hrs | Proto | Reliability is non-negotiable |
 | 1.14 | Whisper API transcription integration | P0 | 4 hrs | Proto | Language auto-detect |
@@ -645,9 +645,9 @@ Every task across all 5 phases. Priority: P0 = required for that phase, P1 = hig
 | 2.16 | FCM push notification integration | P0 | 3 hrs | Proto | Delivery infrastructure |
 | 2.17 | Basic notification scheduler (cron) | P0 | 3 hrs | Proto | Morning nudge + evening reminder |
 | 3.1 | Onboarding flow (8 screens) | P0 | 8 hrs | MVP | First impression is everything |
-| 3.1a | Goal selection + adaptive color theme system | P0 | 8 hrs | MVP | Unique differentiator — felt immediately |
+| 3.1a | Goal selection + adaptive color theme system | P0 | 8 hrs | MVP | Unique differentiator - felt immediately |
 | 3.1b | `users.goal` + `users.theme` DB columns + migration | P0 | 1 hr | MVP | Schema update |
-| 3.1c | `src/theme.ts` — 8 complete theme palettes | P0 | 4 hrs | MVP | Psychology-backed color sets |
+| 3.1c | `src/theme.ts` - 8 complete theme palettes | P0 | 4 hrs | MVP | Psychology-backed color sets |
 | 3.1d | ThemeContext + app-wide theme wiring | P0 | 4 hrs | MVP | Replace all hardcoded colors |
 | 3.1e | Theme settings screen (allow re-selection) | P1 | 2 hrs | MVP | User control |
 | 3.2 | Full Mood Map (interactive, zoomable, all-time) | P0 | 8 hrs | MVP | Major feature for marketing |
@@ -687,7 +687,7 @@ Every task across all 5 phases. Priority: P0 = required for that phase, P1 = hig
 | 4.13 | Month-over-month narrative API | P1 | 4 hrs | Growth | `GET /mood/history?range=90d` |
 | 4.14 | Hindi system prompts in prompts.go | P0 | 6 hrs | Growth | India moat |
 | 4.15 | Hinglish detection + auto-language routing | P0 | 3 hrs | Growth | Mixed Hindi-English support |
-| 4.16 | Streak freeze mechanic | P0 | 3 hrs | Growth | Retention — Duolingo-proven |
+| 4.16 | Streak freeze mechanic | P0 | 3 hrs | Growth | Retention - Duolingo-proven |
 | 4.17 | Comeback language + milestone celebrations | P1 | 4 hrs | Growth | Emotional design |
 | 4.18 | Shareable insight cards (non-content) | P0 | 4 hrs | Growth | Viral acquisition loop |
 | 4.19 | Rant Mode prompt + UI | P1 | 3 hrs | Growth | Different journaling style |
@@ -714,7 +714,7 @@ Every task across all 5 phases. Priority: P0 = required for that phase, P1 = hig
 | 5.14 | Crisis → Care Bridge (Practo/YourDOST affiliate) | P1 | 4 hrs | Scale | Convert safety into revenue |
 | 5.15 | Voice tone analysis microservice | P2 | 8 hrs | Scale | Audio-level emotion signals |
 | 5.16 | B2B team mood dashboard | P2 | 16 hrs | Scale | Enterprise revenue stream |
-| 5.17 | Clinical validation study (NIMHANS/AIIMS) | P1 | — | Scale | Zero cost, category-defining |
+| 5.17 | Clinical validation study (NIMHANS/AIIMS) | P1 | - | Scale | Zero cost, category-defining |
 | 5.18 | Outcome measurement (every 10th entry survey) | P1 | 3 hrs | Scale | VC data requirement |
 | 5.19 | PDF export (monthly/yearly) | P1 | 6 hrs | Scale | Premium content |
 | 5.20 | Apple Health / Google Fit integration | P2 | 6 hrs | Scale | Health ecosystem |

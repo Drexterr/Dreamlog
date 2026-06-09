@@ -38,7 +38,7 @@ func NewBillingHandler(svc planManager, stripeSecretKey, stripePublishableKey st
 	}
 }
 
-// GET /billing/plan — returns the authenticated user's current plan and its limits.
+// GET /billing/plan - returns the authenticated user's current plan and its limits.
 func (h *BillingHandler) GetPlan(c *gin.Context) {
 	user := middleware.UserFromCtx(c.Request.Context())
 	if user == nil {
@@ -54,7 +54,7 @@ func (h *BillingHandler) GetPlan(c *gin.Context) {
 	})
 }
 
-// POST /billing/upgrade — stub upgrade endpoint (no payment in dev; sets plan directly).
+// POST /billing/upgrade - stub upgrade endpoint (no payment in dev; sets plan directly).
 // In production this is called after Stripe confirms payment via POST /billing/create-payment-intent.
 func (h *BillingHandler) Upgrade(c *gin.Context) {
 	userID := middleware.UserIDFromCtx(c.Request.Context())
@@ -94,7 +94,7 @@ func (h *BillingHandler) Upgrade(c *gin.Context) {
 	})
 }
 
-// POST /billing/create-payment-intent — creates a Stripe PaymentIntent for a plan upgrade.
+// POST /billing/create-payment-intent - creates a Stripe PaymentIntent for a plan upgrade.
 // Returns client_secret for the mobile Stripe SDK to present the payment sheet.
 // When STRIPE_SECRET_KEY is not set (dev), returns a stub client_secret.
 func (h *BillingHandler) CreatePaymentIntent(c *gin.Context) {
@@ -122,7 +122,7 @@ func (h *BillingHandler) CreatePaymentIntent(c *gin.Context) {
 
 	amount := planAmount(req.Plan, req.Currency)
 
-	// Dev mode: Stripe keys not configured — return a test stub.
+	// Dev mode: Stripe keys not configured - return a test stub.
 	if h.stripeSecretKey == "" {
 		c.JSON(http.StatusOK, gin.H{
 			"client_secret":   "pi_stub_dev_only_secret",
@@ -226,7 +226,7 @@ func createStripePaymentIntent(ctx context.Context, secretKey string, amount int
 	return result.ClientSecret, nil
 }
 
-// allPlanDetails returns the limits for every plan — used on pricing pages.
+// allPlanDetails returns the limits for every plan - used on pricing pages.
 func allPlanDetails() map[models.Plan]*models.PlanLimits {
 	plans := []models.Plan{models.PlanFree, models.PlanPlus, models.PlanPro, models.PlanB2B}
 	out := make(map[models.Plan]*models.PlanLimits, len(plans))

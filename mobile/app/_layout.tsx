@@ -52,7 +52,7 @@ export default function RootLayout() {
     (async () => {
       try {
         // Wait for any deep link to be processed first so setSession() completes
-        // before we read the session — avoids the race where a confirmation link
+        // before we read the session - avoids the race where a confirmation link
         // opens the app but getSession() runs before the tokens are stored.
         await deepLinkReady;
         const { data: { session } } = await supabase.auth.getSession();
@@ -125,7 +125,7 @@ export default function RootLayout() {
             router.replace('/(tabs)');
           }
         } catch {
-          // ignore — startup effect will handle recovery on next launch
+          // ignore - startup effect will handle recovery on next launch
         }
       } else if (event === 'SIGNED_OUT') {
         router.replace('/auth');

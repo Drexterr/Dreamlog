@@ -16,7 +16,7 @@ import { useTheme } from '../../../src/context/ThemeContext';
 import type { TherapySession } from '../../../src/types';
 
 function formatDuration(sec?: number): string {
-  if (!sec) return '—';
+  if (!sec) return '-';
   const m = Math.floor(sec / 60);
   const s = sec % 60;
   return `${m} min ${s} sec`;
@@ -41,7 +41,7 @@ export default function TherapySummaryScreen() {
   const handleShare = async () => {
     if (!session?.post_session_summary) return;
     await Share.share({
-      message: `My reflection session summary:\n\n${session.post_session_summary}\n\n— via DreamLog`,
+      message: `My reflection session summary:\n\n${session.post_session_summary}\n\n- via DreamLog`,
     });
   };
 

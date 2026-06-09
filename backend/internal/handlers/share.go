@@ -29,14 +29,14 @@ type shareLinkRepo interface {
 type ShareHandler struct {
 	repo         shareLinkRepo
 	subscription shareQuotaChecker
-	appURL       string // e.g. "https://dreamlog.app" — used to build the share URL
+	appURL       string // e.g. "https://dreamlog.app" - used to build the share URL
 }
 
 func NewShareHandler(repo shareLinkRepo, subscription shareQuotaChecker, appURL string) *ShareHandler {
 	return &ShareHandler{repo: repo, subscription: subscription, appURL: appURL}
 }
 
-// POST /share — create a 72-hour passcode-protected share link.
+// POST /share - create a 72-hour passcode-protected share link.
 func (h *ShareHandler) Create(c *gin.Context) {
 	user := middleware.UserFromCtx(c.Request.Context())
 	if user == nil {
@@ -93,7 +93,7 @@ func (h *ShareHandler) Create(c *gin.Context) {
 	})
 }
 
-// GET /share — list all active share links for the authenticated user.
+// GET /share - list all active share links for the authenticated user.
 func (h *ShareHandler) List(c *gin.Context) {
 	userID := middleware.UserIDFromCtx(c.Request.Context())
 	links, err := h.repo.ListByUser(c.Request.Context(), userID)
@@ -119,7 +119,7 @@ func (h *ShareHandler) List(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"links": out})
 }
 
-// DELETE /share/:id — revoke a share link.
+// DELETE /share/:id - revoke a share link.
 func (h *ShareHandler) Revoke(c *gin.Context) {
 	userID := middleware.UserIDFromCtx(c.Request.Context())
 	linkID, err := uuid.Parse(c.Param("id"))
@@ -134,7 +134,7 @@ func (h *ShareHandler) Revoke(c *gin.Context) {
 	c.Status(http.StatusNoContent)
 }
 
-// GET /share/:token — public endpoint; validates passcode and returns shared data.
+// GET /share/:token - public endpoint; validates passcode and returns shared data.
 // Passcode is passed as query param ?p=1234.
 func (h *ShareHandler) View(c *gin.Context) {
 	token := c.Param("token")

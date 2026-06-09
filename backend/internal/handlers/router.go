@@ -37,6 +37,7 @@ type Deps struct {
 	AppBaseURL           string
 	StripeSecretKey      string
 	StripePublishableKey string
+	StorageProxyBaseURL  string
 	Log                  *zap.Logger
 }
 
@@ -53,7 +54,7 @@ func NewRouter(deps Deps) http.Handler {
 		c.JSON(http.StatusOK, gin.H{"status": "ok"})
 	})
 
-	// Auth (public — no JWT required)
+	// Auth (public - no JWT required)
 	authHandler := NewAuthHandler(deps.AuthSvc)
 	r.POST("/auth/register", authHandler.Register)
 	r.POST("/auth/login", authHandler.Login)
@@ -72,9 +73,11 @@ func NewRouter(deps Deps) http.Handler {
 	auth.POST("/billing/upgrade", billingHandler.Upgrade)
 	auth.POST("/billing/create-payment-intent", billingHandler.CreatePaymentIntent)
 
-	// Upload proxy (no auth — key is unguessable; dev only when STORAGE_PROXY_BASE_URL is set)
 	entryHandler := NewEntryHandler(deps.EntrySvc, deps.StorageSvc, deps.SubscriptionSvc)
-	r.PUT("/upload", entryHandler.UploadProxy)
+	// Upload proxy: only registered when STORAGE_PROXY_BASE_URL is set (local MinIO dev only)
+	if deps.StorageProxyBaseURL != "" {
+		r.PUT("/upload", entryHandler.UploadProxy)
+	}
 
 	// Entries + presign
 	entries := auth.Group("/entries")
@@ -100,32 +103,32 @@ func NewRouter(deps Deps) http.Handler {
 	moodHandler := NewMoodHandler(deps.AnalysisRepo, deps.NudgeRepo, deps.UserRepo)
 	auth.GET("/mood/weekly", moodHandler.WeeklyMood)
 	auth.GET("/mood/streak", moodHandler.Streak)
-	auth.GET("/mood/history", moodHandler.MoodHistory)   // Plus+ only — gated in handler
-	auth.GET("/mood/patterns", moodHandler.PatternRadar) // all plans — emotion pattern radar
+	auth.GET("/mood/history", moodHandler.MoodHistory)   // Plus+ only - gated in handler
+	auth.GET("/mood/patterns", moodHandler.PatternRadar) // all plans - emotion pattern radar
 	auth.POST("/streak/freeze", moodHandler.UseFreeze)
 
 	// Device registration (FCM tokens)
 	auth.POST("/devices", moodHandler.RegisterDevice)
 
-	// Weekly reviews — Plus+ only (gated in handler)
+	// Weekly reviews - Plus+ only (gated in handler)
 	reviewHandler := NewWeeklyReviewHandler(deps.WeeklyReviewRepo)
 	auth.GET("/reviews/weekly", reviewHandler.List)
 	auth.GET("/reviews/weekly/latest", reviewHandler.GetLatest)
 
-	// Annual reviews — Plus+ only (gated in handler)
+	// Annual reviews - Plus+ only (gated in handler)
 	annualReviewHandler := NewAnnualReviewHandler(deps.AnnualReviewRepo)
 	auth.GET("/reviews/annual", annualReviewHandler.List)
 	auth.GET("/reviews/annual/latest", annualReviewHandler.GetLatest)
 
-	// Therapist share links (5a) — Plus+ only (gated in handler)
+	// Therapist share links (5a) - Plus+ only (gated in handler)
 	shareHandler := NewShareHandler(deps.ShareRepo, deps.SubscriptionSvc, deps.AppBaseURL)
 	auth.POST("/share", shareHandler.Create)
 	auth.GET("/share", shareHandler.List)
 	auth.DELETE("/share/:id", shareHandler.Revoke)
-	// Public — no auth middleware; passcode in query param
+	// Public - no auth middleware; passcode in query param
 	r.GET("/share/:token", shareHandler.View)
 
-	// PDF export (5d) — Pro+ only (gated in handler)
+	// PDF export (5d) - Pro+ only (gated in handler)
 	exportHandler := NewExportHandler(deps.AnalysisRepo, deps.UserRepo)
 	auth.GET("/export/pdf", exportHandler.ExportPDF)
 
@@ -147,7 +150,7 @@ func NewRouter(deps Deps) http.Handler {
 	auth.GET("/journeys/sessions/:sessionID", journeyHandler.GetSession)
 	auth.POST("/journeys/sessions/:sessionID/advance", journeyHandler.AdvanceSession)
 
-	// Life Chapters — user-defined time periods with themes
+	// Life Chapters - user-defined time periods with themes
 	chapterHandler := NewLifeChapterHandler(deps.LifeChapterRepo, deps.ClaudeSvc)
 	auth.GET("/chapters", chapterHandler.List)
 	auth.POST("/chapters", chapterHandler.Create)

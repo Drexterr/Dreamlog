@@ -84,7 +84,7 @@ func (s *WeeklyReviewScheduler) grantWeeklyFreezes(ctx context.Context) {
 
 // scheduleForActiveUsers finds users with entries in the last 7 days and
 // inserts a pending weekly_review row for the most recent past Sunday 10 AM
-// (idempotent — ON CONFLICT DO NOTHING prevents duplicates).
+// (idempotent - ON CONFLICT DO NOTHING prevents duplicates).
 func (s *WeeklyReviewScheduler) scheduleForActiveUsers(ctx context.Context) {
 	since := time.Now().Add(-7 * 24 * time.Hour)
 	users, err := s.userRepo.ListWithRecentEntries(ctx, since)
@@ -147,7 +147,7 @@ func (s *WeeklyReviewScheduler) processOne(ctx context.Context, rv *models.Weekl
 	}
 
 	if len(entries) == 0 {
-		// No entries this week — mark failed with a soft reason.
+		// No entries this week - mark failed with a soft reason.
 		_ = s.reviewRepo.MarkFailed(ctx, rv.ID, "no entries found for the week")
 		return nil
 	}

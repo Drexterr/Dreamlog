@@ -2,7 +2,7 @@
 --
 -- The backend connects to PostgreSQL directly via DATABASE_URL (superuser/service role),
 -- which bypasses RLS. These statements only affect Supabase's PostgREST API, which this
--- app does not use — all data access goes through the Go backend.
+-- app does not use - all data access goes through the Go backend.
 --
 -- Enabling RLS with no permissive policies = deny all PostgREST access, which is correct.
 -- This clears the Supabase "RLS disabled" security advisory.

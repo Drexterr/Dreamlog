@@ -464,7 +464,7 @@ func TestAggregateYearData_TopEmotionsSortedByFrequency(t *testing.T) {
 
 func TestAggregateYearData_OneSummaryPerMonth(t *testing.T) {
 	year := 2025
-	// Two entries in the same month — only one summary should appear for that month
+	// Two entries in the same month - only one summary should appear for that month
 	entries := []*models.YearSummaryEntry{
 		{Date: time.Date(year, time.April, 1, 0, 0, 0, 0, time.UTC), Summary: "First April", MoodScore: 65, Emotions: []string{"calm"}},
 		{Date: time.Date(year, time.April, 15, 0, 0, 0, 0, time.UTC), Summary: "Second April", MoodScore: 70, Emotions: []string{"hopeful"}},

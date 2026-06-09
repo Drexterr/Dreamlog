@@ -1,5 +1,5 @@
 /**
- * useRecorder — manages the full audio recording lifecycle.
+ * useRecorder - manages the full audio recording lifecycle.
  *
  * Audio config:
  *   - Format:    AAC (m4a container)

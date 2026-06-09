@@ -1,5 +1,5 @@
 /**
- * JournalScreen — main screen for recording and viewing entries.
+ * JournalScreen - main screen for recording and viewing entries.
  *
  * Flow:
  *   1. User taps record → permissions requested → recording starts

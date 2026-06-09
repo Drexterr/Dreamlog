@@ -1,5 +1,5 @@
 /**
- * FollowUpScreen — "Tell me more" bounded conversation.
+ * FollowUpScreen - "Tell me more" bounded conversation.
  *
  * Rules:
  * - Max 3 user turns (enforced by backend + shown in UI)

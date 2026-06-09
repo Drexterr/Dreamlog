@@ -18,7 +18,7 @@ type ShareLink struct {
 }
 
 // ShareLinkView is the public payload returned when a therapist opens a valid link.
-// Raw transcripts and reflections are excluded — only AI summaries and mood data.
+// Raw transcripts and reflections are excluded - only AI summaries and mood data.
 type ShareLinkView struct {
 	UserName    string          `json:"user_name"`
 	Period      string          `json:"period"` // always "30d"
@@ -29,7 +29,7 @@ type ShareLinkView struct {
 	ExpiresAt   time.Time       `json:"expires_at"`
 }
 
-// EntrySummary is a single entry's anonymized AI output — no raw transcript.
+// EntrySummary is a single entry's anonymized AI output - no raw transcript.
 type EntrySummary struct {
 	Date      string   `json:"date"`       // YYYY-MM-DD
 	Summary   string   `json:"summary"`    // 2-3 sentence AI summary only

@@ -26,7 +26,7 @@ type ClientTherapistLink struct {
 	RevokedAt    *time.Time `json:"revoked_at,omitempty"`
 }
 
-// ClientSummary is returned by GET /therapists/clients — one row per linked client.
+// ClientSummary is returned by GET /therapists/clients - one row per linked client.
 type ClientSummary struct {
 	ClientID    uuid.UUID `json:"client_id"`
 	Name        string    `json:"name"`

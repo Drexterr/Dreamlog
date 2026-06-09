@@ -310,7 +310,7 @@ export default function TherapySessionScreen() {
       const { sound } = await Audio.Sound.createAsync({ uri: url }, { shouldPlay: true });
       ttsSound.current = sound;
     } catch {
-      // TTS playback failures are silent — text is always visible as fallback.
+      // TTS playback failures are silent - text is always visible as fallback.
     }
   }, []);
 
@@ -611,7 +611,7 @@ export default function TherapySessionScreen() {
             </Text>
           )}
 
-          {/* Orb — hidden when ended */}
+          {/* Orb - hidden when ended */}
           {!isEnded && (
             <SessionOrb
               recording={isRecording}

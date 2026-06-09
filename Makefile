@@ -26,7 +26,7 @@ endif
 # ── Default: print help ───────────────────────────────────────────────────────
 help:
 	@echo ""
-	@echo "DreamLog — available make targets"
+	@echo "DreamLog - available make targets"
 	@echo ""
 	@echo "  Dev lifecycle"
 	@echo "    make dev              Build + start all services (detached)"
@@ -64,14 +64,14 @@ help:
 	@echo "  Scaling"
 	@echo "    make scale-worker N=2 Scale worker to N replicas"
 	@echo ""
-	@echo "  Backend — local Go (no Docker)"
+	@echo "  Backend - local Go (no Docker)"
 	@echo "    make api              go run ./cmd/api"
 	@echo "    make worker           go run ./cmd/worker"
 	@echo "    make tidy             go mod tidy"
 	@echo "    make vet              go vet ./..."
 	@echo "    make lint             golangci-lint run (requires golangci-lint)"
 	@echo ""
-	@echo "  Backend — tests"
+	@echo "  Backend - tests"
 	@echo "    make test             go test ./..."
 	@echo "    make test-race        go test -race ./...  (always use in CI)"
 	@echo "    make test-cover       go test -coverprofile=coverage.out + open HTML"
@@ -80,7 +80,7 @@ help:
 	@echo "    make test-handlers    Run only internal/handlers tests"
 	@echo "    make test-workers     Run only internal/workers tests"
 	@echo ""
-	@echo "  Mobile — dev server"
+	@echo "  Mobile - dev server"
 	@echo "    make mobile-install        npm install"
 	@echo "    make mobile-start          expo start"
 	@echo "    make mobile-tunnel         expo start --tunnel"
@@ -90,14 +90,14 @@ help:
 	@echo "    make mobile-lint           eslint check"
 	@echo "    make mobile-typecheck      tsc --noEmit"
 	@echo ""
-	@echo "  Mobile — EAS cloud builds (free tier = long queue)"
+	@echo "  Mobile - EAS cloud builds (free tier = long queue)"
 	@echo "    make mobile-build-dev      EAS cloud, development profile"
 	@echo "    make mobile-build-preview  EAS cloud, preview profile"
 	@echo "    make mobile-build-prod     EAS cloud, production profile"
 	@echo ""
-	@echo "  Mobile — APK builds (Windows-native, no EAS/cloud)"
+	@echo "  Mobile - APK builds (Windows-native, no EAS/cloud)"
 	@echo "    make apk              Build release APK via Gradle (needs Android Studio)"
-	@echo "    make apk-debug        Build debug APK — faster, no signing"
+	@echo "    make apk-debug        Build debug APK - faster, no signing"
 	@echo "    make apk-ci           Trigger build on GitHub Actions (fallback)"
 	@echo "    make apk-download     Download latest APK from GitHub Actions"
 	@echo ""
@@ -129,7 +129,7 @@ dev-stop:
 dev-restart:
 	docker compose up --build -d --remove-orphans
 
-# Remove containers AND volumes (full wipe — loses all data).
+# Remove containers AND volumes (full wipe - loses all data).
 down:
 	docker compose down -v --remove-orphans
 
@@ -196,7 +196,7 @@ db-migrate-down:
 	docker compose exec api sh -c \
 	  'migrate -path /app/migrations -database "$$DATABASE_URL" down 1'
 
-# Wipe and re-apply all migrations (DEV ONLY — destroys all data).
+# Wipe and re-apply all migrations (DEV ONLY - destroys all data).
 db-reset:
 	@echo "WARNING: This will drop and recreate the database. Ctrl-C to abort."
 	@sleep 3
@@ -221,7 +221,7 @@ minio-console:
 	@echo "  user:     minioadmin"
 	@echo "  password: minioadmin_secret"
 
-# ── Backend — local Go (no Docker) ───────────────────────────────────────────
+# ── Backend - local Go (no Docker) ───────────────────────────────────────────
 api:
 	cd backend && go run ./cmd/api
 
@@ -237,7 +237,7 @@ vet:
 lint:
 	cd backend && golangci-lint run ./...
 
-# ── Backend — tests ───────────────────────────────────────────────────────────
+# ── Backend - tests ───────────────────────────────────────────────────────────
 
 # Run all tests. Use test-race in CI.
 test:
@@ -294,8 +294,8 @@ mobile-lint:
 mobile-typecheck:
 	cd mobile && npx tsc --noEmit
 
-# ── Mobile — EAS builds ───────────────────────────────────────────────────────
-# Cloud builds (EAS servers — free tier queues can take hours).
+# ── Mobile - EAS builds ───────────────────────────────────────────────────────
+# Cloud builds (EAS servers - free tier queues can take hours).
 mobile-build-dev:
 	cd mobile && npx eas build --profile development --platform android
 
@@ -305,7 +305,7 @@ mobile-build-preview:
 mobile-build-prod:
 	cd mobile && npx eas build --profile production --platform android
 
-# Local builds (runs on your machine — no queue, no wait).
+# Local builds (runs on your machine - no queue, no wait).
 # Requires: Android SDK + JDK for Android; Xcode for iOS (macOS only).
 # Install prerequisite: npm install -g eas-cli
 mobile-build-dev-local:
@@ -316,7 +316,7 @@ mobile-build-preview-local:
 
 JAVA_HOME = C:\Program Files\Android\Android Studio\jbr
 
-# Build APK directly using Gradle — works on Windows, no EAS/cloud needed.
+# Build APK directly using Gradle - works on Windows, no EAS/cloud needed.
 # Requires: Android Studio installed (includes JDK + Android SDK).
 # First run takes ~3 min (Gradle download); subsequent runs ~1 min.
 apk:
@@ -326,7 +326,7 @@ apk:
 	@echo ""
 	@echo "APK ready: mobile\android\app\build\outputs\apk\release\app-release.apk"
 
-# Debug APK (faster build, no signing needed — good for quick device testing).
+# Debug APK (faster build, no signing needed - good for quick device testing).
 apk-debug:
 	cd mobile && npx expo prebuild --platform android --clean
 	powershell -ExecutionPolicy Bypass -File scripts\write-local-props.ps1
@@ -337,7 +337,7 @@ apk-debug:
 # Trigger build on GitHub Actions (fallback if Android Studio is not installed).
 apk-ci:
 	gh workflow run build-apk.yml --field profile=preview-local
-	@echo "Build triggered — download from the Actions tab when done."
+	@echo "Build triggered - download from the Actions tab when done."
 
 # Download the latest APK artifact from GitHub Actions.
 apk-download:

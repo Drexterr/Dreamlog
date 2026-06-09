@@ -1,6 +1,6 @@
 /**
- * ProcessingScreen — shown while the backend processes the audio.
- * Uses a breathing pulse animation — no spinner, intentional feel.
+ * ProcessingScreen - shown while the backend processes the audio.
+ * Uses a breathing pulse animation - no spinner, intentional feel.
  */
 
 import React, { useEffect, useRef } from 'react';

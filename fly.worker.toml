@@ -18,7 +18,7 @@ primary_region = "sin"
   DB_MAX_IDLE_CONNS = "3"
   DB_CONN_MAX_LIFETIME = "5m"
 
-# Worker has no HTTP service — it's a background process
+# Worker has no HTTP service - it's a background process
 [processes]
   app = "/worker"
 

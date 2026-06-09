@@ -237,7 +237,7 @@ func (r *AnalysisRepository) MoodHistory(ctx context.Context, userID uuid.UUID, 
 	since := now.AddDate(0, 0, -days)
 	prevSince := since.AddDate(0, 0, -days)
 
-	// Daily mood for the requested window — journal entries + therapy sessions combined.
+	// Daily mood for the requested window - journal entries + therapy sessions combined.
 	const dailyQ = `
 		SELECT
 		    TO_CHAR(day, 'YYYY-MM-DD') AS day,
@@ -289,7 +289,7 @@ func (r *AnalysisRepository) MoodHistory(ctx context.Context, userID uuid.UUID, 
 		avgMood = &v
 	}
 
-	// Previous period average — journal entries + therapy sessions combined.
+	// Previous period average - journal entries + therapy sessions combined.
 	const prevAvgQ = `
 		SELECT COALESCE(ROUND(AVG(mood))::INT, 0), COUNT(*)::INT
 		FROM (
@@ -322,7 +322,7 @@ func (r *AnalysisRepository) MoodHistory(ctx context.Context, userID uuid.UUID, 
 		}
 	}
 
-	// Top emotions over the period — journal entries + therapy sessions.
+	// Top emotions over the period - journal entries + therapy sessions.
 	const emotionQ = `
 		SELECT tone FROM (
 		    SELECT ea.emotional_tone AS tone

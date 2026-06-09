@@ -3,7 +3,7 @@
 **Base URL (dev):** `http://localhost:8080`
 **Auth:** All endpoints except `/health`, `/auth/register`, `/auth/login` require `Authorization: Bearer <jwt>`
 
-Claude: Read this file before touching any handler in `backend/internal/handlers/`. The request/response shapes here are the contract the mobile app is built against — do not change field names or types without updating both sides.
+Claude: Read this file before touching any handler in `backend/internal/handlers/`. The request/response shapes here are the contract the mobile app is built against - do not change field names or types without updating both sides.
 
 ---
 
@@ -30,8 +30,8 @@ Response `200`:
 { "token": "string", "user": { "id": "uuid", "email": "string", "name": "string" } }
 
 // Errors
-400 — missing fields
-409 — email already registered
+400 - missing fields
+409 - email already registered
 ```
 
 ### POST /auth/login
@@ -43,8 +43,8 @@ Response `200`:
 { "token": "string", "user": { "id": "uuid", "email": "string", "name": "string" } }
 
 // Errors
-400 — missing fields
-401 — invalid credentials
+400 - missing fields
+401 - invalid credentials
 ```
 
 ---
@@ -93,7 +93,7 @@ Creates a Stripe PaymentIntent for a plan upgrade. The mobile uses the returned 
 }
 
 // Errors
-400 — invalid plan (must be plus or pro) or invalid currency
+400 - invalid plan (must be plus or pro) or invalid currency
 ```
 
 **Amounts:**
@@ -113,15 +113,15 @@ Called after Stripe payment succeeds. Sets the user's plan in the database.
 { "plan": "plus", "plan_expires_at": "RFC3339 | null", "limits": { /* PlanLimits */ } }
 
 // Errors
-400 — invalid or missing plan
+400 - invalid or missing plan
 ```
 
 **Plan gating:**
-- `GET /mood/history` — requires `plus` or higher; returns `403` otherwise
-- `GET /reviews/weekly` and `GET /reviews/weekly/latest` — requires `plus` or higher
-- `POST /share` — requires `plus` (5/month) or `pro`/`b2b` (unlimited); `free` gets `403`
-- `GET /export/pdf` — requires `pro` or higher
-- `POST /entries` — `free` plan capped at 10 entries/month (returns `409` at limit)
+- `GET /mood/history` - requires `plus` or higher; returns `403` otherwise
+- `GET /reviews/weekly` and `GET /reviews/weekly/latest` - requires `plus` or higher
+- `POST /share` - requires `plus` (5/month) or `pro`/`b2b` (unlimited); `free` gets `403`
+- `GET /export/pdf` - requires `pro` or higher
+- `POST /entries` - `free` plan capped at 10 entries/month (returns `409` at limit)
 
 ---
 
@@ -157,7 +157,7 @@ Response `200`:
   "age_range": "under_18 | 18_24 | 25_34 | 35_44 | 45_plus"
 }
 
-// Response 200 — same shape as GET /me
+// Response 200 - same shape as GET /me
 ```
 
 ---
@@ -220,7 +220,7 @@ Response `200`:
 ```
 
 ### GET /entries/:id
-Response `200` — same shape as single item in list above, plus:
+Response `200` - same shape as single item in list above, plus:
 ```json
 {
   "error_msg": "string | null",
@@ -235,7 +235,7 @@ Full-text search via PostgreSQL tsvector.
 
 Query params: `?q=anxiety+work&page=1&limit=20`
 
-Response `200` — same shape as GET /entries list.
+Response `200` - same shape as GET /entries list.
 
 ---
 
@@ -299,7 +299,7 @@ Response `200`:
 ## Conversations
 
 ### POST /entries/:id/conversation
-Idempotent — returns existing conversation if already created for this entry.
+Idempotent - returns existing conversation if already created for this entry.
 
 Response `200` or `201`:
 ```json
@@ -340,9 +340,9 @@ Errors: `404` if entry not found or not completed.
 ```
 
 Errors:
-- `404` — conversation not found
-- `409` — conversation is already closed (turn_count = 3)
-- `400` — empty content
+- `404` - conversation not found
+- `409` - conversation is already closed (turn_count = 3)
+- `400` - empty content
 
 ---
 
@@ -435,15 +435,15 @@ Uses one streak freeze to protect a missed day (the frozen date is treated as an
 { "freeze_count": 0, "freeze_date": "2026-05-27" }
 
 // Errors
-400 — missing or invalid freeze_date
-409 — no streak freezes remaining
+400 - missing or invalid freeze_date
+409 - no streak freezes remaining
 ```
 
 ---
 
 ## Shareable Insight Cards
 
-Available to all plans (no gate) — maximises viral sharing.
+Available to all plans (no gate) - maximises viral sharing.
 
 ### GET /insights/card
 Returns everything needed to render the week's shareable insight card.
@@ -599,13 +599,13 @@ Response `200`:
   "color": "#7C3AED"
 }
 
-// Response 201 — LifeChapter (same shape as list item)
+// Response 201 - LifeChapter (same shape as list item)
 ```
 
 Errors: `400` missing title or start_date.
 
 ### GET /chapters/:id
-Response `200` — LifeChapter (same shape as list item).
+Response `200` - LifeChapter (same shape as list item).
 
 Errors: `404` not found or belongs to different user.
 
@@ -622,7 +622,7 @@ All fields optional; only provided fields are updated.
   "color": "#059669"
 }
 
-// Response 200 — updated LifeChapter
+// Response 200 - updated LifeChapter
 ```
 
 Errors: `404` not found.
@@ -656,7 +656,7 @@ Response `200`:
 ```
 
 ### POST /chapters/:id/summarize
-Generates a Claude narrative for the chapter using all entries within its date range. Stores result in `summary`. Idempotent — calling again regenerates.
+Generates a Claude narrative for the chapter using all entries within its date range. Stores result in `summary`. Idempotent - calling again regenerates.
 
 Response `200`:
 ```json
@@ -669,7 +669,7 @@ Errors: `404` chapter not found · `500` if Claude is unavailable.
 
 ## Relationship Map
 
-Automatically populated by Claude during the entry analysis pipeline. No user action required — people mentioned in journal entries are extracted and tracked.
+Automatically populated by Claude during the entry analysis pipeline. No user action required - people mentioned in journal entries are extracted and tracked.
 
 ### GET /relationships
 Returns all people extracted from the user's entries.
@@ -801,7 +801,7 @@ Response `200`:
 ### POST /journeys/:journeyID/start
 Starts a new session for the given journey template.
 
-Response `201` — JourneySession:
+Response `201` - JourneySession:
 ```json
 {
   "id": "uuid",
@@ -832,7 +832,7 @@ Response `200`:
 ### GET /journeys/sessions/:sessionID
 Returns a single session with all step states.
 
-Response `200` — JourneySession (same shape as above).
+Response `200` - JourneySession (same shape as above).
 
 Errors: `400` invalid UUID · `404` session not found or belongs to another user.
 
@@ -843,7 +843,7 @@ Records an entry for the current step and advances to the next. Returns the upda
 // Request
 { "entry_id": "uuid" }
 
-// Response 200 — updated JourneySession
+// Response 200 - updated JourneySession
 ```
 
 Errors: `400` missing entry_id or invalid session UUID · `409` session already completed.
@@ -857,7 +857,7 @@ Errors: `400` missing entry_id or invalid session UUID · `409` session already 
 // Request
 { "name": "string", "email": "string", "credentials": "PhD, Clinical Psychology" }
 
-// Response 201 — Therapist object
+// Response 201 - Therapist object
 { "id": "uuid", "user_id": "uuid", "name": "string", "email": "string",
   "credentials": "string", "plan": "trial", "created_at": "RFC3339" }
 ```
@@ -942,7 +942,7 @@ Register or update FCM token. Upserts on `fcm_token`.
 
 ## Therapy Mode
 
-Real-time AI-assisted voice/text conversation sessions. Sessions are standalone — not tied to a journal entry. Crisis detection runs on every user message.
+Real-time AI-assisted voice/text conversation sessions. Sessions are standalone - not tied to a journal entry. Crisis detection runs on every user message.
 
 **Billing:** ₹499/session charged at session start, or included in Pro plan (2 sessions/month). `402` returned if no sessions remaining and no session credits.
 
@@ -968,8 +968,8 @@ Start a new therapy session. Loads the user's journal context (last 30d mood avg
 }
 
 // Errors
-402 — no session credits and not on Pro plan
-400 — invalid persona value
+402 - no session credits and not on Pro plan
+400 - invalid persona value
 ```
 
 **Persona options:**
@@ -992,18 +992,18 @@ Get a pre-signed PUT URL for uploading a voice turn. Same pattern as journal ent
 { "upload_url": "string", "audio_key": "string" }
 
 // Errors
-404 — session not found or belongs to different user
-409 — session is not active (expired, completed, or crisis_detected)
+404 - session not found or belongs to different user
+409 - session is not active (expired, completed, or crisis_detected)
 ```
 
 ### POST /therapy/sessions/:id/messages
 Send a user message (voice or text) and receive an AI response.
 
 ```json
-// Request — voice input
+// Request - voice input
 { "audio_key": "string", "input_mode": "voice" }
 
-// Request — text input
+// Request - text input
 { "content": "string", "input_mode": "text" }
 
 // Response 201
@@ -1032,15 +1032,15 @@ Send a user message (voice or text) and receive an AI response.
 }
 
 // Errors
-400 — missing both audio_key and content; or content is empty
-404 — session not found or belongs to different user
-409 — session is not active (expired, completed, or crisis_detected)
-410 — session expired (time limit reached)
+400 - missing both audio_key and content; or content is empty
+404 - session not found or belongs to different user
+409 - session is not active (expired, completed, or crisis_detected)
+410 - session expired (time limit reached)
 ```
 
-**Crisis response — two-stage:**
+**Crisis response - two-stage:**
 - **First detection (`crisis_warnings = 0`):** `session_state.is_crisis` becomes `true`, `session_state.crisis_warnings` becomes `1`, but `session_state.status` remains `active`. The assistant response attempts de-escalation (grounding, validation, breathing). Session stays open.
-- **Second detection (`crisis_warnings >= 1`):** `session_state.status` becomes `crisis_detected`. Response contains crisis hotlines + "I can't help further — please reach out to a professional." Session cannot accept further messages.
+- **Second detection (`crisis_warnings >= 1`):** `session_state.status` becomes `crisis_detected`. Response contains crisis hotlines + "I can't help further - please reach out to a professional." Session cannot accept further messages.
 
 ### POST /therapy/sessions/:id/end
 End a session early. Triggers Claude to generate a 3-sentence post-session summary.
@@ -1056,8 +1056,8 @@ End a session early. Triggers Claude to generate a 3-sentence post-session summa
 }
 
 // Errors
-404 — session not found or belongs to different user
-409 — session already ended
+404 - session not found or belongs to different user
+409 - session already ended
 ```
 
 ### GET /therapy/sessions/:id
@@ -1120,9 +1120,9 @@ All errors use this shape:
 ```
 
 Common HTTP status codes:
-- `400` Bad Request — validation failure
-- `401` Unauthorized — missing or invalid JWT
-- `403` Forbidden — valid JWT but wrong user
+- `400` Bad Request - validation failure
+- `401` Unauthorized - missing or invalid JWT
+- `403` Forbidden - valid JWT but wrong user
 - `404` Not Found
-- `409` Conflict — e.g. conversation closed, email already exists
+- `409` Conflict - e.g. conversation closed, email already exists
 - `500` Internal Server Error

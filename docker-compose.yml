@@ -75,7 +75,7 @@ services:
 
   # ── Local Whisper (dev only) ──────────────────────────────────────────────
   # OpenAI-compatible API, runs on CPU, no GPU needed.
-  # First start downloads the model (~150 MB for 'base') — takes ~60s.
+  # First start downloads the model (~150 MB for 'base') - takes ~60s.
   whisper:
     image: fedirz/faster-whisper-server:latest-cpu
     container_name: dreamlog_whisper
@@ -112,7 +112,7 @@ services:
       - "8080:8080"
 
   # ── Transcription Worker ──────────────────────────────────────────────────
-  # No container_name — lets Docker Compose scale with replicas freely.
+  # No container_name - lets Docker Compose scale with replicas freely.
   worker:
     build:
       context: ./backend

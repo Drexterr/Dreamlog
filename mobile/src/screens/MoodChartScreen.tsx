@@ -1,5 +1,5 @@
 /**
- * MoodChartScreen — 7-day mood trend + streak display.
+ * MoodChartScreen - 7-day mood trend + streak display.
  *
  * Uses a manual SVG-free bar chart (React Native View-based) to avoid
  * adding a charting dependency. Replace with Victory Native or Recharts
@@ -64,7 +64,7 @@ export function MoodChartScreen() {
         <View style={styles.chartCard}>
           <Text style={styles.chartLabel}>Mood over 7 days</Text>
           {moods.length === 0 ? (
-            <Text style={styles.emptyChart}>No data yet — keep journaling.</Text>
+            <Text style={styles.emptyChart}>No data yet - keep journaling.</Text>
           ) : (
             <View style={styles.bars}>
               {moods.map((day) => {

@@ -192,7 +192,7 @@ func (r *TherapyRepository) IncrementTurn(ctx context.Context, id uuid.UUID) (in
 }
 
 // SetSessionAnalysis stores the full structured post-session analysis from Claude.
-// This replaces SetPostSessionSummary — both the prose narrative and structured fields are stored atomically.
+// This replaces SetPostSessionSummary - both the prose narrative and structured fields are stored atomically.
 func (r *TherapyRepository) SetSessionAnalysis(ctx context.Context, id uuid.UUID, a *models.TherapySessionAnalysis) error {
 	toneJSON, err := json.Marshal(a.EmotionalTone)
 	if err != nil {

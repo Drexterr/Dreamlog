@@ -201,7 +201,7 @@ export default function RecordScreen() {
   const [uploadLabel, setUploadLabel] = useState('');
   const [mode, setMode] = useState<EntryMode>('processing');
 
-  // Don't auto-start — wait for user to tap the orb after choosing mode.
+  // Don't auto-start - wait for user to tap the orb after choosing mode.
 
   const handleStop = useCallback(async () => {
     if (phase !== 'recording') return;
@@ -222,7 +222,7 @@ export default function RecordScreen() {
       });
       Alert.alert(
         'Saved offline',
-        "You're offline. Recording saved — it will upload when you reconnect.",
+        "You're offline. Recording saved - it will upload when you reconnect.",
         [{ text: 'OK', onPress: () => router.back() }],
       );
       return;
@@ -283,7 +283,7 @@ export default function RecordScreen() {
           {phase === 'idle' ? 'What kind of\nsession is this?' : 'Take your time.\nI’m here.'}
         </Text>
 
-        {/* Mode picker — visible only before recording starts */}
+        {/* Mode picker - visible only before recording starts */}
         {phase === 'idle' && (
           <ModePicker selected={mode} onSelect={setMode} />
         )}

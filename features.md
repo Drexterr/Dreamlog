@@ -8,9 +8,9 @@ DreamLog: Full Entrepreneurial & Strategic Analysis
 
   Global Mental Health App Landscape (2025-2026)
 
-  Mental health tech raised $352M in 2025 — a 150% jump from $138M in 2024. The money is flowing. But
+  Mental health tech raised $352M in 2025 - a 150% jump from $138M in 2024. The money is flowing. But
   here's what the data actually tells you that most founders miss: the number of deals dropped from 20
-  to 13 even as total capital more than doubled. Translation — VCs are writing bigger checks into fewer,
+  to 13 even as total capital more than doubled. Translation - VCs are writing bigger checks into fewer,
    more established companies. Seed-stage journaling/wellness apps are fighting for a shrinking slice of
    attention.
 
@@ -18,13 +18,13 @@ DreamLog: Full Entrepreneurial & Strategic Analysis
   $497.9M in 2024 → $1.4B by 2030 at 18.5% CAGR. India is the fastest-growing segment in Asia-Pacific.
   That's your headline number for a pitch deck.
 
-  Critical nuance VCs know: Clinical Mental Health Apps have a cap-to-deal ratio of 0.23x — meaning
+  Critical nuance VCs know: Clinical Mental Health Apps have a cap-to-deal ratio of 0.23x - meaning
   therapy/journaling apps are raising far smaller rounds than clinical/psychiatric platforms. The big
   money is in clinical validation, not consumer apps. You need to understand which game you're actually
   playing.
 
   ---
-  2. Competitive Map — Who You're Actually Fighting
+  2. Competitive Map - Who You're Actually Fighting
 
   Rosebud (Your Global Benchmark)
 
@@ -36,22 +36,22 @@ DreamLog: Full Entrepreneurial & Strategic Analysis
   - Moat: Bessemer-backed means serious capital, distribution, and credibility. Tim Ferriss means
   influencer access. They have a CBT-template library, adaptive follow-up questions, and voice
   journaling in 20+ languages
-  - Weakness: Still US/Western-centric. The 20+ language claim is surface-level — the AI prompt
+  - Weakness: Still US/Western-centric. The 20+ language claim is surface-level - the AI prompt
   engineering is not culturally localized
 
-  Rocket Journal (Your India Direct Competitor — Most Dangerous)
+  Rocket Journal (Your India Direct Competitor - Most Dangerous)
 
   - Backer: Rocket Health (founded 2021, 200,000+ therapy sessions delivered, 100+ licensed
   psychologists)
   - Launch: September 2025, immediately broke into India Top 10 Health & Fitness within 48 hours
-  - Distribution advantage: They're not a journaling startup — they're a therapy company with an
+  - Distribution advantage: They're not a journaling startup - they're a therapy company with an
   existing emotionally-committed user base that built a journaling app. That's not marketing, that's a
   structural moat
   - Features: Rant Mode (free-form venting) + Structured check-in prompts
   - Platform: iOS only (Android + Apple Watch 2026)
   - Weakness: They are a therapy company first. Their journaling UX will always be secondary priority.
   They don't have DreamLog's pipeline sophistication (crisis detection, context builder, follow-up
-  conversations). Also — they're owned by a clinical entity, which creates HIPAA-adjacent liability and
+  conversations). Also - they're owned by a clinical entity, which creates HIPAA-adjacent liability and
   conservative product decisions
 
   Day One
@@ -76,27 +76,27 @@ DreamLog: Full Entrepreneurial & Strategic Analysis
   Before building anything, recognize what's genuinely differentiated in the current architecture:
 
   Real competitive edges:
-  1. Context builder (last 5 entries) — this is embryonic longitudinal intelligence. No consumer
+  1. Context builder (last 5 entries) - this is embryonic longitudinal intelligence. No consumer
   journaling app does this well
-  2. Two-stage crisis detection that fails safe — this is better than anything Rosebud or Rocket Journal
+  2. Two-stage crisis detection that fails safe - this is better than anything Rosebud or Rocket Journal
    has documented publicly. This is an ethical infrastructure advantage
-  3. 3-turn follow-up conversations grounded in the original entry — the prompt engineering here (not
+  3. 3-turn follow-up conversations grounded in the original entry - the prompt engineering here (not
   repeating the reflection, not using therapy language, ending gracefully) is thoughtful
-  4. Zero-cost dev environment — you can move fast and iterate without burning capital on API calls
-  5. Clean, scalable backend architecture — most consumer apps at this stage are held together with duct
+  4. Zero-cost dev environment - you can move fast and iterate without burning capital on API calls
+  5. Clean, scalable backend architecture - most consumer apps at this stage are held together with duct
    tape. Yours can handle worker scaling, has a dead letter queue, has full-text search. This is a
   hiring/investor signal
 
   What's actually weak right now:
-  1. No retention mechanics beyond streaks — streaks alone don't retain users past Day 14
-  2. No outcomes measurement — you can't tell a VC "X% of users report improvement." You have no data
+  1. No retention mechanics beyond streaks - streaks alone don't retain users past Day 14
+  2. No outcomes measurement - you can't tell a VC "X% of users report improvement." You have no data
   collection for this
-  3. No onboarding / personalization — every user gets the same generic AI regardless of why they
+  3. No onboarding / personalization - every user gets the same generic AI regardless of why they
   downloaded the app
-  4. Single language (English) — in India, this cuts your addressable market by 60-70%
-  5. No viral/sharing loop — completely private, zero organic growth
-  6. No B2B angle — consumer health is hard to monetize; enterprise makes the unit economics work
-  7. Mobile only — no web app is a retention killer for desktop-heavy users (working professionals)
+  4. Single language (English) - in India, this cuts your addressable market by 60-70%
+  5. No viral/sharing loop - completely private, zero organic growth
+  6. No B2B angle - consumer health is hard to monetize; enterprise makes the unit economics work
+  7. Mobile only - no web app is a retention killer for desktop-heavy users (working professionals)
 
   ---
   4. The Strategic Repositioning You Need
@@ -104,7 +104,7 @@ DreamLog: Full Entrepreneurial & Strategic Analysis
   Stop thinking of DreamLog as a "voice journaling app." That category is crowded and underfunded.
   Reposition as:
 
-  ▎ "Longitudinal Emotional Intelligence — the first app that understands how you feel across months and
+  ▎ "Longitudinal Emotional Intelligence - the first app that understands how you feel across months and
   ▎  years, not just today."
 
   Fitbit didn't win by saying "it counts your steps." It won by showing you your sleep patterns, your
@@ -119,7 +119,7 @@ DreamLog: Full Entrepreneurial & Strategic Analysis
 
   Ranked by impact-to-effort ratio. Asterisked ones (*) are VC pitch-worthy differentiators.
 
-  Tier 1 — Build in the Next 60 Days (Retention & Engagement)
+  Tier 1 - Build in the Next 60 Days (Retention & Engagement)
 
   **1. Structured Onboarding with Goal Selection ***
   When a user opens the app for the first time, ask them 3 questions:
@@ -137,16 +137,16 @@ DreamLog: Full Entrepreneurial & Strategic Analysis
   Thursday. Tap to see your week."
 
   This is the single highest-retention feature in consumer journaling apps. Rosebud does it. You need to
-   do it better — because you have richer data (key_quotes, topics[], emotional_tone with intensity
+   do it better - because you have richer data (key_quotes, topics[], emotional_tone with intensity
   scores). Your weekly review should feel like a letter from a thoughtful friend, not a dashboard. The
   data is already in your DB. The nudge scheduler is already built. This is largely a new Claude prompt
   + a new cron job.
 
   3. Streak Mechanics with Forgiveness*
   Current streaks are punishing. People miss one day and they're done. Add:
-  - Streak Freeze (one per week automatically, two more purchasable) — Duolingo's most important
+  - Streak Freeze (one per week automatically, two more purchasable) - Duolingo's most important
   retention mechanic
-  - "Comeback" language when streak breaks — not guilt, encouragement. "You're back. That matters more
+  - "Comeback" language when streak breaks - not guilt, encouragement. "You're back. That matters more
   than the number."
   - Milestone celebrations at 7, 21, 50, 100 days with a shareable card (this is the viral hook)
 
@@ -161,19 +161,19 @@ DreamLog: Full Entrepreneurial & Strategic Analysis
   5. Hindi + Regional Language Support*
   India has 300M+ Hindi speakers on smartphones. Rocket Journal is English-only for now. DreamLog can
   own this wedge. The Whisper base model already handles Hindi transcription. The gap is the Claude
-  reflection prompt — you need to:
-  - Detect language from transcript (Whisper returns this already — language field is in your DB)
+  reflection prompt - you need to:
+  - Detect language from transcript (Whisper returns this already - language field is in your DB)
   - Build Hindi/Hinglish system prompts (same emotional intelligence, different language)
-  - Let users journal in mixed Hindi-English (extremely common — it's called Hinglish and 200M Indians
+  - Let users journal in mixed Hindi-English (extremely common - it's called Hinglish and 200M Indians
   use it daily)
 
   This is a 2-3 week build with outsized strategic impact. Rocket Journal will take 3-6 months to catch
   up here because their therapist network thinks in English.
 
   ---
-  Tier 2 — Build in 60-120 Days (Differentiation & Monetization)
+  Tier 2 - Build in 60-120 Days (Differentiation & Monetization)
 
-  6. The Life Graph — 30/90/365 Day Emotional Trajectory*
+  6. The Life Graph - 30/90/365 Day Emotional Trajectory*
   This is your moat. Build a visualization that shows:
   - Mood score trendline over 30/90/365 days (you have mood_score per entry)
   - Recurring emotional tones across the year (aggregate emotional_tone JSONB)
@@ -184,7 +184,7 @@ DreamLog: Full Entrepreneurial & Strategic Analysis
   points. Anxiety appeared 40% less often. The topic family appeared for the first time since October."
 
   This is what no one else does. Rosebud shows weekly summaries. Day One shows nothing. You can show
-  someone 2 years of their emotional life. That's not a journaling app — that's a personal longitudinal
+  someone 2 years of their emotional life. That's not a journaling app - that's a personal longitudinal
   emotional health record.
 
   7. Therapist Sharing Mode*
@@ -196,7 +196,7 @@ DreamLog: Full Entrepreneurial & Strategic Analysis
   - AI-generated summaries only (not raw transcripts unless user opts in)
   - Top recurring emotional tones and topics
 
-  Charge ₹99/export or include in premium tier. This is also your clinical partnership wedge — once
+  Charge ₹99/export or include in premium tier. This is also your clinical partnership wedge - once
   therapists are looking at DreamLog data in sessions, they become a distribution channel.
 
   8. Crisis → Care Bridge*
@@ -204,12 +204,12 @@ DreamLog: Full Entrepreneurial & Strategic Analysis
   monetizable version:
   - "It sounds like you're going through something heavy. Would you like to speak with a therapist
   today?"
-  - Integration with Practo, MindPeers, YourDOST, or Rocket Health (yes, even a competitor — they need
+  - Integration with Practo, MindPeers, YourDOST, or Rocket Health (yes, even a competitor - they need
   leads too) via affiliate
   - Revenue share: ₹200-500 per successful therapy booking
 
   This converts your safety infrastructure into a revenue line. It also makes you clinically responsible
-   in a good way — you're not just detecting crisis, you're bridging to care.
+   in a good way - you're not just detecting crisis, you're bridging to care.
 
   9. Prompt Modes / Templates
   Not everyone can free-form journal. Add structured modes alongside free recording:
@@ -222,20 +222,20 @@ DreamLog: Full Entrepreneurial & Strategic Analysis
   These are different system prompts in prompts.go. 2-3 days each to build well.
 
   10. Export & Data Portability
-  - PDF export: Monthly/yearly "Emotional Journal" — beautiful formatted PDF with mood graphs, top
+  - PDF export: Monthly/yearly "Emotional Journal" - beautiful formatted PDF with mood graphs, top
   quotes, key moments. Charge ₹49/export or include in premium.
   - Apple Health / Google Fit integration: write MindfulSession events after each entry. This gets you
   into the health ecosystem and Apple's mental wellness narrative.
   - CSV export of mood scores + dates for power users
 
   ---
-  Tier 3 — 120+ Days (Scale & VC Narrative)
+  Tier 3 - 120+ Days (Scale & VC Narrative)
 
   11. B2B Corporate Wellness Play*
   This is where unit economics actually work. Sell to HR teams:
   - Employees journal anonymously
   - HR/wellness lead gets an aggregated, anonymized "Team Emotional Health Score" dashboard
-  - Alerts if aggregate stress crosses a threshold (not individual data — GDPR/privacy safe)
+  - Alerts if aggregate stress crosses a threshold (not individual data - GDPR/privacy safe)
   - Pricing: ₹199/employee/month
 
   Target: IT companies in Bangalore/Hyderabad with >200 employees. These companies already spend
@@ -259,7 +259,7 @@ DreamLog: Full Entrepreneurial & Strategic Analysis
   Charge ₹1,999/month for a therapist dashboard:
   - Clients who opt in share summaries
   - Therapist sees mood trends before sessions
-  - "Pre-session brief" feature — Claude generates a 3-sentence brief of what the client has been
+  - "Pre-session brief" feature - Claude generates a 3-sentence brief of what the client has been
   experiencing this week
   - Therapist can add a private note after the session that gets integrated into the next week's context
 
@@ -283,7 +283,7 @@ DreamLog: Full Entrepreneurial & Strategic Analysis
   ├── 7-day mood chart
   └── 3-turn follow-up
 
-  DreamLog Plus — ₹199/month India | $7.99/month Global
+  DreamLog Plus - ₹199/month India | $7.99/month Global
   ├── Unlimited entries
   ├── Hindi + regional language
   ├── Life Graph (30/90/365 day view)
@@ -292,7 +292,7 @@ DreamLog: Full Entrepreneurial & Strategic Analysis
   ├── Streak freeze (2x/week)
   └── Therapist share link (5/month)
 
-  DreamLog Pro — ₹499/month India | $14.99/month Global
+  DreamLog Pro - ₹499/month India | $14.99/month Global
   ├── Everything in Plus
   ├── PDF export (monthly reports)
   ├── Apple Health / Google Fit integration
@@ -300,7 +300,7 @@ DreamLog: Full Entrepreneurial & Strategic Analysis
   ├── Priority processing (faster Claude response)
   └── Early access to new features
 
-  B2B Wellness — ₹199/employee/month (min 50 employees)
+  B2B Wellness - ₹199/employee/month (min 50 employees)
   ├── All Pro features for employees
   ├── HR dashboard (aggregated only, never individual)
   ├── Monthly wellness report
@@ -346,43 +346,43 @@ DreamLog: Full Entrepreneurial & Strategic Analysis
    retention. Every VC conversation will start with that number.
 
   ---
-  8. The Rocket Journal Problem — Your Response Strategy
+  8. The Rocket Journal Problem - Your Response Strategy
 
   Rocket Journal's moats: existing therapy user base, clinical credibility, first-mover in India, Rocket
    Health brand.
 
-  DreamLog's counter-strategy — don't fight on their ground:
+  DreamLog's counter-strategy - don't fight on their ground:
 
-  1. Go deeper on AI quality — Rocket Journal's reflections are generic (I'd bet on this). Your prompt
+  1. Go deeper on AI quality - Rocket Journal's reflections are generic (I'd bet on this). Your prompt
   engineering is sophisticated. Make DreamLog's reflections visibly, noticeably better. Show this in
   marketing: "Read a DreamLog reflection vs. a competitor's reflection. Spot the difference."
-  2. Own the non-clinical user — Rocket Journal will always feel like it's connected to therapy/mental
+  2. Own the non-clinical user - Rocket Journal will always feel like it's connected to therapy/mental
   illness. Stigma is real in India. DreamLog should feel like a personal growth tool for
-  well-functioning people who want to understand themselves. "Not because something's wrong — because
+  well-functioning people who want to understand themselves. "Not because something's wrong - because
   you want to know yourself better."
-  3. Win on language — Hindi, Tamil, Bengali. Rocket Journal won't move fast here because their
+  3. Win on language - Hindi, Tamil, Bengali. Rocket Journal won't move fast here because their
   therapist network and clinical content is English-first.
-  4. Win on data ownership narrative — "Your journal stays yours. We never share it. No therapist reads
+  4. Win on data ownership narrative - "Your journal stays yours. We never share it. No therapist reads
   it unless you choose to share." This is a trust story that a therapy-company-owned app can never fully
    tell.
-  5. Win on B2B — Rocket Health is a B2C therapy platform. Corporate wellness is not their core motion.
+  5. Win on B2B - Rocket Health is a B2C therapy platform. Corporate wellness is not their core motion.
   You can own it.
 
   ---
   9. The One Big Bet You Should Consider
 
   After 10+ years of building startups, the companies that get funded aren't the ones with the best
-  features — they're the ones with the clearest story about why they win at scale.
+  features - they're the ones with the clearest story about why they win at scale.
 
   DreamLog's big bet story:
 
   ▎ "Every other mental health app knows how you feel today. We're building the first system that
-  ▎ understands how you feel across years — detecting emotional patterns before you're aware of them,
+  ▎ understands how you feel across years - detecting emotional patterns before you're aware of them,
   ▎ connecting triggers to outcomes, and giving you a longitudinal map of your inner life. We start with
   ▎  voice journaling because it's the lowest-friction way to collect this data. The data is the moat.
   ▎ The insights are the product."
 
-  This story is about becoming the mental health data layer — not a journaling app. The journaling is
+  This story is about becoming the mental health data layer - not a journaling app. The journaling is
   just how you collect the emotional signal. If you can build longitudinal emotional intelligence that's
    genuinely predictive ("the last 4 times your mood dropped below 35, a major work event preceded it by
    3 days"), you have something defensible, scientifically interesting, and fundable.
@@ -390,16 +390,16 @@ DreamLog: Full Entrepreneurial & Strategic Analysis
   ---
   10. Immediate Action Plan (Next 30 Days)
 
-  1. Soft launch to 100 beta users — WhatsApp groups, Reddit (r/IndiaSocial, r/bangalore), Twitter/X.
+  1. Soft launch to 100 beta users - WhatsApp groups, Reddit (r/IndiaSocial, r/bangalore), Twitter/X.
   Get real usage data before building anything else
-  2. Build the Weekly Emotional Review — single highest-retention feature, uses your existing data
-  3. Add Hindi language support — Whisper already handles it, just need Hindi prompts
-  4. Build the shareable milestone card — streak milestones → Instagram share → free acquisition
-  5. Add outcome measurement — after every 10th entry, ask "How would you describe your overall mood
+  2. Build the Weekly Emotional Review - single highest-retention feature, uses your existing data
+  3. Add Hindi language support - Whisper already handles it, just need Hindi prompts
+  4. Build the shareable milestone card - streak milestones → Instagram share → free acquisition
+  5. Add outcome measurement - after every 10th entry, ask "How would you describe your overall mood
   compared to when you started?" Store this. It's your clinical data
-  6. Write 3 tests — crisis detection, worker pipeline, conversation turn cap. Not for VCs, for your own
+  6. Write 3 tests - crisis detection, worker pipeline, conversation turn cap. Not for VCs, for your own
    confidence
-  7. Get a clinical advisor — find one therapist or psychiatrist (NIMHANS alumni, LinkedIn) willing to
+  7. Get a clinical advisor - find one therapist or psychiatrist (NIMHANS alumni, LinkedIn) willing to
   be an informal advisor. Even unpaid. It changes every conversation
 
   ---

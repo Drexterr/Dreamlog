@@ -22,7 +22,7 @@ func NewWeeklyReviewRepository(db *pgxpool.Pool) *WeeklyReviewRepository {
 }
 
 // Schedule inserts a pending review row for the given user + week_start.
-// Idempotent — ON CONFLICT DO NOTHING means calling it twice is safe.
+// Idempotent - ON CONFLICT DO NOTHING means calling it twice is safe.
 func (r *WeeklyReviewRepository) Schedule(ctx context.Context, userID uuid.UUID, weekStart time.Time, scheduledAt time.Time) error {
 	const q = `
 		INSERT INTO weekly_reviews (user_id, week_start, scheduled_at)

@@ -233,7 +233,7 @@ func TestExportHandler_ExportPDF_PreferredNameOverridesName(t *testing.T) {
 	req.Header.Set("Authorization", "Bearer "+exportTestJWT(t))
 	r.ServeHTTP(w, req)
 
-	// Just verify it returns 200 — the preferred name is embedded in the PDF binary.
+	// Just verify it returns 200 - the preferred name is embedded in the PDF binary.
 	if w.Code != http.StatusOK {
 		t.Fatalf("preferred name: want 200, got %d: %s", w.Code, w.Body.String())
 	}

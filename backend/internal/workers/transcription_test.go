@@ -447,7 +447,7 @@ func TestWorker_RetryIncrementsAttempt(t *testing.T) {
 	f.transcriber.err = errors.New("temporary failure")
 	f.transcriber.result = nil
 
-	// Attempt 0 — should re-enqueue with attempt=1
+	// Attempt 0 - should re-enqueue with attempt=1
 	job := models.TranscriptionJob{
 		EntryID:  entryID,
 		UserID:   userID,
@@ -565,7 +565,7 @@ func TestWorker_NudgeNotScheduledWhenMorningNudgeEmpty(t *testing.T) {
 	f.ai.result = &models.ClaudeAnalysisOutput{
 		MoodScore:    50,
 		Reflection:   "Reflection text.",
-		MorningNudge: "", // empty — no nudge
+		MorningNudge: "", // empty - no nudge
 		Summary:      "Summary.",
 	}
 
@@ -636,7 +636,7 @@ func TestWorker_ClaudeAnalysisFails_NoAnalysisStoredAndRetried(t *testing.T) {
 		t.Error("analysis must not be stored when Claude analysis fails")
 	}
 
-	// Audio must NOT be deleted — the job failed before the delete step.
+	// Audio must NOT be deleted - the job failed before the delete step.
 	if len(f.storage.deleted) > 0 {
 		t.Error("audio must not be deleted when Claude analysis fails")
 	}
@@ -783,7 +783,7 @@ func TestWorker_PersonExtraction_NilExtractor_SafelySkipped(t *testing.T) {
 	userID := uuid.New()
 
 	f := newWorkerFixture(entryID, userID, "audio/key")
-	// personExtractor and personRepo are nil — must not panic
+	// personExtractor and personRepo are nil - must not panic
 
 	payload := makeJobPayload(t, entryID, userID, "audio/key")
 	f.worker.processJob(context.Background(), payload)

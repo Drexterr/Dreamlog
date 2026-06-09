@@ -72,7 +72,7 @@ func newClaudeWithServer(srv *httptest.Server) *ClaudeService {
 // ── Stage 1: high-certainty keyword tests ────────────────────────────────────
 
 func TestCrisisStage1_AllHighCertaintyPhrases(t *testing.T) {
-	// No Claude server needed — Stage 1 never calls the API.
+	// No Claude server needed - Stage 1 never calls the API.
 	detector := NewCrisisDetector(nil)
 	ctx := context.Background()
 
@@ -172,7 +172,7 @@ func TestCrisisStage2_ClaudeConfirmsYes(t *testing.T) {
 		t.Fatal(err)
 	}
 	if !result.Detected {
-		t.Error("Claude confirmed yes — should be crisis")
+		t.Error("Claude confirmed yes - should be crisis")
 	}
 	if result.Response == "" {
 		t.Error("crisis response must not be empty")
@@ -193,7 +193,7 @@ func TestCrisisStage2_ClaudeConfirmsNo(t *testing.T) {
 		t.Fatal(err)
 	}
 	if result.Detected {
-		t.Error("Claude confirmed no — should not be crisis")
+		t.Error("Claude confirmed no - should not be crisis")
 	}
 }
 
@@ -206,7 +206,7 @@ func TestCrisisStage2_ClaudeUnreachable_DefaultsToCrisis(t *testing.T) {
 
 	transcript := "I feel like nobody cares if I live or die."
 	result, err := detector.Screen(ctx, transcript, "IN")
-	// Screen itself must NOT return an error — it absorbs the Claude error and fails safe.
+	// Screen itself must NOT return an error - it absorbs the Claude error and fails safe.
 	if err != nil {
 		t.Fatalf("Screen must not surface Claude errors: %v", err)
 	}
@@ -259,7 +259,7 @@ func TestCrisisStage2_OnlyCallsClaudeOnce(t *testing.T) {
 	detector := NewCrisisDetector(newClaudeWithServer(srv))
 	ctx := context.Background()
 
-	// Multiple ambiguous phrases — Claude should only be called once.
+	// Multiple ambiguous phrases - Claude should only be called once.
 	transcript := "I feel like I can't go on and it's not worth living and better off without me."
 	_, err := detector.Screen(ctx, transcript, "IN")
 	if err != nil {

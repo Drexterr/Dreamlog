@@ -5,7 +5,7 @@
  * user gets credit in Apple Health's Mindfulness minutes and Google Fit's
  * mindfulness goals.
  *
- * The integration is opt-in and fails silently — a HealthKit error never
+ * The integration is opt-in and fails silently - a HealthKit error never
  * interrupts the main app flow.
  */
 
@@ -58,7 +58,7 @@ export interface MindfulSessionOptions {
 
 /**
  * Writes a MindfulSession event to Apple Health (iOS) or Google Fit (Android).
- * Always resolves — never throws into the caller.
+ * Always resolves - never throws into the caller.
  */
 export async function writeMindfulSession(opts: MindfulSessionOptions): Promise<void> {
   try {
@@ -93,6 +93,6 @@ async function writeHealthKitSession(opts: MindfulSessionOptions): Promise<void>
 async function writeGoogleFitSession(opts: MindfulSessionOptions): Promise<void> {
   // Google Fit requires @react-native-community/google-fit and Google Sign-In.
   // The pattern is the same: init → save activity session with activityType = MEDITATION.
-  // Stubbed for now — implement when adding Google Fit credentials.
+  // Stubbed for now - implement when adding Google Fit credentials.
   void opts;
 }

@@ -181,7 +181,7 @@ func fetchJWKS(endpoint string) (map[string]*ecdsa.PublicKey, []*ecdsa.PublicKey
 
 // AuthMiddleware validates JWTs and auto-provisions users.
 // Supports HS256 (local /auth/register+login path) and ES256 (Supabase JWKS).
-// jwksURL may be empty — in that case only HS256 is accepted.
+// jwksURL may be empty - in that case only HS256 is accepted.
 func AuthMiddleware(jwtSecret, jwksURL string, userSvc userProvisioner, log *zap.Logger) gin.HandlerFunc {
 	hsKey := []byte(jwtSecret)
 

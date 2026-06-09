@@ -44,11 +44,11 @@ func (q *Queue) Enqueue(ctx context.Context, v any) error {
 
 // Dequeue blocks until a job is available or the context is cancelled.
 // Returns (payload bytes, nil) on success.
-// Returns (nil, nil) on timeout — caller should loop.
+// Returns (nil, nil) on timeout - caller should loop.
 func (q *Queue) Dequeue(ctx context.Context) ([]byte, error) {
 	result, err := q.rdb.BRPop(ctx, q.pollTimeout, q.mainKey).Result()
 	if err == redis.Nil {
-		return nil, nil // timeout — no job available
+		return nil, nil // timeout - no job available
 	}
 	if err != nil {
 		return nil, fmt.Errorf("queue: brpop %q: %w", q.mainKey, err)

@@ -186,7 +186,7 @@ func (w *TranscriptionWorker) handle(ctx context.Context, job *models.Transcript
 		return fmt.Errorf("whisper returned empty transcript")
 	}
 
-	// Persist transcript immediately — before AI analysis.
+	// Persist transcript immediately - before AI analysis.
 	if err := w.entryRepo.SetCompleted(ctx, job.EntryID, whisperResult.Text, whisperResult.Language); err != nil {
 		return fmt.Errorf("store transcript: %w", err)
 	}
@@ -263,7 +263,7 @@ func (w *TranscriptionWorker) handle(ctx context.Context, job *models.Transcript
 		log.Warn("worker: delete audio failed (non-fatal)", zap.Error(err))
 	}
 
-	// ── 9. Extract people (relationship map) — non-fatal ────────────────────
+	// ── 9. Extract people (relationship map) - non-fatal ────────────────────
 	if w.personExtractor != nil && w.personRepo != nil && whisperResult.Text != "" {
 		extracted, err := w.personExtractor.ExtractPeople(ctx, whisperResult.Text)
 		if err != nil {

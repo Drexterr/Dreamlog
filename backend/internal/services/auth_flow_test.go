@@ -239,7 +239,7 @@ func TestLogin_NoPasswordHash_ReturnsError(t *testing.T) {
 		ID:    uuid.New(),
 		Email: "supaonly@test.com",
 	}
-	// No hash — GetPasswordHash returns ""
+	// No hash - GetPasswordHash returns ""
 
 	svc := NewAuthService(store, "test-secret")
 	_, _, err := svc.Login(context.Background(), "supaonly@test.com", "anypassword")

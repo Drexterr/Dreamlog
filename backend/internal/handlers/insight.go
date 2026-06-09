@@ -37,7 +37,7 @@ func NewInsightHandler(repo insightRepo, streakRepo insightStreakQuerier) *Insig
 	return &InsightHandler{repo: repo, streakRepo: streakRepo}
 }
 
-// GET /insights/card — returns all data needed to render the week's shareable insight card.
+// GET /insights/card - returns all data needed to render the week's shareable insight card.
 // Available to all plans (not gated) to maximise viral sharing.
 func (h *InsightHandler) GetCard(c *gin.Context) {
 	userID := middleware.UserIDFromCtx(c.Request.Context())
@@ -58,7 +58,7 @@ func (h *InsightHandler) GetCard(c *gin.Context) {
 	c.JSON(http.StatusOK, data)
 }
 
-// POST /insights/share — records that the user shared their insight card.
+// POST /insights/share - records that the user shared their insight card.
 // Returns updated share count. Available to all plans.
 func (h *InsightHandler) RecordShare(c *gin.Context) {
 	userID := middleware.UserIDFromCtx(c.Request.Context())

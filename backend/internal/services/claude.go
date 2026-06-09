@@ -82,7 +82,7 @@ type AnalyzeEntryInput struct {
 }
 
 // AnalyzeEntry runs the full analysis prompt and returns structured output.
-// It does NOT perform crisis detection — that must happen before this call.
+// It does NOT perform crisis detection - that must happen before this call.
 func (s *ClaudeService) AnalyzeEntry(ctx context.Context, input AnalyzeEntryInput) (*models.ClaudeAnalysisOutput, error) {
 	if s.cfg.StubAnalysis {
 		if input.Mode == "dream" {
@@ -243,7 +243,7 @@ func stubYearInReview(input YearInReviewPromptInput) *YearInReviewOutput {
 	return &YearInReviewOutput{
 		Narrative: fmt.Sprintf(
 			"For %s, %d was a year of honest reflection and quiet growth. "+
-				"You showed up consistently — %d entries worth of presence with yourself. "+
+				"You showed up consistently - %d entries worth of presence with yourself. "+
 				"The months had their weight and their lightness, and you moved through both. "+
 				"What you carried this year, you carried with more awareness than the year before. "+
 				"That counts for something.",
@@ -353,7 +353,7 @@ func stubChapterSummary(input ChapterSummaryPromptInput) *ChapterSummaryOutput {
 		Summary: fmt.Sprintf(
 			"During %s, %s showed up consistently with %d journal entries that captured the texture of this period. "+
 				"There was a recurring thread of %s running through the entries, giving this chapter its particular quality. "+
-				"The moods shifted — sometimes heavy, sometimes lighter — but the presence was steady. "+
+				"The moods shifted - sometimes heavy, sometimes lighter - but the presence was steady. "+
 				"What you lived through during this time shaped something in how you understand yourself.",
 			title, name, input.EntryCount,
 			func() string {
@@ -510,7 +510,7 @@ func stubDreamAnalysis(transcript string) *models.ClaudeAnalysisOutput {
 		MorningNudge: "Notice if the feeling from this dream threads through your day.",
 		DreamSymbols:      []string{"unknown space", "movement", "figures"},
 		DreamType:         "vivid",
-		PsychologicalLens: "The imagery of unknown space and moving figures may reflect the psyche exploring uncharted aspects of itself — a classic Jungian journey into the unconscious. The sense of movement without clear destination often signals a transition phase where something in you is shifting but has not yet found form.",
+		PsychologicalLens: "The imagery of unknown space and moving figures may reflect the psyche exploring uncharted aspects of itself - a classic Jungian journey into the unconscious. The sense of movement without clear destination often signals a transition phase where something in you is shifting but has not yet found form.",
 		VedicLens:         "In the Vedic tradition, dreams of open spaces and movement are considered sattvic in nature when they carry a quality of expansiveness rather than fear. The figures appearing may represent ancestral presences (pitrus) or aspects of the dreamer's own subtle body (sukshma sharira) processing accumulated experience.",
 	}
 }
@@ -523,7 +523,7 @@ func stubWeeklyReview(input WeeklyReviewPromptInput) *WeeklyReviewOutput {
 	return &WeeklyReviewOutput{
 		Narrative: fmt.Sprintf(
 			"This was a meaningful week for %s, with %d entries capturing the texture of daily life. "+
-				"There was movement in your emotional landscape — moments of difficulty and moments of quiet steadiness. "+
+				"There was movement in your emotional landscape - moments of difficulty and moments of quiet steadiness. "+
 				"What you brought to the page this week says something about where your attention is right now.",
 			name, input.EntryCount,
 		),
@@ -538,7 +538,7 @@ func stubWeeklyReview(input WeeklyReviewPromptInput) *WeeklyReviewOutput {
 
 func stubFollowUp(userMessage string) string {
 	return fmt.Sprintf(
-		"That's a really interesting point — \"%s\". "+
+		"That's a really interesting point - \"%s\". "+
 			"It sounds like there's more beneath the surface there. "+
 			"What do you think was driving that feeling?",
 		truncate(userMessage, 60),
@@ -595,7 +595,7 @@ func (s *ClaudeService) TherapySummary(ctx context.Context, input TherapySummary
 			KeyInsights: []string{"recurring theme around sleep and mood connection", "awareness of self-critical thought patterns", "unresolved tension around external expectations"},
 			SessionNarrative: "You explored themes of daily stress and the emotional patterns that shape your week. " +
 				"A key moment emerged when you connected current feelings to recurring threads from your journal. " +
-				"There was a noticeable shift in tone as the session progressed — from heaviness at the start to something closer to relief. " +
+				"There was a noticeable shift in tone as the session progressed - from heaviness at the start to something closer to relief. " +
 				"The conversation surfaced an awareness of self-critical patterns, particularly around productivity. " +
 				"You named the sleep-mood connection as something worth paying attention to going forward. " +
 				"A thread around balancing external expectations with internal capacity remained open at the close. " +
@@ -633,7 +633,7 @@ func (s *ClaudeService) TherapySummary(ctx context.Context, input TherapySummary
 
 func stubTherapyTurn(userMessage string) string {
 	return fmt.Sprintf(
-		"Just so we're on the same page — I'm an AI, not a therapist. This conversation is a space for reflection, not clinical care. If you're in crisis, please reach out to a professional.\n\n"+
+		"Just so we're on the same page - I'm an AI, not a therapist. This conversation is a space for reflection, not clinical care. If you're in crisis, please reach out to a professional.\n\n"+
 			"Thank you for sharing that. When you say \"%s\", I'm curious what that felt like in the moment. "+
 			"What was going through your mind right then?",
 		truncate(userMessage, 60),

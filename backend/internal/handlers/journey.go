@@ -30,13 +30,13 @@ func NewJourneyHandler(svc journeyManager) *JourneyHandler {
 	return &JourneyHandler{svc: svc}
 }
 
-// GET /journeys — list available journey templates.
+// GET /journeys - list available journey templates.
 func (h *JourneyHandler) ListTemplates(c *gin.Context) {
 	templates := h.svc.ListTemplates()
 	c.JSON(http.StatusOK, gin.H{"journeys": templates})
 }
 
-// POST /journeys/:journeyID/start — start a new session.
+// POST /journeys/:journeyID/start - start a new session.
 func (h *JourneyHandler) StartSession(c *gin.Context) {
 	userID := middleware.UserIDFromCtx(c.Request.Context())
 	journeyID := c.Param("journeyID")
@@ -54,7 +54,7 @@ func (h *JourneyHandler) StartSession(c *gin.Context) {
 	c.JSON(http.StatusCreated, session)
 }
 
-// GET /journeys/sessions — list the user's sessions (most recent first).
+// GET /journeys/sessions - list the user's sessions (most recent first).
 func (h *JourneyHandler) ListSessions(c *gin.Context) {
 	userID := middleware.UserIDFromCtx(c.Request.Context())
 
@@ -69,7 +69,7 @@ func (h *JourneyHandler) ListSessions(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"sessions": sessions})
 }
 
-// GET /journeys/sessions/:sessionID — get session state with steps.
+// GET /journeys/sessions/:sessionID - get session state with steps.
 func (h *JourneyHandler) GetSession(c *gin.Context) {
 	userID := middleware.UserIDFromCtx(c.Request.Context())
 	sessionID, err := uuid.Parse(c.Param("sessionID"))
@@ -86,7 +86,7 @@ func (h *JourneyHandler) GetSession(c *gin.Context) {
 	c.JSON(http.StatusOK, session)
 }
 
-// POST /journeys/sessions/:sessionID/advance — record entry for current step, advance.
+// POST /journeys/sessions/:sessionID/advance - record entry for current step, advance.
 func (h *JourneyHandler) AdvanceSession(c *gin.Context) {
 	userID := middleware.UserIDFromCtx(c.Request.Context())
 	sessionID, err := uuid.Parse(c.Param("sessionID"))

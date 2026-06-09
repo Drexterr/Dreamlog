@@ -56,7 +56,7 @@ func (h *UserHandler) UpdateMe(c *gin.Context) {
 	c.JSON(http.StatusOK, user)
 }
 
-// DELETE /me — permanently deletes the authenticated user and all their data.
+// DELETE /me - permanently deletes the authenticated user and all their data.
 func (h *UserHandler) DeleteMe(c *gin.Context) {
 	userID := middleware.UserIDFromCtx(c.Request.Context())
 	if err := h.svc.Delete(c.Request.Context(), userID); err != nil {

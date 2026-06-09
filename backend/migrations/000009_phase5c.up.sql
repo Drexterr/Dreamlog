@@ -27,7 +27,7 @@ CREATE INDEX idx_company_members_company ON company_members(company_id);
 CREATE INDEX idx_company_members_user    ON company_members(user_id);
 
 -- View: anonymised per-day team mood for an HR dashboard.
--- Never exposes individual user identity — only aggregate stats per company.
+-- Never exposes individual user identity - only aggregate stats per company.
 CREATE VIEW v_team_daily_mood AS
     SELECT
         cm.company_id,

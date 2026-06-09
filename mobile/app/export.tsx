@@ -26,7 +26,7 @@ type Period = 'monthly' | 'yearly';
 
 const PERIODS: { key: Period; label: string; description: string }[] = [
   { key: 'monthly', label: 'Last 30 days', description: 'Mood arc, top emotions, and all entries from the past month.' },
-  { key: 'yearly', label: 'Last 365 days', description: 'Full-year emotional journey — a complete annual retrospective.' },
+  { key: 'yearly', label: 'Last 365 days', description: 'Full-year emotional journey - a complete annual retrospective.' },
 ];
 
 export default function ExportScreen() {
@@ -82,7 +82,7 @@ export default function ExportScreen() {
 
           <Text style={[styles.title, { color: colors.textPrimary }]}>Export Journal</Text>
           <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
-            Download a beautifully formatted PDF of your emotional journal — your mood arc, AI entry summaries, and key quotes.
+            Download a beautifully formatted PDF of your emotional journal - your mood arc, AI entry summaries, and key quotes.
           </Text>
 
           {/* What's included */}

@@ -7,7 +7,7 @@ const STORAGE_KEY = 'dreamlog_region_currency';
 
 // Detects whether the user's device is set to India's region.
 // Result is cached so subsequent reads are instant.
-// Detection checks both regionCode and currencyCode — many Indian Android devices
+// Detection checks both regionCode and currencyCode - many Indian Android devices
 // use "English (US)" as their language (regionCode: 'US') but still report
 // currencyCode: 'INR', so checking currency is more reliable.
 export async function detectAndCacheRegion(): Promise<RegionCurrency> {
@@ -42,7 +42,7 @@ export async function getCachedRegion(): Promise<RegionCurrency | null> {
   return null;
 }
 
-// Pricing helpers — use these everywhere instead of hardcoding ₹ strings.
+// Pricing helpers - use these everywhere instead of hardcoding ₹ strings.
 export const THERAPY_SESSION_PRICE: Record<RegionCurrency, string> = {
   inr: '₹499',
   usd: '$4.99',

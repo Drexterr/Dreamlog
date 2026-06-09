@@ -57,7 +57,7 @@ const PLANS: PlanCard[] = [
       'Hindi + Hinglish support',
       'Life Graph (30 / 90 / 365 days)',
       'Weekly emotional review',
-      'All prompt modes — Rant, Gratitude, Decision',
+      'All prompt modes - Rant, Gratitude, Decision',
       'Streak freeze (up to 3)',
       'Therapist sharing (5 links / month)',
     ],
@@ -135,7 +135,7 @@ export default function UpgradeScreen() {
         return;
       }
 
-      // Step 4: payment confirmed — update plan on backend
+      // Step 4: payment confirmed - update plan on backend
       const expiresAt = new Date();
       expiresAt.setDate(expiresAt.getDate() + 30);
 

@@ -365,7 +365,7 @@ func TestWeekLabel_SameMonth(t *testing.T) {
 func TestWeekLabel_CrossMonth(t *testing.T) {
 	weekStart := time.Date(2026, time.May, 25, 0, 0, 0, 0, time.UTC) // Sunday May 25
 	label := weekLabel(weekStart)
-	// May 25 + 6 = May 31 — still same month
+	// May 25 + 6 = May 31 - still same month
 	// Let's use May 26 → Jun 1
 	weekStart2 := time.Date(2026, time.May, 26, 0, 0, 0, 0, time.UTC)
 	label2 := weekLabel(weekStart2)

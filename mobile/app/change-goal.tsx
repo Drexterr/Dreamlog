@@ -26,7 +26,7 @@ const GOALS: { key: UserGoal; label: string; description: string; emoji: string 
   { key: 'relationships', label: 'Understanding relationships',  description: 'Connection, conflict, how I show up for others',           emoji: '❤️' },
   { key: 'career',        label: 'Career & purpose',            description: 'Work, direction, what I\'m building toward',               emoji: '🌲' },
   { key: 'trauma',        label: 'Processing past / trauma',    description: 'Difficult memories, healing, working through trauma',      emoji: '🩹' },
-  { key: 'curious',       label: 'Just exploring',              description: 'No agenda — I\'m curious about my inner life',             emoji: '🌌' },
+  { key: 'curious',       label: 'Just exploring',              description: 'No agenda - I\'m curious about my inner life',             emoji: '🌌' },
 ];
 
 export default function ChangeGoalScreen() {
@@ -46,7 +46,7 @@ export default function ChangeGoalScreen() {
     try {
       await api.updateMe({ goal });
     } catch {
-      // theme already changed optimistically — don't revert the visual
+      // theme already changed optimistically - don't revert the visual
     } finally {
       setSaving(null);
       router.back();
