@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
+import { Leaf, Mic, Bubble, Chart, Lock } from './icons';
 
 function useInView(threshold = 0.15) {
   const ref = useRef<HTMLDivElement>(null);
@@ -163,6 +164,48 @@ export default function LandingPage() {
     { name: 'Gratitude', count: 6, desc: "Small things - a good meal, a friend who texted. You notice them even on hard days." },
   ];
 
+  const modes = [
+    { name: 'Processing', desc: 'The default. Untangle what happened today and hear it reflected back.' },
+    { name: 'Rant', desc: 'No analysis, no advice. Just say it all out loud and let it go.' },
+    { name: 'Gratitude', desc: 'Three gentle follow-ups that help you notice what actually went right.' },
+    { name: 'Decision', desc: "Socratic questions for when you're stuck between two options." },
+    { name: 'Dream Decoder', desc: 'Record a dream and get two readings - a Jungian depth-psychology lens and a Vedic Svapna Shastra lens.' },
+  ];
+
+  const personas = [
+    { name: 'Comforting', tagline: 'Warm, validating, feelings-first' },
+    { name: 'Rational', tagline: 'Structured, Socratic, logic-grounded' },
+    { name: 'CBT', tagline: 'Spots thought patterns and distortions' },
+    { name: 'Mindful', tagline: 'Grounding, present-moment, breath-aware' },
+  ];
+
+  const plans = [
+    {
+      name: 'Free',
+      price: '₹0',
+      period: 'no card, no clock',
+      popular: false,
+      features: ['10 entries a month', 'AI reflection on every entry', '7-day mood chart', '3-turn follow-up conversations', 'Crisis detection always on'],
+      cta: 'Start free',
+    },
+    {
+      name: 'DreamLog+',
+      price: '₹199',
+      period: 'a month — $7.99 outside India',
+      popular: true,
+      features: ['Unlimited entries', 'All five prompt modes', 'Life Graph - 30/90/365-day trends', 'Weekly emotional review', 'Hindi + Hinglish support', 'Streak freeze', 'Therapist sharing (5/month)'],
+      cta: 'Get Plus',
+    },
+    {
+      name: 'DreamLog Pro',
+      price: '₹499',
+      period: 'a month — $14.99 outside India',
+      popular: false,
+      features: ['Everything in Plus', '2 therapy sessions a month', 'PDF export of your journal', 'Apple Health sync', 'Unlimited therapist sharing', 'Priority processing'],
+      cta: 'Go Pro',
+    },
+  ];
+
   const faqs = [
     {
       q: "Do I have to write anything?",
@@ -193,14 +236,16 @@ export default function LandingPage() {
       {/* Header */}
       <header className={`site-header ${scrolled ? 'scrolled' : ''}`}>
         <div style={s.logoWrap}>
-          <span style={s.logoLeaf}>🍃</span>
+          <span style={{ color: 'var(--accent)', display: 'inline-flex' }}><Leaf size={22} /></span>
           <span style={s.logoName}>DreamLog</span>
         </div>
         <nav className="desktop-nav">
           <a href="#features" className="nav-link">Features</a>
-          <a href="#breathing" className="nav-link">Breathe</a>
           <a href="#showcase" className="nav-link">How it works</a>
+          <a href="#modes" className="nav-link">Modes</a>
+          <a href="#therapy" className="nav-link">Therapy Mode</a>
           <a href="#therapist" className="nav-link">For therapists</a>
+          <a href="#pricing" className="nav-link">Pricing</a>
         </nav>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           <button onClick={goToPortal} className="btn-dark">Therapist portal →</button>
@@ -213,15 +258,17 @@ export default function LandingPage() {
       {menuOpen && (
         <div className="mobile-menu">
           <a href="#features" className="mobile-link" onClick={() => setMenuOpen(false)}>Features</a>
-          <a href="#breathing" className="mobile-link" onClick={() => setMenuOpen(false)}>Breathe</a>
           <a href="#showcase" className="mobile-link" onClick={() => setMenuOpen(false)}>How it works</a>
+          <a href="#modes" className="mobile-link" onClick={() => setMenuOpen(false)}>Modes</a>
+          <a href="#therapy" className="mobile-link" onClick={() => setMenuOpen(false)}>Therapy Mode</a>
           <a href="#therapist" className="mobile-link" onClick={() => setMenuOpen(false)}>For therapists</a>
+          <a href="#pricing" className="mobile-link" onClick={() => setMenuOpen(false)}>Pricing</a>
           <button onClick={() => { goToPortal(); setMenuOpen(false); }} className="mobile-link" style={{ background: 'none', border: 'none', fontFamily: 'inherit', cursor: 'pointer', textAlign: 'left', padding: '14px 28px' }}>Therapist portal</button>
         </div>
       )}
 
       {/* Hero */}
-      <section style={s.hero}>
+      <section className="hero-section" style={s.hero}>
         <div className="fade-in-up" style={s.heroLeft}>
           <span style={s.eyebrow}>voice journaling · ai reflection</span>
           <h1 style={s.heroHeading}>
@@ -236,7 +283,7 @@ export default function LandingPage() {
             <a href="#showcase" className="btn-primary">See how it works</a>
             <button onClick={goToPortal} className="btn-ghost">Therapist portal</button>
           </div>
-          <p style={s.heroNote}>No account needed to explore · Free to start</p>
+          <p style={s.heroNote}>Free to start, and you don&apos;t need an account just to look around.</p>
         </div>
 
         <div
@@ -263,12 +310,12 @@ export default function LandingPage() {
           </span>
           <span style={s.statLabel}>entries reflected on</span>
         </div>
-        <div style={s.statDivider} />
+        <div className="stat-divider-el" style={s.statDivider} />
         <div style={s.statItem}>
           <span className={`stat-num ${statsRef.inView ? 'count-in' : ''}`}>{mins} min</span>
           <span style={s.statLabel}>average recording</span>
         </div>
-        <div style={s.statDivider} />
+        <div className="stat-divider-el" style={s.statDivider} />
         <div style={s.statItem}>
           <span className={`stat-num ${statsRef.inView ? 'count-in' : ''}`}>{streak} days</span>
           <span style={s.statLabel}>longest streak</span>
@@ -276,18 +323,18 @@ export default function LandingPage() {
       </div>
 
       {/* Features */}
-      <section id="features" style={s.section} ref={featuresRef.ref}>
-        <div style={s.sectionHead}>
+      <section id="features" className="section-padded" style={s.section} ref={featuresRef.ref}>
+        <div style={{ marginBottom: '48px', maxWidth: '560px' }}>
           <span style={s.sectionEyebrow}>what it does</span>
-          <h2 style={s.sectionHeading}>Built around how people actually think</h2>
-          <p style={s.sectionSub}>Not how they&apos;re supposed to journal.</p>
+          <h2 style={{ ...s.sectionHeading, textAlign: 'left' }}>Built around how people actually think</h2>
+          <p style={{ ...s.sectionSub, textAlign: 'left' }}>Not how they&apos;re supposed to journal.</p>
         </div>
         <div style={s.featureGrid}>
           {[
-            { icon: '🎙️', title: 'Just talk', body: "No cursor blinking at you. No word count. Hit record and say whatever's on your mind - Whisper picks it up even when you trail off mid-sentence." },
-            { icon: '🪞', title: 'It asks back', body: "Claude reads your entry and reflects something specific to you, not a generic affirmation. It usually ends with one question you didn't think to ask yourself." },
-            { icon: '🌱', title: 'Notice patterns', body: "After a few weeks, you start seeing things - which topics come up when you're stressed, what your mood actually looks like on Mondays, what you keep circling back to." },
-            { icon: '🔒', title: 'Private by design', body: "Audio is deleted the moment it's transcribed. Entries are encrypted. You can share a summary with your therapist, but nothing leaves without you choosing it." },
+            { icon: <Mic />, title: 'Just talk', body: "No cursor blinking at you. No word count. Hit record and say whatever's on your mind - Whisper picks it up even when you trail off mid-sentence." },
+            { icon: <Bubble />, title: 'It asks back', body: "Claude reads your entry and reflects something specific to you, not a generic affirmation. It usually ends with one question you didn't think to ask yourself." },
+            { icon: <Chart />, title: 'Notice patterns', body: "After a few weeks, you start seeing things - which topics come up when you're stressed, what your mood actually looks like on Mondays, what you keep circling back to." },
+            { icon: <Lock />, title: 'Private by design', body: "Audio is deleted the moment it's transcribed. Entries are encrypted. You can share a summary with your therapist, but nothing leaves without you choosing it." },
           ].map((f, i) => (
             <div key={f.title} className={`feature-card ${featuresRef.inView ? 'card-visible' : ''}`} style={{ animationDelay: `${i * 0.1}s` }}>
               <span style={s.featureIcon}>{f.icon}</span>
@@ -299,7 +346,7 @@ export default function LandingPage() {
       </section>
 
       {/* Showcase */}
-      <section id="showcase" style={{ ...s.section, background: 'rgba(235, 236, 233, 0.3)', borderTop: '1px solid rgba(42,44,43,0.06)', borderBottom: '1px solid rgba(42,44,43,0.06)' }}>
+      <section id="showcase" className="section-padded" style={{ ...s.section, background: 'rgba(235, 236, 233, 0.3)', borderTop: '1px solid rgba(42,44,43,0.06)', borderBottom: '1px solid rgba(42,44,43,0.06)' }}>
         <div style={{ textAlign: 'center', marginBottom: '44px' }}>
           <span style={s.sectionEyebrow}>try it</span>
           <h2 style={s.sectionHeading}>See what it actually feels like</h2>
@@ -453,8 +500,73 @@ export default function LandingPage() {
         </div>
       </div>
 
+      {/* Modes */}
+      <section id="modes" className="section-padded" style={s.section}>
+        <div className="modes-layout-wrap" style={s.modesLayout}>
+          <div className="modes-intro-col" style={s.modesIntro}>
+            <span style={s.sectionEyebrow}>modes</span>
+            <h2 style={{ ...s.sectionHeading, textAlign: 'left' }}>Not every day needs the same conversation</h2>
+            <p style={{ fontSize: '0.95rem', color: 'var(--muted)', lineHeight: 1.7, marginTop: '14px', maxWidth: '340px' }}>
+              Before you hit record, you pick how you want to be listened to.
+              Most days that&apos;s Processing. Some days it&apos;s very much not.
+            </p>
+          </div>
+          <div style={{ flex: '1 1 480px' }}>
+            {modes.map((m, i) => (
+              <div key={m.name} className="mode-row">
+                <span className="mode-num">{String(i + 1).padStart(2, '0')}</span>
+                <div>
+                  <h3 style={s.modeTitle}>{m.name}</h3>
+                  <p style={s.modeBody}>{m.desc}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Therapy Mode */}
+      <section id="therapy" className="section-padded" style={{ ...s.section, paddingTop: '20px' }}>
+        <div style={s.therapyBanner}>
+          <div style={{ flex: '1 1 380px' }}>
+            <span style={{ ...s.sectionEyebrow, color: '#FAF8F5', opacity: 0.75 }}>therapy mode</span>
+            <h2 style={s.therapyHeading}>An hour with an AI that has actually been listening</h2>
+            <p style={s.therapyPara}>
+              A real-time voice or text session grounded in your journal history - your mood trends,
+              your recurring themes, even what you worked through last session. Not a replacement for
+              therapy. A space to reflect between everything else.
+            </p>
+            <ul style={s.therapyList}>
+              {['Up to 60 minutes, voice or text', 'Remembers your past sessions', 'Crisis detection active on every message', 'Post-session summary you can keep'].map(item => (
+                <li key={item} style={{ display: 'flex', gap: '12px', alignItems: 'baseline' }}>
+                  <span style={{ color: '#9DB096', flexShrink: 0, fontSize: '0.7rem' }}>—</span>
+                  <span>{item}</span>
+                </li>
+              ))}
+            </ul>
+            <p style={{ fontSize: '0.8rem', color: 'rgba(250,248,245,0.65)', margin: '18px 0 0' }}>
+              ₹499 per session · included twice a month with Pro
+            </p>
+          </div>
+          <div className="persona-col" style={s.personaCol}>
+            <p style={{ fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: '1.5px', color: 'rgba(250,248,245,0.6)', fontWeight: 600, margin: '0 0 12px' }}>
+              choose your companion style
+            </p>
+            {personas.map(p => (
+              <div key={p.name} className="persona-row">
+                <span className="persona-initial">{p.name.charAt(0)}</span>
+                <div>
+                  <strong style={{ fontSize: '0.9rem', color: '#FAF8F5', display: 'block' }}>{p.name}</strong>
+                  <span style={{ fontSize: '0.78rem', color: 'rgba(250,248,245,0.65)' }}>{p.tagline}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* Therapist */}
-      <section id="therapist" ref={therapistRef.ref} style={s.therapistSection}>
+      <section id="therapist" className="therapist-section" ref={therapistRef.ref} style={s.therapistSection}>
         <div className={`therapist-content ${therapistRef.inView ? 'slide-in-left' : ''}`} style={s.therapistLeft}>
           <span style={s.sectionEyebrow}>for clinicians</span>
           <h2 style={s.sectionHeading}>A window into the week before the session</h2>
@@ -470,7 +582,7 @@ export default function LandingPage() {
               { title: 'Crisis detection built in', desc: 'Two-stage screening runs on every entry. If something flags, the client sees crisis resources immediately.' },
             ].map(item => (
               <div key={item.title} style={s.bulletRow}>
-                <span style={s.checkmark}>✓</span>
+                <span style={s.checkmark}>—</span>
                 <div>
                   <strong style={{ fontSize: '0.92rem', display: 'block', marginBottom: '2px' }}>{item.title}</strong>
                   <span style={{ fontSize: '0.88rem', color: 'var(--muted)' }}>{item.desc}</span>
@@ -520,8 +632,43 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* Pricing */}
+      <section id="pricing" className="section-padded" style={{ ...s.section, background: 'rgba(235, 236, 233, 0.3)', borderTop: '1px solid rgba(42,44,43,0.06)', borderBottom: '1px solid rgba(42,44,43,0.06)', maxWidth: 'none' }}>
+        <div style={{ maxWidth: '1100px', margin: '0 auto' }}>
+          <div style={{ marginBottom: '48px', maxWidth: '480px' }}>
+            <span style={s.sectionEyebrow}>pricing</span>
+            <h2 style={{ ...s.sectionHeading, textAlign: 'left' }}>Start free. Stay as long as it helps.</h2>
+            <p style={{ ...s.sectionSub, textAlign: 'left' }}>No credit card to begin, and nothing happens to your entries if you stop paying.</p>
+          </div>
+          <div style={s.pricingGrid}>
+            {plans.map(plan => (
+              <div key={plan.name} className={`plan-card ${plan.popular ? 'plan-card-popular' : ''}`}>
+                {plan.popular && <span className="serif" style={s.popularNote}>most people pick this one</span>}
+                <h3 style={s.planName}>{plan.name}</h3>
+                <div style={{ margin: '14px 0 4px' }}>
+                  <span style={s.planPrice}>{plan.price}</span>
+                </div>
+                <p style={{ fontSize: '0.78rem', color: 'var(--muted)', margin: '0 0 18px' }}>{plan.period}</p>
+                <ul style={s.planList}>
+                  {plan.features.map(f => (
+                    <li key={f} className="plan-item">{f}</li>
+                  ))}
+                </ul>
+                <a href="#showcase" className={plan.popular ? 'btn-primary' : 'btn-ghost'} style={{ width: '100%', marginTop: 'auto' }}>
+                  {plan.cta}
+                </a>
+              </div>
+            ))}
+          </div>
+          <p style={{ fontSize: '0.8rem', color: 'var(--muted)', marginTop: '28px' }}>
+            Running a team? B2B wellness plans start at ₹199 per employee a month.{' '}
+            <a href="#therapist" style={{ color: 'var(--accent)' }}>And if you&apos;re a therapist, the portal is over here.</a>
+          </p>
+        </div>
+      </section>
+
       {/* FAQ */}
-      <section style={s.faqSection}>
+      <section className="faq-section-el section-padded" style={s.faqSection}>
         <h2 style={{ ...s.sectionHeading, textAlign: 'center', marginBottom: '48px' }}>Things people ask</h2>
         <div style={{ maxWidth: '700px', margin: '0 auto' }}>
           {faqs.map((faq, i) => (
@@ -539,7 +686,7 @@ export default function LandingPage() {
       </section>
 
       {/* CTA Banner */}
-      <div style={s.ctaBanner}>
+      <div className="cta-banner-el" style={s.ctaBanner}>
         <h2 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '2.6rem', fontWeight: 300, color: 'var(--dark)', marginBottom: '12px' }}>
           Start with one recording.
         </h2>
@@ -554,21 +701,42 @@ export default function LandingPage() {
 
       {/* Footer */}
       <footer style={s.footer}>
-        <div style={s.footerInner}>
-          <div>
-            <p style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '1.4rem', fontStyle: 'italic', fontWeight: 600, marginBottom: '6px' }}>DreamLog</p>
-            <p style={{ fontSize: '0.78rem', color: 'var(--muted)' }}>A mindful space for the things you need to say.</p>
+        <div className="footer-inner-wrap" style={s.footerInner}>
+          <div style={{ maxWidth: '280px' }}>
+            <p style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '1.4rem', fontStyle: 'italic', fontWeight: 600, marginBottom: '6px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span style={{ color: 'var(--accent)', display: 'inline-flex' }}><Leaf size={18} /></span>
+              DreamLog
+            </p>
+            <p style={{ fontSize: '0.78rem', color: 'var(--muted)', lineHeight: 1.6 }}>
+              A mindful space for the things you need to say. Audio deleted after transcription. Entries encrypted. Yours.
+            </p>
           </div>
-          <div style={{ display: 'flex', gap: '28px', flexWrap: 'wrap' }}>
+          <div style={s.footerCol}>
+            <p style={s.footerColTitle}>Product</p>
             <a href="#features" className="footer-link">Features</a>
+            <a href="#modes" className="footer-link">Modes</a>
+            <a href="#therapy" className="footer-link">Therapy Mode</a>
+            <a href="#pricing" className="footer-link">Pricing</a>
+          </div>
+          <div style={s.footerCol}>
+            <p style={s.footerColTitle}>Explore</p>
+            <a href="#showcase" className="footer-link">Live demo</a>
             <a href="#breathing" className="footer-link">Breathe</a>
-            <a href="#showcase" className="footer-link">Demo</a>
-            <a href="#therapist" className="footer-link">Clinicians</a>
+            <a href="#therapist" className="footer-link">For clinicians</a>
+          </div>
+          <div style={s.footerCol}>
+            <p style={s.footerColTitle}>Professionals</p>
+            <a href="/login" className="footer-link">Therapist portal</a>
+            <a href="#pricing" className="footer-link">B2B wellness</a>
+            <a href="mailto:support@dreamlog.app" className="footer-link">support@dreamlog.app</a>
           </div>
         </div>
-        <p style={{ fontSize: '0.75rem', color: 'var(--muted)', textAlign: 'center', marginTop: '32px', paddingTop: '24px', borderTop: '1px solid rgba(42,44,43,0.06)' }}>
-          © 2026 DreamLog · Built with care
-        </p>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px', marginTop: '32px', paddingTop: '24px', borderTop: '1px solid rgba(42,44,43,0.06)', maxWidth: '1300px', marginLeft: 'auto', marginRight: 'auto' }}>
+          <p style={{ fontSize: '0.75rem', color: 'var(--muted)', margin: 0 }}>© 2026 DreamLog · Built with care</p>
+          <p style={{ fontSize: '0.72rem', color: 'var(--muted)', margin: 0 }}>
+            If you&apos;re in crisis, please reach out: iCall 9152987821 · Vandrevala 1860-2662-345 · 988 (US)
+          </p>
+        </div>
       </footer>
     </div>
   );
@@ -669,14 +837,114 @@ const css = `
 .footer-link { color: var(--muted); text-decoration: none; font-size: 0.86rem; transition: color 0.2s; }
 .footer-link:hover { color: var(--dark); }
 
-@media (max-width: 900px) { .desktop-nav { display: none; } .hamburger { display: flex; } }
-@media (max-width: 700px) { .desktop-nav { display: none; } }
+.mode-row { display: flex; gap: 24px; align-items: baseline; padding: 22px 4px; border-top: 1px solid rgba(42,44,43,0.09); transition: padding-left 0.3s cubic-bezier(0.16,1,0.3,1), background 0.3s; }
+.mode-row:last-child { border-bottom: 1px solid rgba(42,44,43,0.09); }
+.mode-row:hover { padding-left: 14px; background: rgba(120,133,116,0.04); }
+.mode-num { font-family: 'Cormorant Garamond', serif; font-style: italic; font-size: 1.15rem; color: var(--accent); flex-shrink: 0; min-width: 30px; }
+
+.persona-row { display: flex; align-items: center; gap: 14px; border-bottom: 1px solid rgba(250,248,245,0.12); padding: 13px 4px; transition: padding-left 0.25s; }
+.persona-row:last-child { border-bottom: none; }
+.persona-row:hover { padding-left: 10px; }
+.persona-initial { font-family: 'Cormorant Garamond', serif; font-style: italic; font-size: 1.35rem; font-weight: 600; color: #9DB096; width: 26px; flex-shrink: 0; text-align: center; }
+
+.plan-card { background: var(--card); border: 1px solid var(--border); border-radius: 22px; padding: 30px 26px; display: flex; flex-direction: column; position: relative; transition: transform 0.3s cubic-bezier(0.16,1,0.3,1), box-shadow 0.3s; }
+.plan-card:hover { transform: translateY(-5px); box-shadow: 0 20px 40px rgba(42,44,43,0.06); }
+.plan-card-popular { border: 1.5px solid var(--accent); box-shadow: 0 16px 36px rgba(120,133,116,0.12); }
+
+.plan-item { font-size: 0.86rem; color: var(--muted); line-height: 1.5; padding: 9px 2px; border-top: 1px dashed rgba(42,44,43,0.12); }
+.plan-item:first-child { border-top: none; }
+
+/* ── Responsive ─────────────────────────────────────────── */
+@media (max-width: 900px) {
+  .desktop-nav { display: none; }
+  .hamburger { display: flex; }
+}
+
+@media (max-width: 820px) {
+  /* Therapist section: 2-col → 1-col */
+  .therapist-section {
+    grid-template-columns: 1fr !important;
+    gap: 36px !important;
+    padding: 64px 5% !important;
+  }
+  .therapist-card-wrap { justify-content: center !important; }
+  .therapist-section { align-items: flex-start !important; }
+}
+
+@media (max-width: 768px) {
+  /* Hero */
+  .hero-section {
+    padding: 96px 5% 56px !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    gap: 36px !important;
+  }
+  .breathing-card {
+    width: 220px !important;
+    height: 220px !important;
+    margin: 0 auto;
+    flex-shrink: 0 !important;
+  }
+  .breath-orb { width: 86px !important; height: 86px !important; }
+  .breath-label { bottom: 22px !important; }
+
+  /* Stat dividers */
+  .stat-divider-el { display: none !important; }
+
+  /* Sections */
+  .section-padded { padding-top: 60px !important; padding-bottom: 60px !important; }
+
+  /* Modes layout: remove sticky, tighten gap */
+  .modes-layout-wrap { gap: 32px !important; }
+  .modes-intro-col { position: static !important; flex: 1 1 100% !important; }
+
+  /* Simulator: reduce screen padding */
+  .site-header { padding: 16px 5% !important; }
+  .site-header.scrolled { padding: 12px 5% !important; }
+
+  /* Quote */
+  .quote-section { padding: 56px 5% !important; }
+
+  /* FAQ section */
+  .faq-section-el { padding: 60px 5% !important; }
+
+  /* Footer */
+  .footer-inner-wrap { gap: 32px 24px !important; }
+
+  /* CTA banner */
+  .cta-banner-el { padding: 60px 5% !important; }
+}
+
+@media (max-width: 540px) {
+  /* Even smaller screens */
+  .breathing-card { width: 180px !important; height: 180px !important; }
+  .breath-orb { width: 70px !important; height: 70px !important; }
+  .breath-word { font-size: 1rem !important; }
+  .breath-label { bottom: 18px !important; }
+
+  /* Simulator tabs */
+  .sim-tab { font-size: 0.76rem !important; padding: 12px 6px !important; }
+
+  /* Therapy banner */
+  .persona-col { flex: 1 1 100% !important; }
+
+  /* Pricing */
+  .plan-card { padding: 24px 18px !important; }
+}
+
+@media (max-width: 400px) {
+  .hero-section { padding: 88px 4% 48px !important; flex-direction: column !important; align-items: center !important; }
+  .section-padded { padding-left: 4% !important; padding-right: 4% !important; }
+  .breathing-card { width: 160px !important; height: 160px !important; }
+  .breath-orb { width: 62px !important; height: 62px !important; }
+  .breath-word { font-size: 0.88rem !important; }
+}
 `;
 
 const s: Record<string, React.CSSProperties> = {
   page: { width: '100vw', minHeight: '100vh', overflowX: 'hidden', background: '#FAF8F5', color: '#2A2C2B', fontFamily: "'Plus Jakarta Sans', sans-serif", lineHeight: 1.6, position: 'relative', zIndex: 1, WebkitFontSmoothing: 'antialiased' },
   logoWrap: { display: 'flex', alignItems: 'center', gap: '8px', zIndex: 1 },
-  logoLeaf: { fontSize: '1.3rem' },
   logoName: { fontFamily: "'Cormorant Garamond', serif", fontSize: '1.6rem', fontWeight: 600, fontStyle: 'italic', color: '#2A2C2B' },
   hero: { minHeight: '100vh', padding: '120px 6% 80px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '60px', maxWidth: '1300px', margin: '0 auto', flexWrap: 'wrap' },
   heroLeft: { flex: '1 1 420px', display: 'flex', flexDirection: 'column', gap: '22px' },
@@ -697,7 +965,7 @@ const s: Record<string, React.CSSProperties> = {
   sectionHeading: { fontFamily: "'Cormorant Garamond', serif", fontSize: 'clamp(2rem, 3.5vw, 2.8rem)', fontWeight: 300, color: '#2A2C2B', margin: '8px 0 0' },
   sectionSub: { fontSize: '0.95rem', color: '#7E8280', marginTop: '8px' },
   featureGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '24px' },
-  featureIcon: { fontSize: '1.5rem', display: 'block', marginBottom: '12px' },
+  featureIcon: { display: 'inline-flex', color: '#788574', marginBottom: '14px' },
   featureTitle: { fontFamily: "'Cormorant Garamond', serif", fontSize: '1.65rem', fontWeight: 400, color: '#2A2C2B', marginBottom: '10px' },
   featureBody: { fontSize: '0.9rem', color: '#7E8280', lineHeight: 1.65 },
   simulator: { maxWidth: '820px', margin: '0 auto', background: 'white', border: '1px solid rgba(42,44,43,0.08)', borderRadius: '24px', overflow: 'hidden', boxShadow: '0 20px 50px rgba(42,44,43,0.04)' },
@@ -733,6 +1001,22 @@ const s: Record<string, React.CSSProperties> = {
   moodFill: { height: '100%', background: '#788574', borderRadius: '3px' },
   clinicBrief: { paddingTop: '14px' },
   tagPill: { fontSize: '0.68rem', background: 'rgba(42,44,43,0.04)', color: '#7E8280', padding: '3px 10px', borderRadius: '10px', border: '1px solid rgba(42,44,43,0.05)' },
+  modesLayout: { display: 'flex', gap: '64px', flexWrap: 'wrap', alignItems: 'flex-start', maxWidth: '1100px', margin: '0 auto' },
+  modesIntro: { flex: '0 1 340px', position: 'sticky', top: '110px' },
+  modeTitle: { fontFamily: "'Cormorant Garamond', serif", fontSize: '1.45rem', fontWeight: 400, color: '#2A2C2B', marginBottom: '6px' },
+  modeBody: { fontSize: '0.88rem', color: '#7E8280', lineHeight: 1.6, margin: 0, maxWidth: '480px' },
+  therapyBanner: { background: '#2A2C2B', borderRadius: '28px', padding: 'clamp(32px, 5vw, 56px)', display: 'flex', gap: '48px', flexWrap: 'wrap', alignItems: 'center', maxWidth: '1100px', margin: '0 auto', boxShadow: '0 24px 56px rgba(42,44,43,0.18)' },
+  therapyHeading: { fontFamily: "'Cormorant Garamond', serif", fontSize: 'clamp(1.8rem, 3vw, 2.5rem)', fontWeight: 300, color: '#FAF8F5', margin: '10px 0 16px', lineHeight: 1.2 },
+  therapyPara: { fontSize: '0.95rem', color: 'rgba(250,248,245,0.75)', lineHeight: 1.7, margin: '0 0 20px', maxWidth: '480px' },
+  therapyList: { listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '0.88rem', color: 'rgba(250,248,245,0.85)' },
+  personaCol: { flex: '1 1 280px', display: 'flex', flexDirection: 'column', gap: '10px' },
+  pricingGrid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '22px', alignItems: 'stretch' },
+  popularNote: { position: 'absolute', top: '-14px', right: '18px', transform: 'rotate(-2deg)', color: '#788574', fontSize: '1.02rem', fontStyle: 'italic', fontWeight: 600, whiteSpace: 'nowrap', background: '#FAF8F5', padding: '0 8px' },
+  planName: { fontFamily: "'Cormorant Garamond', serif", fontSize: '1.6rem', fontWeight: 400, color: '#2A2C2B', margin: 0 },
+  planPrice: { fontFamily: "'Cormorant Garamond', serif", fontSize: '2.6rem', fontWeight: 600, color: '#2A2C2B' },
+  planList: { listStyle: 'none', padding: 0, margin: '0 0 26px', display: 'flex', flexDirection: 'column' },
+  footerCol: { display: 'flex', flexDirection: 'column', gap: '10px' },
+  footerColTitle: { fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: '1.2px', color: '#2A2C2B', fontWeight: 700, margin: '0 0 4px' },
   faqSection: { padding: '90px 6%', maxWidth: '1100px', margin: '0 auto' },
   faqBtn: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', background: 'transparent', border: 'none', cursor: 'pointer', padding: '0', gap: '16px' },
   faqPlus: { fontSize: '1.4rem', color: '#7E8280', flexShrink: 0, transition: 'transform 0.3s ease', display: 'inline-block' },

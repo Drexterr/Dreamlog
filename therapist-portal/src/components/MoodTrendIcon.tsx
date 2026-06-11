@@ -1,10 +1,10 @@
 type Trend = 'improving' | 'declining' | 'stable' | 'insufficient_data';
 
 const ICONS: Record<Trend, { icon: string; color: string }> = {
-  improving:         { icon: '↑', color: '#4ade80' },
-  declining:         { icon: '↓', color: '#f87171' },
-  stable:            { icon: '→', color: '#facc15' },
-  insufficient_data: { icon: '-', color: '#9b8ec4' },
+  improving:         { icon: '↑', color: '#5A9367' },
+  declining:         { icon: '↓', color: '#C05B4D' },
+  stable:            { icon: '→', color: '#B08A3E' },
+  insufficient_data: { icon: '–', color: '#7E8280' },
 };
 
 export default function MoodTrendIcon({ trend }: { trend: Trend }) {

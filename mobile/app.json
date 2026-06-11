@@ -30,14 +30,27 @@
       ],
       "expo-font",
       "expo-secure-store",
-      "@react-native-google-signin/google-signin"
+      "@react-native-google-signin/google-signin",
+      "@react-native-firebase/app",
+      "@react-native-firebase/messaging",
+      "expo-apple-authentication",
+      [
+        "expo-build-properties",
+        {
+          "ios": {
+            "useFrameworks": "static"
+          }
+        }
+      ]
     ],
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.dreamlog.app",
+      "usesAppleSignIn": true,
       "infoPlist": {
         "NSMicrophoneUsageDescription": "Allow DreamLog to access your microphone to record voice journals.",
-        "NSHealthUpdateUsageDescription": "DreamLog writes a Mindful Session to Apple Health after each completed journal entry."
+        "NSHealthUpdateUsageDescription": "DreamLog writes a Mindful Session to Apple Health after each completed journal entry.",
+        "ITSAppUsesNonExemptEncryption": false
       },
       "entitlements": {
         "com.apple.developer.healthkit": true
@@ -53,7 +66,8 @@
       "permissions": [
         "RECORD_AUDIO",
         "android.permission.RECORD_AUDIO",
-        "android.permission.MODIFY_AUDIO_SETTINGS"
+        "android.permission.MODIFY_AUDIO_SETTINGS",
+        "android.permission.POST_NOTIFICATIONS"
       ]
     },
     "extra": {

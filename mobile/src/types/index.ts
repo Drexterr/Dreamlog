@@ -304,6 +304,7 @@ export interface OfflineQueueItem {
   sizeBytes: number;
   createdAt: string;
   attempts: number;
+  mode?: EntryMode; // entry mode at record time; defaults to 'processing' when absent
 }
 
 // ── Phase 6 + 8: Therapy Mode ─────────────────────────────────────────────────

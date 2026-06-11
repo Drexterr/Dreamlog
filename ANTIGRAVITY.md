@@ -27,6 +27,9 @@ Before answering any questions, writing code, or taking any execution actions, t
 * 🧪 **[docs/TESTING.md](file:///C:/Users/bharat.jain/Desktop/per/dream/docs/TESTING.md)**
   * *Purpose:* Testing priority matrix, mock definitions, and exact commands for verifying changes.
   * *Read when:* Preparing verification plans, writing tests, or validating backend/mobile changes.
+* 🚀 **[docs/LAUNCH_CHECKLIST.md](file:///C:/Users/bharat.jain/Desktop/per/dream/docs/LAUNCH_CHECKLIST.md)**
+  * *Purpose:* Everything left before App Store / Play Store launch — payments/IAP decision, store compliance, iOS readiness (§2b), push notification setup (§2c), demo account (§2d), production env verification.
+  * *Read when:* Doing any release, store-submission, EAS build, or production-config work.
 
 ---
 
@@ -61,10 +64,20 @@ go mod tidy             # Clean up dependencies
 
 ### Mobile Commands (run from `mobile/`)
 ```bash
-npm install             # Install package dependencies
+npm install --legacy-peer-deps  # Install package dependencies (flag required)
 npx expo start          # Start Expo developer server
 npx expo start --android # Start on Android emulator
 npx expo start --ios     # Start on iOS simulator
+```
+
+### Release Commands (EAS - run from repo root)
+```bash
+make mobile-build-prod        # Android production build (.aab)
+make mobile-build-prod-ios    # iOS production build (cloud macOS worker, no Mac needed)
+make mobile-submit-android    # Upload latest build to Play Console
+make mobile-submit-ios        # Upload latest build to TestFlight
+make mobile-device-ios        # Register iPhone UDID for development builds
+make mobile-versions          # Show remote versionCode / buildNumber
 ```
 
 ### Docker-Compose / Make Commands

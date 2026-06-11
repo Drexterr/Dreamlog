@@ -135,16 +135,15 @@ export default function UpgradeScreen() {
         return;
       }
 
-      // Step 4: payment confirmed - update plan on backend
-      const expiresAt = new Date();
-      expiresAt.setDate(expiresAt.getDate() + 30);
-
-      const updated = await api.upgradePlan(targetPlan, expiresAt.toISOString());
+      // Step 4: payment confirmed - the backend re-verifies the PaymentIntent
+      // with Stripe before granting the plan and sets the expiry server-side.
+      const paymentIntentId = intent.client_secret.split('_secret')[0];
+      const updated = await api.upgradePlan(targetPlan, paymentIntentId);
       setBilling(updated);
 
       Alert.alert(
         'Welcome to ' + (targetPlan === 'plus' ? 'DreamLog+' : 'DreamLog Pro') + '!',
-        'Your subscription is now active.',
+        'Your 30-day pass is now active.',
         [{ text: 'Continue', onPress: () => router.back() }],
       );
     } catch {
@@ -249,9 +248,9 @@ export default function UpgradeScreen() {
                 {isCurrent && card.plan !== 'free' && (
                   <View style={[styles.currentBanner, { backgroundColor: colors.brandGlow }]}>
                     <Text style={[styles.currentBannerText, { color: colors.brand }]}>
-                      Active · renews {billing?.plan_expires_at
-                        ? new Date(billing.plan_expires_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
-                        : 'monthly'}
+                      Active{billing?.plan_expires_at
+                        ? ` · until ${new Date(billing.plan_expires_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}`
+                        : ''}
                     </Text>
                   </View>
                 )}
@@ -262,10 +261,11 @@ export default function UpgradeScreen() {
           {/* Footer */}
           <View style={styles.footer}>
             <Text style={[styles.footerText, { color: colors.textFaint }]}>
-              Secured by Stripe · Cancel anytime · No hidden fees
+              Secured by Stripe · One-time payment · No hidden fees
             </Text>
             <Text style={[styles.footerText, { color: colors.textFaint }]}>
-              Subscriptions auto-renew monthly. Manage in Settings.
+              Each purchase is a 30-day pass. It does not auto-renew and you
+              will never be charged automatically.
             </Text>
           </View>
         </ScrollView>

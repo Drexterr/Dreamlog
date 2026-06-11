@@ -126,4 +126,6 @@ ANTHROPIC_API_KEY   Leave blank in dev; set for real Claude calls
 STUB_AI_ANALYSIS    true in dev (returns canned response), false in prod
 WHISPER_API_URL     Local whisper server or OpenAI endpoint
 STORAGE_ENDPOINT    MinIO (dev) or R2 endpoint
+FCM_CREDENTIALS_JSON  Firebase service-account JSON content (blank in dev = push skipped silently)
+FCM_PROJECT_ID        Firebase project ID (needed on API and worker - nudges send from the worker)
 ```

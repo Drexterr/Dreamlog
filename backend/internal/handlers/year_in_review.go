@@ -25,7 +25,7 @@ func (h *AnnualReviewHandler) GetLatest(c *gin.Context) {
 		c.Error(apierr.Unauthorized("user not found"))
 		return
 	}
-	if !user.Plan.AtLeast(models.PlanPlus) {
+	if !user.EffectivePlan().AtLeast(models.PlanPlus) {
 		c.Error(apierr.Forbidden("annual reviews require DreamLog+ or higher"))
 		return
 	}
@@ -49,7 +49,7 @@ func (h *AnnualReviewHandler) List(c *gin.Context) {
 		c.Error(apierr.Unauthorized("user not found"))
 		return
 	}
-	if !user.Plan.AtLeast(models.PlanPlus) {
+	if !user.EffectivePlan().AtLeast(models.PlanPlus) {
 		c.Error(apierr.Forbidden("annual reviews require DreamLog+ or higher"))
 		return
 	}

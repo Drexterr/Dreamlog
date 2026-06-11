@@ -1,8 +1,23 @@
 # DreamLog Testing Strategy
 
-## Current State
+## Current State (updated 2026-06-11)
 
-**Zero tests exist.** This file defines what must be tested and how.
+**600+ unit/integration tests exist** covering Priorities 1–9 below. Coverage by package:
+
+| Package | Coverage | Notes |
+|---|---|---|
+| `internal/models` | 100% | pure logic |
+| `internal/middleware` | ~87% | incl. JWKS/ES256 path; uncovered = live-network branches |
+| `internal/handlers` | ~77% | all routes incl. billing verification, therapy, exports |
+| `internal/workers` | ~78% | full pipeline; uncovered = long-running `Run()` scheduler loops |
+| `internal/services` | ~70% | crisis.go ~100% (CI gate ≥90% ✅); uncovered = thin pgx-backed wrappers + external clients (TTS; FCM credential/OAuth handling unit-tested in `fcm_test.go` since 2026-06-11, live send still external) |
+| `pkg/apierr` | 100% | pure logic |
+| `internal/repositories`, `pkg/queue`, `pkg/storage` | 0% | need real Postgres/Redis/MinIO — integration tier, see Test Database below |
+| `cmd/*`, `internal/config` | 0% | process entry points; exercised by `make dev` smoke run |
+
+The repository/queue/storage tier is intentionally untested at unit level — mocking
+the DB is forbidden (see Test Database). Closing that gap requires the
+testcontainers-go suite described below, which needs Docker and belongs in CI.
 
 Run all backend tests: `go test ./...`
 Run specific package: `go test ./internal/services/...`

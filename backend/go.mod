@@ -1,6 +1,6 @@
 module github.com/dreamlog/backend
 
-go 1.23
+go 1.25.0
 
 require (
 	github.com/aws/aws-sdk-go-v2 v1.30.3
@@ -17,9 +17,11 @@ require (
 	github.com/redis/go-redis/v9 v9.6.1
 	go.uber.org/zap v1.27.0
 	golang.org/x/crypto v0.23.0
+	golang.org/x/oauth2 v0.36.0
 )
 
 require (
+	cloud.google.com/go/compute/metadata v0.3.0 // indirect
 	github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream v1.6.3 // indirect
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.16.11 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/configsources v1.3.15 // indirect

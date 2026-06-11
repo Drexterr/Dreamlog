@@ -14,6 +14,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { GoogleSignin, statusCodes, isErrorWithCode } from '@react-native-google-signin/google-signin';
+import * as AppleAuthentication from 'expo-apple-authentication';
 import { supabase } from '../src/lib/supabase';
 import { api } from '../src/api/client';
 import { useTheme } from '../src/context/ThemeContext';
@@ -113,6 +114,35 @@ export default function AuthScreen() {
     } catch (err: any) {
       if (isErrorWithCode(err) && err.code === statusCodes.SIGN_IN_CANCELLED) return;
       setError(err?.message ?? 'Google sign-in failed. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleAppleSignIn = async () => {
+    setError('');
+    setLoading(true);
+    try {
+      const credential = await AppleAuthentication.signInAsync({
+        requestedScopes: [
+          AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
+          AppleAuthentication.AppleAuthenticationScope.EMAIL,
+        ],
+      });
+
+      if (!credential.identityToken) throw new Error('No identity token from Apple');
+
+      const { error: signInError } = await supabase.auth.signInWithIdToken({
+        provider: 'apple',
+        token: credential.identityToken,
+      });
+      if (signInError) throw signInError;
+
+      const user = await api.me();
+      router.replace(user.goal ? '/(tabs)' : '/onboarding' as any);
+    } catch (err: any) {
+      if (err?.code === 'ERR_REQUEST_CANCELED') return;
+      setError(err?.message ?? 'Apple sign-in failed. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -219,6 +249,17 @@ export default function AuthScreen() {
               </>
             )}
           </TouchableOpacity>
+
+          {/* Sign in with Apple - iOS only (App Store Guideline 4.8) */}
+          {Platform.OS === 'ios' && (
+            <AppleAuthentication.AppleAuthenticationButton
+              buttonType={AppleAuthentication.AppleAuthenticationButtonType.SIGN_IN}
+              buttonStyle={AppleAuthentication.AppleAuthenticationButtonStyle.WHITE}
+              cornerRadius={14}
+              style={styles.appleBtn}
+              onPress={handleAppleSignIn}
+            />
+          )}
 
           {/* Divider */}
           <View style={styles.divider}>
@@ -410,6 +451,11 @@ const styles = StyleSheet.create({
   googleBtnText: {
     fontSize: 15,
     fontFamily: 'Nunito_600SemiBold',
+  },
+  appleBtn: {
+    width: '100%',
+    height: 50,
+    marginTop: 10,
   },
   divider: {
     flexDirection: 'row',

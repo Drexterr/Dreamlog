@@ -228,7 +228,7 @@ func (h *MoodHandler) MoodHistory(c *gin.Context) {
 		c.Error(apierr.Unauthorized("user not found"))
 		return
 	}
-	if !user.Plan.AtLeast(models.PlanPlus) {
+	if !user.EffectivePlan().AtLeast(models.PlanPlus) {
 		c.Error(apierr.Forbidden("mood history requires DreamLog+ or higher"))
 		return
 	}

@@ -104,6 +104,7 @@ func main() {
 	lifeChapterRepo := repositories.NewLifeChapterRepository(db)
 	relationshipRepo := repositories.NewRelationshipRepository(db)
 	therapyRepo := repositories.NewTherapyRepository(db)
+	paymentRepo := repositories.NewPaymentRepository(db)
 
 	// ── Services ──────────────────────────────────────────────────────────────
 	jobQueue := queue.New(rdb, cfg.Worker.QueueKey, cfg.Worker.DLQKey, cfg.Worker.PollTimeout)
@@ -144,6 +145,7 @@ func main() {
 		AnnualReviewRepo: annualReviewRepo,
 		LifeChapterRepo:  lifeChapterRepo,
 		RelationshipRepo: relationshipRepo,
+		PaymentRepo:      paymentRepo,
 		ClaudeSvc:        claudeSvc,
 		JWTSecret:            cfg.Supabase.JWTSecret,
 		SupabaseJWKSURL:      supabaseJWKSURL(cfg.Supabase.URL),

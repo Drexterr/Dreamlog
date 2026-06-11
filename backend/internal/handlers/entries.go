@@ -52,7 +52,7 @@ func (h *EntryHandler) Create(c *gin.Context) {
 	}
 
 	// Check monthly entry quota (free plan: 10/month).
-	if err := h.subscription.CheckEntryQuota(c.Request.Context(), user.ID, user.Plan); err != nil {
+	if err := h.subscription.CheckEntryQuota(c.Request.Context(), user.ID, user.EffectivePlan()); err != nil {
 		c.Error(apierr.Conflict(err.Error()))
 		return
 	}

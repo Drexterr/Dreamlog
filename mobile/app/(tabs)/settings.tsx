@@ -130,6 +130,7 @@ export default function SettingsScreen() {
   const [loadError, setLoadError] = useState(false);
   const [entryCount, setEntryCount] = useState(0);
   const [currentPlan, setCurrentPlan] = useState<Plan>('free');
+  const [planExpiresAt, setPlanExpiresAt] = useState<string | null>(null);
   const [nudgeEnabled, setNudgeEnabled] = useState(true);
   const [nudgeHour, setNudgeHour] = useState(8);
   const [showHourPicker, setShowHourPicker] = useState(false);
@@ -149,7 +150,10 @@ export default function SettingsScreen() {
       })
       .catch(() => setLoadError(true));
     api.getBillingPlan()
-      .then((b) => setCurrentPlan(b.plan))
+      .then((b) => {
+        setCurrentPlan(b.plan);
+        setPlanExpiresAt(b.plan_expires_at ?? null);
+      })
       .catch(() => {});
     api.listEntries(1, 1)
       .then((r) => setEntryCount(r.total))
@@ -312,7 +316,11 @@ export default function SettingsScreen() {
               <View style={{ flex: 1 }}>
                 <Text style={[styles.settingLabel, { color: colors.textPrimary }]}>Current plan</Text>
                 <Text style={[styles.settingSub, { color: colors.textMuted }]}>
-                  {currentPlan === 'free' ? 'Upgrade for unlimited entries & more' : 'Active subscription'}
+                  {currentPlan === 'free'
+                    ? 'Upgrade for unlimited entries & more'
+                    : planExpiresAt
+                      ? `Active until ${new Date(planExpiresAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })} · does not auto-renew`
+                      : 'Active'}
                 </Text>
               </View>
               <View style={[styles.planBadge, {

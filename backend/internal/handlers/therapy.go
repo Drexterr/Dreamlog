@@ -71,7 +71,7 @@ func (h *TherapyHandler) StartSession(c *gin.Context) {
 	if user.Country != nil {
 		userCountry = *user.Country
 	}
-	session, err := h.svc.StartSession(c.Request.Context(), userID, user.Plan, persona, userCountry)
+	session, err := h.svc.StartSession(c.Request.Context(), userID, user.EffectivePlan(), persona, userCountry)
 	if err != nil {
 		if isPaymentRequired(err) {
 			c.JSON(http.StatusPaymentRequired, gin.H{

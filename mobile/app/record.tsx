@@ -219,6 +219,7 @@ export default function RecordScreen() {
         durationSec: result.durationSec,
         sizeBytes: result.sizeBytes,
         createdAt: new Date().toISOString(),
+        mode,
       });
       Alert.alert(
         'Saved offline',

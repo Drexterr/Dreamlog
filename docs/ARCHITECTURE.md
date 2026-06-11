@@ -313,7 +313,7 @@ v_daily_mood: per-user daily avg mood_score (excludes crisis entries)
 Two paths coexist and must not be conflated:
 
 **Path A - Supabase JWT (all protected routes)**
-- Mobile generates JWT via Supabase Auth
+- Mobile generates JWT via Supabase Auth (email/password, Google Sign-In, and Sign in with Apple on iOS)
 - Dev: manually generate at jwt.io with `SUPABASE_JWT_SECRET`
 - `internal/middleware/auth.go` validates HS256 signature, extracts `sub` + `email`
 - If user doesn't exist in DB yet → auto-provisions (INSERT users)
@@ -408,6 +408,17 @@ Runs as a goroutine inside the worker process (`workers/nudge_scheduler.go`):
 Morning nudge creation: triggered at end of successful entry processing
 - `scheduled_at` = next occurrence of `users.fcm_nudge_hour` in `users.timezone`
 - One nudge per entry - no duplicates
+
+Device token registration (mobile side of the push pipeline, added 2026-06-11):
+- `mobile/src/services/push.ts` runs on auth (wired in `app/_layout.tsx`): requests notification
+  permission (incl. Android 13 `POST_NOTIFICATIONS`), fetches the FCM token via
+  `@react-native-firebase/messaging`, calls `POST /devices`, and re-registers on token rotation
+- Fail-silent by design: Expo Go, denied permission, or missing iOS Firebase config never crash the app
+- Backend upserts on `fcm_token` into `user_devices`
+- `services/fcm.go` authenticates to the FCM HTTP v1 API via `golang.org/x/oauth2/google`
+  (service-account JWT exchange, cached auto-refreshing token source); skips silently when
+  `FCM_CREDENTIALS_JSON` / `FCM_PROJECT_ID` are unset (dev)
+- iOS delivery additionally requires an APNs key uploaded to Firebase (see LAUNCH_CHECKLIST.md §2b)
 
 ---
 

@@ -12,6 +12,8 @@
         test test-race test-cover test-crisis test-services test-handlers test-workers \
         mobile-install mobile-start mobile-tunnel mobile-android mobile-ios mobile-web mobile-lint mobile-typecheck \
         mobile-build-dev mobile-build-dev-local mobile-build-preview mobile-build-preview-local mobile-build-prod \
+        mobile-build-dev-ios mobile-build-preview-ios mobile-build-prod-ios \
+        mobile-submit-android mobile-submit-ios mobile-device-ios mobile-versions \
         apk apk-debug apk-ci apk-download \
         portal-install portal-dev portal-build portal-start portal-lint
 
@@ -91,9 +93,18 @@ help:
 	@echo "    make mobile-typecheck      tsc --noEmit"
 	@echo ""
 	@echo "  Mobile - EAS cloud builds (free tier = long queue)"
-	@echo "    make mobile-build-dev      EAS cloud, development profile"
-	@echo "    make mobile-build-preview  EAS cloud, preview profile"
-	@echo "    make mobile-build-prod     EAS cloud, production profile"
+	@echo "    make mobile-build-dev          EAS cloud, development profile (Android)"
+	@echo "    make mobile-build-preview      EAS cloud, preview profile (Android)"
+	@echo "    make mobile-build-prod         EAS cloud, production profile (Android)"
+	@echo "    make mobile-build-dev-ios      EAS cloud, development profile (iOS)"
+	@echo "    make mobile-build-preview-ios  EAS cloud, preview profile (iOS)"
+	@echo "    make mobile-build-prod-ios     EAS cloud, production profile (iOS)"
+	@echo ""
+	@echo "  Mobile - store release (see docs/LAUNCH_CHECKLIST.md)"
+	@echo "    make mobile-submit-android  Upload latest prod build to Play Console"
+	@echo "    make mobile-submit-ios      Upload latest prod build to TestFlight"
+	@echo "    make mobile-device-ios      Register an iPhone UDID for dev builds"
+	@echo "    make mobile-versions        Show remote versionCode / buildNumber"
 	@echo ""
 	@echo "  Mobile - APK builds (Windows-native, no EAS/cloud)"
 	@echo "    make apk              Build release APK via Gradle (needs Android Studio)"
@@ -270,8 +281,10 @@ test-workers:
 	cd backend && go test -race ./internal/workers/...
 
 # ── Mobile ────────────────────────────────────────────────────────────────────
+# --legacy-peer-deps: the tree has a pre-existing react/react-dom peer conflict
+# that npm's strict resolver rejects; all installs in mobile/ need this flag.
 mobile-install:
-	cd mobile && npm install
+	cd mobile && npm install --legacy-peer-deps
 
 mobile-start:
 	cd mobile && npx expo start
@@ -304,6 +317,36 @@ mobile-build-preview:
 
 mobile-build-prod:
 	cd mobile && npx eas build --profile production --platform android
+
+# iOS builds run on EAS macOS workers - no Mac needed locally.
+# Prerequisites: Apple Developer account + mobile/GoogleService-Info.plist
+# (see docs/LAUNCH_CHECKLIST.md section 2b - iOS builds fail without the plist).
+mobile-build-dev-ios:
+	cd mobile && npx eas build --profile development --platform ios
+
+mobile-build-preview-ios:
+	cd mobile && npx eas build --profile preview --platform ios
+
+mobile-build-prod-ios:
+	cd mobile && npx eas build --profile production --platform ios
+
+# ── Mobile - store release ────────────────────────────────────────────────────
+# Versioning: bump "version" in mobile/app.json + git tag; versionCode /
+# buildNumber are auto-incremented remotely by EAS (appVersionSource: remote).
+mobile-submit-android:
+	cd mobile && npx eas submit --platform android --latest
+
+mobile-submit-ios:
+	cd mobile && npx eas submit --platform ios --latest
+
+# Register a physical iPhone's UDID so development builds can install on it.
+mobile-device-ios:
+	cd mobile && npx eas device:create
+
+# Show the remote build counters EAS will use for the next build.
+mobile-versions:
+	cd mobile && npx eas build:version:get --platform android && \
+	  npx eas build:version:get --platform ios
 
 # Local builds (runs on your machine - no queue, no wait).
 # Requires: Android SDK + JDK for Android; Xcode for iOS (macOS only).

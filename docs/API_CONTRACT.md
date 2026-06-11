@@ -103,20 +103,41 @@ Creates a Stripe PaymentIntent for a plan upgrade. The mobile uses the returned 
 | pro  | 49900 paise (₹499) | 1499 cents ($14.99) |
 
 ### POST /billing/upgrade
-Called after Stripe payment succeeds. Sets the user's plan in the database.
+Called after Stripe payment succeeds. The backend **verifies the payment with
+Stripe server-side** before granting anything - it never trusts the client's
+claim that payment happened. Plan expiry is set server-side to now + 30 days
+(payments are one-time 30-day passes, not auto-renewing subscriptions).
 
 ```json
 // Request
-{ "plan": "free | plus | pro | b2b", "expires_at": "RFC3339 | null" }
+{ "plan": "free | plus | pro", "payment_intent_id": "pi_..." }
 
 // Response 200
 { "plan": "plus", "plan_expires_at": "RFC3339 | null", "limits": { /* PlanLimits */ } }
 
 // Errors
-400 - invalid or missing plan
+400 - invalid or missing plan; missing payment_intent_id; payment was made for
+      a different plan; payment amount below plan price; b2b requested
+      (b2b is provisioned by sales, not self-serve)
+402 - payment intent exists but has not succeeded
+409 - payment intent already used to grant a plan (replay protection)
 ```
 
+Rules:
+- `plan: "free"` (self-downgrade) needs no payment and clears the expiry.
+- For `plus`/`pro` the referenced PaymentIntent must be `succeeded`, carry
+  `metadata.plan` matching the requested plan, and match the plan price.
+- Each `payment_intent_id` grants a plan exactly once (`payments` table,
+  unique on intent ID).
+- Dev mode (no `STRIPE_SECRET_KEY`): verification is skipped; paid plans are
+  granted with a server-set 30-day expiry so the local stack needs no
+  external APIs.
+
 **Plan gating:**
+
+All gating uses the **effective plan**: a paid plan whose `plan_expires_at`
+is in the past is treated as `free` everywhere (including `GET /billing/plan`).
+
 - `GET /mood/history` - requires `plus` or higher; returns `403` otherwise
 - `GET /reviews/weekly` and `GET /reviews/weekly/latest` - requires `plus` or higher
 - `POST /share` - requires `plus` (5/month) or `pro`/`b2b` (unlimited); `free` gets `403`

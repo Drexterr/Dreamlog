@@ -31,6 +31,7 @@ type Deps struct {
 	AnnualReviewRepo  *repositories.AnnualReviewRepository
 	LifeChapterRepo      *repositories.LifeChapterRepository
 	RelationshipRepo     *repositories.RelationshipRepository
+	PaymentRepo          *repositories.PaymentRepository
 	ClaudeSvc            *services.ClaudeService
 	JWTSecret            string
 	SupabaseJWKSURL      string
@@ -68,7 +69,7 @@ func NewRouter(deps Deps) http.Handler {
 	auth.DELETE("/me", userHandler.DeleteMe)
 
 	// Billing / subscription
-	billingHandler := NewBillingHandler(deps.SubscriptionSvc, deps.StripeSecretKey, deps.StripePublishableKey)
+	billingHandler := NewBillingHandler(deps.SubscriptionSvc, deps.PaymentRepo, deps.StripeSecretKey, deps.StripePublishableKey)
 	auth.GET("/billing/plan", billingHandler.GetPlan)
 	auth.POST("/billing/upgrade", billingHandler.Upgrade)
 	auth.POST("/billing/create-payment-intent", billingHandler.CreatePaymentIntent)

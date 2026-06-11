@@ -9,7 +9,7 @@
       "distribution": "internal",
       "autoIncrement": true,
       "env": {
-        "EXPO_PUBLIC_API_URL": "http://localhost:8080",
+        "EXPO_PUBLIC_API_URL": "https://dreamlog-production-f9e2.up.railway.app",
         "EXPO_PUBLIC_SUPABASE_URL": "https://rvmriuwxyxrpyoseqhci.supabase.co"
       }
     },

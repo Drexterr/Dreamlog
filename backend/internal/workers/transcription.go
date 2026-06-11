@@ -195,9 +195,9 @@ func (w *TranscriptionWorker) handle(ctx context.Context, job *models.Transcript
 	log.Info("worker: crisis screening")
 	crisis, err := w.crisisDetector.Screen(ctx, whisperResult.Text, job.UserCountry)
 	if err != nil {
-		// Non-fatal: log and continue with normal analysis.
-		log.Warn("worker: crisis detector error, continuing", zap.Error(err))
-		crisis = &services.CrisisResult{Detected: false}
+		// ADR-002 fail-safe: if the screener errors, uncertain = crisis.
+		log.Warn("worker: crisis detector error, failing safe (treating as crisis)", zap.Error(err))
+		crisis = &services.CrisisResult{Detected: true, Response: services.CrisisResponse(job.UserCountry)}
 	}
 
 	if crisis.Detected {

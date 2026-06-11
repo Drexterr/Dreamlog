@@ -273,17 +273,31 @@ func TestCrisisStage2_OnlyCallsClaudeOnce(t *testing.T) {
 // ── Crisis response content test ─────────────────────────────────────────────
 
 func TestCrisisResponse_ContainsCrisisResources(t *testing.T) {
-	resp := buildCrisisResponse("US")
-	if !strings.Contains(resp, "988") {
-		t.Error("crisis response must contain US crisis line 988")
+	usResp := buildCrisisResponse("US")
+	if !strings.Contains(usResp, "988") {
+		t.Error("US crisis response must contain crisis line 988")
 	}
-	if !strings.Contains(resp, "iCall") {
-		t.Error("crisis response must contain India iCall resource")
+
+	inResp := buildCrisisResponse("IN")
+	if !strings.Contains(inResp, "iCall") {
+		t.Error("India crisis response must contain iCall resource")
 	}
-	if !strings.Contains(resp, "Vandrevala") {
-		t.Error("crisis response must contain India Vandrevala Foundation")
+	if !strings.Contains(inResp, "Vandrevala") {
+		t.Error("India crisis response must contain Vandrevala Foundation")
 	}
-	if !strings.Contains(resp, "findahelpline") {
-		t.Error("crisis response must contain international resource link")
+
+	// Unknown or empty country must fall back to international resources.
+	for _, country := range []string{"", "ZZ"} {
+		resp := buildCrisisResponse(country)
+		if !strings.Contains(resp, "findahelpline") {
+			t.Errorf("crisis response for country %q must contain international resource link", country)
+		}
+	}
+
+	// Every localised response must include an emergency number line.
+	for country := range countryHelplines {
+		if !strings.Contains(buildCrisisResponse(country), "Emergency:") {
+			t.Errorf("crisis response for %s must include an emergency number", country)
+		}
 	}
 }

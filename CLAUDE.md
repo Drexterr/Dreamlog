@@ -11,6 +11,7 @@ Always read these files before touching code. They define contracts, invariants,
 - @docs/DECISIONS.md - why things are built the way they are (read before proposing changes to core patterns)
 - @docs/TESTING.md - what must be tested, how to structure tests
 - @docs/ROADMAP.md - phase status and what's planned next
+- @docs/LAUNCH_CHECKLIST.md - everything left before App Store / Play Store launch (read before release/store work)
 - @ANTIGRAVITY.md - rules, guidelines, and commands for the Antigravity AI coding assistant
 
 When working in the backend: also read @backend/CLAUDE.md
@@ -36,11 +37,25 @@ go test ./internal/services/...  # Run tests in a specific package
 
 ```bash
 cd mobile
-npm install             # Install dependencies
+npm install --legacy-peer-deps   # Install dependencies (flag required - see mobile/CLAUDE.md)
 npx expo start          # Start dev server
 npx expo start --android
 npx expo start --ios
 ```
+
+### Release builds (EAS - one codebase, both stores)
+
+```bash
+make mobile-build-prod        # Android production build (.aab)
+make mobile-build-prod-ios    # iOS production build (.ipa, cloud macOS worker - no Mac needed)
+make mobile-submit-android    # Upload latest build to Play Console
+make mobile-submit-ios        # Upload latest build to TestFlight
+make mobile-device-ios        # Register an iPhone UDID for development builds
+make mobile-versions          # Show remote versionCode / buildNumber counters
+```
+
+Versioning: bump `version` in `mobile/app.json` once per release (shared by both platforms);
+per-platform build numbers are auto-incremented remotely by EAS. See docs/LAUNCH_CHECKLIST.md.
 
 ### Docker / Make (recommended for full-stack dev)
 
@@ -105,6 +120,7 @@ Mobile → POST /entries/:id/conversation + POST /conversations/:id/messages (ma
 - **`src/hooks/useRecorder.ts`** - Audio recording state machine (expo-av); AAC 44.1kHz mono, max 30 min
 - **`src/services/upload.ts`** - Orchestrates presign → PUT → POST with 3-attempt exponential backoff
 - **`src/services/offlineQueue.ts`** - AsyncStorage-based queue; auto-flushes on reconnect, max 5 retries
+- **`src/services/push.ts`** - FCM push registration (permission → token → `POST /devices`); fail-silent, called from `app/_layout.tsx` on auth
 - **`src/theme.ts`** - Design tokens (dark purple palette, CormorantGaramond + Nunito fonts)
 
 No Redux or global state manager - component state via React hooks, persistence via AsyncStorage or SecureStore.

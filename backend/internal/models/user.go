@@ -108,6 +108,17 @@ type User struct {
 	UpdatedAt           time.Time  `json:"updated_at"`
 }
 
+// EffectivePlan returns the plan the user is actually entitled to right now.
+// A paid plan with plan_expires_at in the past grants no privileges - it
+// degrades to free. A nil expiry means the plan never expires.
+// All plan gating must use this, never the raw Plan field.
+func (u *User) EffectivePlan() Plan {
+	if u.Plan != PlanFree && u.PlanExpiresAt != nil && u.PlanExpiresAt.Before(time.Now()) {
+		return PlanFree
+	}
+	return u.Plan
+}
+
 type UpdateUserInput struct {
 	Name          *string `json:"name" binding:"omitempty,min=1,max=200"`
 	PreferredName *string `json:"preferred_name" binding:"omitempty,max=100"`

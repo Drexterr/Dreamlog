@@ -7,9 +7,12 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"sync"
 	"time"
 
 	appconfig "github.com/dreamlog/backend/internal/config"
+	"golang.org/x/oauth2"
+	"golang.org/x/oauth2/google"
 )
 
 // FCMService sends push notifications via Firebase Cloud Messaging HTTP v1 API.
@@ -18,6 +21,10 @@ import (
 type FCMService struct {
 	cfg        *appconfig.FCMConfig
 	httpClient *http.Client
+
+	tokenOnce   sync.Once
+	tokenSource oauth2.TokenSource
+	tokenErr    error
 }
 
 func NewFCMService(cfg *appconfig.FCMConfig) *FCMService {
@@ -89,33 +96,28 @@ func (s *FCMService) SendToToken(ctx context.Context, token, title, body string,
 }
 
 // getAccessToken exchanges the service account credentials for a short-lived
-// OAuth2 bearer token using the Google token endpoint.
-// In production this should be cached with a ~50-minute TTL.
+// OAuth2 bearer token. The TokenSource is created once and reused; it caches
+// the token internally and refreshes it automatically before expiry.
 func (s *FCMService) getAccessToken(ctx context.Context) (string, error) {
-	// Build a minimal JWT assertion for the Google token endpoint.
-	// google.golang.org/api/option is the canonical approach;
-	// this is a simplified manual implementation to avoid adding a heavy dependency.
-	// For production: use "golang.org/x/oauth2/google" with ServiceAccountJSON.
-
-	type serviceAccount struct {
-		ClientEmail string `json:"client_email"`
-		PrivateKey  string `json:"private_key"`
-		TokenURI    string `json:"token_uri"`
+	s.tokenOnce.Do(func() {
+		conf, err := google.JWTConfigFromJSON(
+			[]byte(s.cfg.CredentialsJSON),
+			"https://www.googleapis.com/auth/firebase.messaging",
+		)
+		if err != nil {
+			s.tokenErr = fmt.Errorf("fcm: parse credentials: %w", err)
+			return
+		}
+		// Background context: the source outlives any single request.
+		s.tokenSource = conf.TokenSource(context.Background())
+	})
+	if s.tokenErr != nil {
+		return "", s.tokenErr
 	}
 
-	var sa serviceAccount
-	if err := json.Unmarshal([]byte(s.cfg.CredentialsJSON), &sa); err != nil {
-		return "", fmt.Errorf("fcm: parse credentials: %w", err)
+	token, err := s.tokenSource.Token()
+	if err != nil {
+		return "", fmt.Errorf("fcm: fetch access token: %w", err)
 	}
-
-	// For a production implementation, replace this with golang.org/x/oauth2/google:
-	//
-	//   conf, err := google.JWTConfigFromJSON([]byte(s.cfg.CredentialsJSON),
-	//       "https://www.googleapis.com/auth/firebase.messaging")
-	//   token, err := conf.TokenSource(ctx).Token()
-	//   return token.AccessToken, err
-	//
-	// The stub below returns an error so FCM is skipped in dev without credentials.
-	_ = sa
-	return "", fmt.Errorf("fcm: production credentials required - add golang.org/x/oauth2/google")
+	return token.AccessToken, nil
 }

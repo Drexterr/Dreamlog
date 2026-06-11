@@ -51,31 +51,46 @@ export async function getQueue(): Promise<OfflineQueueItem[]> {
  * Items that fail increment their attempt counter.
  * Items that exceed MAX_ITEM_ATTEMPTS are discarded (with logging).
  */
+let flushInFlight = false;
+
 export async function flush(
   onItemUploaded?: (item: OfflineQueueItem) => void,
   onItemFailed?: (item: OfflineQueueItem, err: Error) => void,
 ): Promise<void> {
-  const queue = await readQueue();
-  if (queue.length === 0) return;
+  // Guard against overlapping flushes (e.g. rapid reconnect events) which
+  // would double-upload the same items.
+  if (flushInFlight) return;
+  flushInFlight = true;
 
-  const remaining: OfflineQueueItem[] = [];
+  try {
+    const queue = await readQueue();
+    if (queue.length === 0) return;
 
-  for (const item of queue) {
-    try {
-      await uploadRecording(item.localUri, item.durationSec);
-      onItemUploaded?.(item);
-      // Remove from queue by NOT adding to remaining[].
-    } catch (err) {
-      const updated = { ...item, attempts: item.attempts + 1 };
-      const error = err instanceof Error ? err : new Error(String(err));
-      onItemFailed?.(updated, error);
+    const remaining: OfflineQueueItem[] = [];
 
-      if (updated.attempts < MAX_ITEM_ATTEMPTS) {
-        remaining.push(updated);
+    for (const item of queue) {
+      try {
+        await uploadRecording(item.localUri, item.durationSec, undefined, item.mode ?? 'processing');
+        onItemUploaded?.(item);
+        // Remove from queue by NOT adding to remaining[].
+      } catch (err) {
+        const updated = { ...item, attempts: item.attempts + 1 };
+        const error = err instanceof Error ? err : new Error(String(err));
+        onItemFailed?.(updated, error);
+
+        if (updated.attempts < MAX_ITEM_ATTEMPTS) {
+          remaining.push(updated);
+        }
+        // Else: silently drop - too many failures, avoid infinite accumulation.
       }
-      // Else: silently drop - too many failures, avoid infinite accumulation.
     }
-  }
 
-  await writeQueue(remaining);
+    // Preserve any items enqueued while this flush was running.
+    const current = await readQueue();
+    const processedIds = new Set(queue.map((i) => i.id));
+    const newlyEnqueued = current.filter((i) => !processedIds.has(i.id));
+    await writeQueue([...remaining, ...newlyEnqueued]);
+  } finally {
+    flushInFlight = false;
+  }
 }

@@ -255,9 +255,11 @@ export const api = {
       .post<CreatePaymentIntentResponse>('/billing/create-payment-intent', { plan, currency })
       .then((r) => r.data),
 
-  upgradePlan: (plan: Plan, expiresAt?: string): Promise<BillingPlanResponse> =>
+  // paymentIntentId is required for paid plans in production - the backend
+  // verifies the payment with Stripe before granting. Expiry is server-set.
+  upgradePlan: (plan: Plan, paymentIntentId?: string): Promise<BillingPlanResponse> =>
     http
-      .post<BillingPlanResponse>('/billing/upgrade', { plan, expires_at: expiresAt ?? null })
+      .post<BillingPlanResponse>('/billing/upgrade', { plan, payment_intent_id: paymentIntentId })
       .then((r) => r.data),
 };
 

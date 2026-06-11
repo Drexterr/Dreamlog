@@ -16,10 +16,13 @@ import {
   Nunito_600SemiBold,
   Nunito_700Bold,
 } from '@expo-google-fonts/nunito';
+import NetInfo from '@react-native-community/netinfo';
 import { api, storeToken } from '../src/api/client';
 import { supabase, deepLinkReady } from '../src/lib/supabase';
 import { ThemeProvider } from '../src/context/ThemeContext';
 import { detectAndCacheRegion } from '../src/services/region';
+import { flush as flushOfflineQueue } from '../src/services/offlineQueue';
+import { registerForPushNotifications } from '../src/services/push';
 
 const STRIPE_PK = process.env.EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY ?? '';
 
@@ -108,6 +111,25 @@ export default function RootLayout() {
     }
   }, [ready, fontsLoaded, fontError]);
 
+  // Register this device's FCM token for morning nudges and weekly-review
+  // pushes. Fail-silent: never blocks startup.
+  useEffect(() => {
+    if (!ready || !hasToken) return;
+    registerForPushNotifications();
+  }, [ready, hasToken]);
+
+  // Flush the offline upload queue whenever connectivity is restored.
+  // flush() is internally guarded against overlapping runs.
+  useEffect(() => {
+    if (!ready || !hasToken) return;
+    const unsubscribe = NetInfo.addEventListener((state) => {
+      if (state.isConnected) {
+        flushOfflineQueue();
+      }
+    });
+    return () => unsubscribe();
+  }, [ready, hasToken]);
+
   // After startup, listen for auth state changes triggered by deep links (e.g. email
   // confirmation). This handles the case where the user taps the confirmation link and
   // Supabase fires SIGNED_IN after the initial redirect logic has already run.
@@ -117,6 +139,7 @@ export default function RootLayout() {
       if (event === 'SIGNED_IN' && session) {
         try {
           await storeToken(session.access_token);
+          registerForPushNotifications();
           const user = await api.me();
           if (!user.goal) {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any

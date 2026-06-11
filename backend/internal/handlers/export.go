@@ -39,7 +39,7 @@ func (h *ExportHandler) ExportPDF(c *gin.Context) {
 		_ = c.Error(apierr.Unauthorized("user not found"))
 		return
 	}
-	if !user.Plan.AtLeast(models.PlanPro) {
+	if !user.EffectivePlan().AtLeast(models.PlanPro) {
 		_ = c.Error(apierr.Forbidden("PDF export requires DreamLog Pro or higher"))
 		return
 	}

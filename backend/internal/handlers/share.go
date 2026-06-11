@@ -46,7 +46,7 @@ func (h *ShareHandler) Create(c *gin.Context) {
 	userID := user.ID
 
 	// Check share quota for the user's plan.
-	if err := h.subscription.CheckShareQuota(c.Request.Context(), userID, user.Plan); err != nil {
+	if err := h.subscription.CheckShareQuota(c.Request.Context(), userID, user.EffectivePlan()); err != nil {
 		_ = c.Error(apierr.Forbidden(err.Error()))
 		return
 	}

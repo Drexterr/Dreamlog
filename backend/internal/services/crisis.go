@@ -202,6 +202,13 @@ Emergency: 112`,
 Emergency: 10111`,
 }
 
+// CrisisResponse returns the empathetic crisis response with country-specific
+// helplines. Exported for callers (e.g. the worker pipeline) that must apply
+// the ADR-002 fail-safe when the screener itself errors.
+func CrisisResponse(country string) string {
+	return buildCrisisResponse(country)
+}
+
 // buildCrisisResponse returns an empathetic plain-text response with country-specific helplines.
 // country should be an ISO 3166-1 alpha-2 code; empty or unknown falls back to international resources.
 func buildCrisisResponse(country string) string {

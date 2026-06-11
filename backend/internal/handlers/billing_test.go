@@ -239,13 +239,13 @@ func TestBillingHandler_Upgrade_MissingPlan_Returns400(t *testing.T) {
 	}
 }
 
-func TestBillingHandler_Upgrade_WithExpiry_Returns200(t *testing.T) {
+func TestBillingHandler_Upgrade_ClientExpiryIgnored_ServerSets30Days(t *testing.T) {
 	user := billingTestUser(models.PlanFree)
 	svc := &fakePlanManager{}
 	r := newBillingTestRouter(t, svc, user)
 
-	expiry := time.Now().Add(30 * 24 * time.Hour).UTC().Format(time.RFC3339)
-	body, _ := json.Marshal(map[string]string{"plan": "pro", "expires_at": expiry})
+	// Client attempts to grant itself a plan until 2099 - must be ignored.
+	body, _ := json.Marshal(map[string]string{"plan": "pro", "expires_at": "2099-01-01T00:00:00Z"})
 	w := httptest.NewRecorder()
 	req, _ := http.NewRequest(http.MethodPost, "/billing/upgrade", bytes.NewReader(body))
 	req.Header.Set("Authorization", "Bearer "+billingTestJWT(t))
@@ -253,10 +253,14 @@ func TestBillingHandler_Upgrade_WithExpiry_Returns200(t *testing.T) {
 	r.ServeHTTP(w, req)
 
 	if w.Code != http.StatusOK {
-		t.Fatalf("expected 200 with expiry, got %d: %s", w.Code, w.Body.String())
+		t.Fatalf("expected 200, got %d: %s", w.Code, w.Body.String())
 	}
 	if svc.upgradedExpiry == nil {
-		t.Fatal("expected expiry to be passed through to service")
+		t.Fatal("expected server-set expiry")
+	}
+	maxExpiry := time.Now().Add(31 * 24 * time.Hour)
+	if svc.upgradedExpiry.After(maxExpiry) {
+		t.Errorf("client-supplied expiry must be ignored; got %v (more than 31 days out)", svc.upgradedExpiry)
 	}
 }
 
@@ -363,6 +367,295 @@ func TestBillingHandler_GetPlan_FreeLimitsHaveMonthlyEntries(t *testing.T) {
 	}
 	if limits["has_weekly_review"] != false {
 		t.Errorf("free plan must have has_weekly_review=false, got %v", limits["has_weekly_review"])
+	}
+}
+
+// ── Verified (production) mode: payment must be proven server-side ───────────
+
+type fakePaymentRecorder struct {
+	seen map[string]bool
+}
+
+func (f *fakePaymentRecorder) Record(_ context.Context, _ uuid.UUID, intentID string, _ models.Plan, _ int64, _ string) (bool, error) {
+	if f.seen == nil {
+		f.seen = map[string]bool{}
+	}
+	if f.seen[intentID] {
+		return false, nil
+	}
+	f.seen[intentID] = true
+	return true, nil
+}
+
+// stripeStub serves GET /v1/payment_intents/:id with a canned intent.
+func stripeStub(t *testing.T, intent map[string]interface{}) *httptest.Server {
+	t.Helper()
+	return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode(intent)
+	}))
+}
+
+func newVerifiedBillingRouter(t *testing.T, svc planManager, payments paymentRecorder, stripeURL string, testUser *models.User) *gin.Engine {
+	t.Helper()
+	gin.SetMode(gin.TestMode)
+	log := zap.NewNop()
+
+	r := gin.New()
+	r.Use(middleware.ErrorHandler(log))
+	r.Use(middleware.AuthMiddleware(billingTestSecret, "", &fakeProvisioner{user: testUser}, log))
+
+	h := &BillingHandler{svc: svc, payments: payments, stripeSecretKey: "sk_test_123", stripeBaseURL: stripeURL}
+	r.GET("/billing/plan", h.GetPlan)
+	r.POST("/billing/upgrade", h.Upgrade)
+	return r
+}
+
+func postUpgrade(t *testing.T, r *gin.Engine, body map[string]string) *httptest.ResponseRecorder {
+	t.Helper()
+	raw, _ := json.Marshal(body)
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest(http.MethodPost, "/billing/upgrade", bytes.NewReader(raw))
+	req.Header.Set("Authorization", "Bearer "+billingTestJWT(t))
+	req.Header.Set("Content-Type", "application/json")
+	r.ServeHTTP(w, req)
+	return w
+}
+
+func TestBillingHandler_UpgradeVerified_MissingPaymentIntent_Returns400(t *testing.T) {
+	r := newVerifiedBillingRouter(t, &fakePlanManager{}, &fakePaymentRecorder{}, "http://localhost:0", billingTestUser(models.PlanFree))
+	w := postUpgrade(t, r, map[string]string{"plan": "plus"})
+	if w.Code != http.StatusBadRequest {
+		t.Fatalf("expected 400 without payment_intent_id, got %d: %s", w.Code, w.Body.String())
+	}
+}
+
+func TestBillingHandler_UpgradeVerified_PaymentNotSucceeded_Returns402(t *testing.T) {
+	stripe := stripeStub(t, map[string]interface{}{
+		"id": "pi_1", "status": "requires_payment_method", "amount": 19900, "currency": "inr",
+		"metadata": map[string]string{"plan": "plus"},
+	})
+	defer stripe.Close()
+
+	r := newVerifiedBillingRouter(t, &fakePlanManager{}, &fakePaymentRecorder{}, stripe.URL, billingTestUser(models.PlanFree))
+	w := postUpgrade(t, r, map[string]string{"plan": "plus", "payment_intent_id": "pi_1"})
+	if w.Code != http.StatusPaymentRequired {
+		t.Fatalf("expected 402 for unpaid intent, got %d: %s", w.Code, w.Body.String())
+	}
+}
+
+func TestBillingHandler_UpgradeVerified_WrongPlanMetadata_Returns400(t *testing.T) {
+	stripe := stripeStub(t, map[string]interface{}{
+		"id": "pi_2", "status": "succeeded", "amount": 19900, "currency": "inr",
+		"metadata": map[string]string{"plan": "plus"},
+	})
+	defer stripe.Close()
+
+	// Paid for plus, asking for pro.
+	r := newVerifiedBillingRouter(t, &fakePlanManager{}, &fakePaymentRecorder{}, stripe.URL, billingTestUser(models.PlanFree))
+	w := postUpgrade(t, r, map[string]string{"plan": "pro", "payment_intent_id": "pi_2"})
+	if w.Code != http.StatusBadRequest {
+		t.Fatalf("expected 400 for plan mismatch, got %d: %s", w.Code, w.Body.String())
+	}
+}
+
+func TestBillingHandler_UpgradeVerified_AmountTooLow_Returns400(t *testing.T) {
+	stripe := stripeStub(t, map[string]interface{}{
+		"id": "pi_3", "status": "succeeded", "amount": 100, "currency": "inr",
+		"metadata": map[string]string{"plan": "pro"},
+	})
+	defer stripe.Close()
+
+	r := newVerifiedBillingRouter(t, &fakePlanManager{}, &fakePaymentRecorder{}, stripe.URL, billingTestUser(models.PlanFree))
+	w := postUpgrade(t, r, map[string]string{"plan": "pro", "payment_intent_id": "pi_3"})
+	if w.Code != http.StatusBadRequest {
+		t.Fatalf("expected 400 for amount mismatch, got %d: %s", w.Code, w.Body.String())
+	}
+}
+
+func TestBillingHandler_UpgradeVerified_Success_GrantsServerExpiry(t *testing.T) {
+	stripe := stripeStub(t, map[string]interface{}{
+		"id": "pi_4", "status": "succeeded", "amount": 49900, "currency": "inr",
+		"metadata": map[string]string{"plan": "pro"},
+	})
+	defer stripe.Close()
+
+	svc := &fakePlanManager{}
+	r := newVerifiedBillingRouter(t, svc, &fakePaymentRecorder{}, stripe.URL, billingTestUser(models.PlanFree))
+	w := postUpgrade(t, r, map[string]string{"plan": "pro", "payment_intent_id": "pi_4"})
+	if w.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d: %s", w.Code, w.Body.String())
+	}
+	if svc.upgradedPlan != models.PlanPro {
+		t.Fatalf("expected pro granted, got %s", svc.upgradedPlan)
+	}
+	if svc.upgradedExpiry == nil {
+		t.Fatal("expected server-set expiry on verified upgrade")
+	}
+}
+
+func TestBillingHandler_UpgradeVerified_ReplayedIntent_Returns409(t *testing.T) {
+	stripe := stripeStub(t, map[string]interface{}{
+		"id": "pi_5", "status": "succeeded", "amount": 19900, "currency": "inr",
+		"metadata": map[string]string{"plan": "plus"},
+	})
+	defer stripe.Close()
+
+	payments := &fakePaymentRecorder{}
+	r := newVerifiedBillingRouter(t, &fakePlanManager{}, payments, stripe.URL, billingTestUser(models.PlanFree))
+
+	if w := postUpgrade(t, r, map[string]string{"plan": "plus", "payment_intent_id": "pi_5"}); w.Code != http.StatusOK {
+		t.Fatalf("first use must succeed, got %d: %s", w.Code, w.Body.String())
+	}
+	if w := postUpgrade(t, r, map[string]string{"plan": "plus", "payment_intent_id": "pi_5"}); w.Code != http.StatusConflict {
+		t.Fatalf("replayed intent must return 409, got %d: %s", w.Code, w.Body.String())
+	}
+}
+
+func TestBillingHandler_UpgradeVerified_B2BSelfServe_Returns400(t *testing.T) {
+	r := newVerifiedBillingRouter(t, &fakePlanManager{}, &fakePaymentRecorder{}, "http://localhost:0", billingTestUser(models.PlanFree))
+	w := postUpgrade(t, r, map[string]string{"plan": "b2b"})
+	if w.Code != http.StatusBadRequest {
+		t.Fatalf("b2b must not be self-serve in production, got %d: %s", w.Code, w.Body.String())
+	}
+}
+
+func TestBillingHandler_UpgradeVerified_DowngradeToFree_NoPaymentNeeded(t *testing.T) {
+	svc := &fakePlanManager{}
+	r := newVerifiedBillingRouter(t, svc, &fakePaymentRecorder{}, "http://localhost:0", billingTestUser(models.PlanPro))
+	w := postUpgrade(t, r, map[string]string{"plan": "free"})
+	if w.Code != http.StatusOK {
+		t.Fatalf("downgrade to free must not require payment, got %d: %s", w.Code, w.Body.String())
+	}
+	if svc.upgradedPlan != models.PlanFree {
+		t.Fatalf("expected free, got %s", svc.upgradedPlan)
+	}
+	if svc.upgradedExpiry != nil {
+		t.Error("free plan must have nil expiry")
+	}
+}
+
+// ── POST /billing/create-payment-intent (dev stub mode) ─────────────────────
+
+func newPaymentIntentRouter(t *testing.T) *gin.Engine {
+	t.Helper()
+	gin.SetMode(gin.TestMode)
+	log := zap.NewNop()
+	r := gin.New()
+	r.Use(middleware.ErrorHandler(log))
+	r.Use(middleware.AuthMiddleware(billingTestSecret, "", &fakeProvisioner{user: billingTestUser(models.PlanFree)}, log))
+	h := &BillingHandler{svc: &fakePlanManager{}, stripePublishableKey: "pk_test_x"}
+	r.POST("/billing/create-payment-intent", h.CreatePaymentIntent)
+	return r
+}
+
+func postPaymentIntent(t *testing.T, r *gin.Engine, body map[string]string) *httptest.ResponseRecorder {
+	t.Helper()
+	raw, _ := json.Marshal(body)
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest(http.MethodPost, "/billing/create-payment-intent", bytes.NewReader(raw))
+	req.Header.Set("Authorization", "Bearer "+billingTestJWT(t))
+	req.Header.Set("Content-Type", "application/json")
+	r.ServeHTTP(w, req)
+	return w
+}
+
+func TestCreatePaymentIntent_DevStub_ReturnsStubSecret(t *testing.T) {
+	r := newPaymentIntentRouter(t)
+	w := postPaymentIntent(t, r, map[string]string{"plan": "plus", "currency": "inr"})
+	if w.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d: %s", w.Code, w.Body.String())
+	}
+	var resp map[string]interface{}
+	json.Unmarshal(w.Body.Bytes(), &resp)
+	if resp["client_secret"] == "" || resp["client_secret"] == nil {
+		t.Error("expected stub client_secret in dev mode")
+	}
+	if resp["amount"] != float64(19900) {
+		t.Errorf("plus INR amount: want 19900, got %v", resp["amount"])
+	}
+}
+
+func TestCreatePaymentIntent_InvalidCurrency_Returns400(t *testing.T) {
+	r := newPaymentIntentRouter(t)
+	if w := postPaymentIntent(t, r, map[string]string{"plan": "plus", "currency": "gbp"}); w.Code != http.StatusBadRequest {
+		t.Fatalf("expected 400 for unsupported currency, got %d", w.Code)
+	}
+}
+
+func TestCreatePaymentIntent_FreePlan_Returns400(t *testing.T) {
+	r := newPaymentIntentRouter(t)
+	if w := postPaymentIntent(t, r, map[string]string{"plan": "free", "currency": "usd"}); w.Code != http.StatusBadRequest {
+		t.Fatalf("expected 400 for free plan, got %d", w.Code)
+	}
+}
+
+func TestPlanAmount_AllCurrencies(t *testing.T) {
+	cases := []struct {
+		plan     models.Plan
+		currency string
+		want     int64
+	}{
+		{models.PlanPlus, "inr", 19900},
+		{models.PlanPro, "inr", 49900},
+		{models.PlanPlus, "usd", 799},
+		{models.PlanPro, "usd", 1499},
+		{models.PlanPlus, "eur", 699},
+		{models.PlanPro, "eur", 1299},
+		{models.PlanFree, "inr", 0},
+	}
+	for _, tc := range cases {
+		if got := planAmount(tc.plan, tc.currency); got != tc.want {
+			t.Errorf("planAmount(%s, %s): want %d, got %d", tc.plan, tc.currency, tc.want, got)
+		}
+	}
+}
+
+// ── plan_expires_at enforcement ──────────────────────────────────────────────
+
+func TestBillingHandler_GetPlan_ExpiredPlus_ReportsFree(t *testing.T) {
+	expired := time.Now().Add(-24 * time.Hour)
+	user := billingTestUser(models.PlanPlus)
+	user.PlanExpiresAt = &expired
+
+	r := newBillingTestRouter(t, &fakePlanManager{}, user)
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest(http.MethodGet, "/billing/plan", nil)
+	req.Header.Set("Authorization", "Bearer "+billingTestJWT(t))
+	r.ServeHTTP(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d", w.Code)
+	}
+	var resp map[string]interface{}
+	json.Unmarshal(w.Body.Bytes(), &resp)
+	if resp["plan"] != "free" {
+		t.Fatalf("expired plus plan must report as free, got %v", resp["plan"])
+	}
+}
+
+func TestUser_EffectivePlan(t *testing.T) {
+	past := time.Now().Add(-time.Hour)
+	future := time.Now().Add(time.Hour)
+
+	cases := []struct {
+		name   string
+		plan   models.Plan
+		expiry *time.Time
+		want   models.Plan
+	}{
+		{"free never expires", models.PlanFree, nil, models.PlanFree},
+		{"plus no expiry", models.PlanPlus, nil, models.PlanPlus},
+		{"plus future expiry", models.PlanPlus, &future, models.PlanPlus},
+		{"plus expired", models.PlanPlus, &past, models.PlanFree},
+		{"pro expired", models.PlanPro, &past, models.PlanFree},
+		{"b2b expired", models.PlanB2B, &past, models.PlanFree},
+	}
+	for _, tc := range cases {
+		u := &models.User{Plan: tc.plan, PlanExpiresAt: tc.expiry}
+		if got := u.EffectivePlan(); got != tc.want {
+			t.Errorf("%s: want %s, got %s", tc.name, tc.want, got)
+		}
 	}
 }
 

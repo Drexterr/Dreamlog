@@ -30,6 +30,7 @@ src/
   hooks/useRecorder.ts      audio recording state machine - do not re-implement recording logic
   services/upload.ts        presign → PUT → POST orchestration with backoff
   services/offlineQueue.ts  AsyncStorage-based retry queue
+  services/push.ts          FCM push registration (fail-silent) - wired in app/_layout.tsx
   theme.ts                  design tokens - always import from here
   types/index.ts            shared TypeScript types
   screens/                  screen-level components (used by app/ routes)
@@ -67,6 +68,17 @@ src/
 - Format: AAC, 44.1 kHz, mono
 - Max duration: 30 minutes (enforced in useRecorder)
 - Do not use `expo-av` directly in screens - go through the hook
+
+### Push Notifications
+- All push registration lives in `src/services/push.ts` - do not call Firebase Messaging anywhere else
+- It is fail-silent by design (Expo Go, denied permission, missing iOS Firebase config must never crash the app)
+- Called from `app/_layout.tsx` on auth; the backend upserts tokens on `POST /devices`
+- Requires a development build - push does not work in Expo Go
+
+### Auth Providers
+- Email/password and Google/Apple sign-in all go through Supabase (`src/lib/supabase.ts`)
+- Sign in with Apple renders on iOS only (`expo-apple-authentication`, App Store Guideline 4.8) - keep it whenever Google sign-in is offered
+- The backend's local `/auth/register` + `/auth/login` path is dev-only; the app does not use it
 
 ### Upload Flow
 - Audio upload is a 3-step sequence: presign → PUT to storage → POST to /entries
@@ -115,6 +127,9 @@ expo-secure-store JWT storage
 expo-font         font loading (Cormorant Garamond + Nunito)
 axios             HTTP client (always via src/api/client.ts)
 @react-native-async-storage/async-storage   offline queue + non-sensitive persistence
+@react-native-firebase/app + messaging      FCM push tokens (via src/services/push.ts only)
+expo-apple-authentication                   Sign in with Apple (iOS only)
+expo-build-properties                       iOS static frameworks (required by RN Firebase)
 ```
 
 ---
@@ -122,7 +137,7 @@ axios             HTTP client (always via src/api/client.ts)
 ## Dev Setup
 
 ```bash
-npm install
+npm install --legacy-peer-deps   # required: pre-existing react/react-dom peer conflict
 npx expo start
 
 # Platform-specific

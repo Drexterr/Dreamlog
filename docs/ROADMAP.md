@@ -13,6 +13,7 @@
 | 7 | Longitudinal Intelligence | ✅ Complete |
 | 8 | Enhanced Therapy Mode | 🚧 In Progress |
 | - | UX Polish | ✅ Complete |
+| - | Store Launch Prep | 🚧 In Progress (see docs/LAUNCH_CHECKLIST.md) |
 
 ---
 
@@ -368,6 +369,36 @@ Incremental UX improvements shipped outside phase gates.
 ### Therapy - 402 Credit Redirect ✅
 - When `POST /therapy/sessions` returns 402 (no session credits), `app/therapy/persona-picker.tsx` now calls `router.replace('/therapy/pricing')` instead of showing an Alert
 - User lands directly on the pricing screen where they can purchase a session pack or upgrade to Pro
+
+---
+
+## Store Launch Prep 🚧
+Tracking doc: `docs/LAUNCH_CHECKLIST.md` (single source of truth for everything left before launch)
+
+One codebase ships to both stores via EAS — no separate iOS app. Shared `version` in
+`mobile/app.json`; per-platform build numbers auto-incremented remotely by EAS.
+
+### Shipped 2026-06-11
+- **Push notifications fixed end-to-end** (were silently dead on both platforms):
+  - Backend `services/fcm.go`: real OAuth token exchange via `golang.org/x/oauth2/google`
+    (was a stub that always errored) + unit tests
+  - Mobile: `@react-native-firebase/app` + `messaging` installed; `src/services/push.ts`
+    registers the FCM token on auth (`POST /devices`), handles Android 13 permission +
+    token rotation; fail-silent
+  - Requires a new native build (`eas build`) — push does not work in Expo Go or via OTA update
+- **Sign in with Apple** (App Store Guideline 4.8): native button on auth screen (iOS only),
+  via Supabase `signInWithIdToken`; `ios.usesAppleSignIn` set
+- **iOS build config**: `ITSAppUsesNonExemptEncryption=false`, static frameworks
+  (`expo-build-properties`), `eas.json` dev profile now points at Railway (not localhost)
+- **Makefile release targets**: `mobile-build-*-ios`, `mobile-submit-android/ios`,
+  `mobile-device-ios`, `mobile-versions`
+- **Demo/tester account** created in production Supabase (credentials in LAUNCH_CHECKLIST §2d)
+
+### Remaining (needs owner accounts — see LAUNCH_CHECKLIST §1, §2b, §2c)
+- Apple Developer enrollment → APNs key, `GoogleService-Info.plist` (iOS builds fail without it),
+  iOS OAuth client for Google Sign-In, Supabase Apple provider
+- IAP vs web-only purchase decision (biggest blocker, both stores)
+- Privacy policy, store listings, data-safety forms, Sentry/uptime monitoring, CI race-detector gate
 
 ---
 

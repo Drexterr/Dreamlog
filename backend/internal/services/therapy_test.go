@@ -101,6 +101,18 @@ func (r *fakeTherapyRepo) IncrementCrisisWarning(_ context.Context, id uuid.UUID
 	return s.CrisisWarnings, nil
 }
 
+func (r *fakeTherapyRepo) SetSessionAnalysis(_ context.Context, id uuid.UUID, a *models.TherapySessionAnalysis) error {
+	s, ok := r.sessions[id]
+	if !ok {
+		return errors.New("session not found")
+	}
+	s.SessionMoodScore = &a.MoodScore
+	s.SessionEmotionalTone = a.EmotionalTone
+	s.SessionTopics = a.Topics
+	s.SessionKeyInsights = a.KeyInsights
+	return nil
+}
+
 func (r *fakeTherapyRepo) SetPostSessionSummary(_ context.Context, id uuid.UUID, summary string) error {
 	s, ok := r.sessions[id]
 	if !ok {
@@ -174,7 +186,7 @@ func newStubTherapyService(repo *fakeTherapyRepo, crisisDetector *CrisisDetector
 	if crisisDetector == nil {
 		crisisDetector = NewCrisisDetector(nil)
 	}
-	return NewTherapyService(repo, &fakeTherapyAnalysisRepo{}, claude, transcription, &fakeTherapyStorage{}, crisisDetector, true)
+	return NewTherapyService(repo, &fakeTherapyAnalysisRepo{}, claude, transcription, &fakeTherapyStorage{}, crisisDetector, nil, true)
 }
 
 func claudeBlockingTherapyServer(t *testing.T) *httptest.Server {
@@ -430,7 +442,7 @@ func TestTherapy_AudioDeletedAfterTranscription(t *testing.T) {
 	transcription := NewTranscriptionService(&appconfig.OpenAIConfig{
 		BaseURL: "http://localhost:0", APIKey: "test",
 	})
-	svc := NewTherapyService(repo, &fakeTherapyAnalysisRepo{}, claude, transcription, storage, NewCrisisDetector(nil), true)
+	svc := NewTherapyService(repo, &fakeTherapyAnalysisRepo{}, claude, transcription, storage, NewCrisisDetector(nil), nil, true)
 
 	userID := uuid.New()
 	session := startSession(t, svc, userID)
@@ -457,7 +469,7 @@ func TestTherapy_PaymentRequired_NonStubbedMode(t *testing.T) {
 
 	claude := NewClaudeService(&appconfig.AnthropicConfig{StubAnalysis: true, Model: "stub"})
 	transcription := NewTranscriptionService(&appconfig.OpenAIConfig{BaseURL: "http://localhost:9999"})
-	svc := NewTherapyService(repo, &fakeTherapyAnalysisRepo{}, claude, transcription, &fakeTherapyStorage{}, NewCrisisDetector(nil), false)
+	svc := NewTherapyService(repo, &fakeTherapyAnalysisRepo{}, claude, transcription, &fakeTherapyStorage{}, NewCrisisDetector(nil), nil, false)
 
 	_, err := svc.StartSession(context.Background(), uuid.New(), models.PlanFree, models.PersonaComforting, "")
 	if err == nil {
@@ -579,7 +591,7 @@ func TestTherapy_LayeredCrisis_FailSafe_ClaudeUnreachableOnFirst(t *testing.T) {
 	claude := newClaudeWithServer(errSrv) // de-escalation call will also fail
 
 	transcription := NewTranscriptionService(&appconfig.OpenAIConfig{BaseURL: "http://localhost:9999"})
-	svc := NewTherapyService(repo, &fakeTherapyAnalysisRepo{}, claude, transcription, &fakeTherapyStorage{}, crisis, true)
+	svc := NewTherapyService(repo, &fakeTherapyAnalysisRepo{}, claude, transcription, &fakeTherapyStorage{}, crisis, nil, true)
 
 	userID := uuid.New()
 	session := startSession(t, svc, userID)
@@ -604,7 +616,7 @@ func TestTherapy_LayeredCrisis_FailSafe_TimeoutOnFirst(t *testing.T) {
 	crisis := NewCrisisDetector(newClaudeWithServer(blockSrv))
 	claude := newClaudeWithServer(blockSrv)
 	transcription := NewTranscriptionService(&appconfig.OpenAIConfig{BaseURL: "http://localhost:9999"})
-	svc := NewTherapyService(repo, &fakeTherapyAnalysisRepo{}, claude, transcription, &fakeTherapyStorage{}, crisis, true)
+	svc := NewTherapyService(repo, &fakeTherapyAnalysisRepo{}, claude, transcription, &fakeTherapyStorage{}, crisis, nil, true)
 
 	userID := uuid.New()
 	session := startSession(t, svc, userID)

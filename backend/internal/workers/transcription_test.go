@@ -377,6 +377,34 @@ func TestWorker_CrisisDetected_StoresCrisisAnalysis(t *testing.T) {
 	}
 }
 
+func TestWorker_CrisisScreenerError_FailsSafeAsCrisis(t *testing.T) {
+	entryID := uuid.New()
+	userID := uuid.New()
+	audioKey := "audio/test/screener-error.aac"
+
+	f := newWorkerFixture(entryID, userID, audioKey)
+	f.crisis.result = nil
+	f.crisis.err = errors.New("screener unavailable")
+
+	payload := makeJobPayload(t, entryID, userID, audioKey)
+	f.worker.processJob(context.Background(), payload)
+
+	// ADR-002: screener error must be treated as a crisis, never as normal.
+	if len(f.analysisStore.upserted) == 0 {
+		t.Fatal("entry must store an analysis record when screener errors")
+	}
+	stored := f.analysisStore.upserted[0]
+	if !stored.IsCrisis {
+		t.Error("screener error must fail safe with is_crisis=true")
+	}
+	if stored.Reflection == "" {
+		t.Error("fail-safe crisis entry must include a crisis resource response")
+	}
+	if f.nudge.calls > 0 {
+		t.Error("no nudge must be scheduled for a fail-safe crisis entry")
+	}
+}
+
 func TestWorker_CrisisDetected_AudioNotDeletedForAudit(t *testing.T) {
 	entryID := uuid.New()
 	userID := uuid.New()
