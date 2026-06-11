@@ -54,18 +54,21 @@ type PlanLimits struct {
 func GetPlanLimits(p Plan) *PlanLimits {
 	switch p {
 	case PlanPlus:
+		// Plus is the complete journal product - every journal feature, no therapy.
 		return &PlanLimits{
 			Plan: PlanPlus, MonthlyEntries: -1, MonthlyShares: PlusMonthlyShares,
-			HasPDFExport: false, HasWeeklyReview: true, HasMoodHistory: true,
+			HasPDFExport: true, HasWeeklyReview: true, HasMoodHistory: true,
 			HasHindi: true, HasAllModes: true, HasStreakFreeze: true, HasTherapistShare: true,
-			DisplayName: "DreamLog+", Price: "₹199/month · €6.99/month · $7.99/month",
+			DisplayName: "DreamLog+", Price: "₹249/month · €5.99/month · $5.99/month",
 		}
 	case PlanPro:
+		// Pro = everything in Plus + therapy (1 included session/month, member
+		// pricing on extras) + unlimited therapist sharing.
 		return &PlanLimits{
 			Plan: PlanPro, MonthlyEntries: -1, MonthlyShares: -1,
 			HasPDFExport: true, HasWeeklyReview: true, HasMoodHistory: true,
 			HasHindi: true, HasAllModes: true, HasStreakFreeze: true, HasTherapistShare: true,
-			DisplayName: "DreamLog Pro", Price: "₹499/month · €12.99/month · $14.99/month",
+			DisplayName: "DreamLog Pro", Price: "₹499/month · €9.99/month · $9.99/month",
 		}
 	case PlanB2B:
 		return &PlanLimits{
@@ -96,6 +99,7 @@ type User struct {
 	Goal                *string    `json:"goal,omitempty"`
 	AgeRange            *string    `json:"age_range,omitempty"`
 	Country             *string    `json:"country,omitempty"`
+	VoiceLanguage       string     `json:"voice_language"` // therapy TTS voice: auto | english | hindi
 	StreakFreezeCount   int        `json:"streak_freeze_count"`
 	Plan                Plan       `json:"plan"`
 	PlanExpiresAt       *time.Time `json:"plan_expires_at,omitempty"`
@@ -128,4 +132,5 @@ type UpdateUserInput struct {
 	Goal          *string `json:"goal" binding:"omitempty,oneof=stress anxiety grief depression trauma relationships career curious"`
 	AgeRange      *string `json:"age_range" binding:"omitempty,oneof=under_18 18_24 25_34 35_44 45_plus"`
 	Country       *string `json:"country" binding:"omitempty,min=2,max=2"`
+	VoiceLanguage *string `json:"voice_language" binding:"omitempty,oneof=auto english hindi"`
 }

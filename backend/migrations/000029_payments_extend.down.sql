@@ -1,0 +1,4 @@
+ALTER TABLE payments
+    DROP COLUMN IF EXISTS store,
+    DROP COLUMN IF EXISTS product_id,
+    DROP COLUMN IF EXISTS country;

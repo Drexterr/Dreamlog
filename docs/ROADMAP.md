@@ -11,7 +11,7 @@
 | 5 | Scale & B2B | ✅ Complete |
 | 6 | Therapy Mode | ✅ Complete |
 | 7 | Longitudinal Intelligence | ✅ Complete |
-| 8 | Enhanced Therapy Mode | 🚧 In Progress |
+| 8 | Enhanced Therapy Mode | ✅ Complete |
 | - | UX Polish | ✅ Complete |
 | - | Store Launch Prep | 🚧 In Progress (see docs/LAUNCH_CHECKLIST.md) |
 
@@ -197,9 +197,10 @@ Built:
 - Audio deleted after transcription per ADR-005
 - Mobile: `app/therapy/index.tsx`, `app/therapy/session.tsx`, `app/therapy/summary/[id].tsx`
 - All 6 therapy API functions in `src/api/client.ts`, all 11 therapy types in `src/types/index.ts`
-- Billing: first session free; Pro plan 2/month; ₹499/session otherwise (402 returned when no credits)
+- Billing: first session free; Pro plan 1/month included, extras at ₹299 member price; ₹499/session standalone (402 returned when no credits) - see docs/PRICING.md
 
-**All Phase 6 features shipped.** Voice input and OpenAI TTS voice output are fully implemented.
+**All Phase 6 features shipped.** Voice input and TTS voice output are fully implemented
+(Azure Speech since 2026-06-11, with OpenAI TTS as fallback - see Phase 8b voice table).
 
 ### Cost Per Session (text mode)
 | | |
@@ -248,64 +249,68 @@ Features built beyond the original roadmap phases:
 
 ---
 
-## Phase 8 - Enhanced Therapy Mode 🚧
-Migration: `000020_therapy_personas.up.sql`
+## Phase 8 - Enhanced Therapy Mode ✅
+Migrations: `000020_therapy_personas.up.sql`
 
-Upgrades the existing Therapy Mode (Phase 6) with personas, session memory, graceful wind-down, layered crisis handling, and an onboarding gate.
+Upgrades Therapy Mode (Phase 6) with four AI personas, session memory, graceful wind-down, and layered crisis handling.
 
-### Sub-steps
+### 8a - DB Schema + Models ✅
+- `persona TEXT NOT NULL DEFAULT 'comforting'` added to `therapy_sessions` (migration 000020)
+- `crisis_warnings INT NOT NULL DEFAULT 0` added to `therapy_sessions` (migration 000020)
+- `TherapyContextSnapshot` carries `PastSessionSummaries []string` (last 3 post-session summaries, fetched at session start)
+- `TherapySession` model + repo interface updated with all new fields
 
-#### 8a - DB Schema + Models 🔲
-- Add `persona TEXT NOT NULL DEFAULT 'comforting'` to `therapy_sessions`
-- Add `crisis_warnings INT NOT NULL DEFAULT 0` to `therapy_sessions`
-- Update `TherapyContextSnapshot` to carry `past_session_summaries []string` (last 3 post-session summaries, fetched at session start - no new column, sourced from existing `post_session_summary` rows)
-- Update `TherapySession` model + repo interface with new fields
+### 8b - Therapist Personas ✅
+Four personas, each with a distinct system prompt and mapped TTS voice.
+Azure Speech voices (empathetic SSML styles; Hindi voices for Hindi turns);
+OpenAI voices remain as fallback when `AZURE_TTS_KEY` is unset:
 
-#### 8b - Therapist Personas 🔲
-Four personas, each with a distinct system prompt and mapped TTS voice:
+| Persona | Character | Azure voice (EN) · style | Azure voice (HI) | OpenAI fallback |
+|---|---|---|---|---|
+| `comforting` | Warm, validating, gentle - focuses on feelings first | `en-US-JennyNeural` · empathetic | `hi-IN-SwaraNeural` | `nova` |
+| `rational` | Logical, structured, Socratic - facts before feelings | `en-US-BrandonNeural` · calm | `hi-IN-MadhurNeural` | `onyx` |
+| `cbt` | CBT-informed - identifies thought patterns, challenges distortions | `en-US-AriaNeural` · chat | `hi-IN-SwaraNeural` | `alloy` |
+| `mindful` | Grounding, present-moment, breath-aware | `en-US-SaraNeural` · gentle | `hi-IN-SwaraNeural` | `shimmer` |
 
-| Persona | Character | TTS Voice |
+`AZURE_TTS_USE_HD=true` switches to per-persona DragonHD multilingual voices (EN+HI+Hinglish in one voice, emotion auto-detected):
+
+| Persona | DragonHD voice (EN) | DragonHD voice (Indian/Hindi) |
 |---|---|---|
-| `comforting` | Warm, validating, gentle - focuses on feelings first | `nova` |
-| `rational` | Logical, structured, Socratic - facts before feelings | `onyx` |
-| `cbt` | CBT-informed - identifies thought patterns, challenges distortions | `alloy` |
-| `mindful` | Grounding, present-moment, breath-aware | `shimmer` |
+| `comforting` | `en-US-Jenny:DragonHDLatestNeural` | `en-IN-Diya:DragonHDLatestNeural` |
+| `rational` | `en-US-Andrew2:DragonHDLatestNeural` | `en-IN-Arjun:DragonHDLatestNeural` |
+| `cbt` | `en-US-Aria:DragonHDLatestNeural` | `en-IN-Diya:DragonHDLatestNeural` |
+| `mindful` | `en-US-Serena:DragonHDLatestNeural` | `en-IN-Diya:DragonHDLatestNeural` |
 
-- Four new `buildTherapyPersonaSystemPrompt_*(ctx, timeRemainingSec)` functions in `prompts.go`
+`AZURE_TTS_VOICE_OVERRIDE` forces a single voice for all personas/languages and wins over `USE_HD`.
+
+**Voice language preference:** `users.voice_language` (migration 000027, `auto | english | hindi`),
+exposed on GET/PUT `/me`, picker in mobile Settings → Therapy. Snapshotted into
+`TherapyContextSnapshot.voice_language` at session start.
+
+- `buildPersonaBlock()` dispatches to 4 persona-specific blocks in `prompts.go`
 - `POST /therapy/sessions` accepts `persona` field (defaults to `comforting`)
 - Persona stored in `therapy_sessions.persona`; used on every turn
 
-#### 8c - Session Continuity 🔲
-- At session start, fetch last 3 completed session `post_session_summary` values for the user
-- Inject into `TherapyContextSnapshot.PastSessionSummaries`
-- System prompt includes a "Memory from past sessions" section so the AI can reference prior work naturally
-- This is what makes the AI feel like it actually remembers you
+### 8c - Session Continuity ✅
+- At session start, last 3 completed session `post_session_summary` values fetched via `PastCompletedSummaries`
+- Injected into `TherapyContextSnapshot.PastSessionSummaries` (frozen at session start — ADR-016)
+- System prompt includes a `MEMORY FROM PAST SESSIONS` block when summaries are present
+- Snapshot is read-only for the duration of the session; live journal changes don't affect it
 
-#### 8d - Graceful Wind-Down 🔲
-- `time_remaining_sec` injected into the system prompt on every `SendMessage` call
-- When `time_remaining_sec < 600` (10 min): prompt instructs Claude to start bringing the conversation to a natural close
-- When `time_remaining_sec < 120` (2 min): prompt instructs Claude to wrap up in this turn
-- Mobile timer already exists; server now drives the wind-down tone
+### 8d - Graceful Wind-Down ✅
+- `buildWindDownInstruction(timeRemainingSec)` returns time-aware instruction injected into every `SendMessage` call
+- When `timeRemainingSec < 600` (10 min): prompt instructs Claude to begin natural close
+- When `timeRemainingSec < 120` (2 min): prompt instructs Claude to wrap up in this turn
+- `time_remaining_sec` returned in every `session_state` response
 
-#### 8e - Layered Crisis Handling 🔲
-Current behaviour: crisis detected → immediate hard stop, crisis resources shown.
+### 8e - Layered Crisis Handling ✅
+Two-stage behaviour per ADR-014:
+1. **Stage 1 (first detection, `crisis_warnings = 0`):** `handleCrisis()` calls `buildDeEscalationPrompt()` → Claude sends grounding response; session stays active; `crisis_warnings` incremented to 1. If Claude unreachable during de-escalation → hard-stop immediately (fail-safe).
+2. **Stage 2 (`crisis_warnings >= 1` or Claude unreachable on Stage 1):** `hardStopCrisis()` sets `status = crisis_detected`, returns crisis helplines, closes session permanently.
 
-New two-stage behaviour:
-1. **Stage 1 (first detection):** AI sends a grounding de-escalation response (breathing, safety check, validation); session stays active; `crisis_warnings` incremented to 1
-2. **Stage 2 (second detection, or if user explicitly confirms intent):** session hard-stopped, status = `crisis_detected`; response includes crisis helplines + "I'm not able to help further - please reach out to a professional" message
-
-- If the de-escalation response itself contains another crisis signal → immediately escalate to Stage 2
-- `crisis_warnings` column tracks attempts per session
-
-#### 8f - Onboarding Gate: Journal vs Therapy 🔲
-- After goal selection in onboarding, add a screen: "How would you like to begin?" with two cards: Journal and Start a Therapy Session
-- "Journal" → existing record flow
-- "Start a Therapy Session" → persona picker → POST /therapy/sessions
-
-**All Phase 8 features shipped.** Voice input and TTS audio playback fully implemented.
-- Each person tracked with role (family/friend/colleague/romantic/other), mention count, positive/negative sentiment counts
-- `GET /relationships` - full map of all people mentioned; `GET /relationships/:id` - person + recent mention context
-- Claude extracts people during the worker pipeline (in `workers/transcription.go` after analysis)
+### 8f - Onboarding Gate: Journal vs Therapy ✅
+- Step 4 of onboarding: "How would you like to begin?" screen with Journal and Therapy cards
+- Journal → existing record flow; Therapy → persona picker → POST /therapy/sessions
 
 ---
 
@@ -402,22 +407,25 @@ One codebase ships to both stores via EAS — no separate iOS app. Shared `versi
 
 ---
 
-## Monetization Tiers (Target)
+## Monetization Tiers
+
+Canonical pricing, unit economics, and decisions log: **docs/PRICING.md** (finalized 2026-06-11).
 
 ```
 Free
   10 entries/month | basic reflection | 7-day mood chart | 3-turn follow-up
 
-DreamLog+ - ₹199/month India | $7.99/month Global
-  Unlimited entries | Hindi support | Life Graph | Weekly Review
-  All prompt modes | Streak freeze | Therapist share (5/month)
+DreamLog+ (the complete journal) - ₹249/month India | $5.99/month Global
+  Unlimited entries | Hindi support | Life Graph | Weekly + Annual Reviews
+  All prompt modes | PDF export | Apple Health sync
+  Streak freeze | Therapist share (5/month)
 
-DreamLog Pro - ₹499/month India | $14.99/month Global
-  Everything in Plus | PDF export | Apple Health sync
+DreamLog Pro (journal + therapy) - ₹499/month India | $9.99/month Global
+  Everything in Plus | 1 Therapy Session included/month
+  Extra sessions at member price (₹299 / $4.99)
   Unlimited therapist share | Priority processing
-  2 Therapy Sessions/month
 
-Therapy Session - ₹499/session (pay-per-use)
+Therapy Session - ₹499 / $7.99 standalone (pay-per-use, any plan)
   Journal-context-aware AI conversation | Up to 1 hour
   Voice or text input | Optional AI voice output
   Post-session summary | Crisis detection active

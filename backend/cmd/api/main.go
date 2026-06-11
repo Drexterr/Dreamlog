@@ -105,6 +105,7 @@ func main() {
 	relationshipRepo := repositories.NewRelationshipRepository(db)
 	therapyRepo := repositories.NewTherapyRepository(db)
 	paymentRepo := repositories.NewPaymentRepository(db)
+	analyticsRepo := repositories.NewAnalyticsRepository(db)
 
 	// ── Services ──────────────────────────────────────────────────────────────
 	jobQueue := queue.New(rdb, cfg.Worker.QueueKey, cfg.Worker.DLQKey, cfg.Worker.PollTimeout)
@@ -116,7 +117,8 @@ func main() {
 	convSvc := services.NewConversationService(convRepo, entryRepo, analysisRepo, claudeSvc)
 	subscriptionSvc := services.NewSubscriptionService(userRepo, shareRepo)
 	transcriptionSvc := services.NewTranscriptionService(&cfg.OpenAI)
-	ttsSvc := services.NewTTSService(&cfg.OpenAI, storageClient)
+	analyticsSvc := services.NewAnalyticsService(analyticsRepo)
+	ttsSvc := services.NewTTSService(&cfg.OpenAI, &cfg.AzureTTS, storageClient)
 	crisisDetector := services.NewCrisisDetector(claudeSvc)
 	therapySvc := services.NewTherapyService(
 		therapyRepo, analysisRepo, claudeSvc, transcriptionSvc, storageSvc,
@@ -146,10 +148,15 @@ func main() {
 		LifeChapterRepo:  lifeChapterRepo,
 		RelationshipRepo: relationshipRepo,
 		PaymentRepo:      paymentRepo,
+		AnalyticsRepo:    analyticsRepo,
+		AnalyticsSvc:     analyticsSvc,
 		ClaudeSvc:        claudeSvc,
 		JWTSecret:            cfg.Supabase.JWTSecret,
 		SupabaseJWKSURL:      supabaseJWKSURL(cfg.Supabase.URL),
 		AppBaseURL:           cfg.App.BaseURL,
+		MinimumAppVersion:    cfg.App.MinimumAppVersion,
+		AndroidStoreURL:      cfg.App.AndroidStoreURL,
+		IOSStoreURL:          cfg.App.IOSStoreURL,
 		StripeSecretKey:      cfg.Stripe.SecretKey,
 		StripePublishableKey: cfg.Stripe.PublishableKey,
 		StorageProxyBaseURL:  cfg.Storage.ProxyBaseURL,

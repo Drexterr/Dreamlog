@@ -145,4 +145,5 @@ All config is injected via environment variables (see `.env.example`). Key vars:
 | `ANTHROPIC_API_KEY` | Claude API (blank = stubbed in dev) |
 | `STORAGE_ENDPOINT` | MinIO (dev) or R2 endpoint |
 | `WHISPER_API_URL` | Local Whisper server or OpenAI API URL |
+| `AZURE_TTS_KEY` / `AZURE_TTS_REGION` | Azure Speech TTS for therapy voice (blank = OpenAI fallback or skipped in dev) |
 | `EXPO_PUBLIC_API_URL` | Backend URL consumed by mobile |

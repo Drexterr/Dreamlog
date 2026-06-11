@@ -159,7 +159,15 @@ Password: DreamTest!2026
 Backend on Railway (`https://dreamlog-production-f9e2.up.railway.app`):
 
 - [ ] `STUB_AI_ANALYSIS=false` and real `ANTHROPIC_API_KEY` set (reflections are canned stubs otherwise).
-- [ ] `OPENAI_API_KEY` + `WHISPER_API_URL` pointing at the real Whisper API (and TTS for therapy voice).
+- [ ] `OPENAI_API_KEY` + `WHISPER_API_URL` pointing at the real Whisper API.
+- [ ] `AZURE_TTS_KEY` + `AZURE_TTS_REGION` set for therapy voice output (Azure Speech:
+      empathetic SSML styles for English personas + Hindi voices for Hindi turns). Optional
+      `AZURE_TTS_USE_HD=true` upgrades to per-persona DragonHD multilingual voices
+      (EN+HI+Hinglish in one voice, emotion auto-detected; ~$22/1M chars vs ~$15 — verify the
+      chosen region serves HD voices, e.g. Central India since 2026-03). Optional
+      `AZURE_TTS_VOICE_OVERRIDE` forces one voice for all personas (e.g.
+      `en-IN-Aarti:DragonHDLatestNeural`) and wins over `USE_HD`. When Azure is unset, TTS
+      falls back to OpenAI.
 - [ ] `FCM_CREDENTIALS_JSON` + `FCM_PROJECT_ID` set so morning nudges and weekly-review pushes
       actually send (token exchange + client registration fixed 2026-06-11, see section 2c).
 - [ ] `CORS_ALLOWED_ORIGINS` includes the therapist-portal production origin (defaults to localhost otherwise).

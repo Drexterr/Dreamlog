@@ -21,7 +21,7 @@ func NewUserRepository(db *pgxpool.Pool) *UserRepository {
 	return &UserRepository{db: db}
 }
 
-const userColumns = `id, supabase_id, email, name, timezone, fcm_nudge_hour, nudge_enabled, goal, preferred_name, streak_freeze_count, plan, plan_expires_at, age_range, country, is_deleted, deleted_at, first_joined_at, reregistered_at, reregistration_count, created_at, updated_at`
+const userColumns = `id, supabase_id, email, name, timezone, fcm_nudge_hour, nudge_enabled, goal, preferred_name, streak_freeze_count, plan, plan_expires_at, age_range, country, voice_language, is_deleted, deleted_at, first_joined_at, reregistered_at, reregistration_count, created_at, updated_at`
 
 // rowScanner is satisfied by both pgx.Row and pgx.Rows - avoids a direct pgx type in the signature.
 type rowScanner interface {
@@ -36,7 +36,7 @@ func scanUser(row rowScanner) (*models.User, error) {
 		&u.Goal, &u.PreferredName,
 		&u.StreakFreezeCount,
 		&u.Plan, &u.PlanExpiresAt,
-		&u.AgeRange, &u.Country,
+		&u.AgeRange, &u.Country, &u.VoiceLanguage,
 		&u.IsDeleted, &u.DeletedAt, &u.FirstJoinedAt, &u.ReregisteredAt, &u.ReregistrationCount,
 		&u.CreatedAt, &u.UpdatedAt,
 	)
@@ -56,6 +56,7 @@ type ProfileUpdate struct {
 	Goal          *string
 	AgeRange      *string
 	Country       *string
+	VoiceLanguage *string
 }
 
 // UpdateProfile applies whichever fields are non-nil in a single UPDATE.
@@ -102,6 +103,11 @@ func (r *UserRepository) UpdateProfile(ctx context.Context, id uuid.UUID, p Prof
 	if p.Country != nil {
 		setClauses = append(setClauses, fmt.Sprintf("country = $%d", idx))
 		args = append(args, *p.Country)
+		idx++
+	}
+	if p.VoiceLanguage != nil {
+		setClauses = append(setClauses, fmt.Sprintf("voice_language = $%d", idx))
+		args = append(args, *p.VoiceLanguage)
 		idx++
 	}
 

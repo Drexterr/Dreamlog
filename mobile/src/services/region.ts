@@ -43,12 +43,19 @@ export async function getCachedRegion(): Promise<RegionCurrency | null> {
 }
 
 // Pricing helpers - use these everywhere instead of hardcoding ₹ strings.
+// Canonical prices live in docs/PRICING.md - keep in sync.
 export const THERAPY_SESSION_PRICE: Record<RegionCurrency, string> = {
   inr: '₹499',
+  usd: '$7.99',
+};
+
+// Discounted extra-session price for Pro members (beyond the included session).
+export const THERAPY_MEMBER_SESSION_PRICE: Record<RegionCurrency, string> = {
+  inr: '₹299',
   usd: '$4.99',
 };
 
 export const PLAN_PRICE: Record<'plus' | 'pro', Record<RegionCurrency, string>> = {
-  plus: { inr: '₹199 / month', usd: '$7.99 / month' },
-  pro:  { inr: '₹499 / month', usd: '$14.99 / month' },
+  plus: { inr: '₹249 / month', usd: '$5.99 / month' },
+  pro:  { inr: '₹499 / month', usd: '$9.99 / month' },
 };

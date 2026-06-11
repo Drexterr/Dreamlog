@@ -69,6 +69,9 @@ export type AgeRange = 'under_18' | '18_24' | '25_34' | '35_44' | '45_plus';
 
 export type Plan = 'free' | 'plus' | 'pro' | 'b2b';
 
+// Therapy TTS voice language. 'auto' follows the language the user speaks each turn.
+export type VoiceLanguage = 'auto' | 'english' | 'hindi';
+
 export interface User {
   id: string;
   supabase_id: string;
@@ -81,6 +84,7 @@ export interface User {
   goal?: UserGoal;
   age_range?: AgeRange;
   country?: string;            // ISO 3166-1 alpha-2 (e.g. "IN", "US", "DE")
+  voice_language: VoiceLanguage;
   streak_freeze_count: number;
   plan: Plan;
   plan_expires_at?: string;    // RFC3339, null if no expiry
@@ -439,4 +443,10 @@ export interface CreatePaymentIntentResponse {
   amount: number;
   currency: string;
   publishable_key: string;
+}
+
+export interface VersionInfo {
+  minimum_version: string;
+  android_store_url: string;
+  ios_store_url: string;
 }

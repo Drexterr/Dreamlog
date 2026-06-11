@@ -1,7 +1,7 @@
 # DreamLog API Contract
 
 **Base URL (dev):** `http://localhost:8080`
-**Auth:** All endpoints except `/health`, `/auth/register`, `/auth/login` require `Authorization: Bearer <jwt>`
+**Auth:** All endpoints except `/health`, `/version`, `/auth/register`, `/auth/login` require `Authorization: Bearer <jwt>`
 
 Claude: Read this file before touching any handler in `backend/internal/handlers/`. The request/response shapes here are the contract the mobile app is built against - do not change field names or types without updating both sides.
 
@@ -15,6 +15,22 @@ No auth required.
 Response `200`:
 ```json
 { "status": "ok" }
+```
+
+### GET /version
+No auth required. Force-update gate: the mobile app calls this on every cold start and
+compares its installed version (from `app.json`) against `minimum_version`. If the
+installed version is lower, the app shows a blocking screen with an "Update Now" button
+that opens the store listing. The check is fail-open on the client - if this endpoint is
+unreachable, the app launches normally.
+
+Response `200`:
+```json
+{
+  "minimum_version": "1.0.0",      // env MINIMUM_APP_VERSION; semver-style "x.y.z"
+  "android_store_url": "string",   // env ANDROID_STORE_URL; Play Store listing
+  "ios_store_url": "string"        // env IOS_STORE_URL; "" until the app is on the App Store
+}
 ```
 
 ---
@@ -87,7 +103,7 @@ Creates a Stripe PaymentIntent for a plan upgrade. The mobile uses the returned 
 // Response 200
 {
   "client_secret":   "pi_..._secret_...",  // passed to Stripe SDK initPaymentSheet
-  "amount":          19900,                // amount in smallest unit (paise / cents)
+  "amount":          24900,                // amount in smallest unit (paise / cents)
   "currency":        "inr",
   "publishable_key": "pk_live_..."
 }
@@ -96,11 +112,11 @@ Creates a Stripe PaymentIntent for a plan upgrade. The mobile uses the returned 
 400 - invalid plan (must be plus or pro) or invalid currency
 ```
 
-**Amounts:**
+**Amounts** (canonical prices in `docs/PRICING.md`):
 | Plan | INR | USD |
 |---|---|---|
-| plus | 19900 paise (₹199) | 799 cents ($7.99) |
-| pro  | 49900 paise (₹499) | 1499 cents ($14.99) |
+| plus | 24900 paise (₹249) | 599 cents ($5.99) |
+| pro  | 49900 paise (₹499) | 999 cents ($9.99) |
 
 ### POST /billing/upgrade
 Called after Stripe payment succeeds. The backend **verifies the payment with
@@ -141,7 +157,7 @@ is in the past is treated as `free` everywhere (including `GET /billing/plan`).
 - `GET /mood/history` - requires `plus` or higher; returns `403` otherwise
 - `GET /reviews/weekly` and `GET /reviews/weekly/latest` - requires `plus` or higher
 - `POST /share` - requires `plus` (5/month) or `pro`/`b2b` (unlimited); `free` gets `403`
-- `GET /export/pdf` - requires `pro` or higher
+- `GET /export/pdf` - requires `plus` or higher (Plus is the complete journal product)
 - `POST /entries` - `free` plan capped at 10 entries/month (returns `409` at limit)
 
 ---
@@ -162,6 +178,7 @@ Response `200`:
   "fcm_nudge_hour": 8,                // 0-23, local hour for morning nudge
   "goal": "stress | anxiety | grief | depression | trauma | relationships | career | curious | null",
   "age_range": "under_18 | 18_24 | 25_34 | 35_44 | 45_plus | null",
+  "voice_language": "auto | english | hindi",  // therapy TTS voice; auto = follow detected speech language
   "created_at": "RFC3339"
 }
 ```
@@ -175,7 +192,8 @@ Response `200`:
   "timezone": "string",
   "fcm_nudge_hour": 8,
   "goal": "stress | anxiety | grief | depression | trauma | relationships | career | curious",
-  "age_range": "under_18 | 18_24 | 25_34 | 35_44 | 45_plus"
+  "age_range": "under_18 | 18_24 | 25_34 | 35_44 | 45_plus",
+  "voice_language": "auto | english | hindi"   // 400 on any other value
 }
 
 // Response 200 - same shape as GET /me
@@ -965,7 +983,7 @@ Register or update FCM token. Upserts on `fcm_token`.
 
 Real-time AI-assisted voice/text conversation sessions. Sessions are standalone - not tied to a journal entry. Crisis detection runs on every user message.
 
-**Billing:** ₹499/session charged at session start, or included in Pro plan (2 sessions/month). `402` returned if no sessions remaining and no session credits.
+**Billing:** first session ever is free. Pro plan includes 1 session/month; beyond that Pro members pay the member price (₹299/session) and everyone else pays the standalone price (₹499/session), charged at session start. `402` returned if no sessions remaining and no session credits.
 
 ### POST /therapy/sessions
 Start a new therapy session. Loads the user's journal context (last 30d mood avg, top emotions, top topics, last 5 entry summaries, last 3 past session summaries) and snapshots it for the session.

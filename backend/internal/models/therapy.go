@@ -17,11 +17,15 @@ const (
 	// TherapySessionDuration is the server-enforced hard cap per session.
 	TherapySessionDuration = 60 * time.Minute
 
-	// TherapySessionPricePaise is the pay-per-use price in Indian paise (₹499).
+	// TherapySessionPricePaise is the standalone pay-per-use price in Indian paise (₹499).
 	TherapySessionPricePaise = 49900
 
+	// TherapyMemberSessionPricePaise is the discounted extra-session price for Pro
+	// members who have used their included monthly session (₹299).
+	TherapyMemberSessionPricePaise = 29900
+
 	// TherapyProMonthlyAllowance is the number of sessions included in the Pro plan per month.
-	TherapyProMonthlyAllowance = 2
+	TherapyProMonthlyAllowance = 1
 )
 
 // TherapyPersona defines the AI's conversational style for a session.
@@ -51,6 +55,7 @@ type TherapyContextSnapshot struct {
 	RecentSummaries      []string `json:"recent_summaries"`        // last 5 entry summaries, oldest first
 	PastSessionSummaries []string `json:"past_session_summaries"`  // last 3 completed session summaries, oldest first
 	Country              string   `json:"country"`                 // user's country at session start (ISO 3166-1 alpha-2)
+	VoiceLanguage        string   `json:"voice_language,omitempty"` // user's TTS preference at session start: auto | english | hindi
 }
 
 // TherapySessionAnalysis is the structured output Claude generates at session end.

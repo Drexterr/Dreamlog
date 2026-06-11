@@ -2,15 +2,15 @@
 
 ## Current State (updated 2026-06-11)
 
-**600+ unit/integration tests exist** covering Priorities 1–9 below. Coverage by package:
+**600+ unit/integration tests exist** covering Priorities 1–10 below. Coverage by package:
 
 | Package | Coverage | Notes |
 |---|---|---|
 | `internal/models` | 100% | pure logic |
 | `internal/middleware` | ~87% | incl. JWKS/ES256 path; uncovered = live-network branches |
-| `internal/handlers` | ~77% | all routes incl. billing verification, therapy, exports |
+| `internal/handlers` | ~77% | all routes incl. billing verification, therapy handler (Phase 6 + 8), exports |
 | `internal/workers` | ~78% | full pipeline; uncovered = long-running `Run()` scheduler loops |
-| `internal/services` | ~70% | crisis.go ~100% (CI gate ≥90% ✅); uncovered = thin pgx-backed wrappers + external clients (TTS; FCM credential/OAuth handling unit-tested in `fcm_test.go` since 2026-06-11, live send still external) |
+| `internal/services` | ~72% | crisis.go ~100% (CI gate ≥90% ✅); therapy_test.go covers all Phase 8/9 cases (layered crisis, personas, session continuity, wind-down); analytics_test.go covers analytics service; tts_test.go + fcm_test.go cover external client paths via httptest |
 | `pkg/apierr` | 100% | pure logic |
 | `internal/repositories`, `pkg/queue`, `pkg/storage` | 0% | need real Postgres/Redis/MinIO — integration tier, see Test Database below |
 | `cmd/*`, `internal/config` | 0% | process entry points; exercised by `make dev` smoke run |
@@ -250,7 +250,7 @@ TestTherapy_HistorySentEachTurn                // full message history sent to C
 ```go
 TestTherapy_BillingDeducted_OnStart            // session creation deducts therapy_sessions_remaining or charges
 TestTherapy_NoBillingCredit_Returns402         // no credits + not Pro → 402, no session created
-TestTherapy_ProPlan_AllowsTwoSessions          // Pro user gets 2 free sessions/month
+TestTherapy_ProPlan_IncludedSession            // Pro user gets 1 free session/month; extras at member price (₹299)
 ```
 
 ### Mock Interfaces for Therapy Tests

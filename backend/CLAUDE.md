@@ -125,6 +125,10 @@ JWT_SECRET          Supabase JWT secret (shared with mobile)
 ANTHROPIC_API_KEY   Leave blank in dev; set for real Claude calls
 STUB_AI_ANALYSIS    true in dev (returns canned response), false in prod
 WHISPER_API_URL     Local whisper server or OpenAI endpoint
+AZURE_TTS_KEY       Azure Speech key for therapy voice output (blank = OpenAI TTS fallback, or skipped)
+AZURE_TTS_REGION    Azure Speech region, e.g. centralindia
+AZURE_TTS_USE_HD    true = per-persona DragonHD multilingual voices (EN+HI+Hinglish in one voice, emotion auto-detected)
+AZURE_TTS_VOICE_OVERRIDE  Optional: force one voice for all personas (e.g. en-IN-Aarti:DragonHDLatestNeural); wins over USE_HD
 STORAGE_ENDPOINT    MinIO (dev) or R2 endpoint
 FCM_CREDENTIALS_JSON  Firebase service-account JSON content (blank in dev = push skipped silently)
 FCM_PROJECT_ID        Firebase project ID (needed on API and worker - nudges send from the worker)

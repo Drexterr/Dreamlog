@@ -19,7 +19,7 @@ import { useRouter } from 'expo-router';
 import { clearToken, api } from '../../src/api/client';
 import { supabase } from '../../src/lib/supabase';
 import { useTheme } from '../../src/context/ThemeContext';
-import type { AgeRange, Plan, User, UserGoal } from '../../src/types';
+import type { AgeRange, Plan, User, UserGoal, VoiceLanguage } from '../../src/types';
 
 const GOAL_META: Record<UserGoal, { label: string; emoji: string }> = {
   anxiety:       { label: 'Working through anxiety',     emoji: '🌱' },
@@ -52,6 +52,18 @@ const AGE_RANGE_LABELS: Record<AgeRange, string> = {
   '25_34':  '25 – 34',
   '35_44':  '35 – 44',
   '45_plus': '45 or older',
+};
+
+const VOICE_LANGUAGES: { key: VoiceLanguage; label: string; description: string }[] = [
+  { key: 'auto',    label: 'Auto-detect',    description: 'Match the language you speak each turn' },
+  { key: 'english', label: 'English',        description: 'Always reply with an English voice' },
+  { key: 'hindi',   label: 'हिंदी (Hindi)',  description: 'Always reply with a Hindi voice' },
+];
+
+const VOICE_LANGUAGE_LABELS: Record<VoiceLanguage, string> = {
+  auto: 'Auto',
+  english: 'English',
+  hindi: 'हिंदी',
 };
 
 const CRISIS_HOTLINES = [
@@ -133,6 +145,9 @@ export default function SettingsScreen() {
   const [planExpiresAt, setPlanExpiresAt] = useState<string | null>(null);
   const [nudgeEnabled, setNudgeEnabled] = useState(true);
   const [nudgeHour, setNudgeHour] = useState(8);
+  const [voiceLanguage, setVoiceLanguage] = useState<VoiceLanguage>('auto');
+  const [savingVoiceLang, setSavingVoiceLang] = useState(false);
+  const [showVoiceLangPicker, setShowVoiceLangPicker] = useState(false);
   const [showHourPicker, setShowHourPicker] = useState(false);
   const [showCrisisModal, setShowCrisisModal] = useState(false);
   const [showProfileModal, setShowProfileModal] = useState(false);
@@ -147,6 +162,7 @@ export default function SettingsScreen() {
         setUser(u);
         setNudgeEnabled(u.nudge_enabled ?? true);
         setNudgeHour(u.fcm_nudge_hour ?? 8);
+        setVoiceLanguage(u.voice_language ?? 'auto');
       })
       .catch(() => setLoadError(true));
     api.getBillingPlan()
@@ -185,6 +201,22 @@ export default function SettingsScreen() {
       Alert.alert('Could not save', 'Please try again.');
     } finally {
       setSavingHour(false);
+    }
+  };
+
+  const handleSelectVoiceLanguage = async (lang: VoiceLanguage) => {
+    setShowVoiceLangPicker(false);
+    if (lang === voiceLanguage) return;
+    setSavingVoiceLang(true);
+    const prev = voiceLanguage;
+    setVoiceLanguage(lang);
+    try {
+      await api.updateMe({ voice_language: lang });
+    } catch {
+      setVoiceLanguage(prev);
+      Alert.alert('Could not save', 'Please try again.');
+    } finally {
+      setSavingVoiceLang(false);
     }
   };
 
@@ -394,6 +426,22 @@ export default function SettingsScreen() {
             )}
           </View>
 
+          {/* Therapy */}
+          <Text style={[styles.sectionLabel, { color: colors.textSecondary }]}>THERAPY</Text>
+          <View style={[styles.section, { backgroundColor: colors.card, borderColor: colors.borderFaint }]}>
+            <SettingRow
+              label="Voice language"
+              sub="The language of the AI voice in therapy sessions"
+              colors={colors}
+              onPress={() => setShowVoiceLangPicker(true)}
+              right={
+                <Text style={[styles.valueText, { color: savingVoiceLang ? colors.textMuted : colors.purple300 }]}>
+                  {VOICE_LANGUAGE_LABELS[voiceLanguage]}
+                </Text>
+              }
+            />
+          </View>
+
           {/* Privacy */}
           <Text style={[styles.sectionLabel, { color: colors.textSecondary }]}>PRIVACY</Text>
           <View style={[styles.section, { backgroundColor: colors.card, borderColor: colors.borderFaint }]}>
@@ -481,6 +529,57 @@ export default function SettingsScreen() {
                 );
               }}
             />
+          </View>
+        </BlurView>
+      </Modal>
+
+      {/* Voice language picker modal */}
+      <Modal
+        visible={showVoiceLangPicker}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setShowVoiceLangPicker(false)}
+      >
+        <BlurView intensity={55} tint="dark" style={styles.modalOverlay}>
+          <TouchableOpacity
+            style={styles.modalDismiss}
+            activeOpacity={1}
+            onPress={() => setShowVoiceLangPicker(false)}
+          />
+          <View
+            style={[styles.modalSheet, { backgroundColor: colors.cardSolid, borderColor: colors.border }]}
+            onStartShouldSetResponder={() => true}
+          >
+            <View style={[styles.modalHandle, { backgroundColor: colors.border }]} />
+            <Text style={[styles.modalTitle, { color: colors.textPrimary }]}>Voice Language</Text>
+            <Text style={[styles.modalSub, { color: colors.textMuted }]}>
+              Choose the language of the AI voice in therapy sessions.
+            </Text>
+            {VOICE_LANGUAGES.map((opt) => {
+              const isSelected = opt.key === voiceLanguage;
+              return (
+                <TouchableOpacity
+                  key={opt.key}
+                  style={[
+                    styles.hourRow,
+                    { borderBottomColor: colors.borderFaint },
+                    isSelected && { backgroundColor: colors.brandGlow },
+                  ]}
+                  onPress={() => handleSelectVoiceLanguage(opt.key)}
+                  activeOpacity={0.7}
+                >
+                  <View style={{ flex: 1 }}>
+                    <Text style={[styles.hourLabel, { color: isSelected ? colors.purple300 : colors.textPrimary }]}>
+                      {opt.label}
+                    </Text>
+                    <Text style={[styles.settingSub, { color: colors.textMuted }]}>{opt.description}</Text>
+                  </View>
+                  {isSelected && (
+                    <Text style={[styles.hourCheck, { color: colors.brand }]}>✓</Text>
+                  )}
+                </TouchableOpacity>
+              );
+            })}
           </View>
         </BlurView>
       </Modal>

@@ -131,11 +131,15 @@ DreamLog offers the following subscription tiers:
 | Plan | India | Global |
 |---|---|---|
 | Free | ₹0 | $0 |
-| DreamLog+ | ₹199/month | $7.99/month |
-| DreamLog Pro | ₹499/month | $14.99/month |
+| DreamLog+ | ₹249/month | $5.99/month |
+| DreamLog Pro | ₹499/month | $9.99/month |
 | B2B Wellness | ₹199/employee/month | Contact us |
 
 The Free plan is limited to 10 journal entries per month.
+
+Therapy Sessions may also be purchased individually: ₹499 / $7.99 per session
+(₹299 / $4.99 per extra session for DreamLog Pro subscribers beyond the one
+session included in their plan).
 
 ### 7.2 Auto-Renewal
 

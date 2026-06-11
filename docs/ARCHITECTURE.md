@@ -84,7 +84,7 @@ internal/handlers/weekly_reviews.go # /reviews/weekly
 internal/handlers/year_in_review.go # /reviews/annual (Plus+ only)
 internal/handlers/insight.go        # /insights/card, /insights/share
 internal/handlers/share.go          # /share CRUD + public view
-internal/handlers/export.go         # /export/pdf (Pro+ only)
+internal/handlers/export.go         # /export/pdf (Plus+ only)
 internal/handlers/b2b.go            # /b2b/companies
 internal/handlers/therapist.go      # /therapists dashboard API
 internal/handlers/journey.go        # /journeys templates + sessions
@@ -119,6 +119,7 @@ users
   nudge_enabled BOOLEAN DEFAULT true
   goal TEXT                     -- stress|anxiety|grief|depression|relationships|career|trauma|curious
   age_range TEXT                -- under_18|18_24|25_34|35_44|45_plus; nullable (migration 000021)
+  voice_language TEXT DEFAULT 'auto' -- therapy TTS voice: auto|english|hindi (migration 000027)
   plan TEXT DEFAULT 'free'      -- free | plus | pro | b2b (migration 000011)
   plan_expires_at TIMESTAMPTZ   -- NULL = no expiry
   password_hash TEXT            -- only set for local-auth users
@@ -302,6 +303,25 @@ therapy_messages
   input_mode TEXT               -- 'voice' | 'text'
   created_at TIMESTAMPTZ
 
+payments                        -- payment records for plan upgrades; one row per intent (migration 000026)
+  id UUID PK
+  user_id UUID FK → users
+  payment_intent_id TEXT UNIQUE -- Stripe PaymentIntent ID; unique for replay protection
+  plan TEXT                     -- plan granted: plus | pro
+  amount_paise INT              -- amount charged in smallest currency unit
+  currency TEXT                 -- 'inr' | 'usd'
+  store TEXT DEFAULT 'stripe'   -- 'stripe' | 'apple' | 'google' (migration 000029)
+  product_id TEXT               -- IAP product identifier, e.g. "com.dreamlog.app.plus.monthly" (migration 000029)
+  country CHAR(2)               -- ISO 3166-1 alpha-2, e.g. "IN" | "US" (migration 000029)
+  created_at TIMESTAMPTZ
+
+analytics_events                -- append-only product event stream (migration 000028); privacy-safe (IDs/metadata only)
+  id UUID PK
+  user_id UUID FK → users NULL  -- NULL for pre-auth / anonymous events
+  event_name TEXT               -- e.g. signup, entry_completed, therapy_session_started
+  properties JSONB DEFAULT '{}'
+  created_at TIMESTAMPTZ
+
 -- Views
 v_daily_mood: per-user daily avg mood_score (excludes crisis entries)
 ```
@@ -451,7 +471,9 @@ Mobile
   │       → check session not expired (started_at + 1hr < NOW())
   │       → fetch session message history
   │       → Claude therapy prompt (with journal context injected at session start)
-  │       → if TTS enabled: generate audio via OpenAI TTS
+  │       → if TTS enabled: generate audio via Azure Speech TTS (persona voice +
+  │         empathetic SSML style; Hindi voice when the user's turn was Hindi;
+  │         OpenAI TTS fallback when Azure is not configured)
   │       → INSERT therapy_session_messages (user + assistant)
   │       → UPDATE therapy_sessions (turn_count, last_active_at)
   │       → DELETE user audio from storage immediately after transcription
@@ -507,10 +529,11 @@ Context is injected **once at session start** (stored in `context_snapshot`) and
 |---|---|
 | Whisper (30 min user speech) | ~$0.18 |
 | Claude Sonnet (with prompt caching) | ~$0.70 |
-| OpenAI TTS (optional, AI voice out) | ~$0.17 |
+| Azure Speech TTS (optional, AI voice out, ~8K chars) | ~$0.13 standard / ~$0.18 HD voices |
 | **Total** | **~$1.05** |
 
-Priced at ₹499/session or included in Pro plan (2 sessions/month).
+Priced at ₹499/session standalone (₹299 member price for Pro users beyond their
+included session), or included in Pro plan (1 session/month). See docs/PRICING.md.
 
 ### Key Invariants
 
@@ -528,7 +551,7 @@ Priced at ₹499/session or included in Pro plan (2 sessions/month).
 | Storage | MinIO (Docker) | Cloudflare R2 |
 | Transcription | faster-whisper-server (local CPU) | OpenAI Whisper API |
 | AI analysis | Stubbed (`STUB_AI_ANALYSIS=true`) | Anthropic Claude API |
-| TTS (Therapy Mode) | Skipped / stubbed | OpenAI TTS API |
+| TTS (Therapy Mode) | Skipped / stubbed | Azure Speech TTS (empathetic SSML styles + Hindi voices); falls back to OpenAI TTS when `AZURE_TTS_KEY` unset |
 | Auth | Manual JWT from jwt.io | Supabase Auth |
 | Push notifications | Skipped (no FCM credentials) | Firebase Cloud Messaging |
 | Migrations | Auto-run on API startup | Auto-run on API startup |

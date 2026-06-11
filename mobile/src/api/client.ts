@@ -26,6 +26,8 @@ import {
   TimelineResponse,
   User,
   UserGoal,
+  VersionInfo,
+  VoiceLanguage,
   WeeklyMoodResponse,
   WeeklyReview,
   WeeklyReviewListResponse,
@@ -62,6 +64,11 @@ export interface AuthResponse {
 
 // ── API surface ──────────────────────────────────────────────────────────────
 export const api = {
+  // ── Version (public - force-update gate) ──────────────────────────────────
+  // Short timeout: this runs on every cold start and must never delay launch.
+  getVersion: (): Promise<VersionInfo> =>
+    http.get<VersionInfo>('/version', { timeout: 5_000 }).then((r) => r.data),
+
   // ── Auth ──────────────────────────────────────────────────────────────────
   register: (email: string, name: string, password: string): Promise<AuthResponse> =>
     http.post<AuthResponse>('/auth/register', { email, name, password }).then((r) => r.data),
@@ -82,6 +89,7 @@ export const api = {
     goal?: UserGoal;
     age_range?: AgeRange;
     country?: string;
+    voice_language?: VoiceLanguage;
   }): Promise<User> =>
     http.put<User>('/me', fields).then((r) => r.data),
 

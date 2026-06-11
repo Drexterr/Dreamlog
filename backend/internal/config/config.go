@@ -16,6 +16,7 @@ type Config struct {
 	Storage   StorageConfig
 	Supabase  SupabaseConfig
 	OpenAI    OpenAIConfig
+	AzureTTS  AzureTTSConfig
 	Anthropic AnthropicConfig
 	FCM       FCMConfig
 	App       AppConfig
@@ -66,6 +67,17 @@ type OpenAIConfig struct {
 	BaseURL string // override for testing
 }
 
+// AzureTTSConfig configures Azure Speech text-to-speech for Therapy Mode voice output.
+// When Key+Region are set, Azure is used instead of OpenAI TTS (empathetic SSML styles,
+// Hindi voices). When unset, TTS falls back to OpenAI, or is skipped entirely in dev.
+type AzureTTSConfig struct {
+	Key           string
+	Region        string // e.g. "centralindia", "eastus"
+	BaseURL       string // override for testing; defaults to https://{region}.tts.speech.microsoft.com
+	UseHD         bool   // use per-persona DragonHD multilingual voices (emotion auto-detected, EN+HI+Hinglish in one voice; ~$22/1M chars vs ~$15 standard)
+	VoiceOverride string // optional: force one voice for all personas/languages, e.g. "en-IN-Aarti:DragonHDLatestNeural"; wins over UseHD
+}
+
 type AnthropicConfig struct {
 	APIKey      string
 	BaseURL     string // override for testing
@@ -79,7 +91,10 @@ type FCMConfig struct {
 }
 
 type AppConfig struct {
-	BaseURL string // e.g. "https://dreamlog.app" - used to build share URLs
+	BaseURL           string // e.g. "https://dreamlog.app" - used to build share URLs
+	MinimumAppVersion string // oldest mobile version allowed; older installs see a force-update screen
+	AndroidStoreURL   string // Play Store listing URL for the Update Now button
+	IOSStoreURL       string // App Store listing URL; empty until the app is live on the App Store
 }
 
 type StripeConfig struct {
@@ -134,6 +149,13 @@ func Load() (*Config, error) {
 			APIKey:  getEnv("OPENAI_API_KEY", ""),
 			BaseURL: getEnv("OPENAI_BASE_URL", "https://api.openai.com/v1"),
 		},
+		AzureTTS: AzureTTSConfig{
+			Key:           getEnv("AZURE_TTS_KEY", ""),
+			Region:        getEnv("AZURE_TTS_REGION", ""),
+			BaseURL:       getEnv("AZURE_TTS_BASE_URL", ""),
+			UseHD:         parseBool("AZURE_TTS_USE_HD", false),
+			VoiceOverride: getEnv("AZURE_TTS_VOICE_OVERRIDE", ""),
+		},
 		Anthropic: AnthropicConfig{
 			APIKey:       getEnv("ANTHROPIC_API_KEY", ""),
 			BaseURL:      getEnv("ANTHROPIC_BASE_URL", "https://api.anthropic.com"),
@@ -145,7 +167,10 @@ func Load() (*Config, error) {
 			ProjectID:       getEnv("FCM_PROJECT_ID", ""),
 		},
 		App: AppConfig{
-			BaseURL: getEnv("APP_BASE_URL", "https://dreamlog.app"),
+			BaseURL:           getEnv("APP_BASE_URL", "https://dreamlog.app"),
+			MinimumAppVersion: getEnv("MINIMUM_APP_VERSION", "1.0.0"),
+			AndroidStoreURL:   getEnv("ANDROID_STORE_URL", "https://play.google.com/store/apps/details?id=com.dreamlog.app"),
+			IOSStoreURL:       getEnv("IOS_STORE_URL", ""),
 		},
 		Stripe: StripeConfig{
 			SecretKey:      getEnv("STRIPE_SECRET_KEY", ""),

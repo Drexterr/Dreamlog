@@ -34,7 +34,7 @@ type fakeTherapyServicer struct {
 	gotPersona  models.TherapyPersona
 }
 
-func (f *fakeTherapyServicer) StartSession(_ context.Context, userID uuid.UUID, plan models.Plan, persona models.TherapyPersona, _ string) (*models.TherapySession, error) {
+func (f *fakeTherapyServicer) StartSession(_ context.Context, userID uuid.UUID, plan models.Plan, persona models.TherapyPersona, _, _ string) (*models.TherapySession, error) {
 	f.gotPlan = plan
 	f.gotPersona = persona
 	if f.startErr != nil {

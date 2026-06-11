@@ -81,7 +81,7 @@ func NewTherapyService(
 //   - First session ever → free (acquisition hook)
 //   - Pro plan → up to 2 sessions/month free
 //   - Otherwise → ₹499 (stub in dev: allow with billing_amount_paise set)
-func (s *TherapyService) StartSession(ctx context.Context, userID uuid.UUID, userPlan models.Plan, persona models.TherapyPersona, userCountry string) (*models.TherapySession, error) {
+func (s *TherapyService) StartSession(ctx context.Context, userID uuid.UUID, userPlan models.Plan, persona models.TherapyPersona, userCountry, userVoiceLanguage string) (*models.TherapySession, error) {
 	billingPaise, err := s.computeBilling(ctx, userID, userPlan)
 	if err != nil {
 		return nil, err
@@ -93,6 +93,7 @@ func (s *TherapyService) StartSession(ctx context.Context, userID uuid.UUID, use
 		snapshot = models.TherapyContextSnapshot{}
 	}
 	snapshot.Country = userCountry
+	snapshot.VoiceLanguage = userVoiceLanguage
 
 	session, err := s.repo.Create(ctx, userID, persona, snapshot, billingPaise)
 	if err != nil {
@@ -119,19 +120,30 @@ func (s *TherapyService) SendMessage(ctx context.Context, sessionID, userID uuid
 		return nil, ErrTherapyExpired
 	}
 
-	// Resolve user content: transcribe if voice input.
+	// Resolve user content: transcribe if voice input. The detected language
+	// drives the TTS voice (Hindi sessions get Hindi voices).
 	userContent := req.Content
+	userLanguage := ""
 	if req.InputMode == "voice" {
 		if req.AudioKey == "" {
 			return nil, errTherapyMissingAudio
 		}
-		transcribed, transcribeErr := s.transcribeAudio(ctx, req.AudioKey)
+		transcribed, language, transcribeErr := s.transcribeAudio(ctx, req.AudioKey)
 		// Delete audio from storage regardless of transcription outcome (ADR-005).
 		_ = s.storage.Delete(ctx, req.AudioKey)
 		if transcribeErr != nil {
 			return nil, fmt.Errorf("therapySvc.SendMessage transcribe: %w", transcribeErr)
 		}
 		userContent = transcribed
+		userLanguage = language
+	} else {
+		userLanguage = DetectTextLanguage(userContent)
+	}
+
+	// An explicit user preference (Settings → Voice language) overrides
+	// per-turn detection. "auto" or empty keeps the detected language.
+	if pref := session.ContextSnapshot.VoiceLanguage; pref != "" && pref != "auto" {
+		userLanguage = pref
 	}
 
 	if userContent == "" {
@@ -191,7 +203,7 @@ func (s *TherapyService) SendMessage(ctx context.Context, sessionID, userID uuid
 	// Generate TTS audio for the assistant reply (non-fatal: errors are logged and skipped).
 	if s.tts != nil {
 		ttsCtx, cancel := context.WithTimeout(ctx, 20*time.Second)
-		ttsURL, ttsErr := s.tts.Synthesize(ttsCtx, session.ID.String(), assistantMsg.ID.String(), aiReply, session.Persona)
+		ttsURL, ttsErr := s.tts.Synthesize(ttsCtx, session.ID.String(), assistantMsg.ID.String(), aiReply, session.Persona, userLanguage)
 		cancel()
 		if ttsErr == nil && ttsURL != "" {
 			assistantMsg.TTSUrl = &ttsURL
@@ -390,8 +402,10 @@ func (s *TherapyService) computeBilling(ctx context.Context, userID uuid.UUID, p
 		return 0, nil
 	}
 
-	// Pro plan includes 2 sessions/month.
-	if plan.AtLeast(models.PlanPro) {
+	// Pro plan includes TherapyProMonthlyAllowance sessions/month; beyond that,
+	// Pro members pay the discounted member price per extra session.
+	isPro := plan.AtLeast(models.PlanPro)
+	if isPro {
 		monthCount, err := s.repo.CountThisMonth(ctx, userID)
 		if err != nil {
 			return 0, fmt.Errorf("therapySvc.billing: %w", err)
@@ -401,9 +415,14 @@ func (s *TherapyService) computeBilling(ctx context.Context, userID uuid.UUID, p
 		}
 	}
 
+	sessionPrice := models.TherapySessionPricePaise
+	if isPro {
+		sessionPrice = models.TherapyMemberSessionPricePaise
+	}
+
 	// In dev stub mode: allow with billing amount set (no real payment).
 	if s.stubBilling {
-		return models.TherapySessionPricePaise, nil
+		return sessionPrice, nil
 	}
 
 	// In prod: real payment would be processed here. For now, return 402.
@@ -443,10 +462,12 @@ func (s *TherapyService) loadContextSnapshot(ctx context.Context, userID uuid.UU
 	return snapshot, contextLoaded, nil
 }
 
-func (s *TherapyService) transcribeAudio(ctx context.Context, audioKey string) (string, error) {
+// transcribeAudio returns the transcript and Whisper's detected language
+// (e.g. "english", "hindi"); the language selects the TTS voice for the reply.
+func (s *TherapyService) transcribeAudio(ctx context.Context, audioKey string) (string, string, error) {
 	rc, err := s.storage.GetObject(ctx, audioKey)
 	if err != nil {
-		return "", fmt.Errorf("fetch audio: %w", err)
+		return "", "", fmt.Errorf("fetch audio: %w", err)
 	}
 	defer rc.Close()
 
@@ -455,9 +476,9 @@ func (s *TherapyService) transcribeAudio(ctx context.Context, audioKey string) (
 
 	resp, err := s.transcription.Transcribe(whisperCtx, rc, audioKey)
 	if err != nil {
-		return "", fmt.Errorf("whisper: %w", err)
+		return "", "", fmt.Errorf("whisper: %w", err)
 	}
-	return resp.Text, nil
+	return resp.Text, resp.Language, nil
 }
 
 // snapshotToPromptContext converts a stored snapshot to the prompt input struct.

@@ -50,7 +50,7 @@ dream/
 | Storage | MinIO (dev) / Cloudflare R2 (prod) - pre-signed PUT URLs |
 | Transcription | faster-whisper-server (local dev) / OpenAI Whisper (prod) |
 | AI analysis | Claude Sonnet 4.6 via Anthropic Messages API (stub mode in dev) |
-| TTS | OpenAI TTS - Therapy Mode AI voice output (optional, skipped in dev) |
+| TTS | Azure Speech - Therapy Mode AI voice output (empathetic SSML styles + Hindi voices; OpenAI TTS fallback; skipped in dev) |
 | Mobile | React Native 0.74, Expo 51, expo-router, expo-av |
 | Fonts | Cormorant Garamond (serif) + Nunito (sans) |
 
@@ -373,7 +373,7 @@ During local development no paid APIs are called:
 |---|---|---|
 | Transcription | faster-whisper-server (local CPU) | OpenAI Whisper API |
 | AI analysis | Stubbed (`STUB_AI_ANALYSIS=true`) | Anthropic Claude API |
-| TTS (Therapy Mode) | Skipped / stubbed | OpenAI TTS API |
+| TTS (Therapy Mode) | Skipped / stubbed | Azure Speech TTS (OpenAI TTS fallback) |
 | Storage | MinIO (local Docker) | Cloudflare R2 |
 | Auth | Manually generated JWT | Supabase Auth |
 

@@ -45,8 +45,8 @@ func TestGetPlanLimits_AllPlans(t *testing.T) {
 	if plus.MonthlyShares != PlusMonthlyShares {
 		t.Errorf("plus shares: want %d, got %d", PlusMonthlyShares, plus.MonthlyShares)
 	}
-	if plus.HasPDFExport {
-		t.Error("plus plan must not include PDF export")
+	if !plus.HasPDFExport {
+		t.Error("plus plan must include PDF export (Plus is the complete journal product)")
 	}
 
 	pro := GetPlanLimits(PlanPro)

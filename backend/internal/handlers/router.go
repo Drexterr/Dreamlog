@@ -10,6 +10,9 @@ import (
 	"go.uber.org/zap"
 )
 
+// ensure AnalyticsService satisfies the analyticsTracker interface at compile time.
+var _ analyticsTracker = (*services.AnalyticsService)(nil)
+
 type Deps struct {
 	UserSvc          *services.UserService
 	AuthSvc          *services.AuthService
@@ -32,10 +35,15 @@ type Deps struct {
 	LifeChapterRepo      *repositories.LifeChapterRepository
 	RelationshipRepo     *repositories.RelationshipRepository
 	PaymentRepo          *repositories.PaymentRepository
+	AnalyticsRepo        *repositories.AnalyticsRepository
+	AnalyticsSvc         *services.AnalyticsService
 	ClaudeSvc            *services.ClaudeService
 	JWTSecret            string
 	SupabaseJWKSURL      string
 	AppBaseURL           string
+	MinimumAppVersion    string
+	AndroidStoreURL      string
+	IOSStoreURL          string
 	StripeSecretKey      string
 	StripePublishableKey string
 	StorageProxyBaseURL  string
@@ -55,6 +63,10 @@ func NewRouter(deps Deps) http.Handler {
 		c.JSON(http.StatusOK, gin.H{"status": "ok"})
 	})
 
+	// Force-update gate (public - the app checks this before auth)
+	versionHandler := NewVersionHandler(deps.MinimumAppVersion, deps.AndroidStoreURL, deps.IOSStoreURL)
+	r.GET("/version", versionHandler.Get)
+
 	// Auth (public - no JWT required)
 	authHandler := NewAuthHandler(deps.AuthSvc)
 	r.POST("/auth/register", authHandler.Register)
@@ -69,7 +81,7 @@ func NewRouter(deps Deps) http.Handler {
 	auth.DELETE("/me", userHandler.DeleteMe)
 
 	// Billing / subscription
-	billingHandler := NewBillingHandler(deps.SubscriptionSvc, deps.PaymentRepo, deps.StripeSecretKey, deps.StripePublishableKey)
+	billingHandler := NewBillingHandler(deps.SubscriptionSvc, deps.PaymentRepo, deps.AnalyticsSvc, deps.StripeSecretKey, deps.StripePublishableKey)
 	auth.GET("/billing/plan", billingHandler.GetPlan)
 	auth.POST("/billing/upgrade", billingHandler.Upgrade)
 	auth.POST("/billing/create-payment-intent", billingHandler.CreatePaymentIntent)

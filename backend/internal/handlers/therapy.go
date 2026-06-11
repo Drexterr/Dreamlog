@@ -16,7 +16,7 @@ import (
 
 // therapyServicer is the minimal interface TherapyHandler needs.
 type therapyServicer interface {
-	StartSession(ctx context.Context, userID uuid.UUID, userPlan models.Plan, persona models.TherapyPersona, userCountry string) (*models.TherapySession, error)
+	StartSession(ctx context.Context, userID uuid.UUID, userPlan models.Plan, persona models.TherapyPersona, userCountry, userVoiceLanguage string) (*models.TherapySession, error)
 	SendMessage(ctx context.Context, sessionID, userID uuid.UUID, req models.SendTherapyMessageRequest) (*models.SendTherapyMessageResponse, error)
 	EndSession(ctx context.Context, sessionID, userID uuid.UUID) (*models.EndSessionResponse, error)
 	GetSession(ctx context.Context, sessionID, userID uuid.UUID) (*models.TherapySession, error)
@@ -71,7 +71,7 @@ func (h *TherapyHandler) StartSession(c *gin.Context) {
 	if user.Country != nil {
 		userCountry = *user.Country
 	}
-	session, err := h.svc.StartSession(c.Request.Context(), userID, user.EffectivePlan(), persona, userCountry)
+	session, err := h.svc.StartSession(c.Request.Context(), userID, user.EffectivePlan(), persona, userCountry, user.VoiceLanguage)
 	if err != nil {
 		if isPaymentRequired(err) {
 			c.JSON(http.StatusPaymentRequired, gin.H{

@@ -266,6 +266,49 @@ func TestUserHandler_UpdateMe_FCMNudgeHourOutOfRange_Returns400(t *testing.T) {
 	}
 }
 
+func TestUserHandler_UpdateMe_VoiceLanguage_Valid_Returns200(t *testing.T) {
+	for _, lang := range []string{"auto", "english", "hindi"} {
+		updated := userTestUser()
+		updated.VoiceLanguage = lang
+		svc := &fakeUserProfiler{updateResp: updated}
+		r := newUserTestRouter(t, svc, userTestUser())
+
+		body, _ := json.Marshal(map[string]string{"voice_language": lang})
+		w := httptest.NewRecorder()
+		req, _ := http.NewRequest(http.MethodPut, "/me", bytes.NewReader(body))
+		req.Header.Set("Authorization", "Bearer "+userTestJWT(t))
+		req.Header.Set("Content-Type", "application/json")
+		r.ServeHTTP(w, req)
+
+		if w.Code != http.StatusOK {
+			t.Errorf("voice_language %q: want 200, got %d: %s", lang, w.Code, w.Body.String())
+			continue
+		}
+		var resp models.User
+		if err := json.NewDecoder(w.Body).Decode(&resp); err != nil {
+			t.Fatalf("decode: %v", err)
+		}
+		if resp.VoiceLanguage != lang {
+			t.Errorf("voice_language: want %q, got %q", lang, resp.VoiceLanguage)
+		}
+	}
+}
+
+func TestUserHandler_UpdateMe_VoiceLanguage_Invalid_Returns400(t *testing.T) {
+	r := newUserTestRouter(t, &fakeUserProfiler{}, userTestUser())
+
+	body, _ := json.Marshal(map[string]string{"voice_language": "klingon"})
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest(http.MethodPut, "/me", bytes.NewReader(body))
+	req.Header.Set("Authorization", "Bearer "+userTestJWT(t))
+	req.Header.Set("Content-Type", "application/json")
+	r.ServeHTTP(w, req)
+
+	if w.Code != http.StatusBadRequest {
+		t.Errorf("invalid voice_language: want 400, got %d: %s", w.Code, w.Body.String())
+	}
+}
+
 func TestUserHandler_UpdateMe_MissingAuth_Returns401(t *testing.T) {
 	r := newUserTestRouter(t, &fakeUserProfiler{}, userTestUser())
 

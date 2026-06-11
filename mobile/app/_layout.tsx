@@ -23,6 +23,9 @@ import { ThemeProvider } from '../src/context/ThemeContext';
 import { detectAndCacheRegion } from '../src/services/region';
 import { flush as flushOfflineQueue } from '../src/services/offlineQueue';
 import { registerForPushNotifications } from '../src/services/push';
+import { checkForceUpdate } from '../src/services/version';
+import ForceUpdateScreen from '../src/components/ForceUpdateScreen';
+import type { VersionInfo } from '../src/types';
 
 const STRIPE_PK = process.env.EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY ?? '';
 
@@ -34,6 +37,7 @@ export default function RootLayout() {
   const [needsOnboarding, setNeedsOnboarding] = useState(false);
   const [greetingName, setGreetingName] = useState<string | null>(null);
   const [showGreeting, setShowGreeting] = useState(false);
+  const [forceUpdate, setForceUpdate] = useState<VersionInfo | null>(null);
   const greetingOpacity = useRef(new Animated.Value(0)).current;
   const router = useRouter();
   const segments = useSegments();
@@ -49,6 +53,12 @@ export default function RootLayout() {
     Nunito_600SemiBold,
     Nunito_700Bold,
   });
+
+  // Force-update gate: runs independently of the auth check and is fail-open -
+  // checkForceUpdate resolves null on any error so a dead backend never blocks launch.
+  useEffect(() => {
+    checkForceUpdate().then(setForceUpdate);
+  }, []);
 
   // Check Supabase session and, if present, fetch profile to determine onboarding state.
   useEffect(() => {
@@ -170,6 +180,7 @@ export default function RootLayout() {
             <Text style={styles.greetingText}>Hello, {greetingName}</Text>
           </Animated.View>
         ) : null}
+        {forceUpdate ? <ForceUpdateScreen info={forceUpdate} /> : null}
       </ThemeProvider>
     </StripeProvider>
   );

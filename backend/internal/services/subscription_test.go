@@ -71,8 +71,8 @@ func TestGetPlanDetails_Plus(t *testing.T) {
 	if limits.MonthlyShares != models.PlusMonthlyShares {
 		t.Fatalf("expected %d shares for plus plan, got %d", models.PlusMonthlyShares, limits.MonthlyShares)
 	}
-	if limits.HasPDFExport {
-		t.Fatal("plus plan must not have PDF export")
+	if !limits.HasPDFExport {
+		t.Fatal("plus plan must have PDF export (Plus is the complete journal product)")
 	}
 	if !limits.HasWeeklyReview {
 		t.Fatal("plus plan must have weekly review")

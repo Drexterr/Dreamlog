@@ -432,7 +432,7 @@ func TestBillingHandler_UpgradeVerified_MissingPaymentIntent_Returns400(t *testi
 
 func TestBillingHandler_UpgradeVerified_PaymentNotSucceeded_Returns402(t *testing.T) {
 	stripe := stripeStub(t, map[string]interface{}{
-		"id": "pi_1", "status": "requires_payment_method", "amount": 19900, "currency": "inr",
+		"id": "pi_1", "status": "requires_payment_method", "amount": 24900, "currency": "inr",
 		"metadata": map[string]string{"plan": "plus"},
 	})
 	defer stripe.Close()
@@ -446,7 +446,7 @@ func TestBillingHandler_UpgradeVerified_PaymentNotSucceeded_Returns402(t *testin
 
 func TestBillingHandler_UpgradeVerified_WrongPlanMetadata_Returns400(t *testing.T) {
 	stripe := stripeStub(t, map[string]interface{}{
-		"id": "pi_2", "status": "succeeded", "amount": 19900, "currency": "inr",
+		"id": "pi_2", "status": "succeeded", "amount": 24900, "currency": "inr",
 		"metadata": map[string]string{"plan": "plus"},
 	})
 	defer stripe.Close()
@@ -496,7 +496,7 @@ func TestBillingHandler_UpgradeVerified_Success_GrantsServerExpiry(t *testing.T)
 
 func TestBillingHandler_UpgradeVerified_ReplayedIntent_Returns409(t *testing.T) {
 	stripe := stripeStub(t, map[string]interface{}{
-		"id": "pi_5", "status": "succeeded", "amount": 19900, "currency": "inr",
+		"id": "pi_5", "status": "succeeded", "amount": 24900, "currency": "inr",
 		"metadata": map[string]string{"plan": "plus"},
 	})
 	defer stripe.Close()
@@ -571,8 +571,8 @@ func TestCreatePaymentIntent_DevStub_ReturnsStubSecret(t *testing.T) {
 	if resp["client_secret"] == "" || resp["client_secret"] == nil {
 		t.Error("expected stub client_secret in dev mode")
 	}
-	if resp["amount"] != float64(19900) {
-		t.Errorf("plus INR amount: want 19900, got %v", resp["amount"])
+	if resp["amount"] != float64(24900) {
+		t.Errorf("plus INR amount: want 24900, got %v", resp["amount"])
 	}
 }
 
@@ -596,12 +596,12 @@ func TestPlanAmount_AllCurrencies(t *testing.T) {
 		currency string
 		want     int64
 	}{
-		{models.PlanPlus, "inr", 19900},
+		{models.PlanPlus, "inr", 24900},
 		{models.PlanPro, "inr", 49900},
-		{models.PlanPlus, "usd", 799},
-		{models.PlanPro, "usd", 1499},
-		{models.PlanPlus, "eur", 699},
-		{models.PlanPro, "eur", 1299},
+		{models.PlanPlus, "usd", 599},
+		{models.PlanPro, "usd", 999},
+		{models.PlanPlus, "eur", 599},
+		{models.PlanPro, "eur", 999},
 		{models.PlanFree, "inr", 0},
 	}
 	for _, tc := range cases {

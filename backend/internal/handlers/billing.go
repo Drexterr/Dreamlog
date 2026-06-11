@@ -37,15 +37,22 @@ const paidPlanDuration = 30 * 24 * time.Hour
 type BillingHandler struct {
 	svc                  planManager
 	payments             paymentRecorder
+	analytics            analyticsTracker
 	stripeSecretKey      string
 	stripePublishableKey string
 	stripeBaseURL        string // overridable in tests; defaults to the real Stripe API
 }
 
-func NewBillingHandler(svc planManager, payments paymentRecorder, stripeSecretKey, stripePublishableKey string) *BillingHandler {
+// analyticsTracker is the subset of AnalyticsService used by BillingHandler.
+type analyticsTracker interface {
+	TrackUser(ctx context.Context, userID uuid.UUID, event string, props map[string]any)
+}
+
+func NewBillingHandler(svc planManager, payments paymentRecorder, analytics analyticsTracker, stripeSecretKey, stripePublishableKey string) *BillingHandler {
 	return &BillingHandler{
 		svc:                  svc,
 		payments:             payments,
+		analytics:            analytics,
 		stripeSecretKey:      stripeSecretKey,
 		stripePublishableKey: stripePublishableKey,
 		stripeBaseURL:        stripeAPIBaseURL,
@@ -169,6 +176,12 @@ func (h *BillingHandler) Upgrade(c *gin.Context) {
 		return
 	}
 
+	if h.analytics != nil {
+		h.analytics.TrackUser(c.Request.Context(), userID, "plan_changed", map[string]any{
+			"plan": string(req.Plan),
+		})
+	}
+
 	limits := h.svc.GetPlanDetails(user.Plan)
 	c.JSON(http.StatusOK, gin.H{
 		"plan":            user.Plan,
@@ -242,23 +255,23 @@ func planAmount(plan models.Plan, currency string) int64 {
 	case "inr":
 		switch plan {
 		case models.PlanPlus:
-			return 19900 // ₹199
+			return 24900 // ₹249
 		case models.PlanPro:
 			return 49900 // ₹499
 		}
 	case "eur":
 		switch plan {
 		case models.PlanPlus:
-			return 699 // €6.99
+			return 599 // €5.99
 		case models.PlanPro:
-			return 1299 // €12.99
+			return 999 // €9.99
 		}
 	default: // usd
 		switch plan {
 		case models.PlanPlus:
-			return 799 // $7.99
+			return 599 // $5.99
 		case models.PlanPro:
-			return 1499 // $14.99
+			return 999 // $9.99
 		}
 	}
 	return 0
