@@ -274,10 +274,12 @@ export default function RecordScreen() {
           </TouchableOpacity>
         )}
 
-        {/* Status label */}
-        <Text style={[styles.listeningLabel, { color: colors.textSecondary }]}>
-          {phase === 'recording' ? 'listening' : phase === 'uploading' ? 'uploading' : ''}
-        </Text>
+        {/* Status label - only while recording/uploading so it doesn't leave a gap in idle */}
+        {phase !== 'idle' && (
+          <Text style={[styles.listeningLabel, { color: colors.textSecondary }]}>
+            {phase === 'recording' ? 'listening' : 'uploading'}
+          </Text>
+        )}
 
         {/* Tagline */}
         <Text style={[styles.tagline, { color: colors.textPrimary }]}>
@@ -313,7 +315,7 @@ export default function RecordScreen() {
 
         {/* Hint while recording */}
         {phase === 'recording' && (
-          <Text style={[styles.hint, { color: colors.textMuted }]}>tap the orb when you're done</Text>
+          <Text style={[styles.bottomHint, { color: colors.textMuted }]}>tap the orb when you're done</Text>
         )}
       </SafeAreaView>
     </View>
@@ -389,7 +391,13 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.8)',
   },
 
-  timerWrap: { marginTop: 36, height: 24, justifyContent: 'center' },
+  timerWrap: {
+    marginTop: 36,
+    minHeight: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+    alignSelf: 'stretch',
+  },
   timer: {
     fontFamily: 'Nunito_400Regular',
     fontSize: 15,
@@ -406,10 +414,19 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
 
+  // Inline hint, centered below the orb (idle: "tap to begin").
   hint: {
-    position: 'absolute',
-    bottom: 60,
     fontSize: 12,
     fontFamily: 'Nunito_400Regular',
+    textAlign: 'center',
+  },
+  // Screen-bottom hint shown while recording.
+  bottomHint: {
+    position: 'absolute',
+    bottom: 48,
+    alignSelf: 'center',
+    fontSize: 12,
+    fontFamily: 'Nunito_400Regular',
+    textAlign: 'center',
   },
 });

@@ -20,7 +20,7 @@ import NetInfo from '@react-native-community/netinfo';
 import { api, storeToken } from '../src/api/client';
 import { supabase, deepLinkReady } from '../src/lib/supabase';
 import { ThemeProvider } from '../src/context/ThemeContext';
-import { detectAndCacheRegion } from '../src/services/region';
+import { detectAndCacheRegion, setRegionFromCountry } from '../src/services/region';
 import { flush as flushOfflineQueue } from '../src/services/offlineQueue';
 import { registerForPushNotifications } from '../src/services/push';
 import { checkForceUpdate } from '../src/services/version';
@@ -76,10 +76,14 @@ export default function RootLayout() {
         // Sync the JWT into SecureStore so the axios interceptor picks it up.
         await storeToken(session.access_token);
         setHasToken(true);
-        const [user] = await Promise.all([
-          api.me(),
-          detectAndCacheRegion(),
-        ]);
+        const user = await api.me();
+        // Pricing currency: the country chosen at account creation is
+        // authoritative; fall back to device-locale detection when unset.
+        if (user.country) {
+          setRegionFromCountry(user.country).catch(() => {});
+        } else {
+          detectAndCacheRegion().catch(() => {});
+        }
         setNeedsOnboarding(!user.goal);
         if (user.goal) {
           setGreetingName(user.preferred_name || user.name || null);

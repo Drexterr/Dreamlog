@@ -138,24 +138,32 @@ export default function ReflectionScreen() {
   const [entry, setEntry] = useState<Entry | null>(null);
   const [analysis, setAnalysis] = useState<EntryAnalysis | null>(null);
   const [loading, setLoading] = useState(true);
+  const [reloadKey, setReloadKey] = useState(0);
 
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(20)).current;
 
   useEffect(() => {
     if (!id) return;
-    Promise.all([api.getEntry(id), api.getAnalysis(id)])
+    setLoading(true);
+    // The entry can exist while its analysis isn't available yet (still
+    // processing, or processing failed) - fetch both independently so a
+    // missing analysis still renders a useful state instead of a blank screen.
+    Promise.allSettled([api.getEntry(id), api.getAnalysis(id)])
       .then(([e, a]) => {
-        setEntry(e);
-        setAnalysis(a);
+        setEntry(e.status === 'fulfilled' ? e.value : null);
+        setAnalysis(a.status === 'fulfilled' ? a.value : null);
+      })
+      .finally(() => {
+        setLoading(false);
+        fadeAnim.setValue(0);
+        slideAnim.setValue(20);
         Animated.parallel([
           Animated.timing(fadeAnim, { toValue: 1, duration: 800, useNativeDriver: true }),
           Animated.timing(slideAnim, { toValue: 0, duration: 600, useNativeDriver: true }),
         ]).start();
-      })
-      .catch(() => {})
-      .finally(() => setLoading(false));
-  }, [id]);
+      });
+  }, [id, reloadKey]);
 
   const handleDone = () => router.replace('/(tabs)');
 
@@ -180,9 +188,57 @@ export default function ReflectionScreen() {
     );
   }
 
-  const isCrisis = analysis?.is_crisis ?? false;
-  const moodScore = analysis?.mood_score ?? 50;
-  const paragraphs = analysis?.reflection?.split('\n\n').filter(Boolean) ?? ['No reflection available yet.'];
+  // No analysis to show - the entry may still be processing, may have failed,
+  // or the fetch itself failed. Show a friendly state instead of a blank screen.
+  if (!analysis) {
+    const failed = entry?.status === 'failed';
+    const processing = entry?.status === 'pending' || entry?.status === 'processing';
+    return (
+      <View style={[styles.container, { backgroundColor: colors.bg }]}>
+        <StatusBar barStyle="light-content" />
+        <SafeAreaView style={{ flex: 1 }}>
+          <Animated.View
+            style={[styles.fallbackCenter, { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }]}
+          >
+            <Text style={[styles.fallbackTitle, { color: colors.textPrimary }]}>
+              {failed
+                ? "This entry couldn't be processed"
+                : processing
+                  ? 'Still reflecting on this one…'
+                  : 'Reflection unavailable'}
+            </Text>
+            <Text style={[styles.fallbackText, { color: colors.textSecondary }]}>
+              {failed
+                ? 'Something went wrong while processing this entry. Your recording was received, but we couldn’t generate a reflection for it.'
+                : processing
+                  ? 'Your entry is still being transcribed and analyzed. Check back in a moment.'
+                  : 'We couldn’t load this reflection. Check your connection and try again.'}
+            </Text>
+            {!failed && (
+              <TouchableOpacity
+                style={[styles.tellMoreBtn, { backgroundColor: colors.card, borderColor: colors.border, alignSelf: 'stretch' }]}
+                onPress={() => setReloadKey((k) => k + 1)}
+                activeOpacity={0.8}
+              >
+                <Text style={[styles.tellMoreText, { color: colors.brand }]}>Try again</Text>
+              </TouchableOpacity>
+            )}
+            <TouchableOpacity
+              style={[styles.goodnightBtn, { borderColor: colors.borderFaint, alignSelf: 'stretch' }]}
+              onPress={() => router.back()}
+              activeOpacity={0.8}
+            >
+              <Text style={[styles.goodnightText, { color: colors.textMuted }]}>Go back</Text>
+            </TouchableOpacity>
+          </Animated.View>
+        </SafeAreaView>
+      </View>
+    );
+  }
+
+  const isCrisis = analysis.is_crisis;
+  const moodScore = analysis.mood_score ?? 50;
+  const paragraphs = analysis.reflection?.split('\n\n').filter(Boolean) ?? ['No reflection available yet.'];
 
   return (
     <View style={[styles.container, { backgroundColor: colors.bg }]}>
@@ -319,6 +375,24 @@ const styles = StyleSheet.create({
   loadingText: { fontSize: 14, fontFamily: 'Nunito_400Regular', letterSpacing: 0.5 },
 
   scroll: { paddingHorizontal: 24, paddingTop: 40, paddingBottom: 60 },
+
+  fallbackCenter: {
+    flex: 1,
+    justifyContent: 'center',
+    paddingHorizontal: 24,
+    gap: 12,
+  },
+  fallbackTitle: {
+    fontFamily: 'CormorantGaramond_300Light',
+    fontSize: 28,
+    lineHeight: 36,
+  },
+  fallbackText: {
+    fontFamily: 'Nunito_400Regular',
+    fontSize: 14,
+    lineHeight: 22,
+    marginBottom: 12,
+  },
 
   // ── Crisis styles ──────────────────────────────────────────────────────────
   crisisHeader: {

@@ -258,7 +258,7 @@ export const api = {
   getBillingPlan: (): Promise<BillingPlanResponse> =>
     http.get<BillingPlanResponse>('/billing/plan').then((r) => r.data),
 
-  createPaymentIntent: (plan: 'plus' | 'pro', currency: 'inr' | 'usd'): Promise<CreatePaymentIntentResponse> =>
+  createPaymentIntent: (plan: 'plus' | 'pro', currency: 'inr' | 'usd' | 'eur'): Promise<CreatePaymentIntentResponse> =>
     http
       .post<CreatePaymentIntentResponse>('/billing/create-payment-intent', { plan, currency })
       .then((r) => r.data),

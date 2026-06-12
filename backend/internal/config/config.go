@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -187,8 +188,16 @@ func Load() (*Config, error) {
 	return cfg, nil
 }
 
+// env reads an environment variable with surrounding whitespace stripped.
+// Stray spaces/newlines pasted into hosting dashboards (e.g. a trailing space
+// in STORAGE_ENDPOINT) otherwise produce hard-to-trace runtime failures like
+// `failed to parse endpoint URL: invalid character " " in host name`.
+func env(key string) string {
+	return strings.TrimSpace(os.Getenv(key))
+}
+
 func requireEnv(key string) string {
-	v := os.Getenv(key)
+	v := env(key)
 	if v == "" {
 		panic(fmt.Sprintf("required environment variable %q is not set", key))
 	}
@@ -196,14 +205,14 @@ func requireEnv(key string) string {
 }
 
 func getEnv(key, fallback string) string {
-	if v := os.Getenv(key); v != "" {
+	if v := env(key); v != "" {
 		return v
 	}
 	return fallback
 }
 
 func parseInt(key string, fallback int) int {
-	if v := os.Getenv(key); v != "" {
+	if v := env(key); v != "" {
 		if n, err := strconv.Atoi(v); err == nil {
 			return n
 		}
@@ -212,7 +221,7 @@ func parseInt(key string, fallback int) int {
 }
 
 func parseBool(key string, fallback bool) bool {
-	if v := os.Getenv(key); v != "" {
+	if v := env(key); v != "" {
 		if b, err := strconv.ParseBool(v); err == nil {
 			return b
 		}
@@ -221,7 +230,7 @@ func parseBool(key string, fallback bool) bool {
 }
 
 func parseDuration(key string, fallback time.Duration) time.Duration {
-	if v := os.Getenv(key); v != "" {
+	if v := env(key); v != "" {
 		if d, err := time.ParseDuration(v); err == nil {
 			return d
 		}

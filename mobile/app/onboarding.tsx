@@ -15,6 +15,7 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { api } from '../src/api/client';
+import { setRegionFromCountry } from '../src/services/region';
 import { Fonts, THEMES } from '../src/theme';
 import { useTheme } from '../src/context/ThemeContext';
 import type { AgeRange, UserGoal } from '../src/types';
@@ -166,6 +167,8 @@ export default function OnboardingScreen() {
         ...(selectedAgeRange ? { age_range: selectedAgeRange } : {}),
         ...(selectedCountry && selectedCountry !== 'OTHER' ? { country: selectedCountry } : {}),
       });
+      // Pricing currency follows the chosen country (India → INR, Europe → EUR, else USD).
+      await setRegionFromCountry(selectedCountry === 'OTHER' ? null : selectedCountry);
       setStep(5);
     } catch {
       setError('Something went wrong. Please try again.');

@@ -12,6 +12,12 @@
       "sourceType": "github",
       "skillPath": "skills/code-review/SKILL.md",
       "computedHash": "38fa1a6b131fc7c97969deae97c4ddfc6adb3c444d8e91a24fab9c69467f2673"
+    },
+    "graphify": {
+      "source": "safishamsi/graphify",
+      "sourceType": "github",
+      "skillPath": "skills/graphify/SKILL.md",
+      "computedHash": "c89eecd855b10c6c66196b2cdffe09610286b465496b44fe574826c922f68114"
     }
   }
 }

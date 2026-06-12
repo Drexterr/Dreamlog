@@ -11,7 +11,12 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useTheme } from '../../src/context/ThemeContext';
-import { resetAndDetectRegion } from '../../src/services/region';
+import {
+  resetAndDetectRegion,
+  THERAPY_SESSION_PRICE,
+  THERAPY_MEMBER_SESSION_PRICE,
+  PLAN_PRICE_SHORT,
+} from '../../src/services/region';
 import type { RegionCurrency } from '../../src/services/region';
 
 // ── Pricing data ──────────────────────────────────────────────────────────────
@@ -21,10 +26,8 @@ type SessionOption = {
   badge?: string;
   title: string;
   subtitle: string;
-  priceInr: string;
-  priceUsd: string;
-  perSessionInr?: string;
-  perSessionUsd?: string;
+  price: string;
+  perSession?: string;
   saving?: string;
   features: string[];
   cta: string;
@@ -32,45 +35,47 @@ type SessionOption = {
   isPlan?: boolean;
 };
 
-const SESSION_OPTIONS: SessionOption[] = [
-  {
-    id: 'single',
-    title: 'Single Session',
-    subtitle: 'Pay as you go - no subscription',
-    priceInr: '₹499',
-    priceUsd: '$7.99',
-    features: [
-      'Up to 1 hour',
-      'Voice or text input',
-      'AI companion grounded in your journal',
-      'Post-session summary',
-      'Crisis detection active',
-    ],
-    cta: 'Book a Session',
-    highlight: false,
-  },
-  {
-    id: 'pro',
-    badge: 'BEST VALUE',
-    title: 'DreamLog Pro',
-    subtitle: '1 session included every month',
-    priceInr: '₹499 / mo',
-    priceUsd: '$9.99 / mo',
-    perSessionInr: 'Extra sessions at ₹299 member price',
-    perSessionUsd: 'Extra sessions at $4.99 member price',
-    saving: 'A session/month + the full journal',
-    features: [
-      '1 therapy session included per month',
-      'Extra sessions at member price (₹299 / $4.99)',
-      'Everything in DreamLog+ - unlimited entries, all modes',
-      'PDF export & Apple Health sync',
-      'Full mood history & analytics',
-    ],
-    cta: 'Get Pro',
-    highlight: true,
-    isPlan: true,
-  },
-];
+// All prices render in the user's currency only (location asked at account
+// creation: India → INR, Europe → EUR, else USD). Canonical: docs/PRICING.md.
+function buildSessionOptions(currency: RegionCurrency): SessionOption[] {
+  const memberPrice = THERAPY_MEMBER_SESSION_PRICE[currency];
+  return [
+    {
+      id: 'single',
+      title: 'Single Session',
+      subtitle: 'Pay as you go - no subscription',
+      price: THERAPY_SESSION_PRICE[currency],
+      features: [
+        'Up to 1 hour',
+        'Voice or text input',
+        'AI companion grounded in your journal',
+        'Post-session summary',
+        'Crisis detection active',
+      ],
+      cta: 'Book a Session',
+      highlight: false,
+    },
+    {
+      id: 'pro',
+      badge: 'BEST VALUE',
+      title: 'DreamLog Pro',
+      subtitle: '1 session included every month',
+      price: `${PLAN_PRICE_SHORT.pro[currency]} / mo`,
+      perSession: `Extra sessions at ${memberPrice} member price`,
+      saving: 'A session/month + the full journal',
+      features: [
+        '1 therapy session included per month',
+        `Extra sessions at member price (${memberPrice})`,
+        'Everything in DreamLog+ - unlimited entries, all modes',
+        'PDF export & Apple Health sync',
+        'Full mood history & analytics',
+      ],
+      cta: 'Get Pro',
+      highlight: true,
+      isPlan: true,
+    },
+  ];
+}
 
 // ── Persona showcase ──────────────────────────────────────────────────────────
 
@@ -85,17 +90,14 @@ const PERSONAS = [
 
 function OptionCard({
   option,
-  currency,
   colors,
   onPress,
 }: {
   option: SessionOption;
-  currency: RegionCurrency;
   colors: any;
   onPress: () => void;
 }) {
-  const price = currency === 'inr' ? option.priceInr : option.priceUsd;
-  const perSession = currency === 'inr' ? option.perSessionInr : option.perSessionUsd;
+  const { price, perSession } = option;
 
   return (
     <TouchableOpacity
@@ -320,11 +322,10 @@ export default function TherapyPricingScreen() {
           </ScrollView>
 
           {/* Options */}
-          {SESSION_OPTIONS.map((option) => (
+          {buildSessionOptions(activeCurrency).map((option) => (
             <OptionCard
               key={option.id}
               option={option}
-              currency={activeCurrency}
               colors={colors}
               onPress={() => handleOptionPress(option)}
             />

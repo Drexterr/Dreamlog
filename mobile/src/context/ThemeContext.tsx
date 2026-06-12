@@ -70,13 +70,23 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
       easing: Easing.bezier(0.35, 0.01, 0.08, 1),
       useNativeDriver: true,
     }).start(() => {
-      // Circle fully covers screen - swap theme while hidden, then collapse.
+      // Circle fully covers the screen - swap the theme while hidden, then
+      // fade the circle out to reveal the re-themed UI (same soft reveal as
+      // the onboarding goal animation). An instant removal here makes the
+      // screen flash one flat color and then snap, which feels broken.
       setTheme(newTheme);
       api.updateMe({ goal: newTheme }).catch(() => {});
-      bubbleScale.setValue(0);
-      bubbleOpacity.setValue(0);
-      setIsAnimating(false);
-      onComplete?.();
+      Animated.timing(bubbleOpacity, {
+        toValue: 0,
+        duration: 450,
+        easing: Easing.out(Easing.quad),
+        useNativeDriver: true,
+      }).start(() => {
+        bubbleScale.setValue(0);
+        bubbleOpacity.setValue(0);
+        setIsAnimating(false);
+        onComplete?.();
+      });
     });
   };
 

@@ -99,7 +99,7 @@ type User struct {
 	Goal                *string    `json:"goal,omitempty"`
 	AgeRange            *string    `json:"age_range,omitempty"`
 	Country             *string    `json:"country,omitempty"`
-	VoiceLanguage       string     `json:"voice_language"` // therapy TTS voice: auto | english | hindi
+	VoiceLanguage       string     `json:"voice_language"` // therapy TTS voice: auto or any key in SupportedVoiceLanguages
 	StreakFreezeCount   int        `json:"streak_freeze_count"`
 	Plan                Plan       `json:"plan"`
 	PlanExpiresAt       *time.Time `json:"plan_expires_at,omitempty"`
@@ -132,5 +132,23 @@ type UpdateUserInput struct {
 	Goal          *string `json:"goal" binding:"omitempty,oneof=stress anxiety grief depression trauma relationships career curious"`
 	AgeRange      *string `json:"age_range" binding:"omitempty,oneof=under_18 18_24 25_34 35_44 45_plus"`
 	Country       *string `json:"country" binding:"omitempty,min=2,max=2"`
-	VoiceLanguage *string `json:"voice_language" binding:"omitempty,oneof=auto english hindi"`
+	VoiceLanguage *string `json:"voice_language" binding:"omitempty"`
 }
+
+// SupportedVoiceLanguages are the therapy TTS voice languages a user may pick
+// in Settings → Voice language. Keys match Whisper's detected-language output
+// (lowercase English names). "auto" follows the language spoken each turn.
+// Each non-auto key must have an Azure voice mapping in services/tts.go.
+var SupportedVoiceLanguages = map[string]bool{
+	"auto": true, "english": true, "hindi": true,
+	"arabic": true, "bengali": true, "chinese": true, "dutch": true,
+	"french": true, "german": true, "greek": true, "gujarati": true,
+	"indonesian": true, "italian": true, "japanese": true, "kannada": true,
+	"korean": true, "malayalam": true, "marathi": true, "polish": true,
+	"portuguese": true, "punjabi": true, "russian": true, "spanish": true,
+	"swedish": true, "tamil": true, "telugu": true, "thai": true,
+	"turkish": true, "ukrainian": true, "urdu": true, "vietnamese": true,
+}
+
+// IsValidVoiceLanguage reports whether v is an accepted voice_language value.
+func IsValidVoiceLanguage(v string) bool { return SupportedVoiceLanguages[v] }

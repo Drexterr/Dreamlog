@@ -14,74 +14,80 @@ import { useRouter } from 'expo-router';
 import { useStripe } from '@stripe/stripe-react-native';
 import { api } from '../src/api/client';
 import { useTheme } from '../src/context/ThemeContext';
-import { resetAndDetectRegion } from '../src/services/region';
+import {
+  resetAndDetectRegion,
+  PLAN_PRICE,
+  PLAN_PRICE_SHORT,
+  THERAPY_MEMBER_SESSION_PRICE,
+} from '../src/services/region';
+import type { RegionCurrency } from '../src/services/region';
 import type { Plan, BillingPlanResponse } from '../src/types';
 
-type Currency = 'inr' | 'usd';
+type Currency = RegionCurrency;
 
 interface PlanCard {
   plan: Plan;
   emoji: string;
   title: string;
   subtitle?: string;
-  priceInr: string;
-  priceUsd: string;
+  price: string;
   features: string[];
   highlight: boolean;
 }
 
-const PLANS: PlanCard[] = [
-  {
-    plan: 'free',
-    emoji: '🌱',
-    title: 'Free',
-    priceInr: 'Free forever',
-    priceUsd: 'Free forever',
-    features: [
-      '10 entries per month',
-      'Basic AI reflection',
-      '7-day mood chart',
-      '3-turn follow-up conversation',
-    ],
-    highlight: false,
-  },
-  {
-    plan: 'plus',
-    emoji: '⭐',
-    title: 'DreamLog+',
-    subtitle: 'The complete journal',
-    priceInr: '₹249 / month',
-    priceUsd: '$5.99 / month',
-    features: [
-      'Unlimited entries',
-      'Hindi + Hinglish support',
-      'All prompt modes - Rant, Gratitude, Decision, Dream',
-      'Life Graph (30 / 90 / 365 days)',
-      'Weekly + annual emotional reviews',
-      'PDF journal export',
-      'Apple Health sync',
-      'Streak freeze (up to 3)',
-      'Therapist sharing (5 links / month)',
-    ],
-    highlight: true,
-  },
-  {
-    plan: 'pro',
-    emoji: '🔮',
-    title: 'DreamLog Pro',
-    subtitle: 'Journal + therapy',
-    priceInr: '₹499 / month',
-    priceUsd: '$9.99 / month',
-    features: [
-      'Everything in DreamLog+',
-      '1 Therapy session included / month',
-      'Extra sessions at member price (₹299 / $4.99)',
-      'Unlimited therapist sharing',
-      'Priority processing',
-    ],
-    highlight: false,
-  },
-];
+// Prices and the member-session line render in the user's currency only
+// (location asked at account creation: India → INR, Europe → EUR, else USD).
+function buildPlans(currency: Currency): PlanCard[] {
+  return [
+    {
+      plan: 'free',
+      emoji: '🌱',
+      title: 'Free',
+      price: 'Free forever',
+      features: [
+        '10 entries per month',
+        'Basic AI reflection',
+        '7-day mood chart',
+        '3-turn follow-up conversation',
+      ],
+      highlight: false,
+    },
+    {
+      plan: 'plus',
+      emoji: '⭐',
+      title: 'DreamLog+',
+      subtitle: 'The complete journal',
+      price: PLAN_PRICE.plus[currency],
+      features: [
+        'Unlimited entries',
+        'Hindi + Hinglish support',
+        'All prompt modes - Rant, Gratitude, Decision, Dream',
+        'Life Graph (30 / 90 / 365 days)',
+        'Weekly + annual emotional reviews',
+        'PDF journal export',
+        'Apple Health sync',
+        'Streak freeze (up to 3)',
+        'Therapist sharing (5 links / month)',
+      ],
+      highlight: true,
+    },
+    {
+      plan: 'pro',
+      emoji: '🔮',
+      title: 'DreamLog Pro',
+      subtitle: 'Journal + therapy',
+      price: PLAN_PRICE.pro[currency],
+      features: [
+        'Everything in DreamLog+',
+        '1 Therapy session included / month',
+        `Extra sessions at member price (${THERAPY_MEMBER_SESSION_PRICE[currency]})`,
+        'Unlimited therapist sharing',
+        'Priority processing',
+      ],
+      highlight: false,
+    },
+  ];
+}
 
 export default function UpgradeScreen() {
   const router = useRouter();
@@ -121,7 +127,7 @@ export default function UpgradeScreen() {
         paymentIntentClientSecret: intent.client_secret,
         merchantDisplayName: 'DreamLog',
         style: 'alwaysDark',
-        primaryButtonLabel: `Pay ${activeCurrency === 'inr' ? (targetPlan === 'plus' ? '₹249' : '₹499') : (targetPlan === 'plus' ? '$5.99' : '$9.99')}`,
+        primaryButtonLabel: `Pay ${PLAN_PRICE_SHORT[targetPlan][activeCurrency]}`,
       });
       if (initError) {
         Alert.alert('Payment error', initError.message);
@@ -181,7 +187,7 @@ export default function UpgradeScreen() {
         <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
 
           {/* Plan cards */}
-          {PLANS.map((card) => {
+          {buildPlans(activeCurrency).map((card) => {
             const isCurrent = currentPlan === card.plan;
             const isUpgradeable = card.plan !== 'free' && !isCurrent && currentPlan !== 'pro' || (card.plan === 'pro' && currentPlan === 'plus');
             const isPurchasing = purchasing === card.plan;
@@ -214,7 +220,7 @@ export default function UpgradeScreen() {
                       )}
                     </View>
                     <Text style={[styles.cardPrice, { color: colors.purple300 }]}>
-                      {activeCurrency === 'inr' ? card.priceInr : card.priceUsd}
+                      {card.price}
                     </Text>
                   </View>
                 </View>

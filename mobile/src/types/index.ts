@@ -69,8 +69,14 @@ export type AgeRange = 'under_18' | '18_24' | '25_34' | '35_44' | '45_plus';
 
 export type Plan = 'free' | 'plus' | 'pro' | 'b2b';
 
-// Therapy TTS voice language. 'auto' follows the language the user speaks each turn.
-export type VoiceLanguage = 'auto' | 'english' | 'hindi';
+// Therapy TTS voice language. 'auto' follows the language the user speaks each
+// turn. Keep in sync with models.SupportedVoiceLanguages on the backend.
+export type VoiceLanguage =
+  | 'auto' | 'english' | 'hindi' | 'arabic' | 'bengali' | 'chinese' | 'dutch'
+  | 'french' | 'german' | 'greek' | 'gujarati' | 'indonesian' | 'italian'
+  | 'japanese' | 'kannada' | 'korean' | 'malayalam' | 'marathi' | 'polish'
+  | 'portuguese' | 'punjabi' | 'russian' | 'spanish' | 'swedish' | 'tamil'
+  | 'telugu' | 'thai' | 'turkish' | 'ukrainian' | 'urdu' | 'vietnamese';
 
 export interface User {
   id: string;

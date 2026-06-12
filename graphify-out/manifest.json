@@ -1,0 +1,1862 @@
+{
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\backend\\cmd\\api\\main.go": {
+    "mtime": 1781174221.6075583,
+    "ast_hash": "40799b7315ef670be6ce175169cbe3b0",
+    "semantic_hash": "40799b7315ef670be6ce175169cbe3b0"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\backend\\cmd\\worker\\main.go": {
+    "mtime": 1780483315.1064882,
+    "ast_hash": "01f4b73f16814e8ecd30888677624b42",
+    "semantic_hash": "01f4b73f16814e8ecd30888677624b42"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\backend\\internal\\config\\config.go": {
+    "mtime": 1781194169.531658,
+    "ast_hash": "c3f0f32f6f61d3dbb0091d9693418bd1",
+    "semantic_hash": "c3f0f32f6f61d3dbb0091d9693418bd1"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\backend\\internal\\handlers\\analysis.go": {
+    "mtime": 1781115131.189366,
+    "ast_hash": "213e60d3c1dda0a75c5e1c6aa15bdeb7",
+    "semantic_hash": "213e60d3c1dda0a75c5e1c6aa15bdeb7"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\backend\\internal\\handlers\\analysis_test.go": {
+    "mtime": 1780471627.6141715,
+    "ast_hash": "d241e5810c5b3887f0b05b55e5d2d7b4",
+    "semantic_hash": "d241e5810c5b3887f0b05b55e5d2d7b4"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\backend\\internal\\handlers\\auth.go": {
+    "mtime": 1780471573.6248717,
+    "ast_hash": "86bbef65d307a87b7ca006ff23984928",
+    "semantic_hash": "86bbef65d307a87b7ca006ff23984928"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\backend\\internal\\handlers\\auth_test.go": {
+    "mtime": 1780914309.654252,
+    "ast_hash": "6842aeb20a4af47f80c4359f17dc93b9",
+    "semantic_hash": "6842aeb20a4af47f80c4359f17dc93b9"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\backend\\internal\\handlers\\b2b.go": {
+    "mtime": 1779980902.1913946,
+    "ast_hash": "f60d32de612f60f21905794a449b04ec",
+    "semantic_hash": "f60d32de612f60f21905794a449b04ec"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\backend\\internal\\handlers\\b2b_test.go": {
+    "mtime": 1780471627.6911929,
+    "ast_hash": "ab605ce8923a071569d76638badfdf7b",
+    "semantic_hash": "ab605ce8923a071569d76638badfdf7b"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\backend\\internal\\handlers\\billing.go": {
+    "mtime": 1781174192.81511,
+    "ast_hash": "6fba646689404a6fd8b6e4036087e890",
+    "semantic_hash": "6fba646689404a6fd8b6e4036087e890"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\backend\\internal\\handlers\\billing_test.go": {
+    "mtime": 1781173350.0345633,
+    "ast_hash": "10ce8cc88e83816cd0cbf5b9f259339c",
+    "semantic_hash": "10ce8cc88e83816cd0cbf5b9f259339c"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\backend\\internal\\handlers\\conversations.go": {
+    "mtime": 1775367938.4570048,
+    "ast_hash": "e8f33568c7c5df149327303b85de8499",
+    "semantic_hash": "e8f33568c7c5df149327303b85de8499"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\backend\\internal\\handlers\\conversations_test.go": {
+    "mtime": 1780471627.828143,
+    "ast_hash": "8aea3a5012824e1e1abee0d8ef462109",
+    "semantic_hash": "8aea3a5012824e1e1abee0d8ef462109"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\backend\\internal\\handlers\\entries.go": {
+    "mtime": 1781115131.193085,
+    "ast_hash": "8b76e89ca8c721703dce3e1a2131e088",
+    "semantic_hash": "8b76e89ca8c721703dce3e1a2131e088"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\backend\\internal\\handlers\\entries_test.go": {
+    "mtime": 1780989422.393801,
+    "ast_hash": "8d14b4f24ff4e5bf944576274c836347",
+    "semantic_hash": "8d14b4f24ff4e5bf944576274c836347"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\backend\\internal\\handlers\\export.go": {
+    "mtime": 1781173321.192916,
+    "ast_hash": "f7093b4413731b91b7d1dae3dc8d384c",
+    "semantic_hash": "f7093b4413731b91b7d1dae3dc8d384c"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\backend\\internal\\handlers\\export_test.go": {
+    "mtime": 1780989422.3948128,
+    "ast_hash": "23b26f3859d6cd7f03e0bb227880a02e",
+    "semantic_hash": "23b26f3859d6cd7f03e0bb227880a02e"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\backend\\internal\\handlers\\insight.go": {
+    "mtime": 1780989422.393801,
+    "ast_hash": "89f3f9197d78cf8cff79a8f295d77f26",
+    "semantic_hash": "89f3f9197d78cf8cff79a8f295d77f26"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\backend\\internal\\handlers\\insight_test.go": {
+    "mtime": 1780989422.393801,
+    "ast_hash": "acfeaf70460b9803a9887bd5cbd85ebb",
+    "semantic_hash": "acfeaf70460b9803a9887bd5cbd85ebb"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\backend\\internal\\handlers\\interfaces.go": {
+    "mtime": 1780914309.6637273,
+    "ast_hash": "31f5d737d3f2489446b8bda5ce8ef126",
+    "semantic_hash": "31f5d737d3f2489446b8bda5ce8ef126"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\backend\\internal\\handlers\\journey.go": {
+    "mtime": 1780989422.393801,
+    "ast_hash": "cbf12fb7666d32fc5c5bce55f19c3f65",
+    "semantic_hash": "cbf12fb7666d32fc5c5bce55f19c3f65"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\backend\\internal\\handlers\\journey_test.go": {
+    "mtime": 1780471628.123518,
+    "ast_hash": "9333b88837a3487e1337ac52b48ef83a",
+    "semantic_hash": "9333b88837a3487e1337ac52b48ef83a"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\backend\\internal\\handlers\\life_chapters.go": {
+    "mtime": 1780050727.386031,
+    "ast_hash": "8b830e17352644b9a39ab815ce2e17ef",
+    "semantic_hash": "8b830e17352644b9a39ab815ce2e17ef"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\backend\\internal\\handlers\\life_chapters_test.go": {
+    "mtime": 1780471628.184618,
+    "ast_hash": "c3f47751f80ed2deaeb6e195cd45cb7d",
+    "semantic_hash": "c3f47751f80ed2deaeb6e195cd45cb7d"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\backend\\internal\\handlers\\relationships.go": {
+    "mtime": 1780054005.7532818,
+    "ast_hash": "4141c9cc49010083ce572d4b8f6ce007",
+    "semantic_hash": "4141c9cc49010083ce572d4b8f6ce007"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\backend\\internal\\handlers\\relationships_test.go": {
+    "mtime": 1780471628.256088,
+    "ast_hash": "4b4a2d45dab509f36bff7817538e3309",
+    "semantic_hash": "4b4a2d45dab509f36bff7817538e3309"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\backend\\internal\\handlers\\router.go": {
+    "mtime": 1781174210.2234116,
+    "ast_hash": "27fc4c69ac3210caaab8f649d1900015",
+    "semantic_hash": "27fc4c69ac3210caaab8f649d1900015"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\backend\\internal\\handlers\\share.go": {
+    "mtime": 1781115131.210367,
+    "ast_hash": "d89ff3c298db99813f05885871f8b450",
+    "semantic_hash": "d89ff3c298db99813f05885871f8b450"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\backend\\internal\\handlers\\share_test.go": {
+    "mtime": 1780989422.3968298,
+    "ast_hash": "27f903879d88fd6b8c8dfceba676a69c",
+    "semantic_hash": "27f903879d88fd6b8c8dfceba676a69c"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\backend\\internal\\handlers\\streak_test.go": {
+    "mtime": 1780471628.401896,
+    "ast_hash": "7d82b18e4ab67737022565f9d3b6d839",
+    "semantic_hash": "7d82b18e4ab67737022565f9d3b6d839"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\backend\\internal\\handlers\\therapist.go": {
+    "mtime": 1780989422.3983474,
+    "ast_hash": "d6eca696217da13be5fb0c6c90e8f349",
+    "semantic_hash": "d6eca696217da13be5fb0c6c90e8f349"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\backend\\internal\\handlers\\therapist_test.go": {
+    "mtime": 1780471628.4675827,
+    "ast_hash": "1c355b3c799e28d89fffb13013b114cc",
+    "semantic_hash": "1c355b3c799e28d89fffb13013b114cc"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\backend\\internal\\handlers\\therapy.go": {
+    "mtime": 1781170571.1983104,
+    "ast_hash": "bad0166a48723b4bf5a6205f3293e259",
+    "semantic_hash": "bad0166a48723b4bf5a6205f3293e259"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\backend\\internal\\handlers\\therapy_handler_test.go": {
+    "mtime": 1781170670.2654903,
+    "ast_hash": "6c2d9e7b30fcf63ef7673486920d7c2e",
+    "semantic_hash": "6c2d9e7b30fcf63ef7673486920d7c2e"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\backend\\internal\\handlers\\users.go": {
+    "mtime": 1781193973.044523,
+    "ast_hash": "1ff1b3506916b8576699c3da46b08217",
+    "semantic_hash": "1ff1b3506916b8576699c3da46b08217"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\backend\\internal\\handlers\\users_delete_test.go": {
+    "mtime": 1781116422.3847804,
+    "ast_hash": "af33e7fcf7c297b31da3c0a8fe42cb58",
+    "semantic_hash": "af33e7fcf7c297b31da3c0a8fe42cb58"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\backend\\internal\\handlers\\users_test.go": {
+    "mtime": 1781170717.24674,
+    "ast_hash": "7fe476dce846250f3c8986ce94182d63",
+    "semantic_hash": "7fe476dce846250f3c8986ce94182d63"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\backend\\internal\\handlers\\version.go": {
+    "mtime": 1781160366.9310496,
+    "ast_hash": "5a288a3e7a84d7de522db34bd0052d84",
+    "semantic_hash": "5a288a3e7a84d7de522db34bd0052d84"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\backend\\internal\\handlers\\version_test.go": {
+    "mtime": 1781160434.2302535,
+    "ast_hash": "4cc8ecea995c84d64ef03844ce21a48e",
+    "semantic_hash": "4cc8ecea995c84d64ef03844ce21a48e"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\backend\\internal\\handlers\\weekly_reviews.go": {
+    "mtime": 1781115131.20434,
+    "ast_hash": "b0f6e9e3df7244f6da47647030863cb9",
+    "semantic_hash": "b0f6e9e3df7244f6da47647030863cb9"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\backend\\internal\\handlers\\weekly_reviews_test.go": {
+    "mtime": 1780471628.614438,
+    "ast_hash": "96c39a6fa00a9051dc75c5e4d4939837",
+    "semantic_hash": "96c39a6fa00a9051dc75c5e4d4939837"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\backend\\internal\\handlers\\year_in_review.go": {
+    "mtime": 1781115131.197475,
+    "ast_hash": "a26cd245a655d64cb6bf08743f5dc918",
+    "semantic_hash": "a26cd245a655d64cb6bf08743f5dc918"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\backend\\internal\\handlers\\year_in_review_test.go": {
+    "mtime": 1780471628.686813,
+    "ast_hash": "a1f8558c13b35a2df9dad8a5998e61a8",
+    "semantic_hash": "a1f8558c13b35a2df9dad8a5998e61a8"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\backend\\internal\\middleware\\auth.go": {
+    "mtime": 1780989422.3868747,
+    "ast_hash": "4fd1b695e9abed1b707a4a867edc3518",
+    "semantic_hash": "4fd1b695e9abed1b707a4a867edc3518"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\backend\\internal\\middleware\\auth_jwks_test.go": {
+    "mtime": 1781116097.0443015,
+    "ast_hash": "8522a1acf0b53802e5a590a79dd252c6",
+    "semantic_hash": "8522a1acf0b53802e5a590a79dd252c6"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\backend\\internal\\middleware\\auth_test.go": {
+    "mtime": 1780471637.4836895,
+    "ast_hash": "91f99155f8d4db17d9325ca80cd2dbe4",
+    "semantic_hash": "91f99155f8d4db17d9325ca80cd2dbe4"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\backend\\internal\\middleware\\cors.go": {
+    "mtime": 1780987607.801885,
+    "ast_hash": "a3c686fb5332cd825ce2bace603a937a",
+    "semantic_hash": "a3c686fb5332cd825ce2bace603a937a"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\backend\\internal\\middleware\\errors.go": {
+    "mtime": 1780989422.3868747,
+    "ast_hash": "f8c65d6f0d2fed50d0b110e52b5797ad",
+    "semantic_hash": "f8c65d6f0d2fed50d0b110e52b5797ad"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\backend\\internal\\middleware\\logging.go": {
+    "mtime": 1775316317.9147234,
+    "ast_hash": "95337a6e7c87a41c781e403d5bd73ce3",
+    "semantic_hash": "95337a6e7c87a41c781e403d5bd73ce3"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\backend\\internal\\middleware\\middleware_test.go": {
+    "mtime": 1781116055.63677,
+    "ast_hash": "15fff56016139158e356a38fa1c092dc",
+    "semantic_hash": "15fff56016139158e356a38fa1c092dc"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\backend\\internal\\models\\analysis.go": {
+    "mtime": 1780989422.3848758,
+    "ast_hash": "d798c21147d48ebf9205e18525415697",
+    "semantic_hash": "d798c21147d48ebf9205e18525415697"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\backend\\internal\\models\\annual_review.go": {
+    "mtime": 1780049825.1282737,
+    "ast_hash": "b39be897c836f331483281a16daa042c",
+    "semantic_hash": "b39be897c836f331483281a16daa042c"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\backend\\internal\\models\\company.go": {
+    "mtime": 1780989422.3823545,
+    "ast_hash": "b8ec5309464aff24714c1ec4590c7c93",
+    "semantic_hash": "b8ec5309464aff24714c1ec4590c7c93"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\backend\\internal\\models\\conversation.go": {
+    "mtime": 1775367097.16281,
+    "ast_hash": "2a012a3184c3b2d9187e3ceb74b5287d",
+    "semantic_hash": "2a012a3184c3b2d9187e3ceb74b5287d"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\backend\\internal\\models\\entry.go": {
+    "mtime": 1780052554.4652443,
+    "ast_hash": "42defa5c58504d0078729aa78a115ac9",
+    "semantic_hash": "42defa5c58504d0078729aa78a115ac9"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\backend\\internal\\models\\export.go": {
+    "mtime": 1779968387.225067,
+    "ast_hash": "c21ad8abdb2c6ad04d564daa9e3dd5ff",
+    "semantic_hash": "c21ad8abdb2c6ad04d564daa9e3dd5ff"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\backend\\internal\\models\\insight.go": {
+    "mtime": 1780033372.6997316,
+    "ast_hash": "c55e56a40960dfd4fa93f369d2fe4278",
+    "semantic_hash": "c55e56a40960dfd4fa93f369d2fe4278"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\backend\\internal\\models\\job.go": {
+    "mtime": 1780914309.6693532,
+    "ast_hash": "6a1f3d154d7d9ec811d75d67ceae7f0b",
+    "semantic_hash": "6a1f3d154d7d9ec811d75d67ceae7f0b"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\backend\\internal\\models\\journey.go": {
+    "mtime": 1780034518.225718,
+    "ast_hash": "774dbeb80b4fb38c88f25d151d326a57",
+    "semantic_hash": "774dbeb80b4fb38c88f25d151d326a57"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\backend\\internal\\models\\life_chapter.go": {
+    "mtime": 1780050393.779735,
+    "ast_hash": "1e925f5e72e00fa268e63d9f8cabd5ce",
+    "semantic_hash": "1e925f5e72e00fa268e63d9f8cabd5ce"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\backend\\internal\\models\\models_test.go": {
+    "mtime": 1781173369.3992605,
+    "ast_hash": "4cdd861ac339ca293f5165485f3db0f1",
+    "semantic_hash": "4cdd861ac339ca293f5165485f3db0f1"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\backend\\internal\\models\\nudge.go": {
+    "mtime": 1779961131.5348804,
+    "ast_hash": "38a82c1bfc6619eefa3c4e27bb48ab8f",
+    "semantic_hash": "38a82c1bfc6619eefa3c4e27bb48ab8f"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\backend\\internal\\models\\relationship.go": {
+    "mtime": 1780054055.4857745,
+    "ast_hash": "aa95bb9f138de42c1ce65dc098171802",
+    "semantic_hash": "aa95bb9f138de42c1ce65dc098171802"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\backend\\internal\\models\\share.go": {
+    "mtime": 1780989422.3823545,
+    "ast_hash": "07308cab08b0a227bfdfa6f966aa1ab4",
+    "semantic_hash": "07308cab08b0a227bfdfa6f966aa1ab4"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\backend\\internal\\models\\therapist.go": {
+    "mtime": 1780989422.3808773,
+    "ast_hash": "a0ae32d5947227aabe04e227d57819a9",
+    "semantic_hash": "a0ae32d5947227aabe04e227d57819a9"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\backend\\internal\\models\\therapy.go": {
+    "mtime": 1781173277.078072,
+    "ast_hash": "853098147b7e5f79898414d32895d7c3",
+    "semantic_hash": "853098147b7e5f79898414d32895d7c3"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\backend\\internal\\models\\user.go": {
+    "mtime": 1781194153.3197353,
+    "ast_hash": "9589adfb2aaf9a3e475441c3976f06e9",
+    "semantic_hash": "9589adfb2aaf9a3e475441c3976f06e9"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\backend\\internal\\models\\weekly_review.go": {
+    "mtime": 1779940247.4306028,
+    "ast_hash": "8851c8c206898d942b872968bbf9dcba",
+    "semantic_hash": "8851c8c206898d942b872968bbf9dcba"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\backend\\internal\\repositories\\analysis.go": {
+    "mtime": 1780989422.4220028,
+    "ast_hash": "21c490a811bc3a4afdfbf194e7142af2",
+    "semantic_hash": "21c490a811bc3a4afdfbf194e7142af2"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\backend\\internal\\repositories\\analytics.go": {
+    "mtime": 1781174139.8567138,
+    "ast_hash": "b44695c7d96adb38aa05b6f235ef9009",
+    "semantic_hash": "b44695c7d96adb38aa05b6f235ef9009"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\backend\\internal\\repositories\\annual_reviews.go": {
+    "mtime": 1780049862.3803887,
+    "ast_hash": "60f44437481028ef82a34bf0cd30fefe",
+    "semantic_hash": "60f44437481028ef82a34bf0cd30fefe"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\backend\\internal\\repositories\\company.go": {
+    "mtime": 1779968751.241318,
+    "ast_hash": "6f4a59f38bed71e59bccf51e4d985de8",
+    "semantic_hash": "6f4a59f38bed71e59bccf51e4d985de8"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\backend\\internal\\repositories\\conversations.go": {
+    "mtime": 1775367329.8301299,
+    "ast_hash": "4a534cc5ea37ba8d5737870bc5850c60",
+    "semantic_hash": "4a534cc5ea37ba8d5737870bc5850c60"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\backend\\internal\\repositories\\entries.go": {
+    "mtime": 1780989422.4220028,
+    "ast_hash": "8c5ead15d05eb316961144f0d111c9bd",
+    "semantic_hash": "8c5ead15d05eb316961144f0d111c9bd"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\backend\\internal\\repositories\\entries_ext.go": {
+    "mtime": 1779944595.4994488,
+    "ast_hash": "ff230828a224eba08fd3524752a15f6a",
+    "semantic_hash": "ff230828a224eba08fd3524752a15f6a"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\backend\\internal\\repositories\\insight_shares.go": {
+    "mtime": 1780033394.213058,
+    "ast_hash": "a49e7a16e84b3a1063cdd545fb033587",
+    "semantic_hash": "a49e7a16e84b3a1063cdd545fb033587"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\backend\\internal\\repositories\\journey.go": {
+    "mtime": 1780034537.3941326,
+    "ast_hash": "a4b0939445c9ba2b314ebe04280a2676",
+    "semantic_hash": "a4b0939445c9ba2b314ebe04280a2676"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\backend\\internal\\repositories\\life_chapters.go": {
+    "mtime": 1780050559.7957518,
+    "ast_hash": "e54a7c311110f9b2c16587adc5457e7e",
+    "semantic_hash": "e54a7c311110f9b2c16587adc5457e7e"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\backend\\internal\\repositories\\nudges.go": {
+    "mtime": 1775367354.3050494,
+    "ast_hash": "18bef8c792cb0dca53431f8672fc6a02",
+    "semantic_hash": "18bef8c792cb0dca53431f8672fc6a02"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\backend\\internal\\repositories\\payments.go": {
+    "mtime": 1781115224.43219,
+    "ast_hash": "a537ecb8127a03faa464135e12ec1d1e",
+    "semantic_hash": "a537ecb8127a03faa464135e12ec1d1e"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\backend\\internal\\repositories\\relationships.go": {
+    "mtime": 1780054082.4414394,
+    "ast_hash": "fb9fa07976074bdacd11315e78441e55",
+    "semantic_hash": "fb9fa07976074bdacd11315e78441e55"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\backend\\internal\\repositories\\share.go": {
+    "mtime": 1780989422.4235876,
+    "ast_hash": "d3a89f7ad42f585623b7229c9828b8c2",
+    "semantic_hash": "d3a89f7ad42f585623b7229c9828b8c2"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\backend\\internal\\repositories\\therapist.go": {
+    "mtime": 1779979124.2216744,
+    "ast_hash": "c6a12648900da0d4bd24e46f159c1f21",
+    "semantic_hash": "c6a12648900da0d4bd24e46f159c1f21"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\backend\\internal\\repositories\\therapy.go": {
+    "mtime": 1780989422.4235876,
+    "ast_hash": "f10b9adab1fef8b31d0a54f21a5f63ed",
+    "semantic_hash": "f10b9adab1fef8b31d0a54f21a5f63ed"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\backend\\internal\\repositories\\users.go": {
+    "mtime": 1781170473.9596326,
+    "ast_hash": "f09b4d00a50b0f8155a7036121d70660",
+    "semantic_hash": "f09b4d00a50b0f8155a7036121d70660"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\backend\\internal\\repositories\\weekly_reviews.go": {
+    "mtime": 1780989422.4220028,
+    "ast_hash": "c61a9d6fd53c3f8decaf13ce5b0c5091",
+    "semantic_hash": "c61a9d6fd53c3f8decaf13ce5b0c5091"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\backend\\internal\\services\\analytics.go": {
+    "mtime": 1781174079.3977883,
+    "ast_hash": "8383984416b7310c27b97a6dd8899a44",
+    "semantic_hash": "8383984416b7310c27b97a6dd8899a44"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\backend\\internal\\services\\analytics_test.go": {
+    "mtime": 1781174093.6786406,
+    "ast_hash": "1e2b61b2122b489fb14f869927ec0dbb",
+    "semantic_hash": "1e2b61b2122b489fb14f869927ec0dbb"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\backend\\internal\\services\\auth.go": {
+    "mtime": 1780914309.6749527,
+    "ast_hash": "de0a4e90a8ec0234d511f82767cd6d93",
+    "semantic_hash": "de0a4e90a8ec0234d511f82767cd6d93"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\backend\\internal\\services\\auth_flow_test.go": {
+    "mtime": 1780989422.4018826,
+    "ast_hash": "fbb001b09e2b6ae55184bc153b6387fe",
+    "semantic_hash": "fbb001b09e2b6ae55184bc153b6387fe"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\backend\\internal\\services\\auth_test.go": {
+    "mtime": 1780471573.6283903,
+    "ast_hash": "94252930f8cfa7f1c77da954b008edae",
+    "semantic_hash": "94252930f8cfa7f1c77da954b008edae"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\backend\\internal\\services\\claude.go": {
+    "mtime": 1780989422.4018826,
+    "ast_hash": "8f6e0c14ea55743465eef3d3d6891202",
+    "semantic_hash": "8f6e0c14ea55743465eef3d3d6891202"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\backend\\internal\\services\\claude_reviews_test.go": {
+    "mtime": 1781116583.9901457,
+    "ast_hash": "d6558af15d16a4baeaa33e0c9012fd2c",
+    "semantic_hash": "d6558af15d16a4baeaa33e0c9012fd2c"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\backend\\internal\\services\\claude_test.go": {
+    "mtime": 1780989422.4018826,
+    "ast_hash": "734ed069b560c5686db5447bbd940439",
+    "semantic_hash": "734ed069b560c5686db5447bbd940439"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\backend\\internal\\services\\context_builder.go": {
+    "mtime": 1779944676.308091,
+    "ast_hash": "c278973f1f8f432e43d0649587704aa1",
+    "semantic_hash": "c278973f1f8f432e43d0649587704aa1"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\backend\\internal\\services\\context_builder_test.go": {
+    "mtime": 1780989422.410004,
+    "ast_hash": "d1681f3f1bcd61e20ced925e590655b4",
+    "semantic_hash": "d1681f3f1bcd61e20ced925e590655b4"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\backend\\internal\\services\\conversation.go": {
+    "mtime": 1780989422.4090033,
+    "ast_hash": "7ca0cddb64144f225822dabc99729257",
+    "semantic_hash": "7ca0cddb64144f225822dabc99729257"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\backend\\internal\\services\\conversation_test.go": {
+    "mtime": 1780989422.410004,
+    "ast_hash": "978e73b5095e47625f77aa20001e2f79",
+    "semantic_hash": "978e73b5095e47625f77aa20001e2f79"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\backend\\internal\\services\\crisis.go": {
+    "mtime": 1781112913.234233,
+    "ast_hash": "3addbb62b2b1d1fec36ffdef21cf71c4",
+    "semantic_hash": "3addbb62b2b1d1fec36ffdef21cf71c4"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\backend\\internal\\services\\crisis_test.go": {
+    "mtime": 1781112775.3851774,
+    "ast_hash": "e4f14475d24db131ca55b7ab72c1a089",
+    "semantic_hash": "e4f14475d24db131ca55b7ab72c1a089"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\backend\\internal\\services\\entries.go": {
+    "mtime": 1780989422.4120018,
+    "ast_hash": "d41099df03a38beb70e2d472b7a20698",
+    "semantic_hash": "d41099df03a38beb70e2d472b7a20698"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\backend\\internal\\services\\fcm.go": {
+    "mtime": 1781147834.4547157,
+    "ast_hash": "bee04e3d5681ae41ee1a2fb35b8c74ae",
+    "semantic_hash": "bee04e3d5681ae41ee1a2fb35b8c74ae"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\backend\\internal\\services\\fcm_test.go": {
+    "mtime": 1781148056.5081055,
+    "ast_hash": "7a4e22640bdcfcf3104235dfc1e15647",
+    "semantic_hash": "7a4e22640bdcfcf3104235dfc1e15647"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\backend\\internal\\services\\interfaces.go": {
+    "mtime": 1780914309.683357,
+    "ast_hash": "504033939ba34bb00d3d47b09d9392e5",
+    "semantic_hash": "504033939ba34bb00d3d47b09d9392e5"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\backend\\internal\\services\\journey.go": {
+    "mtime": 1780989422.4130056,
+    "ast_hash": "0b711a9b4a9049aaeefedd77fffefbe7",
+    "semantic_hash": "0b711a9b4a9049aaeefedd77fffefbe7"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\backend\\internal\\services\\journey_test.go": {
+    "mtime": 1780034648.520967,
+    "ast_hash": "db80add3228e26519e28a450d567f772",
+    "semantic_hash": "db80add3228e26519e28a450d567f772"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\backend\\internal\\services\\nudge.go": {
+    "mtime": 1780318500.7513156,
+    "ast_hash": "dde783c1509c064fc1888c28220a7d25",
+    "semantic_hash": "dde783c1509c064fc1888c28220a7d25"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\backend\\internal\\services\\prompts.go": {
+    "mtime": 1780989422.4154253,
+    "ast_hash": "d8e19ba8405bea30fd86353355ae5177",
+    "semantic_hash": "d8e19ba8405bea30fd86353355ae5177"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\backend\\internal\\services\\prompts_test.go": {
+    "mtime": 1780989422.4165082,
+    "ast_hash": "c81d3c0f920b9c176a635796fe2243dc",
+    "semantic_hash": "c81d3c0f920b9c176a635796fe2243dc"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\backend\\internal\\services\\storage.go": {
+    "mtime": 1780989422.418564,
+    "ast_hash": "c376b49fa30c65e1ebb546770a1ae4e0",
+    "semantic_hash": "c376b49fa30c65e1ebb546770a1ae4e0"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\backend\\internal\\services\\subscription.go": {
+    "mtime": 1780989422.418564,
+    "ast_hash": "e05ed6c77ae00e8823604b8a4e14c706",
+    "semantic_hash": "e05ed6c77ae00e8823604b8a4e14c706"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\backend\\internal\\services\\subscription_test.go": {
+    "mtime": 1781173353.2830865,
+    "ast_hash": "e1ececfb8c735e287a57dc0a3c0c2d4c",
+    "semantic_hash": "e1ececfb8c735e287a57dc0a3c0c2d4c"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\backend\\internal\\services\\therapy.go": {
+    "mtime": 1781173281.6734428,
+    "ast_hash": "19e63c7c124d49e023acabfd5180f833",
+    "semantic_hash": "19e63c7c124d49e023acabfd5180f833"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\backend\\internal\\services\\therapy_sessions_test.go": {
+    "mtime": 1781116622.91985,
+    "ast_hash": "52fca865b92a87745a96cd47878c3072",
+    "semantic_hash": "52fca865b92a87745a96cd47878c3072"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\backend\\internal\\services\\therapy_test.go": {
+    "mtime": 1781173396.0261238,
+    "ast_hash": "fb2c0f185672cdbeebfdaeefd3ae785d",
+    "semantic_hash": "fb2c0f185672cdbeebfdaeefd3ae785d"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\backend\\internal\\services\\transcription.go": {
+    "mtime": 1775316259.2583117,
+    "ast_hash": "688d65d0e43a8e727aff5a238ceea3ca",
+    "semantic_hash": "688d65d0e43a8e727aff5a238ceea3ca"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\backend\\internal\\services\\tts.go": {
+    "mtime": 1781194017.970594,
+    "ast_hash": "906a122ecf2901d6b2cabca3d7fdca38",
+    "semantic_hash": "906a122ecf2901d6b2cabca3d7fdca38"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\backend\\internal\\services\\tts_test.go": {
+    "mtime": 1781170778.3320277,
+    "ast_hash": "a41948f4487bc072f26d2b9ebdd477f1",
+    "semantic_hash": "a41948f4487bc072f26d2b9ebdd477f1"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\backend\\internal\\services\\users.go": {
+    "mtime": 1781170486.9664137,
+    "ast_hash": "52778b681226e2604841867e1d44be1a",
+    "semantic_hash": "52778b681226e2604841867e1d44be1a"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\backend\\internal\\workers\\interfaces.go": {
+    "mtime": 1780914309.6907885,
+    "ast_hash": "f4f6c737ee8a2f599fb09e69623a35cc",
+    "semantic_hash": "f4f6c737ee8a2f599fb09e69623a35cc"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\backend\\internal\\workers\\nudge_scheduler.go": {
+    "mtime": 1780989422.431125,
+    "ast_hash": "6ce029817a2c8d816c923970623be8b5",
+    "semantic_hash": "6ce029817a2c8d816c923970623be8b5"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\backend\\internal\\workers\\nudge_scheduler_test.go": {
+    "mtime": 1779879600.6602118,
+    "ast_hash": "6cb84ef3bb2c74e34dbfe8adeb4e2a71",
+    "semantic_hash": "6cb84ef3bb2c74e34dbfe8adeb4e2a71"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\backend\\internal\\workers\\transcription.go": {
+    "mtime": 1781112922.388612,
+    "ast_hash": "c25702ee797ab2ba7a3eff6dfafcb07a",
+    "semantic_hash": "c25702ee797ab2ba7a3eff6dfafcb07a"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\backend\\internal\\workers\\transcription_test.go": {
+    "mtime": 1781112946.8407283,
+    "ast_hash": "a9e088150b67908cea9ae89fb5ae658c",
+    "semantic_hash": "a9e088150b67908cea9ae89fb5ae658c"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\backend\\internal\\workers\\weekly_review_scheduler.go": {
+    "mtime": 1780989422.42911,
+    "ast_hash": "7978676902db163aa842cebe4fbc9d6d",
+    "semantic_hash": "7978676902db163aa842cebe4fbc9d6d"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\backend\\internal\\workers\\weekly_review_scheduler_test.go": {
+    "mtime": 1780989422.427601,
+    "ast_hash": "6d72e1e2659ce061c0e6123ca589a8e9",
+    "semantic_hash": "6d72e1e2659ce061c0e6123ca589a8e9"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\backend\\internal\\workers\\year_in_review_scheduler.go": {
+    "mtime": 1780989422.427601,
+    "ast_hash": "531d081ab693ac60312399c238c1a85b",
+    "semantic_hash": "531d081ab693ac60312399c238c1a85b"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\backend\\internal\\workers\\year_in_review_scheduler_test.go": {
+    "mtime": 1780989422.427601,
+    "ast_hash": "e665e02d0f97dfd5453745ecaa69dc32",
+    "semantic_hash": "e665e02d0f97dfd5453745ecaa69dc32"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\backend\\migrations\\000001_init.down.sql": {
+    "mtime": 1775316046.978646,
+    "ast_hash": "5783f3fbfdcef88ecbf4c0a9ef0db3b0",
+    "semantic_hash": "5783f3fbfdcef88ecbf4c0a9ef0db3b0"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\backend\\migrations\\000001_init.up.sql": {
+    "mtime": 1775316040.6251588,
+    "ast_hash": "bca00bc38731a5ce7d4c71d6d9c22e67",
+    "semantic_hash": "bca00bc38731a5ce7d4c71d6d9c22e67"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\backend\\migrations\\000002_phase2.down.sql": {
+    "mtime": 1775367037.7341113,
+    "ast_hash": "d0f5c369f024a858d0cfb51251ba9728",
+    "semantic_hash": "d0f5c369f024a858d0cfb51251ba9728"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\backend\\migrations\\000002_phase2.up.sql": {
+    "mtime": 1775367028.8031008,
+    "ast_hash": "d4076a6a376e62cd3b83611c229da317",
+    "semantic_hash": "d4076a6a376e62cd3b83611c229da317"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\backend\\migrations\\000003_auth.down.sql": {
+    "mtime": 1775997706.6948864,
+    "ast_hash": "5b21a2efbcb96fe7909bb0393b14030e",
+    "semantic_hash": "5b21a2efbcb96fe7909bb0393b14030e"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\backend\\migrations\\000003_auth.up.sql": {
+    "mtime": 1775997703.5793962,
+    "ast_hash": "213419d2f058c8877bf01d6c89c925fd",
+    "semantic_hash": "213419d2f058c8877bf01d6c89c925fd"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\backend\\migrations\\000004_phase4a.down.sql": {
+    "mtime": 1779939197.5282004,
+    "ast_hash": "179bf1c603b59a7e0d10f4cf7d5e0e10",
+    "semantic_hash": "179bf1c603b59a7e0d10f4cf7d5e0e10"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\backend\\migrations\\000004_phase4a.up.sql": {
+    "mtime": 1780989422.165095,
+    "ast_hash": "6c639665accb30b6a9132ea38f3f3df8",
+    "semantic_hash": "6c639665accb30b6a9132ea38f3f3df8"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\backend\\migrations\\000005_phase4b.down.sql": {
+    "mtime": 1779940236.6938546,
+    "ast_hash": "1ae71814c4dac16e7735e7fe94d31f12",
+    "semantic_hash": "1ae71814c4dac16e7735e7fe94d31f12"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\backend\\migrations\\000005_phase4b.up.sql": {
+    "mtime": 1779940230.902048,
+    "ast_hash": "8177600e2d4d7adc8e9e384c539462a7",
+    "semantic_hash": "8177600e2d4d7adc8e9e384c539462a7"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\backend\\migrations\\000006_phase4c.down.sql": {
+    "mtime": 1779941730.1995769,
+    "ast_hash": "b45420540936ec1b0ec9f2fc9ca3ea47",
+    "semantic_hash": "b45420540936ec1b0ec9f2fc9ca3ea47"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\backend\\migrations\\000006_phase4c.up.sql": {
+    "mtime": 1779941725.5137649,
+    "ast_hash": "d940e9ccaf1650efa95637d1014425c4",
+    "semantic_hash": "d940e9ccaf1650efa95637d1014425c4"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\backend\\migrations\\000007_phase4f.down.sql": {
+    "mtime": 1779943436.4601693,
+    "ast_hash": "7bd57643094259bad1898bfb325b13bb",
+    "semantic_hash": "7bd57643094259bad1898bfb325b13bb"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\backend\\migrations\\000007_phase4f.up.sql": {
+    "mtime": 1779943428.1044528,
+    "ast_hash": "9894e70c0deaf57281d30bda239c6e46",
+    "semantic_hash": "9894e70c0deaf57281d30bda239c6e46"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\backend\\migrations\\000008_phase5a.down.sql": {
+    "mtime": 1779967944.08025,
+    "ast_hash": "aa8a0a050c3d87473db868f5c629c979",
+    "semantic_hash": "aa8a0a050c3d87473db868f5c629c979"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\backend\\migrations\\000008_phase5a.up.sql": {
+    "mtime": 1779967941.3783722,
+    "ast_hash": "4f5ddad27dd0618593bdd525a25162fa",
+    "semantic_hash": "4f5ddad27dd0618593bdd525a25162fa"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\backend\\migrations\\000009_phase5c.down.sql": {
+    "mtime": 1779968727.6082852,
+    "ast_hash": "2df94bbae385f2296252d4472121e910",
+    "semantic_hash": "2df94bbae385f2296252d4472121e910"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\backend\\migrations\\000009_phase5c.up.sql": {
+    "mtime": 1780989422.158035,
+    "ast_hash": "0767ce15c68df7f8ce5149ca34a003ef",
+    "semantic_hash": "0767ce15c68df7f8ce5149ca34a003ef"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\backend\\migrations\\000010_phase5g.down.sql": {
+    "mtime": 1779979068.4579854,
+    "ast_hash": "62d8a6b2afeaef7c055a7d043a427e9a",
+    "semantic_hash": "62d8a6b2afeaef7c055a7d043a427e9a"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\backend\\migrations\\000010_phase5g.up.sql": {
+    "mtime": 1779979065.5418327,
+    "ast_hash": "e78c3707fd7b69d9f51b4dbd60b2eef9",
+    "semantic_hash": "e78c3707fd7b69d9f51b4dbd60b2eef9"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\backend\\migrations\\000011_monetization.down.sql": {
+    "mtime": 1780032214.8255415,
+    "ast_hash": "2b4261f953ee5cd590358b4ec0309400",
+    "semantic_hash": "2b4261f953ee5cd590358b4ec0309400"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\backend\\migrations\\000011_monetization.up.sql": {
+    "mtime": 1780032211.926525,
+    "ast_hash": "409adf13fbec566e6c4275827f72dcf6",
+    "semantic_hash": "409adf13fbec566e6c4275827f72dcf6"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\backend\\migrations\\000012_insight_shares.down.sql": {
+    "mtime": 1780033364.3973744,
+    "ast_hash": "3311f69e569e6c9c4498968edfa8b3a3",
+    "semantic_hash": "3311f69e569e6c9c4498968edfa8b3a3"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\backend\\migrations\\000012_insight_shares.up.sql": {
+    "mtime": 1780033362.0450454,
+    "ast_hash": "fadcd0c09c819078cc19e4ab2900878c",
+    "semantic_hash": "fadcd0c09c819078cc19e4ab2900878c"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\backend\\migrations\\000013_guided_journeys.down.sql": {
+    "mtime": 1780034503.4279387,
+    "ast_hash": "9fa5e7b8fc1368f80a033dcac37769f5",
+    "semantic_hash": "9fa5e7b8fc1368f80a033dcac37769f5"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\backend\\migrations\\000013_guided_journeys.up.sql": {
+    "mtime": 1780034499.6184742,
+    "ast_hash": "d51942343d232a7aace14f944dbbf811",
+    "semantic_hash": "d51942343d232a7aace14f944dbbf811"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\backend\\migrations\\000014_year_in_review.down.sql": {
+    "mtime": 1780049816.2276163,
+    "ast_hash": "01f6c22447c745ac46529f9421b99bc8",
+    "semantic_hash": "01f6c22447c745ac46529f9421b99bc8"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\backend\\migrations\\000014_year_in_review.up.sql": {
+    "mtime": 1780049813.285736,
+    "ast_hash": "40908a2c7fe77e973070c52cf76686e9",
+    "semantic_hash": "40908a2c7fe77e973070c52cf76686e9"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\backend\\migrations\\000015_life_chapters.down.sql": {
+    "mtime": 1780050383.1884894,
+    "ast_hash": "45090283d371b9237099b564a2f137a4",
+    "semantic_hash": "45090283d371b9237099b564a2f137a4"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\backend\\migrations\\000015_life_chapters.up.sql": {
+    "mtime": 1780050379.504953,
+    "ast_hash": "2e022e7c5379e33054a1025bbabc39b3",
+    "semantic_hash": "2e022e7c5379e33054a1025bbabc39b3"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\backend\\migrations\\000016_dream_decoder.down.sql": {
+    "mtime": 1780052544.8545046,
+    "ast_hash": "98aa3cec152b8653b0bb0e8c904b672d",
+    "semantic_hash": "98aa3cec152b8653b0bb0e8c904b672d"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\backend\\migrations\\000016_dream_decoder.up.sql": {
+    "mtime": 1780052543.830888,
+    "ast_hash": "7de3dc4a8082b76803b46915b4717d82",
+    "semantic_hash": "7de3dc4a8082b76803b46915b4717d82"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\backend\\migrations\\000017_relationship_map.down.sql": {
+    "mtime": 1780053866.5118222,
+    "ast_hash": "d93c977975a79ca5cf5ca15a651b1e7d",
+    "semantic_hash": "d93c977975a79ca5cf5ca15a651b1e7d"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\backend\\migrations\\000017_relationship_map.up.sql": {
+    "mtime": 1780053863.55428,
+    "ast_hash": "ced4a61fb3431c2eca2aa3fd32fb516d",
+    "semantic_hash": "ced4a61fb3431c2eca2aa3fd32fb516d"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\backend\\migrations\\000018_therapy_mode.down.sql": {
+    "mtime": 1780237268.0956101,
+    "ast_hash": "739ad3106d4a68029b4408ca4f2d3511",
+    "semantic_hash": "739ad3106d4a68029b4408ca4f2d3511"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\backend\\migrations\\000018_therapy_mode.up.sql": {
+    "mtime": 1780237264.6813645,
+    "ast_hash": "ab865c42a0cbc0583adaf97856fb8165",
+    "semantic_hash": "ab865c42a0cbc0583adaf97856fb8165"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\backend\\migrations\\000019_nudge_enabled.down.sql": {
+    "mtime": 1780318446.1342447,
+    "ast_hash": "1f1a6720aaa5f0b06e0044da0f41e1bc",
+    "semantic_hash": "1f1a6720aaa5f0b06e0044da0f41e1bc"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\backend\\migrations\\000019_nudge_enabled.up.sql": {
+    "mtime": 1780318444.9325404,
+    "ast_hash": "93ab74121efa684db168ff493ac16002",
+    "semantic_hash": "93ab74121efa684db168ff493ac16002"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\backend\\migrations\\000020_therapy_personas.down.sql": {
+    "mtime": 1780319926.252384,
+    "ast_hash": "3164bb0631a724be94d0830ffd2cd4d5",
+    "semantic_hash": "3164bb0631a724be94d0830ffd2cd4d5"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\backend\\migrations\\000020_therapy_personas.up.sql": {
+    "mtime": 1780989422.165095,
+    "ast_hash": "903abf34d01031881a0eabd55ac08768",
+    "semantic_hash": "903abf34d01031881a0eabd55ac08768"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\backend\\migrations\\000021_age_range.down.sql": {
+    "mtime": 1780379339.6507664,
+    "ast_hash": "cb0cebf4c2a27908ca8902795938b758",
+    "semantic_hash": "cb0cebf4c2a27908ca8902795938b758"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\backend\\migrations\\000021_age_range.up.sql": {
+    "mtime": 1780379339.3027413,
+    "ast_hash": "1dad3c3c9e36c7847e734174c5f3f277",
+    "semantic_hash": "1dad3c3c9e36c7847e734174c5f3f277"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\backend\\migrations\\000022_therapy_session_analysis.down.sql": {
+    "mtime": 1780381879.0373614,
+    "ast_hash": "b4daf6f4f11b6838aeee9f02ab6da6cf",
+    "semantic_hash": "b4daf6f4f11b6838aeee9f02ab6da6cf"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\backend\\migrations\\000022_therapy_session_analysis.up.sql": {
+    "mtime": 1780381874.2433758,
+    "ast_hash": "b538b3d566f9d96078dd935966057ea5",
+    "semantic_hash": "b538b3d566f9d96078dd935966057ea5"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\backend\\migrations\\000023_dream_lenses.down.sql": {
+    "mtime": 1780493632.7065475,
+    "ast_hash": "6ca4f8bf17a81748a99d8c22d069e26e",
+    "semantic_hash": "6ca4f8bf17a81748a99d8c22d069e26e"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\backend\\migrations\\000023_dream_lenses.up.sql": {
+    "mtime": 1780493631.1017957,
+    "ast_hash": "d52f952991b8c551981bcc598a88ee27",
+    "semantic_hash": "d52f952991b8c551981bcc598a88ee27"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\backend\\migrations\\000024_enable_rls.down.sql": {
+    "mtime": 1780574495.0148745,
+    "ast_hash": "8d944a516499e570795cf6a06027d11f",
+    "semantic_hash": "8d944a516499e570795cf6a06027d11f"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\backend\\migrations\\000024_enable_rls.up.sql": {
+    "mtime": 1780989422.165095,
+    "ast_hash": "c69b47f5abaa8114580fb25d6ea886da",
+    "semantic_hash": "c69b47f5abaa8114580fb25d6ea886da"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\backend\\migrations\\000025_soft_delete_country.down.sql": {
+    "mtime": 1780913679.788104,
+    "ast_hash": "0bce82a982539dd4d3a19500278b2e2e",
+    "semantic_hash": "0bce82a982539dd4d3a19500278b2e2e"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\backend\\migrations\\000025_soft_delete_country.up.sql": {
+    "mtime": 1780913675.4652162,
+    "ast_hash": "1db8c512816a6ad5f0730d1bf23f421e",
+    "semantic_hash": "1db8c512816a6ad5f0730d1bf23f421e"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\backend\\migrations\\000026_payments.down.sql": {
+    "mtime": 1781115208.1615,
+    "ast_hash": "e52032761e397a81c54fd8671fcf1779",
+    "semantic_hash": "e52032761e397a81c54fd8671fcf1779"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\backend\\migrations\\000026_payments.up.sql": {
+    "mtime": 1781115207.5532722,
+    "ast_hash": "15d2750e84029d6c9400e2d303a31005",
+    "semantic_hash": "15d2750e84029d6c9400e2d303a31005"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\backend\\migrations\\000027_voice_language.down.sql": {
+    "mtime": 1781170416.7241983,
+    "ast_hash": "a02a6de14a5eeb9e0c3ecc8fcdb11f65",
+    "semantic_hash": "a02a6de14a5eeb9e0c3ecc8fcdb11f65"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\backend\\migrations\\000027_voice_language.up.sql": {
+    "mtime": 1781170415.9188852,
+    "ast_hash": "cba79a0159260d4251bee27f27da1bbb",
+    "semantic_hash": "cba79a0159260d4251bee27f27da1bbb"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\backend\\migrations\\000028_analytics_events.down.sql": {
+    "mtime": 1781174062.0893285,
+    "ast_hash": "220ec2e0d6fbac095935a08ee9077d44",
+    "semantic_hash": "220ec2e0d6fbac095935a08ee9077d44"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\backend\\migrations\\000028_analytics_events.up.sql": {
+    "mtime": 1781174061.6052809,
+    "ast_hash": "3824569fbf4e59624ba9b104b8a4c363",
+    "semantic_hash": "3824569fbf4e59624ba9b104b8a4c363"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\backend\\migrations\\000029_payments_extend.down.sql": {
+    "mtime": 1781174066.1939814,
+    "ast_hash": "3787dc6d54f1fc5c6f56da4e0c22c9da",
+    "semantic_hash": "3787dc6d54f1fc5c6f56da4e0c22c9da"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\backend\\migrations\\000029_payments_extend.up.sql": {
+    "mtime": 1781174065.395072,
+    "ast_hash": "970d7c273cabb7be22a26927671bbe99",
+    "semantic_hash": "970d7c273cabb7be22a26927671bbe99"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\backend\\pkg\\apierr\\errors.go": {
+    "mtime": 1775316103.4027205,
+    "ast_hash": "ad0fe2c93dec21005a74435907ddfadc",
+    "semantic_hash": "ad0fe2c93dec21005a74435907ddfadc"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\backend\\pkg\\apierr\\errors_test.go": {
+    "mtime": 1781116802.8040607,
+    "ast_hash": "f786ffcff5e580e852310e436ac1ba72",
+    "semantic_hash": "f786ffcff5e580e852310e436ac1ba72"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\backend\\pkg\\queue\\redis.go": {
+    "mtime": 1780989422.3808773,
+    "ast_hash": "4c96de47a37a0122ee3aa80d3701b410",
+    "semantic_hash": "4c96de47a37a0122ee3aa80d3701b410"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\backend\\pkg\\storage\\s3.go": {
+    "mtime": 1776002560.5335872,
+    "ast_hash": "661e8d6d981f79c57e5885fa2bd7b20a",
+    "semantic_hash": "661e8d6d981f79c57e5885fa2bd7b20a"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\mobile\\__tests__\\RecordButton-test.tsx": {
+    "mtime": 1779947303.3187215,
+    "ast_hash": "556a9d9d31ee815e27fdfa20459c43bc",
+    "semantic_hash": "556a9d9d31ee815e27fdfa20459c43bc"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\mobile\\android\\app\\.cxx\\RelWithDebInfo\\3e3n6su4\\arm64-v8a\\.cmake\\api\\v1\\reply\\cache-v2-76725648bd7129dd0074.json": {
+    "mtime": 1781180383.314605,
+    "ast_hash": "ac4d6432b999c0167399b93c743bc200",
+    "semantic_hash": "ac4d6432b999c0167399b93c743bc200"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\mobile\\android\\app\\.cxx\\RelWithDebInfo\\3e3n6su4\\arm64-v8a\\.cmake\\api\\v1\\reply\\cmakeFiles-v1-29e2ab6be640e6e3dbc8.json": {
+    "mtime": 1781180383.3355668,
+    "ast_hash": "7b5f0015b9e2526232d1caf4a7027c46",
+    "semantic_hash": "7b5f0015b9e2526232d1caf4a7027c46"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\mobile\\android\\app\\.cxx\\RelWithDebInfo\\3e3n6su4\\arm64-v8a\\.cmake\\api\\v1\\reply\\codemodel-v2-9f241adfdf890aee3af4.json": {
+    "mtime": 1781180383.7461264,
+    "ast_hash": "0499251ff1e0914d6918dbdc98a80424",
+    "semantic_hash": "0499251ff1e0914d6918dbdc98a80424"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\mobile\\android\\app\\.cxx\\RelWithDebInfo\\3e3n6su4\\arm64-v8a\\.cmake\\api\\v1\\reply\\directory-.-RelWithDebInfo-d0094a50bb2071803777.json": {
+    "mtime": 1781180383.565123,
+    "ast_hash": "9f40cd23d42f6f64a253672a38c7ce57",
+    "semantic_hash": "9f40cd23d42f6f64a253672a38c7ce57"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\mobile\\android\\app\\.cxx\\RelWithDebInfo\\3e3n6su4\\arm64-v8a\\.cmake\\api\\v1\\reply\\directory-RNGoogleSignInCGen_autolinked_build-RelWithDebInfo-d32548cad0bfcfd4a3ae.json": {
+    "mtime": 1781180383.6130593,
+    "ast_hash": "571c70684f98a209e9c40f3a01077ca2",
+    "semantic_hash": "571c70684f98a209e9c40f3a01077ca2"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\mobile\\android\\app\\.cxx\\RelWithDebInfo\\3e3n6su4\\arm64-v8a\\.cmake\\api\\v1\\reply\\directory-rnasyncstorage_autolinked_build-RelWithDebInfo-d72576d17ec4f73f2c11.json": {
+    "mtime": 1781180383.590899,
+    "ast_hash": "119660954b152ffed57303fad37e3c07",
+    "semantic_hash": "119660954b152ffed57303fad37e3c07"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\mobile\\android\\app\\.cxx\\RelWithDebInfo\\3e3n6su4\\arm64-v8a\\.cmake\\api\\v1\\reply\\directory-rngesturehandler_codegen_autolinked_build-RelWithDebInfo-fc0b0c9680b7407dd6bd.json": {
+    "mtime": 1781180383.6459825,
+    "ast_hash": "89e5865d8306577e3ae3ef895235a009",
+    "semantic_hash": "89e5865d8306577e3ae3ef895235a009"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\mobile\\android\\app\\.cxx\\RelWithDebInfo\\3e3n6su4\\arm64-v8a\\.cmake\\api\\v1\\reply\\directory-rnreanimated_autolinked_build-RelWithDebInfo-c8e118d40fbe185ad61d.json": {
+    "mtime": 1781180383.6600294,
+    "ast_hash": "e5dca636a97fa01b7d7e849ad5accc71",
+    "semantic_hash": "e5dca636a97fa01b7d7e849ad5accc71"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\mobile\\android\\app\\.cxx\\RelWithDebInfo\\3e3n6su4\\arm64-v8a\\.cmake\\api\\v1\\reply\\directory-rnscreens_autolinked_build-RelWithDebInfo-9e00a8cf8c4e427e069b.json": {
+    "mtime": 1781180383.6905353,
+    "ast_hash": "6ccc93e3d6b824bc3de24edeee3b3811",
+    "semantic_hash": "6ccc93e3d6b824bc3de24edeee3b3811"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\mobile\\android\\app\\.cxx\\RelWithDebInfo\\3e3n6su4\\arm64-v8a\\.cmake\\api\\v1\\reply\\directory-rnstripe_autolinked_build-RelWithDebInfo-eeca800968f4c4ad17a9.json": {
+    "mtime": 1781180383.6303403,
+    "ast_hash": "278323bb07bc066e75c4cc54514115fc",
+    "semantic_hash": "278323bb07bc066e75c4cc54514115fc"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\mobile\\android\\app\\.cxx\\RelWithDebInfo\\3e3n6su4\\arm64-v8a\\.cmake\\api\\v1\\reply\\directory-rnviewshot_autolinked_build-RelWithDebInfo-5f4ee4985916998675be.json": {
+    "mtime": 1781180383.710883,
+    "ast_hash": "bd4ac4eaa5b39b3027aaeb321da60e26",
+    "semantic_hash": "bd4ac4eaa5b39b3027aaeb321da60e26"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\mobile\\android\\app\\.cxx\\RelWithDebInfo\\3e3n6su4\\arm64-v8a\\.cmake\\api\\v1\\reply\\directory-rnworklets_autolinked_build-RelWithDebInfo-c3f28eefae0e0996f4ba.json": {
+    "mtime": 1781180383.7276335,
+    "ast_hash": "4da782279e43561f63e0916256454eb3",
+    "semantic_hash": "4da782279e43561f63e0916256454eb3"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\mobile\\android\\app\\.cxx\\RelWithDebInfo\\3e3n6su4\\arm64-v8a\\.cmake\\api\\v1\\reply\\directory-safeareacontext_autolinked_build-RelWithDebInfo-fd97d2661a0cfdecf4d0.json": {
+    "mtime": 1781180383.6760173,
+    "ast_hash": "149f67c9ee4e14fb89c0f3f4f3038a58",
+    "semantic_hash": "149f67c9ee4e14fb89c0f3f4f3038a58"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\mobile\\android\\app\\.cxx\\RelWithDebInfo\\3e3n6su4\\arm64-v8a\\.cmake\\api\\v1\\reply\\index-2026-06-11T12-19-43-0771.json": {
+    "mtime": 1781180383.7698498,
+    "ast_hash": "25ccea3ffdafa41b46549f98fb1f50b3",
+    "semantic_hash": "25ccea3ffdafa41b46549f98fb1f50b3"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\mobile\\android\\app\\.cxx\\RelWithDebInfo\\3e3n6su4\\arm64-v8a\\.cmake\\api\\v1\\reply\\target-appmodules-RelWithDebInfo-ffa1f8991f10f3a9537f.json": {
+    "mtime": 1781180383.3579617,
+    "ast_hash": "84c88c80cab8c7e2f30c5ed180005cb2",
+    "semantic_hash": "84c88c80cab8c7e2f30c5ed180005cb2"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\mobile\\android\\app\\.cxx\\RelWithDebInfo\\3e3n6su4\\arm64-v8a\\.cmake\\api\\v1\\reply\\target-react_codegen_RNGoogleSignInCGen-RelWithDebInfo-6b59c086427fc1f22008.json": {
+    "mtime": 1781180383.3793826,
+    "ast_hash": "20922f463f6ed30b4fc2c892c14e7ac0",
+    "semantic_hash": "20922f463f6ed30b4fc2c892c14e7ac0"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\mobile\\android\\app\\.cxx\\RelWithDebInfo\\3e3n6su4\\arm64-v8a\\.cmake\\api\\v1\\reply\\target-react_codegen_rnasyncstorage-RelWithDebInfo-b1b334d32d571641e9a0.json": {
+    "mtime": 1781180383.4022965,
+    "ast_hash": "7c3da3e4ac4a2bc394bd8ce7097a5e84",
+    "semantic_hash": "7c3da3e4ac4a2bc394bd8ce7097a5e84"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\mobile\\android\\app\\.cxx\\RelWithDebInfo\\3e3n6su4\\arm64-v8a\\.cmake\\api\\v1\\reply\\target-react_codegen_rngesturehandler_codegen-RelWithDebInfo-213aeb995b933a67ce51.json": {
+    "mtime": 1781180383.4205353,
+    "ast_hash": "b0b1d0e4891dfa4048b28fafde3cd6f5",
+    "semantic_hash": "b0b1d0e4891dfa4048b28fafde3cd6f5"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\mobile\\android\\app\\.cxx\\RelWithDebInfo\\3e3n6su4\\arm64-v8a\\.cmake\\api\\v1\\reply\\target-react_codegen_rnreanimated-RelWithDebInfo-7d5a23d898d7f9f0ed34.json": {
+    "mtime": 1781180383.4423792,
+    "ast_hash": "b18466045e3068150ce2c53cc25b1e3f",
+    "semantic_hash": "b18466045e3068150ce2c53cc25b1e3f"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\mobile\\android\\app\\.cxx\\RelWithDebInfo\\3e3n6su4\\arm64-v8a\\.cmake\\api\\v1\\reply\\target-react_codegen_rnscreens-RelWithDebInfo-2184fce3dbf49f100bc5.json": {
+    "mtime": 1781180383.462189,
+    "ast_hash": "4e730292c0fc636825e5e9564085373f",
+    "semantic_hash": "4e730292c0fc636825e5e9564085373f"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\mobile\\android\\app\\.cxx\\RelWithDebInfo\\3e3n6su4\\arm64-v8a\\.cmake\\api\\v1\\reply\\target-react_codegen_rnstripe-RelWithDebInfo-e230a29032e2b14b4944.json": {
+    "mtime": 1781180383.4788544,
+    "ast_hash": "b95679475b56504059f4279607ccfed2",
+    "semantic_hash": "b95679475b56504059f4279607ccfed2"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\mobile\\android\\app\\.cxx\\RelWithDebInfo\\3e3n6su4\\arm64-v8a\\.cmake\\api\\v1\\reply\\target-react_codegen_rnviewshot-RelWithDebInfo-679017ab65987b141e4f.json": {
+    "mtime": 1781180383.499995,
+    "ast_hash": "18d468908744a85b4bce36ade4db9c8a",
+    "semantic_hash": "18d468908744a85b4bce36ade4db9c8a"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\mobile\\android\\app\\.cxx\\RelWithDebInfo\\3e3n6su4\\arm64-v8a\\.cmake\\api\\v1\\reply\\target-react_codegen_rnworklets-RelWithDebInfo-7e6c3b356a2a6bb9e2cb.json": {
+    "mtime": 1781180383.527534,
+    "ast_hash": "82bf8045989624654cf205462d4e71fa",
+    "semantic_hash": "82bf8045989624654cf205462d4e71fa"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\mobile\\android\\app\\.cxx\\RelWithDebInfo\\3e3n6su4\\arm64-v8a\\.cmake\\api\\v1\\reply\\target-react_codegen_safeareacontext-RelWithDebInfo-1d349a985839669a9298.json": {
+    "mtime": 1781180383.5453095,
+    "ast_hash": "55d06a3e7e367540c792c497f50f2b28",
+    "semantic_hash": "55d06a3e7e367540c792c497f50f2b28"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\mobile\\android\\app\\.cxx\\RelWithDebInfo\\3e3n6su4\\arm64-v8a\\CMakeFiles\\3.22.1-g37088a8-dirty\\CompilerIdCXX\\CMakeCXXCompilerId.cpp": {
+    "mtime": 1781180378.4801302,
+    "ast_hash": "493a7cc5e29a3cf2b0d95a50ee58d987",
+    "semantic_hash": "493a7cc5e29a3cf2b0d95a50ee58d987"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\mobile\\android\\app\\.cxx\\RelWithDebInfo\\3e3n6su4\\arm64-v8a\\CMakeFiles\\3.22.1-g37088a8-dirty\\CompilerIdC\\CMakeCCompilerId.c": {
+    "mtime": 1781180377.599697,
+    "ast_hash": "245b894a1d9b5e1b569506b0cfe5d36b",
+    "semantic_hash": "245b894a1d9b5e1b569506b0cfe5d36b"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\mobile\\android\\app\\.cxx\\RelWithDebInfo\\3e3n6su4\\arm64-v8a\\CMakeFiles\\_CMakeLTOTest-CXX\\src\\foo.cpp": {
+    "mtime": 1781180381.64047,
+    "ast_hash": "bbf8a05ecab16853fd9ad99b367175f8",
+    "semantic_hash": "bbf8a05ecab16853fd9ad99b367175f8"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\mobile\\android\\app\\.cxx\\RelWithDebInfo\\3e3n6su4\\arm64-v8a\\CMakeFiles\\_CMakeLTOTest-CXX\\src\\main.cpp": {
+    "mtime": 1781180381.6553,
+    "ast_hash": "6155bf9e179fd0f9c2529e16119d24d8",
+    "semantic_hash": "6155bf9e179fd0f9c2529e16119d24d8"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\mobile\\android\\app\\.cxx\\RelWithDebInfo\\3e3n6su4\\arm64-v8a\\android_gradle_build.json": {
+    "mtime": 1781180383.918931,
+    "ast_hash": "1830b8afa1e1eb9b7577c119baf4b6d9",
+    "semantic_hash": "1830b8afa1e1eb9b7577c119baf4b6d9"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\mobile\\android\\app\\.cxx\\RelWithDebInfo\\3e3n6su4\\arm64-v8a\\android_gradle_build_mini.json": {
+    "mtime": 1781180384.1414807,
+    "ast_hash": "6524d682422b6f07d621e8ba50a541d5",
+    "semantic_hash": "6524d682422b6f07d621e8ba50a541d5"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\mobile\\android\\app\\.cxx\\RelWithDebInfo\\3e3n6su4\\arm64-v8a\\compile_commands.json": {
+    "mtime": 1781180383.2432373,
+    "ast_hash": "23feaa8308acc5856af3f744a899e322",
+    "semantic_hash": "23feaa8308acc5856af3f744a899e322"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\mobile\\android\\app\\.cxx\\RelWithDebInfo\\3e3n6su4\\arm64-v8a\\prefab_config.json": {
+    "mtime": 1781180384.1611543,
+    "ast_hash": "f936329ce003effe568ee18df6dee708",
+    "semantic_hash": "f936329ce003effe568ee18df6dee708"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\mobile\\android\\app\\.cxx\\tools\\release\\arm64-v8a\\compile_commands.json": {
+    "mtime": 1781180383.2432373,
+    "ast_hash": "23feaa8308acc5856af3f744a899e322",
+    "semantic_hash": "23feaa8308acc5856af3f744a899e322"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\mobile\\android\\app\\build.gradle": {
+    "mtime": 1781180266.7765758,
+    "ast_hash": "bf35f595b5008b96732ab366d669af29",
+    "semantic_hash": "bf35f595b5008b96732ab366d669af29"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\mobile\\android\\app\\src\\main\\java\\com\\dreamlog\\app\\MainActivity.kt": {
+    "mtime": 1781180266.830295,
+    "ast_hash": "25e51dad36207d31eb5598732d24ea46",
+    "semantic_hash": "25e51dad36207d31eb5598732d24ea46"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\mobile\\android\\app\\src\\main\\java\\com\\dreamlog\\app\\MainApplication.kt": {
+    "mtime": 1781180265.0773687,
+    "ast_hash": "6b727cb09b242f4416ae1689d7e41be9",
+    "semantic_hash": "6b727cb09b242f4416ae1689d7e41be9"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\mobile\\android\\build.gradle": {
+    "mtime": 1781180266.7754898,
+    "ast_hash": "c1e50c7ff1340048f86481dd340ad736",
+    "semantic_hash": "c1e50c7ff1340048f86481dd340ad736"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\mobile\\android\\gradlew": {
+    "mtime": 499162500.0,
+    "ast_hash": "ff1ddbebbc9b4d04f2e9f8cab50d6595",
+    "semantic_hash": "ff1ddbebbc9b4d04f2e9f8cab50d6595"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\mobile\\android\\settings.gradle": {
+    "mtime": 1781180266.7845004,
+    "ast_hash": "47eef96c64cdff7a9d6d8f572e4dd8d5",
+    "semantic_hash": "47eef96c64cdff7a9d6d8f572e4dd8d5"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\mobile\\app.json": {
+    "mtime": 1781242391.5909476,
+    "ast_hash": "4398dd5e3d2552f3886f590a1eecde2d",
+    "semantic_hash": "4398dd5e3d2552f3886f590a1eecde2d"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\mobile\\app\\(tabs)\\_layout.tsx": {
+    "mtime": 1779953624.16872,
+    "ast_hash": "87a6bd4e133f1d79fed069ad5aa3e585",
+    "semantic_hash": "87a6bd4e133f1d79fed069ad5aa3e585"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\mobile\\app\\(tabs)\\index.tsx": {
+    "mtime": 1780989422.1892188,
+    "ast_hash": "44980da508106b08084c9d27daf059ae",
+    "semantic_hash": "44980da508106b08084c9d27daf059ae"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\mobile\\app\\(tabs)\\mood.tsx": {
+    "mtime": 1780989422.1892188,
+    "ast_hash": "deadeb1918b5c267c6bf59f7510dc2ee",
+    "semantic_hash": "deadeb1918b5c267c6bf59f7510dc2ee"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\mobile\\app\\(tabs)\\settings.tsx": {
+    "mtime": 1781194144.4887302,
+    "ast_hash": "a6d4bded462a0f5731dbef69a26ea0e9",
+    "semantic_hash": "a6d4bded462a0f5731dbef69a26ea0e9"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\mobile\\app\\(tabs)\\timeline.tsx": {
+    "mtime": 1780989422.1866915,
+    "ast_hash": "dc2f12149788d32bcee5fa2cce371974",
+    "semantic_hash": "dc2f12149788d32bcee5fa2cce371974"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\mobile\\app\\_layout.tsx": {
+    "mtime": 1781193825.167232,
+    "ast_hash": "e66422309635d0870290fa96694782a5",
+    "semantic_hash": "e66422309635d0870290fa96694782a5"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\mobile\\app\\auth.tsx": {
+    "mtime": 1781148354.1861937,
+    "ast_hash": "d88b11c86c7f5bc87f634cc12bc6bd2f",
+    "semantic_hash": "d88b11c86c7f5bc87f634cc12bc6bd2f"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\mobile\\app\\auth\\callback.tsx": {
+    "mtime": 1780572165.7827868,
+    "ast_hash": "7e5c728926cf202e76e0efd99f1f9964",
+    "semantic_hash": "7e5c728926cf202e76e0efd99f1f9964"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\mobile\\app\\change-goal.tsx": {
+    "mtime": 1780989422.1799605,
+    "ast_hash": "089e03926dd457043c05067686cf5cc3",
+    "semantic_hash": "089e03926dd457043c05067686cf5cc3"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\mobile\\app\\export.tsx": {
+    "mtime": 1780989422.1799605,
+    "ast_hash": "62749e8fd50ac99ca22cf67abf61355b",
+    "semantic_hash": "62749e8fd50ac99ca22cf67abf61355b"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\mobile\\app\\followup\\[id].tsx": {
+    "mtime": 1780559157.7153232,
+    "ast_hash": "6d8744bd523fc6638ebbc030d61a9828",
+    "semantic_hash": "6d8744bd523fc6638ebbc030d61a9828"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\mobile\\app\\journeys.tsx": {
+    "mtime": 1780559144.0173044,
+    "ast_hash": "cc44b47f64766e1ed2c3961c699dd7dc",
+    "semantic_hash": "cc44b47f64766e1ed2c3961c699dd7dc"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\mobile\\app\\journeys\\[sessionId].tsx": {
+    "mtime": 1780559157.9109483,
+    "ast_hash": "46621ddf9023c290b1cc4fb029c9b6b5",
+    "semantic_hash": "46621ddf9023c290b1cc4fb029c9b6b5"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\mobile\\app\\onboarding.tsx": {
+    "mtime": 1781193809.347429,
+    "ast_hash": "bcf26b4da4e93ddb99519fd91411dd9a",
+    "semantic_hash": "bcf26b4da4e93ddb99519fd91411dd9a"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\mobile\\app\\processing\\[id].tsx": {
+    "mtime": 1780989422.1892188,
+    "ast_hash": "2825e86f1cd7db9b4f467e36277b887b",
+    "semantic_hash": "2825e86f1cd7db9b4f467e36277b887b"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\mobile\\app\\record.tsx": {
+    "mtime": 1781193913.9932413,
+    "ast_hash": "e35901a1d8398602a15416b7438b230e",
+    "semantic_hash": "e35901a1d8398602a15416b7438b230e"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\mobile\\app\\reflection\\[id].tsx": {
+    "mtime": 1781193885.4762583,
+    "ast_hash": "ae0d97820056168165aebbb7c53eb84a",
+    "semantic_hash": "ae0d97820056168165aebbb7c53eb84a"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\mobile\\app\\share\\[id].tsx": {
+    "mtime": 1780559158.512968,
+    "ast_hash": "e4be939133e6d8bb41ff2fa818f80c6c",
+    "semantic_hash": "e4be939133e6d8bb41ff2fa818f80c6c"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\mobile\\app\\therapy\\index.tsx": {
+    "mtime": 1780989422.185692,
+    "ast_hash": "56530122c7d06b830fd59b481b48d5f0",
+    "semantic_hash": "56530122c7d06b830fd59b481b48d5f0"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\mobile\\app\\therapy\\persona-picker.tsx": {
+    "mtime": 1780989422.1842258,
+    "ast_hash": "d06d5209a340966e3b2d6aa375f81521",
+    "semantic_hash": "d06d5209a340966e3b2d6aa375f81521"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\mobile\\app\\therapy\\pricing.tsx": {
+    "mtime": 1781193796.3555784,
+    "ast_hash": "d35bcddc1d66118c4946f1e48badecad",
+    "semantic_hash": "d35bcddc1d66118c4946f1e48badecad"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\mobile\\app\\therapy\\session.tsx": {
+    "mtime": 1780989422.1832001,
+    "ast_hash": "92970c81863649f8ca013b7f02a7d71b",
+    "semantic_hash": "92970c81863649f8ca013b7f02a7d71b"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\mobile\\app\\therapy\\summary\\[id].tsx": {
+    "mtime": 1780989422.185692,
+    "ast_hash": "b80d64949aec271d5dff8828341ea30b",
+    "semantic_hash": "b80d64949aec271d5dff8828341ea30b"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\mobile\\app\\upgrade.tsx": {
+    "mtime": 1781193768.963044,
+    "ast_hash": "f4a3e4dc38ab3b3100a51f5ae0449235",
+    "semantic_hash": "f4a3e4dc38ab3b3100a51f5ae0449235"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\mobile\\babel.config.js": {
+    "mtime": 1779947329.725943,
+    "ast_hash": "5efc98f3c6d3435612c3fb3dc1dd7163",
+    "semantic_hash": "5efc98f3c6d3435612c3fb3dc1dd7163"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\mobile\\eas.json": {
+    "mtime": 1781148365.3155365,
+    "ast_hash": "b69ce249c02653c5456a332b414952e0",
+    "semantic_hash": "b69ce249c02653c5456a332b414952e0"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\mobile\\expo-env.d.ts": {
+    "mtime": 1780406108.2258978,
+    "ast_hash": "0dd9dccdb4b08595bc83df70d6a154d3",
+    "semantic_hash": "0dd9dccdb4b08595bc83df70d6a154d3"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\mobile\\jest.config.js": {
+    "mtime": 1779947285.4673784,
+    "ast_hash": "8bd41e17dfe6dcadcdbab6b972045202",
+    "semantic_hash": "8bd41e17dfe6dcadcdbab6b972045202"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\mobile\\jest.setup.js": {
+    "mtime": 1779947525.1304784,
+    "ast_hash": "548b130d4f2d52b95ca95522ab04c148",
+    "semantic_hash": "548b130d4f2d52b95ca95522ab04c148"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\mobile\\metro.config.js": {
+    "mtime": 1775912766.117708,
+    "ast_hash": "97c3dd89718a87050af6a7ec142fc08d",
+    "semantic_hash": "97c3dd89718a87050af6a7ec142fc08d"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\mobile\\package.json": {
+    "mtime": 1781242152.2813303,
+    "ast_hash": "ef3cd32fad134a84ce9fed0f378710db",
+    "semantic_hash": "ef3cd32fad134a84ce9fed0f378710db"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\mobile\\src\\api\\__tests__\\client.test.ts": {
+    "mtime": 1779965629.455251,
+    "ast_hash": "244eb67c8439e0c0e62068179affc876",
+    "semantic_hash": "244eb67c8439e0c0e62068179affc876"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\mobile\\src\\api\\client.ts": {
+    "mtime": 1781193731.1535988,
+    "ast_hash": "b0289a9ca1ed28fc6f4df131508aefb5",
+    "semantic_hash": "b0289a9ca1ed28fc6f4df131508aefb5"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\mobile\\src\\components\\ForceUpdateScreen.tsx": {
+    "mtime": 1781160663.5665493,
+    "ast_hash": "968164dac5ca078ece95f2e73232a3fe",
+    "semantic_hash": "968164dac5ca078ece95f2e73232a3fe"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\mobile\\src\\components\\InsightCard.tsx": {
+    "mtime": 1780989422.205216,
+    "ast_hash": "592e20dc8b6c3d14be4674669af18e11",
+    "semantic_hash": "592e20dc8b6c3d14be4674669af18e11"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\mobile\\src\\components\\PatternRadar.tsx": {
+    "mtime": 1780989422.205216,
+    "ast_hash": "b2c580458ca1cbe256946456ffaad347",
+    "semantic_hash": "b2c580458ca1cbe256946456ffaad347"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\mobile\\src\\components\\RecordButton.tsx": {
+    "mtime": 1775317019.0928152,
+    "ast_hash": "de863a9e2e8d01d320f61dbe9c7fbc4f",
+    "semantic_hash": "de863a9e2e8d01d320f61dbe9c7fbc4f"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\mobile\\src\\components\\ShareInsightModal.tsx": {
+    "mtime": 1780989422.205216,
+    "ast_hash": "978f30e66e36cedeb353e20719fbe625",
+    "semantic_hash": "978f30e66e36cedeb353e20719fbe625"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\mobile\\src\\context\\ThemeContext.tsx": {
+    "mtime": 1781194188.6906931,
+    "ast_hash": "b31a1c64749edb082e270c5fa37ea1db",
+    "semantic_hash": "b31a1c64749edb082e270c5fa37ea1db"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\mobile\\src\\hooks\\useRecorder.ts": {
+    "mtime": 1780989422.2067294,
+    "ast_hash": "be2465a53cdef11f70f7a4bec69b6269",
+    "semantic_hash": "be2465a53cdef11f70f7a4bec69b6269"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\mobile\\src\\lib\\supabase.ts": {
+    "mtime": 1780568640.3685608,
+    "ast_hash": "128676111c9eebd3efad0984622b4cf4",
+    "semantic_hash": "128676111c9eebd3efad0984622b4cf4"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\mobile\\src\\services\\health.ts": {
+    "mtime": 1780989422.205216,
+    "ast_hash": "afc54db14b744000cd8db51e5245ecbb",
+    "semantic_hash": "afc54db14b744000cd8db51e5245ecbb"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\mobile\\src\\services\\offlineQueue.ts": {
+    "mtime": 1781113415.663669,
+    "ast_hash": "fa5c1e50fc76890d9913842d0cb6ec37",
+    "semantic_hash": "fa5c1e50fc76890d9913842d0cb6ec37"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\mobile\\src\\services\\push.ts": {
+    "mtime": 1781148269.8337111,
+    "ast_hash": "e96c63ba6f5d8c112eff63e11212f408",
+    "semantic_hash": "e96c63ba6f5d8c112eff63e11212f408"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\mobile\\src\\services\\region.ts": {
+    "mtime": 1781193704.3514173,
+    "ast_hash": "32bf8e0f08ae3f9738067c17cc0a4f51",
+    "semantic_hash": "32bf8e0f08ae3f9738067c17cc0a4f51"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\mobile\\src\\services\\upload.ts": {
+    "mtime": 1780989422.1962638,
+    "ast_hash": "7bcf141877000de40c117abbdb0c2c70",
+    "semantic_hash": "7bcf141877000de40c117abbdb0c2c70"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\mobile\\src\\services\\version.ts": {
+    "mtime": 1781160651.4416556,
+    "ast_hash": "6490fd130059aa7b2ec4325be335fd0b",
+    "semantic_hash": "6490fd130059aa7b2ec4325be335fd0b"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\mobile\\src\\theme.ts": {
+    "mtime": 1780989422.1912148,
+    "ast_hash": "74737cab2bbdac035dae496919eb2613",
+    "semantic_hash": "74737cab2bbdac035dae496919eb2613"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\mobile\\src\\types\\index.ts": {
+    "mtime": 1781194059.5260592,
+    "ast_hash": "177a71a38012ad2b007dabecd366c0fb",
+    "semantic_hash": "177a71a38012ad2b007dabecd366c0fb"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\mobile\\src\\utils\\uuid.ts": {
+    "mtime": 1780989422.1912148,
+    "ast_hash": "3bd968c1d0afed9fc0f2f5ee20cd907f",
+    "semantic_hash": "3bd968c1d0afed9fc0f2f5ee20cd907f"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\mobile\\tsconfig.json": {
+    "mtime": 1775824823.4840686,
+    "ast_hash": "636bb93fd95659ae38e5870f772393a9",
+    "semantic_hash": "636bb93fd95659ae38e5870f772393a9"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\scripts\\run-gradle.ps1": {
+    "mtime": 1780551015.5480168,
+    "ast_hash": "47e900dc72cb19bad63d1423f7bd0978",
+    "semantic_hash": "47e900dc72cb19bad63d1423f7bd0978"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\scripts\\write-local-props.ps1": {
+    "mtime": 1780551004.8394265,
+    "ast_hash": "86e777a3c2506930e88b73849afdb455",
+    "semantic_hash": "86e777a3c2506930e88b73849afdb455"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\skills-lock.json": {
+    "mtime": 1781181754.4783206,
+    "ast_hash": "97de074db3fd8b66bb4edcd38225f6ba",
+    "semantic_hash": "97de074db3fd8b66bb4edcd38225f6ba"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\therapist-portal\\firebase.json": {
+    "mtime": 1780989564.5921671,
+    "ast_hash": "b686856d758f0dc1faf5c55d200cba77",
+    "semantic_hash": "b686856d758f0dc1faf5c55d200cba77"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\therapist-portal\\next-env.d.ts": {
+    "mtime": 1780989070.0492556,
+    "ast_hash": "da547da2ebeb322abd0257ae82d0f1bf",
+    "semantic_hash": "da547da2ebeb322abd0257ae82d0f1bf"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\therapist-portal\\next.config.js": {
+    "mtime": 1780989538.0840101,
+    "ast_hash": "685e4aa1b1091f472fc45e711e88aae6",
+    "semantic_hash": "685e4aa1b1091f472fc45e711e88aae6"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\therapist-portal\\package.json": {
+    "mtime": 1779979313.9235368,
+    "ast_hash": "33fefc4b717873b62871d7f3294cffb9",
+    "semantic_hash": "33fefc4b717873b62871d7f3294cffb9"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\therapist-portal\\postcss.config.js": {
+    "mtime": 1779979461.929355,
+    "ast_hash": "f25138ae21a7fea13cb86a59efcbdfde",
+    "semantic_hash": "f25138ae21a7fea13cb86a59efcbdfde"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\therapist-portal\\src\\app\\dashboard\\clients\\[[...clientId]]\\ClientBriefContent.tsx": {
+    "mtime": 1781078360.84165,
+    "ast_hash": "8e78fd8a37e7f908bff6d6ebe4404fe8",
+    "semantic_hash": "8e78fd8a37e7f908bff6d6ebe4404fe8"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\therapist-portal\\src\\app\\dashboard\\clients\\[[...clientId]]\\page.tsx": {
+    "mtime": 1780989994.756259,
+    "ast_hash": "4332ffe261acb5961848634901d26d02",
+    "semantic_hash": "4332ffe261acb5961848634901d26d02"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\therapist-portal\\src\\app\\dashboard\\page.tsx": {
+    "mtime": 1781078383.5604098,
+    "ast_hash": "591f8957191e3e25cbe4da67a27a6ed0",
+    "semantic_hash": "591f8957191e3e25cbe4da67a27a6ed0"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\therapist-portal\\src\\app\\layout.tsx": {
+    "mtime": 1781071289.2668025,
+    "ast_hash": "48e01a94a7297a7ff56606fcb417f37e",
+    "semantic_hash": "48e01a94a7297a7ff56606fcb417f37e"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\therapist-portal\\src\\app\\login\\page.tsx": {
+    "mtime": 1781071552.385738,
+    "ast_hash": "d15bddb643eb5a209c8e4d76dac91b28",
+    "semantic_hash": "d15bddb643eb5a209c8e4d76dac91b28"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\therapist-portal\\src\\app\\page.tsx": {
+    "mtime": 1780988623.428576,
+    "ast_hash": "5210a2cb126c184503f490e03bdf178d",
+    "semantic_hash": "5210a2cb126c184503f490e03bdf178d"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\therapist-portal\\src\\components\\LandingPage.tsx": {
+    "mtime": 1781089206.8924096,
+    "ast_hash": "82549b6e496fb35e84ae186612ef0f04",
+    "semantic_hash": "82549b6e496fb35e84ae186612ef0f04"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\therapist-portal\\src\\components\\MoodBadge.tsx": {
+    "mtime": 1781071680.9954863,
+    "ast_hash": "9128db42ea1a5f2c188640586215b8cc",
+    "semantic_hash": "9128db42ea1a5f2c188640586215b8cc"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\therapist-portal\\src\\components\\MoodTrendIcon.tsx": {
+    "mtime": 1781071682.4373262,
+    "ast_hash": "93a8847429cfefc7ae6d8b532eeabfdd",
+    "semantic_hash": "93a8847429cfefc7ae6d8b532eeabfdd"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\therapist-portal\\src\\components\\PortalHeader.tsx": {
+    "mtime": 1781071567.8819842,
+    "ast_hash": "929bc3b57c1aa1a0a4277daf4062ff3f",
+    "semantic_hash": "929bc3b57c1aa1a0a4277daf4062ff3f"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\therapist-portal\\src\\components\\icons.tsx": {
+    "mtime": 1781072356.3967419,
+    "ast_hash": "2a5852814e2c02b6809a707b26d2072d",
+    "semantic_hash": "2a5852814e2c02b6809a707b26d2072d"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\therapist-portal\\src\\lib\\api.ts": {
+    "mtime": 1780988664.3076217,
+    "ast_hash": "cf906652cc2dd3196158241bcf764257",
+    "semantic_hash": "cf906652cc2dd3196158241bcf764257"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\therapist-portal\\tailwind.config.ts": {
+    "mtime": 1779979324.6959198,
+    "ast_hash": "71f7f2626725cf77b0d7deb78a1f90d7",
+    "semantic_hash": "71f7f2626725cf77b0d7deb78a1f90d7"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\therapist-portal\\tsconfig.json": {
+    "mtime": 1779979458.442619,
+    "ast_hash": "b7ef4c7bf2a5e75e33097a76362a22ee",
+    "semantic_hash": "b7ef4c7bf2a5e75e33097a76362a22ee"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\.agents\\skills\\autofix\\SKILL.md": {
+    "mtime": 1780986679.183743,
+    "ast_hash": "fc61ebfd113f92064dc3cff7fdd186dc",
+    "semantic_hash": "fc61ebfd113f92064dc3cff7fdd186dc"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\.agents\\skills\\autofix\\github.md": {
+    "mtime": 1780986679.186306,
+    "ast_hash": "828fe7e8819ca48ac1303cf945db1c09",
+    "semantic_hash": "828fe7e8819ca48ac1303cf945db1c09"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\.agents\\skills\\code-review\\SKILL.md": {
+    "mtime": 1780986679.1873763,
+    "ast_hash": "501969d61b764cddfc70e9d9e702869b",
+    "semantic_hash": "501969d61b764cddfc70e9d9e702869b"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\.agents\\skills\\graphify\\SKILL.md": {
+    "mtime": 1781181722.0423274,
+    "ast_hash": "57aea5ab7bad5cad3d310f8791469315",
+    "semantic_hash": "57aea5ab7bad5cad3d310f8791469315"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\.agents\\skills\\graphify\\references\\add-watch.md": {
+    "mtime": 1781181690.867225,
+    "ast_hash": "e10311cd2f69de7d62674eff2b87420f",
+    "semantic_hash": "e10311cd2f69de7d62674eff2b87420f"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\.agents\\skills\\graphify\\references\\exports.md": {
+    "mtime": 1781181690.8686705,
+    "ast_hash": "4b1c094b3077da6b95ec99694612327e",
+    "semantic_hash": "4b1c094b3077da6b95ec99694612327e"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\.agents\\skills\\graphify\\references\\extraction-spec.md": {
+    "mtime": 1781181690.8686705,
+    "ast_hash": "a50d4409dbac381356a25ca0905d833c",
+    "semantic_hash": "a50d4409dbac381356a25ca0905d833c"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\.agents\\skills\\graphify\\references\\github-and-merge.md": {
+    "mtime": 1781181690.870768,
+    "ast_hash": "aa0e7ef186392cad062e60483ca7dbbf",
+    "semantic_hash": "aa0e7ef186392cad062e60483ca7dbbf"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\.agents\\skills\\graphify\\references\\hooks.md": {
+    "mtime": 1781181690.8725023,
+    "ast_hash": "0045c2f12c69bff3a641a8908a1ac057",
+    "semantic_hash": "0045c2f12c69bff3a641a8908a1ac057"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\.agents\\skills\\graphify\\references\\query.md": {
+    "mtime": 1781181690.873519,
+    "ast_hash": "82efbb856d6a3e15e7d78743b34a63c1",
+    "semantic_hash": "82efbb856d6a3e15e7d78743b34a63c1"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\.agents\\skills\\graphify\\references\\transcribe.md": {
+    "mtime": 1781181690.8752525,
+    "ast_hash": "cf217decf113af55483edfa042f22db5",
+    "semantic_hash": "cf217decf113af55483edfa042f22db5"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\.agents\\skills\\graphify\\references\\update.md": {
+    "mtime": 1781181690.8766117,
+    "ast_hash": "d9a58cbd4846113826f18de077d77f2b",
+    "semantic_hash": "d9a58cbd4846113826f18de077d77f2b"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\.github\\workflows\\build-apk.yml": {
+    "mtime": 1780502152.288432,
+    "ast_hash": "c7c37670debc7214a65f61301981c14a",
+    "semantic_hash": "c7c37670debc7214a65f61301981c14a"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\.github\\workflows\\deploy.yml": {
+    "mtime": 1780407359.1518018,
+    "ast_hash": "c1dea6f77166a4967747a4bac62d9b27",
+    "semantic_hash": "c1dea6f77166a4967747a4bac62d9b27"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\ANTIGRAVITY.md": {
+    "mtime": 1781149275.3698826,
+    "ast_hash": "8a059e265ab9c11aaf639f62e0f5c025",
+    "semantic_hash": "8a059e265ab9c11aaf639f62e0f5c025"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\CLAUDE.md": {
+    "mtime": 1781169885.372892,
+    "ast_hash": "acc72ac8d939edd692127e6724fc6878",
+    "semantic_hash": "acc72ac8d939edd692127e6724fc6878"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\README.md": {
+    "mtime": 1781169862.708802,
+    "ast_hash": "a8e72684c8bc7946ba1e0996a9281994",
+    "semantic_hash": "a8e72684c8bc7946ba1e0996a9281994"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\backend\\CLAUDE.md": {
+    "mtime": 1781170051.4898195,
+    "ast_hash": "4df247f19715042ad01381ee70ba193b",
+    "semantic_hash": "4df247f19715042ad01381ee70ba193b"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\docker-compose.yml": {
+    "mtime": 1780989422.14142,
+    "ast_hash": "05966cc884a749f48fd4c93912a3e516",
+    "semantic_hash": "05966cc884a749f48fd4c93912a3e516"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\docs\\API_CONTRACT.md": {
+    "mtime": 1781194364.3596058,
+    "ast_hash": "84e0b76acd7d35a2452e558e56321dfb",
+    "semantic_hash": "84e0b76acd7d35a2452e558e56321dfb"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\docs\\ARCHITECTURE.md": {
+    "mtime": 1781174524.6751578,
+    "ast_hash": "b4ae7901b02fc259dbefa69c470adb07",
+    "semantic_hash": "b4ae7901b02fc259dbefa69c470adb07"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\docs\\DECISIONS.md": {
+    "mtime": 1780989422.1709888,
+    "ast_hash": "10f8e6b76f427e3c8d8ecb6258a3df9e",
+    "semantic_hash": "10f8e6b76f427e3c8d8ecb6258a3df9e"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\docs\\DreamLog_5Phase_Development_Plan.md": {
+    "mtime": 1780989422.1709888,
+    "ast_hash": "e52ccb944437c487facbf2620ef93426",
+    "semantic_hash": "e52ccb944437c487facbf2620ef93426"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\docs\\LAUNCH_CHECKLIST.md": {
+    "mtime": 1781170073.994248,
+    "ast_hash": "b68173d5f33d29d8ac6f08b75b3d0827",
+    "semantic_hash": "b68173d5f33d29d8ac6f08b75b3d0827"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\docs\\PRICING.md": {
+    "mtime": 1781174384.608465,
+    "ast_hash": "92717e376baf3d7d95a3c629dd220e67",
+    "semantic_hash": "92717e376baf3d7d95a3c629dd220e67"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\docs\\ROADMAP.md": {
+    "mtime": 1781174344.8758461,
+    "ast_hash": "69138df7766b1151fde4dd4e13c2e7cb",
+    "semantic_hash": "69138df7766b1151fde4dd4e13c2e7cb"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\docs\\TESTING.md": {
+    "mtime": 1781174398.2628562,
+    "ast_hash": "a3ae35b76cbfd36057778b56d3f8d582",
+    "semantic_hash": "a3ae35b76cbfd36057778b56d3f8d582"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\docs\\legal\\PRIVACY_POLICY.md": {
+    "mtime": 1780989422.1709888,
+    "ast_hash": "95ed5734bf382b9b589e1e7c39eee418",
+    "semantic_hash": "95ed5734bf382b9b589e1e7c39eee418"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\docs\\legal\\TERMS_AND_CONDITIONS.md": {
+    "mtime": 1781173663.151373,
+    "ast_hash": "37bebdf9b6b95a35bdcd3df63f0d8f7e",
+    "semantic_hash": "37bebdf9b6b95a35bdcd3df63f0d8f7e"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\features.md": {
+    "mtime": 1780989422.1533086,
+    "ast_hash": "8375d01f2075f34a9effa9f02159c03b",
+    "semantic_hash": "8375d01f2075f34a9effa9f02159c03b"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\mobile\\CLAUDE.md": {
+    "mtime": 1781149085.2282946,
+    "ast_hash": "d80eb0ed532be111b858dcaf67d6662b",
+    "semantic_hash": "d80eb0ed532be111b858dcaf67d6662b"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\mobile\\android\\app\\.cxx\\RelWithDebInfo\\3e3n6su4\\arm64-v8a\\CMakeCache.txt": {
+    "mtime": 1781180382.6935246,
+    "ast_hash": "757791a9ed8c44f6406ea8445f0a8b80",
+    "semantic_hash": "757791a9ed8c44f6406ea8445f0a8b80"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\mobile\\android\\app\\.cxx\\RelWithDebInfo\\3e3n6su4\\arm64-v8a\\CMakeFiles\\TargetDirectories.txt": {
+    "mtime": 1781180383.2312982,
+    "ast_hash": "6762e3dd64d299a811fab8550f298f5c",
+    "semantic_hash": "6762e3dd64d299a811fab8550f298f5c"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\mobile\\android\\app\\.cxx\\RelWithDebInfo\\3e3n6su4\\arm64-v8a\\CMakeFiles\\_CMakeLTOTest-CXX\\bin\\CMakeCache.txt": {
+    "mtime": 1781180381.705722,
+    "ast_hash": "587ff625e7c5b8bbc0d1a5e3c5a04391",
+    "semantic_hash": "587ff625e7c5b8bbc0d1a5e3c5a04391"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\mobile\\android\\app\\.cxx\\RelWithDebInfo\\3e3n6su4\\arm64-v8a\\CMakeFiles\\_CMakeLTOTest-CXX\\bin\\CMakeFiles\\TargetDirectories.txt": {
+    "mtime": 1781180381.733053,
+    "ast_hash": "358c5e1dea2a44cacc8da5963238f828",
+    "semantic_hash": "358c5e1dea2a44cacc8da5963238f828"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\mobile\\android\\app\\.cxx\\RelWithDebInfo\\3e3n6su4\\arm64-v8a\\CMakeFiles\\_CMakeLTOTest-CXX\\src\\CMakeLists.txt": {
+    "mtime": 1781180381.621622,
+    "ast_hash": "4da62ef32315d0f698473abc5d91ca05",
+    "semantic_hash": "4da62ef32315d0f698473abc5d91ca05"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\mobile\\android\\app\\.cxx\\RelWithDebInfo\\3e3n6su4\\arm64-v8a\\additional_project_files.txt": {
+    "mtime": 1781180383.9109914,
+    "ast_hash": "26d656ac5d69f79dd7ff80af277dfe22",
+    "semantic_hash": "26d656ac5d69f79dd7ff80af277dfe22"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\mobile\\android\\app\\.cxx\\RelWithDebInfo\\3e3n6su4\\arm64-v8a\\build_file_index.txt": {
+    "mtime": 1781180384.1640475,
+    "ast_hash": "1fb3e19345a76fdf9822ec0f42120101",
+    "semantic_hash": "1fb3e19345a76fdf9822ec0f42120101"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\mobile\\android\\app\\.cxx\\RelWithDebInfo\\3e3n6su4\\arm64-v8a\\metadata_generation_command.txt": {
+    "mtime": 1781180384.159143,
+    "ast_hash": "7c5f1ec3940d7066c4ce2e8ba4a12879",
+    "semantic_hash": "7c5f1ec3940d7066c4ce2e8ba4a12879"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\mobile\\android\\app\\.cxx\\RelWithDebInfo\\3e3n6su4\\arm64-v8a\\symbol_folder_index.txt": {
+    "mtime": 1781180384.1626472,
+    "ast_hash": "abf57c2c0faecf4db75a4e19ecf93c15",
+    "semantic_hash": "abf57c2c0faecf4db75a4e19ecf93c15"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\mobile\\android\\app\\.cxx\\RelWithDebInfo\\3e3n6su4\\hash_key.txt": {
+    "mtime": 1781180384.2969887,
+    "ast_hash": "21564c5485626bdfb4c16bfd274e58ab",
+    "semantic_hash": "21564c5485626bdfb4c16bfd274e58ab"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\mobile\\animation-demo.html": {
+    "mtime": 1780989422.1784353,
+    "ast_hash": "1b639dd29a395db1dc0b7b03ef11b3be",
+    "semantic_hash": "1b639dd29a395db1dc0b7b03ef11b3be"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\mockup.html": {
+    "mtime": 1780989422.1570215,
+    "ast_hash": "b9bd3d3f1850e5dc1e9ece09c2a9ce44",
+    "semantic_hash": "b9bd3d3f1850e5dc1e9ece09c2a9ce44"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\DreamLog_5Phase_Development_Plan.pdf": {
+    "mtime": 1775366472.0293167,
+    "ast_hash": "8006489f1088f4597a2b830eff929266",
+    "semantic_hash": "8006489f1088f4597a2b830eff929266"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\DreamLog_PRD.pdf": {
+    "mtime": 1775366496.9649336,
+    "ast_hash": "2b7435de3a15970e71d556116abb8dbd",
+    "semantic_hash": "2b7435de3a15970e71d556116abb8dbd"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\DreamLog_VC_Analysis.pdf": {
+    "mtime": 1779706029.5268662,
+    "ast_hash": "9eb6ba5698fc6066c036b94df0646af1",
+    "semantic_hash": "9eb6ba5698fc6066c036b94df0646af1"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\mobile\\android\\app\\src\\main\\res\\drawable-hdpi\\splashscreen_logo.png": {
+    "mtime": 1781180266.729157,
+    "ast_hash": "0d236508eb11ae668a2d224fbecdca4b",
+    "semantic_hash": "0d236508eb11ae668a2d224fbecdca4b"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\mobile\\android\\app\\src\\main\\res\\drawable-mdpi\\splashscreen_logo.png": {
+    "mtime": 1781180266.5305178,
+    "ast_hash": "a6f331097a0007c417e99cbe9ef4653f",
+    "semantic_hash": "a6f331097a0007c417e99cbe9ef4653f"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\mobile\\android\\app\\src\\main\\res\\drawable-xhdpi\\splashscreen_logo.png": {
+    "mtime": 1781180266.729157,
+    "ast_hash": "2a5798550f2135fe536d219272820fea",
+    "semantic_hash": "2a5798550f2135fe536d219272820fea"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\mobile\\android\\app\\src\\main\\res\\drawable-xxhdpi\\splashscreen_logo.png": {
+    "mtime": 1781180266.729157,
+    "ast_hash": "e7478fc77d89a54ac9954abf565eac7d",
+    "semantic_hash": "e7478fc77d89a54ac9954abf565eac7d"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\mobile\\android\\app\\src\\main\\res\\drawable-xxxhdpi\\splashscreen_logo.png": {
+    "mtime": 1781180266.729157,
+    "ast_hash": "6e08f2496eefd6aa78781eaa5ee7e5de",
+    "semantic_hash": "6e08f2496eefd6aa78781eaa5ee7e5de"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\mobile\\android\\app\\src\\main\\res\\mipmap-hdpi\\ic_launcher.webp": {
+    "mtime": 1781180265.223441,
+    "ast_hash": "5cd7016b376bb94feb239ad00867e97e",
+    "semantic_hash": "5cd7016b376bb94feb239ad00867e97e"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\mobile\\android\\app\\src\\main\\res\\mipmap-hdpi\\ic_launcher_foreground.webp": {
+    "mtime": 1781180265.2474453,
+    "ast_hash": "35c283f37644ca0cb81ca932d0280f5b",
+    "semantic_hash": "35c283f37644ca0cb81ca932d0280f5b"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\mobile\\android\\app\\src\\main\\res\\mipmap-hdpi\\ic_launcher_round.webp": {
+    "mtime": 1781180265.2381687,
+    "ast_hash": "d3b3346c21f42af573cb9f69dcdf4263",
+    "semantic_hash": "d3b3346c21f42af573cb9f69dcdf4263"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\mobile\\android\\app\\src\\main\\res\\mipmap-mdpi\\ic_launcher.webp": {
+    "mtime": 1781180265.223441,
+    "ast_hash": "61fb5ca7295cdc86f752d84910524436",
+    "semantic_hash": "61fb5ca7295cdc86f752d84910524436"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\mobile\\android\\app\\src\\main\\res\\mipmap-mdpi\\ic_launcher_foreground.webp": {
+    "mtime": 1781180265.2474453,
+    "ast_hash": "5b037bc5282d9fcd8c33af7e04044663",
+    "semantic_hash": "5b037bc5282d9fcd8c33af7e04044663"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\mobile\\android\\app\\src\\main\\res\\mipmap-mdpi\\ic_launcher_round.webp": {
+    "mtime": 1781180265.2381687,
+    "ast_hash": "b9163e6b02e617b0d9945addc74d2bf9",
+    "semantic_hash": "b9163e6b02e617b0d9945addc74d2bf9"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\mobile\\android\\app\\src\\main\\res\\mipmap-xhdpi\\ic_launcher.webp": {
+    "mtime": 1781180265.223441,
+    "ast_hash": "711cb40e1beeb7cf6d65e31a622aa9ea",
+    "semantic_hash": "711cb40e1beeb7cf6d65e31a622aa9ea"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\mobile\\android\\app\\src\\main\\res\\mipmap-xhdpi\\ic_launcher_foreground.webp": {
+    "mtime": 1781180265.2474453,
+    "ast_hash": "f155cda0d8a8905d43058492c57dbdae",
+    "semantic_hash": "f155cda0d8a8905d43058492c57dbdae"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\mobile\\android\\app\\src\\main\\res\\mipmap-xhdpi\\ic_launcher_round.webp": {
+    "mtime": 1781180265.2381687,
+    "ast_hash": "a48480181f4eb1a1b7cb46b3b17cbdf3",
+    "semantic_hash": "a48480181f4eb1a1b7cb46b3b17cbdf3"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\mobile\\android\\app\\src\\main\\res\\mipmap-xxhdpi\\ic_launcher.webp": {
+    "mtime": 1781180265.223441,
+    "ast_hash": "5efaaaabe1a9b8abdd4a4183188f82cf",
+    "semantic_hash": "5efaaaabe1a9b8abdd4a4183188f82cf"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\mobile\\android\\app\\src\\main\\res\\mipmap-xxhdpi\\ic_launcher_foreground.webp": {
+    "mtime": 1781180265.2474453,
+    "ast_hash": "6c49f0f05d0ae86f0143252884f014f5",
+    "semantic_hash": "6c49f0f05d0ae86f0143252884f014f5"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\mobile\\android\\app\\src\\main\\res\\mipmap-xxhdpi\\ic_launcher_round.webp": {
+    "mtime": 1781180265.2381687,
+    "ast_hash": "e54b670b2f540fa984f3c8f02d093925",
+    "semantic_hash": "e54b670b2f540fa984f3c8f02d093925"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\mobile\\android\\app\\src\\main\\res\\mipmap-xxxhdpi\\ic_launcher.webp": {
+    "mtime": 1781180265.2244482,
+    "ast_hash": "91b48e3d866f5f3fecb4c7f47cb5c2bc",
+    "semantic_hash": "91b48e3d866f5f3fecb4c7f47cb5c2bc"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\mobile\\android\\app\\src\\main\\res\\mipmap-xxxhdpi\\ic_launcher_foreground.webp": {
+    "mtime": 1781180265.2474453,
+    "ast_hash": "69b1396a7c9ce6ffbfae4fc519818876",
+    "semantic_hash": "69b1396a7c9ce6ffbfae4fc519818876"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\mobile\\android\\app\\src\\main\\res\\mipmap-xxxhdpi\\ic_launcher_round.webp": {
+    "mtime": 1781180265.2381687,
+    "ast_hash": "c8934aa78f4394d991194ff74232df31",
+    "semantic_hash": "c8934aa78f4394d991194ff74232df31"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\mobile\\assets\\icon.png": {
+    "mtime": 1780502417.4570498,
+    "ast_hash": "67b15a07052dcbb14c97c2a1141c40fd",
+    "semantic_hash": "67b15a07052dcbb14c97c2a1141c40fd"
+  },
+  "C:\\Users\\bharat.jain\\Desktop\\per\\dream\\mobile\\assets\\splash.png": {
+    "mtime": 1780550223.3908374,
+    "ast_hash": "595fd4384076c9bfca98e1e569fce650",
+    "semantic_hash": "595fd4384076c9bfca98e1e569fce650"
+  }
+}

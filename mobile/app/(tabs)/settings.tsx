@@ -12,6 +12,7 @@ import {
   FlatList,
   Linking,
   ActivityIndicator,
+  TextInput,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { BlurView } from 'expo-blur';
@@ -54,17 +55,45 @@ const AGE_RANGE_LABELS: Record<AgeRange, string> = {
   '45_plus': '45 or older',
 };
 
-const VOICE_LANGUAGES: { key: VoiceLanguage; label: string; description: string }[] = [
-  { key: 'auto',    label: 'Auto-detect',    description: 'Match the language you speak each turn' },
-  { key: 'english', label: 'English',        description: 'Always reply with an English voice' },
-  { key: 'hindi',   label: 'हिंदी (Hindi)',  description: 'Always reply with a Hindi voice' },
+// Languages selectable for the therapy AI voice. Keep in sync with the
+// VoiceLanguage type and the backend's models.SupportedVoiceLanguages.
+const VOICE_LANGUAGE_OPTIONS: { key: VoiceLanguage; label: string; native: string }[] = [
+  { key: 'english',    label: 'English',            native: 'English' },
+  { key: 'hindi',      label: 'Hindi',              native: 'हिंदी' },
+  { key: 'arabic',     label: 'Arabic',             native: 'العربية' },
+  { key: 'bengali',    label: 'Bengali',            native: 'বাংলা' },
+  { key: 'chinese',    label: 'Chinese (Mandarin)', native: '中文' },
+  { key: 'dutch',      label: 'Dutch',              native: 'Nederlands' },
+  { key: 'french',     label: 'French',             native: 'Français' },
+  { key: 'german',     label: 'German',             native: 'Deutsch' },
+  { key: 'greek',      label: 'Greek',              native: 'Ελληνικά' },
+  { key: 'gujarati',   label: 'Gujarati',           native: 'ગુજરાતી' },
+  { key: 'indonesian', label: 'Indonesian',         native: 'Bahasa Indonesia' },
+  { key: 'italian',    label: 'Italian',            native: 'Italiano' },
+  { key: 'japanese',   label: 'Japanese',           native: '日本語' },
+  { key: 'kannada',    label: 'Kannada',            native: 'ಕನ್ನಡ' },
+  { key: 'korean',     label: 'Korean',             native: '한국어' },
+  { key: 'malayalam',  label: 'Malayalam',          native: 'മലയാളം' },
+  { key: 'marathi',    label: 'Marathi',            native: 'मराठी' },
+  { key: 'polish',     label: 'Polish',             native: 'Polski' },
+  { key: 'portuguese', label: 'Portuguese',         native: 'Português' },
+  { key: 'punjabi',    label: 'Punjabi',            native: 'ਪੰਜਾਬੀ' },
+  { key: 'russian',    label: 'Russian',            native: 'Русский' },
+  { key: 'spanish',    label: 'Spanish',            native: 'Español' },
+  { key: 'swedish',    label: 'Swedish',            native: 'Svenska' },
+  { key: 'tamil',      label: 'Tamil',              native: 'தமிழ்' },
+  { key: 'telugu',     label: 'Telugu',             native: 'తెలుగు' },
+  { key: 'thai',       label: 'Thai',               native: 'ไทย' },
+  { key: 'turkish',    label: 'Turkish',            native: 'Türkçe' },
+  { key: 'ukrainian',  label: 'Ukrainian',          native: 'Українська' },
+  { key: 'urdu',       label: 'Urdu',               native: 'اردو' },
+  { key: 'vietnamese', label: 'Vietnamese',         native: 'Tiếng Việt' },
 ];
 
-const VOICE_LANGUAGE_LABELS: Record<VoiceLanguage, string> = {
-  auto: 'Auto',
-  english: 'English',
-  hindi: 'हिंदी',
-};
+function voiceLanguageLabel(lang: VoiceLanguage): string {
+  if (lang === 'auto') return 'Auto';
+  return VOICE_LANGUAGE_OPTIONS.find((o) => o.key === lang)?.label ?? lang;
+}
 
 const CRISIS_HOTLINES = [
   { name: 'iCall', tel: 'tel:9152987821', info: '9152987821 · India' },
@@ -148,6 +177,8 @@ export default function SettingsScreen() {
   const [voiceLanguage, setVoiceLanguage] = useState<VoiceLanguage>('auto');
   const [savingVoiceLang, setSavingVoiceLang] = useState(false);
   const [showVoiceLangPicker, setShowVoiceLangPicker] = useState(false);
+  const [voicePickerView, setVoicePickerView] = useState<'root' | 'list'>('root');
+  const [voiceLangSearch, setVoiceLangSearch] = useState('');
   const [showHourPicker, setShowHourPicker] = useState(false);
   const [showCrisisModal, setShowCrisisModal] = useState(false);
   const [showProfileModal, setShowProfileModal] = useState(false);
@@ -202,6 +233,12 @@ export default function SettingsScreen() {
     } finally {
       setSavingHour(false);
     }
+  };
+
+  const openVoiceLangPicker = () => {
+    setVoicePickerView('root');
+    setVoiceLangSearch('');
+    setShowVoiceLangPicker(true);
   };
 
   const handleSelectVoiceLanguage = async (lang: VoiceLanguage) => {
@@ -433,10 +470,10 @@ export default function SettingsScreen() {
               label="Voice language"
               sub="The language of the AI voice in therapy sessions"
               colors={colors}
-              onPress={() => setShowVoiceLangPicker(true)}
+              onPress={openVoiceLangPicker}
               right={
                 <Text style={[styles.valueText, { color: savingVoiceLang ? colors.textMuted : colors.purple300 }]}>
-                  {VOICE_LANGUAGE_LABELS[voiceLanguage]}
+                  {voiceLanguageLabel(voiceLanguage)}
                 </Text>
               }
             />
@@ -547,39 +584,146 @@ export default function SettingsScreen() {
             onPress={() => setShowVoiceLangPicker(false)}
           />
           <View
-            style={[styles.modalSheet, { backgroundColor: colors.cardSolid, borderColor: colors.border }]}
+            style={[styles.modalSheet, styles.voiceSheet, { backgroundColor: colors.cardSolid, borderColor: colors.border }]}
             onStartShouldSetResponder={() => true}
           >
             <View style={[styles.modalHandle, { backgroundColor: colors.border }]} />
-            <Text style={[styles.modalTitle, { color: colors.textPrimary }]}>Voice Language</Text>
-            <Text style={[styles.modalSub, { color: colors.textMuted }]}>
-              Choose the language of the AI voice in therapy sessions.
-            </Text>
-            {VOICE_LANGUAGES.map((opt) => {
-              const isSelected = opt.key === voiceLanguage;
-              return (
+
+            {voicePickerView === 'root' ? (
+              <>
+                <Text style={[styles.modalTitle, { color: colors.textPrimary }]}>Voice Language</Text>
+                <Text style={[styles.modalSub, { color: colors.textMuted }]}>
+                  The language the AI voice replies in during therapy sessions.
+                </Text>
+
+                {/* Auto */}
                 <TouchableOpacity
-                  key={opt.key}
                   style={[
-                    styles.hourRow,
-                    { borderBottomColor: colors.borderFaint },
-                    isSelected && { backgroundColor: colors.brandGlow },
+                    styles.voiceOptionCard,
+                    {
+                      backgroundColor: voiceLanguage === 'auto' ? colors.brandGlow : colors.card,
+                      borderColor: voiceLanguage === 'auto' ? colors.brand : colors.border,
+                    },
                   ]}
-                  onPress={() => handleSelectVoiceLanguage(opt.key)}
-                  activeOpacity={0.7}
+                  onPress={() => handleSelectVoiceLanguage('auto')}
+                  activeOpacity={0.75}
                 >
+                  <Text style={styles.voiceOptionEmoji}>✨</Text>
                   <View style={{ flex: 1 }}>
-                    <Text style={[styles.hourLabel, { color: isSelected ? colors.purple300 : colors.textPrimary }]}>
-                      {opt.label}
+                    <Text style={[styles.voiceOptionLabel, { color: voiceLanguage === 'auto' ? colors.purple300 : colors.textPrimary }]}>
+                      Auto
                     </Text>
-                    <Text style={[styles.settingSub, { color: colors.textMuted }]}>{opt.description}</Text>
+                    <Text style={[styles.settingSub, { color: colors.textMuted }]}>
+                      Replies in the language you speak each turn
+                    </Text>
                   </View>
-                  {isSelected && (
+                  {voiceLanguage === 'auto' && (
                     <Text style={[styles.hourCheck, { color: colors.brand }]}>✓</Text>
                   )}
                 </TouchableOpacity>
-              );
-            })}
+
+                {/* Choose language */}
+                <TouchableOpacity
+                  style={[
+                    styles.voiceOptionCard,
+                    {
+                      backgroundColor: voiceLanguage !== 'auto' ? colors.brandGlow : colors.card,
+                      borderColor: voiceLanguage !== 'auto' ? colors.brand : colors.border,
+                    },
+                  ]}
+                  onPress={() => setVoicePickerView('list')}
+                  activeOpacity={0.75}
+                >
+                  <Text style={styles.voiceOptionEmoji}>🌐</Text>
+                  <View style={{ flex: 1 }}>
+                    <Text style={[styles.voiceOptionLabel, { color: voiceLanguage !== 'auto' ? colors.purple300 : colors.textPrimary }]}>
+                      Choose language
+                    </Text>
+                    <Text style={[styles.settingSub, { color: colors.textMuted }]}>
+                      {voiceLanguage !== 'auto'
+                        ? `Currently ${voiceLanguageLabel(voiceLanguage)}`
+                        : 'Always reply in one language'}
+                    </Text>
+                  </View>
+                  <Text style={[styles.chevron, { color: colors.textMuted }]}>›</Text>
+                </TouchableOpacity>
+              </>
+            ) : (
+              <>
+                {/* Header with back */}
+                <View style={styles.voiceListHeader}>
+                  <TouchableOpacity
+                    onPress={() => setVoicePickerView('root')}
+                    hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                  >
+                    <Text style={[styles.voiceBackText, { color: colors.textMuted }]}>← Back</Text>
+                  </TouchableOpacity>
+                  <Text style={[styles.modalTitle, { color: colors.textPrimary, marginBottom: 0 }]}>
+                    Choose a language
+                  </Text>
+                  <View style={{ width: 48 }} />
+                </View>
+
+                {/* Search */}
+                <View style={[styles.voiceSearchBox, { backgroundColor: colors.card, borderColor: colors.border }]}>
+                  <Text style={[styles.voiceSearchIcon, { color: colors.textMuted }]}>⌕</Text>
+                  <TextInput
+                    style={[styles.voiceSearchInput, { color: colors.textPrimary }]}
+                    placeholder="Search languages…"
+                    placeholderTextColor={colors.textMuted}
+                    value={voiceLangSearch}
+                    onChangeText={setVoiceLangSearch}
+                    autoCorrect={false}
+                    autoCapitalize="none"
+                  />
+                </View>
+
+                <FlatList
+                  data={VOICE_LANGUAGE_OPTIONS.filter((o) => {
+                    const q = voiceLangSearch.trim().toLowerCase();
+                    if (!q) return true;
+                    return (
+                      o.label.toLowerCase().includes(q) ||
+                      o.native.toLowerCase().includes(q) ||
+                      o.key.includes(q)
+                    );
+                  })}
+                  keyExtractor={(o) => o.key}
+                  showsVerticalScrollIndicator={false}
+                  style={styles.voiceLangList}
+                  keyboardShouldPersistTaps="handled"
+                  ListEmptyComponent={
+                    <Text style={[styles.settingSub, { color: colors.textMuted, textAlign: 'center', paddingVertical: 24 }]}>
+                      No languages match “{voiceLangSearch.trim()}”
+                    </Text>
+                  }
+                  renderItem={({ item: opt }) => {
+                    const isSelected = opt.key === voiceLanguage;
+                    return (
+                      <TouchableOpacity
+                        style={[
+                          styles.hourRow,
+                          { borderBottomColor: colors.borderFaint },
+                          isSelected && { backgroundColor: colors.brandGlow },
+                        ]}
+                        onPress={() => handleSelectVoiceLanguage(opt.key)}
+                        activeOpacity={0.7}
+                      >
+                        <Text style={[styles.hourLabel, { color: isSelected ? colors.purple300 : colors.textPrimary }]}>
+                          {opt.label}
+                        </Text>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+                          <Text style={[styles.voiceNativeText, { color: colors.textMuted }]}>{opt.native}</Text>
+                          {isSelected && (
+                            <Text style={[styles.hourCheck, { color: colors.brand }]}>✓</Text>
+                          )}
+                        </View>
+                      </TouchableOpacity>
+                    );
+                  }}
+                />
+              </>
+            )}
           </View>
         </BlurView>
       </Modal>
@@ -953,6 +1097,55 @@ const styles = StyleSheet.create({
     lineHeight: 20,
   },
   hourList: { flexGrow: 0 },
+
+  voiceSheet: { maxHeight: '80%' },
+  voiceOptionCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 14,
+    borderWidth: 1,
+    borderRadius: 14,
+    padding: 16,
+    marginBottom: 10,
+  },
+  voiceOptionEmoji: { fontSize: 22 },
+  voiceOptionLabel: {
+    fontSize: 15,
+    fontFamily: 'Nunito_600SemiBold',
+    marginBottom: 2,
+  },
+  voiceListHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 14,
+  },
+  voiceBackText: {
+    fontSize: 14,
+    fontFamily: 'Nunito_400Regular',
+    width: 48,
+  },
+  voiceSearchBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    borderWidth: 1,
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    marginBottom: 8,
+  },
+  voiceSearchIcon: { fontSize: 16 },
+  voiceSearchInput: {
+    flex: 1,
+    fontSize: 14,
+    fontFamily: 'Nunito_400Regular',
+    paddingVertical: 10,
+  },
+  voiceLangList: { flexGrow: 0 },
+  voiceNativeText: {
+    fontSize: 13,
+    fontFamily: 'Nunito_400Regular',
+  },
   hourRow: {
     flexDirection: 'row',
     alignItems: 'center',

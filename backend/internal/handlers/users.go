@@ -43,6 +43,13 @@ func (h *UserHandler) UpdateMe(c *gin.Context) {
 		return
 	}
 
+	// The supported set lives in models so it stays in sync with the Azure
+	// voice map in services/tts.go - too large for a binding oneof tag.
+	if input.VoiceLanguage != nil && !models.IsValidVoiceLanguage(*input.VoiceLanguage) {
+		c.Error(apierr.BadRequest("unsupported voice_language"))
+		return
+	}
+
 	userID := middleware.UserIDFromCtx(c.Request.Context())
 	user, err := h.svc.UpdateProfile(c.Request.Context(), userID, input)
 	if err != nil {

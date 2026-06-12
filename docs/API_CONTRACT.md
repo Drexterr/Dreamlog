@@ -178,7 +178,9 @@ Response `200`:
   "fcm_nudge_hour": 8,                // 0-23, local hour for morning nudge
   "goal": "stress | anxiety | grief | depression | trauma | relationships | career | curious | null",
   "age_range": "under_18 | 18_24 | 25_34 | 35_44 | 45_plus | null",
-  "voice_language": "auto | english | hindi",  // therapy TTS voice; auto = follow detected speech language
+  "voice_language": "auto | <language>",  // therapy TTS voice; auto = follow detected speech language.
+                                          // <language> is any key in models.SupportedVoiceLanguages (30 languages:
+                                          // english, hindi, spanish, french, german, ..., each mapped to an Azure voice)
   "created_at": "RFC3339"
 }
 ```
@@ -193,7 +195,7 @@ Response `200`:
   "fcm_nudge_hour": 8,
   "goal": "stress | anxiety | grief | depression | trauma | relationships | career | curious",
   "age_range": "under_18 | 18_24 | 25_34 | 35_44 | 45_plus",
-  "voice_language": "auto | english | hindi"   // 400 on any other value
+  "voice_language": "auto | <language>"   // any key in models.SupportedVoiceLanguages; 400 on any other value
 }
 
 // Response 200 - same shape as GET /me

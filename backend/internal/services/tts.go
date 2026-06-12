@@ -75,6 +75,42 @@ var azureVoiceHDIndian = map[models.TherapyPersona]string{
 	models.PersonaMindful:    "en-IN-Diya:DragonHDLatestNeural",
 }
 
+// azureVoiceByLanguage maps the remaining user-selectable voice languages
+// (Settings → Voice language, validated against models.SupportedVoiceLanguages)
+// to one standard neural voice per language. English and Hindi keep their
+// richer per-persona maps above; for these languages all personas share a
+// single warm conversational voice and differ only by system prompt.
+var azureVoiceByLanguage = map[string]string{
+	"arabic":     "ar-SA-ZariyahNeural",
+	"bengali":    "bn-IN-TanishaaNeural",
+	"chinese":    "zh-CN-XiaoxiaoNeural",
+	"dutch":      "nl-NL-ColetteNeural",
+	"french":     "fr-FR-DeniseNeural",
+	"german":     "de-DE-KatjaNeural",
+	"greek":      "el-GR-AthinaNeural",
+	"gujarati":   "gu-IN-DhwaniNeural",
+	"indonesian": "id-ID-GadisNeural",
+	"italian":    "it-IT-ElsaNeural",
+	"japanese":   "ja-JP-NanamiNeural",
+	"kannada":    "kn-IN-SapnaNeural",
+	"korean":     "ko-KR-SunHiNeural",
+	"malayalam":  "ml-IN-SobhanaNeural",
+	"marathi":    "mr-IN-AarohiNeural",
+	"polish":     "pl-PL-ZofiaNeural",
+	"portuguese": "pt-BR-FranciscaNeural",
+	"punjabi":    "pa-IN-VaaniNeural",
+	"russian":    "ru-RU-SvetlanaNeural",
+	"spanish":    "es-ES-ElviraNeural",
+	"swedish":    "sv-SE-SofieNeural",
+	"tamil":      "ta-IN-PallaviNeural",
+	"telugu":     "te-IN-ShrutiNeural",
+	"thai":       "th-TH-PremwadeeNeural",
+	"turkish":    "tr-TR-EmelNeural",
+	"ukrainian":  "uk-UA-PolinaNeural",
+	"urdu":       "ur-IN-GulNeural",
+	"vietnamese": "vi-VN-HoaiMyNeural",
+}
+
 type ttsStorageClient interface {
 	Upload(ctx context.Context, key, contentType string, body io.Reader) error
 	PresignDownload(ctx context.Context, key string, expiry time.Duration) (string, error)
@@ -163,6 +199,8 @@ func (s *TTSService) selectAzureVoice(persona models.TherapyPersona, language st
 		if voice == "" {
 			voice = azureVoiceHI[models.PersonaComforting]
 		}
+	} else if v, ok := azureVoiceByLanguage[normalizeLanguage(language)]; ok {
+		voice = v
 	} else {
 		voice = azureVoiceEN[persona]
 		if voice == "" {
@@ -187,11 +225,17 @@ func isAzureHDVoice(voice string) bool {
 
 // isHindiLanguage normalises Whisper's language output ("hindi", "hi", "Hindi").
 func isHindiLanguage(language string) bool {
-	switch strings.ToLower(strings.TrimSpace(language)) {
+	switch normalizeLanguage(language) {
 	case "hi", "hin", "hindi":
 		return true
 	}
 	return false
+}
+
+// normalizeLanguage lower-cases and trims a Whisper-detected or user-selected
+// language so it can be matched against the voice maps.
+func normalizeLanguage(language string) string {
+	return strings.ToLower(strings.TrimSpace(language))
 }
 
 // DetectTextLanguage gives a best-effort language for typed (non-voice) turns
