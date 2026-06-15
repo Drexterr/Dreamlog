@@ -14,6 +14,7 @@
         mobile-build-dev mobile-build-dev-local mobile-build-preview mobile-build-preview-local mobile-build-prod \
         mobile-build-dev-ios mobile-build-preview-ios mobile-build-prod-ios \
         mobile-submit-android mobile-submit-ios mobile-device-ios mobile-versions \
+        mobile-update mobile-update-preview \
         apk apk-debug apk-ci apk-download \
         portal-install portal-dev portal-build portal-start portal-lint
 
@@ -105,6 +106,8 @@ help:
 	@echo "    make mobile-submit-ios      Upload latest prod build to TestFlight"
 	@echo "    make mobile-device-ios      Register an iPhone UDID for dev builds"
 	@echo "    make mobile-versions        Show remote versionCode / buildNumber"
+	@echo "    make mobile-update MSG=...  OTA JS update → production channel"
+	@echo "    make mobile-update-preview MSG=...  OTA JS update → preview channel"
 	@echo ""
 	@echo "  Mobile - APK builds (Windows-native, no EAS/cloud)"
 	@echo "    make apk              Build release APK via Gradle (needs Android Studio)"
@@ -347,6 +350,15 @@ mobile-device-ios:
 mobile-versions:
 	cd mobile && npx eas build:version:get --platform android && \
 	  npx eas build:version:get --platform ios
+
+# Push an OTA JS update to the production channel (no store submission needed).
+# Devices running a matching runtimeVersion pick it up automatically on next launch.
+mobile-update:
+	cd mobile && npx eas update --channel production --message "$(MSG)"
+
+# Push an OTA JS update to the preview channel.
+mobile-update-preview:
+	cd mobile && npx eas update --channel preview --message "$(MSG)"
 
 # Local builds (runs on your machine - no queue, no wait).
 # Requires: Android SDK + JDK for Android; Xcode for iOS (macOS only).

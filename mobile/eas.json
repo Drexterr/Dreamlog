@@ -28,6 +28,7 @@
     "preview": {
       "distribution": "internal",
       "autoIncrement": true,
+      "channel": "preview",
       "env": {
         "EXPO_PUBLIC_API_URL": "https://dreamlog-production-f9e2.up.railway.app",
         "EXPO_PUBLIC_SUPABASE_URL": "https://rvmriuwxyxrpyoseqhci.supabase.co"
@@ -36,6 +37,7 @@
     "preview-local": {
       "distribution": "internal",
       "autoIncrement": true,
+      "channel": "preview",
       "android": {
         "buildType": "apk"
       },
@@ -46,6 +48,7 @@
     },
     "production": {
       "autoIncrement": true,
+      "channel": "production",
       "env": {
         "EXPO_PUBLIC_API_URL": "https://dreamlog-production-f9e2.up.railway.app",
         "EXPO_PUBLIC_SUPABASE_URL": "https://rvmriuwxyxrpyoseqhci.supabase.co"
