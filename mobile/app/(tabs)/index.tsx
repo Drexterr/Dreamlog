@@ -7,6 +7,7 @@ import {
   StyleSheet,
   StatusBar,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { api } from '../../src/api/client';
@@ -56,14 +57,7 @@ function RecordButton({ onPress, colors }: { onPress: () => void; colors: any })
           { backgroundColor: colors.brand, shadowColor: colors.brand, transform: [{ scale: scaleAnim }] },
         ]}
       >
-        <View style={styles.micWrap}>
-          <View style={[styles.micHead, { borderColor: colors.brandCore }]} />
-          <View style={styles.micArcWrap}>
-            <View style={[styles.micArc, { borderColor: colors.brandCore }]} />
-          </View>
-          <View style={[styles.micStand, { backgroundColor: colors.brandCore }]} />
-          <View style={[styles.micFoot, { borderTopColor: colors.brandCore }]} />
-        </View>
+        <Ionicons name="mic" size={38} color={colors.brandCore} />
       </Animated.View>
     </TouchableOpacity>
   );
@@ -403,21 +397,6 @@ const styles = StyleSheet.create({
     shadowRadius: 16,
     elevation: 8,
   },
-  micWrap: { alignItems: 'center', gap: 3 },
-  micHead: { width: 16, height: 22, borderRadius: 8, borderWidth: 2 },
-  micArcWrap: { overflow: 'hidden', width: 26, height: 13 },
-  micArc: {
-    width: 26,
-    height: 26,
-    borderRadius: 13,
-    borderWidth: 2,
-    borderBottomColor: 'transparent',
-    borderLeftColor: 'transparent',
-    borderRightColor: 'transparent',
-    transform: [{ rotate: '180deg' }],
-  },
-  micStand: { width: 2, height: 5, borderRadius: 1 },
-  micFoot: { width: 14, height: 0, borderTopWidth: 2, borderRadius: 1 },
   recHint: {
     fontSize: 11,
     fontFamily: 'Nunito_400Regular',

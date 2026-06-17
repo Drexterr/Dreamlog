@@ -20,6 +20,7 @@ import { useRouter } from 'expo-router';
 import { clearToken, api } from '../../src/api/client';
 import { supabase } from '../../src/lib/supabase';
 import { useTheme } from '../../src/context/ThemeContext';
+import { useAuth } from '../../src/context/AuthContext';
 import type { AgeRange, Plan, User, UserGoal, VoiceLanguage } from '../../src/types';
 
 const GOAL_META: Record<UserGoal, { label: string; emoji: string }> = {
@@ -166,6 +167,7 @@ const GOALS_LIST: { key: UserGoal; label: string; description: string; emoji: st
 export default function SettingsScreen() {
   const router = useRouter();
   const { theme, colors, setThemeWithBubble } = useTheme();
+  const { isAuthenticated, requestAuth } = useAuth();
 
   const [user, setUser] = useState<User | null>(null);
   const [loadError, setLoadError] = useState(false);
@@ -207,7 +209,7 @@ export default function SettingsScreen() {
       .catch(() => {});
   };
 
-  useEffect(() => { loadProfile(); }, []);
+  useEffect(() => { if (isAuthenticated) loadProfile(); }, [isAuthenticated]);
 
   const handleNudgeToggle = async (value: boolean) => {
     setNudgeEnabled(value);
@@ -326,17 +328,18 @@ export default function SettingsScreen() {
     }, 300);
   };
 
-  const goalMeta = user?.goal
-    ? (GOAL_META[user.goal] ?? { label: 'Just exploring', emoji: '' })
-    : { label: 'Not set', emoji: '' };
+  const effectiveGoal = (user?.goal || theme) as UserGoal;
+  const goalMeta = GOAL_META[effectiveGoal] ?? { label: 'Not set', emoji: '' };
 
-  const displayName = user?.preferred_name || user?.name || '-';
+  const displayName = !isAuthenticated ? 'Sign in' : (user?.preferred_name || user?.name || '-');
   const avatarText = user ? initials(user.preferred_name || user.name || '?') : '?';
-  const profileSub = loadError
-    ? 'Could not load profile - tap to retry'
-    : user
-      ? `${entryCount} ${entryCount === 1 ? 'entry' : 'entries'} · ${PLAN_LABELS[currentPlan]}`
-      : 'Loading…';
+  const profileSub = !isAuthenticated
+    ? 'Tap to sign in and sync your journal'
+    : loadError
+      ? 'Could not load profile · tap to retry'
+      : user
+        ? `${entryCount} ${entryCount === 1 ? 'entry' : 'entries'} · ${PLAN_LABELS[currentPlan]}`
+        : 'Loading…';
 
   if (deleting) {
     return (
@@ -360,8 +363,12 @@ export default function SettingsScreen() {
 
           {/* Profile card */}
           <TouchableOpacity
-            style={[styles.profileCard, { backgroundColor: colors.card, borderColor: loadError ? colors.danger : colors.border }]}
-            onPress={() => loadError ? loadProfile() : setShowProfileModal(true)}
+            style={[styles.profileCard, { backgroundColor: colors.card, borderColor: (loadError && isAuthenticated) ? colors.danger : colors.border }]}
+            onPress={() => {
+              if (!isAuthenticated) { requestAuth(() => loadProfile()); }
+              else if (loadError) { loadProfile(); }
+              else { setShowProfileModal(true); }
+            }}
             activeOpacity={0.75}
           >
             <View style={[styles.avatar, { backgroundColor: colors.brand }]}>

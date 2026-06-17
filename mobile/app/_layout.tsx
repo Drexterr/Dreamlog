@@ -119,9 +119,11 @@ export default function RootLayout() {
       if (redirected.current) return;
       redirected.current = true;
 
-      const seg0 = segments[0] as string;
+      const seg0 = segments[0] as string | undefined;
       const inAuth        = seg0 === 'auth';
       const inOnboarding  = seg0 === 'onboarding';
+      // Root index = app hasn't navigated anywhere yet (blank screen on second restart)
+      const atRootIndex   = !seg0 || seg0 === 'index';
       const onboardingDone = await hasCompletedOnboarding();
 
       if (!hasToken) {
@@ -129,7 +131,7 @@ export default function RootLayout() {
         if (!onboardingDone) {
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           router.replace('/onboarding' as any);
-        } else if (inAuth || inOnboarding) {
+        } else if (inAuth || inOnboarding || atRootIndex) {
           // Returning guest lands on tabs
           router.replace('/(tabs)');
         }
@@ -143,9 +145,13 @@ export default function RootLayout() {
       if (needsOnboarding && !inOnboarding) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         router.replace('/onboarding' as any);
-      } else if (!needsOnboarding && (inAuth || inOnboarding)) {
+      } else if (!needsOnboarding && (inAuth || inOnboarding || atRootIndex)) {
+        // Also redirect from root index — covers blank screen on second restart
         router.replace('/(tabs)');
-      } else if (!needsOnboarding && greetingName) {
+      }
+
+      // Greeting overlay is independent of navigation — show it for any returning user
+      if (!needsOnboarding && greetingName) {
         setShowGreeting(true);
         Animated.sequence([
           Animated.timing(greetingOpacity, { toValue: 1, duration: 400, useNativeDriver: true }),
