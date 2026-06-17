@@ -1,0 +1,1321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DreamLog — Onboarding Design</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;1,400;1,500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:    #0f0e0d;
+  --sf:    #161412;
+  --t1:    #e8e3dc;
+  --t2:    rgba(232,227,220,0.5);
+  --t3:    rgba(232,227,220,0.28);
+  --t4:    rgba(232,227,220,0.1);
+  --bd:    rgba(232,227,220,0.08);
+  --bdm:   rgba(232,227,220,0.14);
+  --a:     #c9956a;
+  --as:    rgba(201,149,106,0.08);
+  --am:    rgba(201,149,106,0.15);
+  --page:  #080706;
+}
+
+html, body {
+  background: var(--page);
+  min-height: 100vh;
+  font-family: 'DM Sans', sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 40px 24px 64px;
+  gap: 0;
+}
+
+/* Page header */
+.page-header {
+  width: 100%;
+  max-width: 900px;
+  margin-bottom: 44px;
+}
+.page-title {
+  font-family: 'Lora', serif;
+  font-size: 20px;
+  font-weight: 400;
+  color: var(--t1);
+  margin-bottom: 6px;
+}
+.page-sub {
+  font-size: 12px;
+  color: var(--t3);
+  line-height: 1.6;
+  font-weight: 300;
+}
+
+/* Step nav dots */
+.step-nav {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+.step-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--bd);
+  border: 1px solid var(--bdm);
+  cursor: pointer;
+  transition: background 0.3s, transform 0.2s;
+}
+.step-dot.active { background: var(--a); transform: scale(1.4); }
+.step-dot.visited { background: var(--bdm); }
+.step-label {
+  font-size: 10px;
+  color: var(--t3);
+  font-weight: 300;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-left: 6px;
+}
+
+/* Main layout */
+.layout { display: flex; gap: 52px; align-items: flex-start; flex-wrap: wrap; width: 100%; max-width: 900px; }
+.left  { display: flex; flex-direction: column; align-items: center; gap: 12px; }
+.right { flex: 1; min-width: 260px; }
+
+/* ─── Phone shell ─── */
+.phone {
+  width: 393px;
+  height: 852px;
+  max-height: 92vh;
+  border-radius: 50px;
+  background: var(--bg);
+  position: relative;
+  overflow: hidden;
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,0.06),
+    0 32px 80px rgba(0,0,0,0.7),
+    0 8px 24px rgba(0,0,0,0.5);
+  display: flex;
+  flex-direction: column;
+}
+
+/* Dynamic island */
+.dynamic-island {
+  position: absolute;
+  top: 14px; left: 50%;
+  transform: translateX(-50%);
+  width: 120px; height: 34px;
+  background: #000;
+  border-radius: 20px;
+  z-index: 20;
+}
+
+/* Status bar */
+.status-bar {
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 52px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  padding: 0 28px 8px;
+  z-index: 15;
+  pointer-events: none;
+}
+.sb-time {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  color: rgba(232,227,220,0.8);
+  letter-spacing: -0.2px;
+}
+.sb-icons { display: flex; align-items: center; gap: 5px; }
+
+/* Home indicator */
+.home-indicator {
+  position: absolute;
+  bottom: 10px; left: 50%;
+  transform: translateX(-50%);
+  width: 134px; height: 5px;
+  background: rgba(232,227,220,0.25);
+  border-radius: 3px;
+  z-index: 20;
+}
+
+/* ─── Screens ─── */
+.screen {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateX(20px);
+  transition: opacity 0.38s ease, transform 0.42s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: opacity, transform;
+  overflow: hidden;
+}
+.screen.active {
+  opacity: 1;
+  pointer-events: all;
+  transform: translateX(0);
+}
+.screen.exit {
+  opacity: 0;
+  transform: translateX(-20px);
+  pointer-events: none;
+}
+
+/* Goal-specific ambient background tint */
+.goal-tint {
+  position: absolute; inset: 0;
+  pointer-events: none;
+  transition: background 0.5s ease;
+  z-index: 0;
+}
+
+/* ─── WELCOME SCREEN ─── */
+#s-welcome { background: var(--bg); }
+.wl-top { padding: 24px 32px 0; position: relative; z-index: 1; }
+.wl-wordmark {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--t3);
+}
+.wl-center {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 0 32px;
+  gap: 0;
+  position: relative;
+  z-index: 1;
+}
+.wl-illus { margin-bottom: 44px; }
+.wl-h1 {
+  font-family: 'Lora', serif;
+  font-size: 26px;
+  font-weight: 500;
+  color: var(--t1);
+  line-height: 1.35;
+  text-align: center;
+  margin-bottom: 16px;
+}
+.wl-p {
+  font-family: 'Lora', serif;
+  font-style: italic;
+  font-size: 15px;
+  color: var(--t2);
+  line-height: 1.65;
+  text-align: center;
+  max-width: 260px;
+}
+.wl-bottom { padding: 0 32px 56px; position: relative; z-index: 1; }
+.btn-outline {
+  width: 100%;
+  padding: 16px;
+  background: transparent;
+  border: 1px solid var(--a);
+  border-radius: 6px;
+  cursor: pointer;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 15px;
+  letter-spacing: 0.04em;
+  color: var(--a);
+  transition: background 0.25s ease, color 0.25s ease;
+}
+.btn-outline:hover { background: var(--a); color: #0f0e0d; }
+.btn-outline:active { transform: scale(0.97); }
+.wl-note {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 12px;
+  color: var(--t3);
+  text-align: center;
+  margin-top: 16px;
+  opacity: 0.55;
+}
+
+/* ─── GOAL SCREEN ─── */
+#s-goals { background: var(--bg); }
+.goal-header { padding: 20px 28px 0; position: relative; z-index: 1; }
+.step-indicator {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--t3);
+  margin-bottom: 8px;
+}
+.goal-h2 {
+  font-family: 'Lora', serif;
+  font-size: 22px;
+  font-weight: 500;
+  color: var(--t1);
+  line-height: 1.3;
+  margin-bottom: 6px;
+}
+.goal-sub {
+  font-family: 'Lora', serif;
+  font-style: italic;
+  font-size: 14px;
+  color: var(--t2);
+  line-height: 1.5;
+}
+.hairline {
+  height: 1px;
+  background: var(--bd);
+  margin: 20px 28px;
+  position: relative;
+  z-index: 1;
+  transform-origin: left;
+  animation: hairlineIn 0.7s 0.25s ease both;
+}
+@keyframes hairlineIn { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+
+.goal-list {
+  flex: 1;
+  overflow-y: auto;
+  scrollbar-width: none;
+  padding: 0 0 48px;
+  position: relative;
+  z-index: 1;
+}
+.goal-list::-webkit-scrollbar { display: none; }
+
+.goal-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+  padding: 15px 28px;
+  background: none;
+  border: none;
+  border-bottom: 1px solid var(--bd);
+  cursor: pointer;
+  text-align: left;
+  position: relative;
+  transition: background 0.2s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+.goal-row:hover { background: rgba(232,227,220,0.02); }
+.goal-row:active { transform: scale(0.99); }
+
+/* Left accent bar */
+.goal-accent-bar {
+  position: absolute;
+  left: 0;
+  top: 20%;
+  bottom: 20%;
+  width: 2px;
+  border-radius: 0 2px 2px 0;
+  opacity: 0;
+  transform: scaleY(0);
+  transform-origin: center;
+  transition: opacity 0.2s, transform 0.2s;
+}
+.goal-row:hover .goal-accent-bar,
+.goal-row.selected .goal-accent-bar {
+  opacity: 1;
+  transform: scaleY(1);
+}
+
+/* Goal glyph */
+.goal-glyph {
+  flex-shrink: 0;
+  width: 22px; height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.4;
+  transition: opacity 0.2s;
+}
+.goal-row:hover .goal-glyph,
+.goal-row.selected .goal-glyph { opacity: 1; }
+
+/* Goal text */
+.goal-text { flex: 1; }
+.goal-label {
+  font-family: 'Lora', serif;
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--t1);
+  line-height: 1.2;
+  margin-bottom: 3px;
+  transition: color 0.2s;
+}
+.goal-row:hover .goal-label,
+.goal-row.selected .goal-label { /* color set by JS */ }
+.goal-desc {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 12.5px;
+  color: var(--t3);
+  line-height: 1.4;
+  transition: color 0.2s, opacity 0.2s;
+}
+.goal-row:hover .goal-desc,
+.goal-row.selected .goal-desc { opacity: 0.75; }
+
+/* Selection dot */
+.goal-sel-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  opacity: 0;
+  transform: scale(0.6);
+  transition: opacity 0.2s, transform 0.2s;
+}
+.goal-row.selected .goal-sel-dot { opacity: 1; transform: scale(1); }
+
+/* Staggered entrance */
+.goal-row { opacity: 0; transform: translateX(12px); }
+#s-goals.active .goal-row { animation: rowIn 0.45s ease forwards; }
+#s-goals.active .goal-row:nth-child(1) { animation-delay: 0.2s; }
+#s-goals.active .goal-row:nth-child(2) { animation-delay: 0.255s; }
+#s-goals.active .goal-row:nth-child(3) { animation-delay: 0.31s; }
+#s-goals.active .goal-row:nth-child(4) { animation-delay: 0.365s; }
+#s-goals.active .goal-row:nth-child(5) { animation-delay: 0.42s; }
+#s-goals.active .goal-row:nth-child(6) { animation-delay: 0.475s; }
+#s-goals.active .goal-row:nth-child(7) { animation-delay: 0.53s; }
+@keyframes rowIn {
+  from { opacity: 0; transform: translateX(12px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+/* ─── REVEAL SCREEN ─── */
+#s-reveal { background: var(--bg); }
+.reveal-glow {
+  position: absolute;
+  top: 28%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 280px; height: 280px;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 0;
+  animation: glowIn 1.4s 0.3s cubic-bezier(0.16,1,0.3,1) both;
+}
+@keyframes glowIn {
+  from { opacity: 0; transform: translateX(-50%) scale(0.8); }
+  to   { opacity: 1; transform: translateX(-50%) scale(1); }
+}
+.reveal-center {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 0 36px;
+  position: relative;
+  z-index: 1;
+}
+.reveal-illus { margin-bottom: 40px; }
+.reveal-goal-label {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  opacity: 0.8;
+  margin-bottom: 12px;
+}
+.reveal-msg {
+  font-family: 'Lora', serif;
+  font-size: 26px;
+  font-weight: 500;
+  color: var(--t1);
+  line-height: 1.3;
+  text-align: center;
+  margin-bottom: 16px;
+}
+.reveal-submsg {
+  font-family: 'Lora', serif;
+  font-style: italic;
+  font-size: 15px;
+  color: var(--t2);
+  line-height: 1.65;
+  text-align: center;
+  max-width: 270px;
+}
+.reveal-hairline {
+  width: 32px; height: 1px;
+  opacity: 0.4;
+  margin-top: 28px;
+  animation: hairlineCenter 0.8s 0.8s ease both;
+  transform: scaleX(0);
+  transform-origin: center;
+}
+@keyframes hairlineCenter { to { transform: scaleX(1); } }
+.reveal-bottom { padding: 0 32px 56px; position: relative; z-index: 1; }
+.btn-solid {
+  width: 100%;
+  padding: 16px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 15px;
+  letter-spacing: 0.03em;
+  color: #0f0e0d;
+  font-weight: 500;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+.btn-solid:hover { opacity: 0.88; }
+.btn-solid:active { transform: scale(0.97); }
+
+/* Fade-in animation helpers for reveal screen */
+.reveal-center > * {
+  animation: fadeUpIn 0.65s ease both;
+}
+.reveal-goal-label  { animation-delay: 0.45s; }
+.reveal-msg         { animation-delay: 0.55s; }
+.reveal-submsg      { animation-delay: 0.68s; }
+.reveal-illus       { animation-delay: 0.2s;  animation: scaleIn 0.9s cubic-bezier(0.16,1,0.3,1) 0.2s both; }
+@keyframes fadeUpIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes scaleIn  { from { opacity: 0; transform: scale(0.85); }    to { opacity: 1; transform: scale(1); } }
+.reveal-bottom { animation: fadeUpIn 0.55s 0.9s ease both; }
+
+/* ─── FORM SCREENS (Name, Age, Country) ─── */
+.form-screen { background: var(--bg); }
+.form-top {
+  padding: 20px 28px 0;
+  position: relative; z-index: 1;
+}
+.back-btn {
+  background: none; border: none;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  color: var(--t3);
+  cursor: pointer;
+  padding: 4px 0;
+  margin-bottom: 20px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: color 0.15s, opacity 0.15s;
+}
+.back-btn:hover { color: var(--t2); }
+.back-btn:active { opacity: 0.45; }
+.form-h2 {
+  font-family: 'Lora', serif;
+  font-size: 24px;
+  font-weight: 500;
+  color: var(--t1);
+  line-height: 1.3;
+  margin-bottom: 8px;
+}
+.form-sub {
+  font-family: 'Lora', serif;
+  font-style: italic;
+  font-size: 14px;
+  color: var(--t2);
+  line-height: 1.55;
+  margin-bottom: 28px;
+}
+
+/* Text input */
+.text-input {
+  width: 100%;
+  padding: 14px 16px;
+  background: rgba(232,227,220,0.03);
+  border: 1px solid var(--bd);
+  border-radius: 6px;
+  font-family: 'Lora', serif;
+  font-size: 16px;
+  color: var(--t1);
+  outline: none;
+  transition: border-color 0.2s;
+  margin-bottom: 24px;
+  -webkit-appearance: none;
+}
+.text-input::placeholder { color: var(--t3); font-style: italic; }
+.text-input:focus { border-color: var(--a); }
+
+/* Age range pills */
+.age-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 28px; }
+.age-pill {
+  width: 100%;
+  padding: 14px 16px;
+  background: rgba(232,227,220,0.02);
+  border: 1px solid var(--bd);
+  border-radius: 6px;
+  cursor: pointer;
+  font-family: 'Lora', serif;
+  font-size: 15px;
+  color: var(--t2);
+  text-align: center;
+  transition: border-color 0.2s, background 0.2s, color 0.2s;
+  -webkit-tap-highlight-color: transparent;
+}
+.age-pill:hover { background: var(--as); border-color: rgba(232,227,220,0.15); color: var(--t1); }
+.age-pill.selected { background: var(--am); color: var(--a); border-color: rgba(201,149,106,0.3); }
+.age-pill:active { transform: scale(0.985); }
+
+/* Country search */
+.country-search-wrap { position: relative; margin-bottom: 0; }
+.country-input-row { position: relative; }
+.country-input {
+  width: 100%;
+  padding: 14px 44px 14px 16px;
+  background: rgba(232,227,220,0.03);
+  border: 1px solid var(--bd);
+  border-radius: 6px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 15px;
+  color: var(--t1);
+  outline: none;
+  transition: border-color 0.2s;
+  -webkit-appearance: none;
+}
+.country-input::placeholder { color: var(--t3); }
+.country-input:focus { border-color: var(--a); }
+.country-input-clear {
+  position: absolute; right: 14px; top: 50%;
+  transform: translateY(-50%);
+  background: none; border: none;
+  font-size: 18px; color: var(--t3);
+  cursor: pointer; padding: 4px;
+  display: none;
+}
+.country-dropdown {
+  position: absolute; top: calc(100% + 4px); left: 0; right: 0;
+  background: #1a1714;
+  border: 1px solid var(--bdm);
+  border-radius: 8px;
+  overflow: hidden;
+  max-height: 220px;
+  overflow-y: auto;
+  scrollbar-width: none;
+  z-index: 50;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+  display: none;
+}
+.country-dropdown::-webkit-scrollbar { display: none; }
+.country-option {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 14px;
+  border-bottom: 1px solid var(--bd);
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.country-option:last-child { border-bottom: none; }
+.country-option:hover { background: rgba(232,227,220,0.04); }
+.country-flag { font-size: 18px; flex-shrink: 0; }
+.country-name {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  color: var(--t1);
+  font-weight: 400;
+}
+.country-selected-display {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 0;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  color: var(--a);
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+/* Continue / Skip button */
+.form-footer {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  padding: 16px 28px 44px;
+  background: linear-gradient(to bottom, transparent, var(--bg) 35%);
+  z-index: 5;
+}
+.btn-continue {
+  width: 100%;
+  padding: 16px;
+  background: var(--a);
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 15px;
+  letter-spacing: 0.03em;
+  color: #0f0e0d;
+  font-weight: 500;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+.btn-continue:hover { opacity: 0.9; }
+.btn-continue:active { transform: scale(0.97); }
+
+/* ─── GATE SCREEN (Journal vs Therapy) ─── */
+#s-gate { background: var(--bg); }
+.gate-top { padding: 20px 28px 0; position: relative; z-index: 1; }
+.gate-h2 {
+  font-family: 'Lora', serif;
+  font-size: 24px;
+  font-weight: 500;
+  color: var(--t1);
+  line-height: 1.3;
+  margin-bottom: 8px;
+}
+.gate-sub {
+  font-family: 'Lora', serif;
+  font-style: italic;
+  font-size: 14px;
+  color: var(--t2);
+  line-height: 1.55;
+  margin-bottom: 28px;
+}
+.gate-cards {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 0 28px;
+  position: relative; z-index: 1;
+}
+.gate-card {
+  border: 1px solid var(--bd);
+  border-radius: 10px;
+  padding: 22px 20px;
+  cursor: pointer;
+  background: rgba(232,227,220,0.02);
+  transition: background 0.2s, border-color 0.2s, transform 0.25s cubic-bezier(0.34,1.56,0.64,1);
+  -webkit-tap-highlight-color: transparent;
+}
+.gate-card:hover { background: rgba(232,227,220,0.04); border-color: var(--bdm); }
+.gate-card:active { transform: scale(0.985); }
+.gate-card-icon { font-size: 28px; margin-bottom: 10px; display: block; }
+.gate-card-title {
+  font-family: 'Lora', serif;
+  font-size: 18px;
+  font-weight: 500;
+  color: var(--t1);
+  margin-bottom: 6px;
+}
+.gate-card-desc {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13.5px;
+  color: var(--t2);
+  line-height: 1.55;
+}
+.gate-badge {
+  display: inline-flex;
+  align-items: center;
+  background: var(--as);
+  border: 1px solid rgba(201,149,106,0.2);
+  border-radius: 4px;
+  padding: 3px 8px;
+  margin-top: 10px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 11px;
+  color: var(--a);
+  letter-spacing: 0.03em;
+}
+
+/* Stagger in gate cards */
+#s-gate.active .gate-card {
+  animation: fadeUpIn 0.5s ease both;
+}
+#s-gate.active .gate-card:nth-child(1) { animation-delay: 0.18s; }
+#s-gate.active .gate-card:nth-child(2) { animation-delay: 0.28s; }
+
+/* ─── Right panel — design notes ─── */
+.section { margin-bottom: 36px; }
+.section-label {
+  font-size: 10px;
+  font-weight: 400;
+  color: var(--t3);
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  margin-bottom: 14px;
+}
+.palette { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 6px; }
+.swatch { display: flex; flex-direction: column; gap: 4px; }
+.swatch-box { width: 52px; height: 32px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.04); }
+.swatch-name { font-size: 9px; color: var(--t3); font-weight: 300; }
+.swatch-val  { font-size: 9px; color: var(--t2); font-family: monospace; }
+
+.goal-swatches { display: flex; flex-direction: column; gap: 8px; }
+.gs-row { display: flex; align-items: center; gap: 10px; }
+.gs-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+.gs-label { font-size: 12px; color: var(--t2); font-weight: 300; }
+.gs-hex { font-size: 10px; color: var(--t3); font-family: monospace; }
+
+.note-card {
+  background: rgba(232,227,220,0.02);
+  border: 1px solid var(--bd);
+  border-radius: 8px;
+  padding: 14px;
+  margin-bottom: 8px;
+}
+.note-tag {
+  display: inline-block;
+  font-size: 9px;
+  font-weight: 400;
+  color: var(--a);
+  background: var(--as);
+  padding: 3px 8px;
+  border-radius: 4px;
+  margin-bottom: 8px;
+}
+.note-h { font-size: 13px; font-weight: 400; color: var(--t1); margin-bottom: 5px; }
+.note-b { font-size: 11px; color: var(--t2); line-height: 1.7; font-weight: 300; }
+
+.divider { height: 1px; background: var(--bd); margin: 32px 0; }
+.phone-hint { font-size: 10.5px; color: var(--t3); font-weight: 300; text-align: center; }
+</style>
+</head>
+<body>
+
+<div class="page-header">
+  <h1 class="page-title">DreamLog — Onboarding</h1>
+  <p class="page-sub">Interactive prototype · 7 screens · Click through to navigate. Designed to match the DreamLog Journaling App design system.</p>
+</div>
+
+<div class="layout">
+
+  <!-- ════ PHONE ════ -->
+  <div class="left">
+
+    <!-- Step dots -->
+    <div class="step-nav" id="step-nav">
+      <div class="step-dot active" onclick="goScreen('s-welcome',0)" title="Welcome"></div>
+      <div class="step-dot" onclick="goScreen('s-goals',1)" title="Goal"></div>
+      <div class="step-dot" onclick="goScreen('s-reveal',2)" title="Reveal"></div>
+      <div class="step-dot" onclick="goScreen('s-name',3)" title="Name"></div>
+      <div class="step-dot" onclick="goScreen('s-age',4)" title="Age"></div>
+      <div class="step-dot" onclick="goScreen('s-country',5)" title="Country"></div>
+      <div class="step-dot" onclick="goScreen('s-gate',6)" title="Begin"></div>
+      <span class="step-label" id="step-label">Welcome</span>
+    </div>
+
+    <div class="phone">
+      <!-- Dynamic island -->
+      <div class="dynamic-island"></div>
+
+      <!-- Status bar -->
+      <div class="status-bar">
+        <span class="sb-time">9:41</span>
+        <div class="sb-icons">
+          <svg width="17" height="12" viewBox="0 0 17 12" fill="none">
+            <rect x="0"   y="6" width="3" height="6" rx="1" fill="rgba(232,227,220,0.8)"/>
+            <rect x="4.5" y="4" width="3" height="8" rx="1" fill="rgba(232,227,220,0.8)"/>
+            <rect x="9"   y="2" width="3" height="10" rx="1" fill="rgba(232,227,220,0.8)"/>
+            <rect x="13.5" y="0" width="3" height="12" rx="1" fill="rgba(232,227,220,0.8)"/>
+          </svg>
+          <svg width="16" height="12" viewBox="0 0 16 12" fill="none">
+            <path d="M8 10.5a1 1 0 1 1 0-2 1 1 0 0 1 0 2z" fill="rgba(232,227,220,0.8)"/>
+            <path d="M5.5 7.8A3.5 3.5 0 0 1 8 6.7a3.5 3.5 0 0 1 2.5 1.1" stroke="rgba(232,227,220,0.8)" stroke-width="1.3" stroke-linecap="round" fill="none"/>
+            <path d="M3 5.2A6 6 0 0 1 8 3.3a6 6 0 0 1 5 1.9" stroke="rgba(232,227,220,0.8)" stroke-width="1.3" stroke-linecap="round" fill="none"/>
+          </svg>
+          <svg width="25" height="12" viewBox="0 0 25 12" fill="none">
+            <rect x="0.5" y="0.5" width="21" height="11" rx="3.5" stroke="rgba(232,227,220,0.5)"/>
+            <rect x="2" y="2" width="16" height="8" rx="2" fill="rgba(232,227,220,0.8)"/>
+            <path d="M22.5 4.5v3a1.5 1.5 0 0 0 0-3z" fill="rgba(232,227,220,0.5)"/>
+          </svg>
+        </div>
+      </div>
+
+      <!-- Home indicator -->
+      <div class="home-indicator"></div>
+
+      <!-- ░░░ WELCOME ░░░ -->
+      <div id="s-welcome" class="screen active">
+        <div class="wl-top">
+          <span class="wl-wordmark">DreamLog</span>
+        </div>
+        <div class="wl-center">
+          <div class="wl-illus">
+            <!-- Welcome illustration: layered portal -->
+            <svg width="180" height="180" viewBox="0 0 180 180" fill="none">
+              <circle cx="90" cy="90" r="86" stroke="rgba(232,227,220,0.05)" stroke-width="1"/>
+              <circle cx="90" cy="90" r="68" stroke="rgba(232,227,220,0.07)" stroke-width="0.8"/>
+              <circle cx="90" cy="90" r="50" stroke="rgba(232,227,220,0.09)" stroke-width="0.8"/>
+              <circle cx="90" cy="90" r="34" stroke="#c9956a" stroke-width="0.8" opacity="0.3"/>
+              <circle cx="90" cy="90" r="18" fill="#c9956a" opacity="0.07"/>
+              <circle cx="90" cy="90" r="18" stroke="#c9956a" stroke-width="0.8" opacity="0.35"/>
+              <circle cx="90" cy="90" r="3.5" fill="#c9956a" opacity="0.65"/>
+              <line x1="24" y1="90" x2="48" y2="90" stroke="rgba(232,227,220,0.12)" stroke-width="0.8" stroke-linecap="round"/>
+              <line x1="132" y1="90" x2="156" y2="90" stroke="rgba(232,227,220,0.12)" stroke-width="0.8" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <h1 class="wl-h1">A private space<br>for honest thought.</h1>
+          <p class="wl-p">No tracking. No judgment.<br>Just you and the page.</p>
+        </div>
+        <div class="wl-bottom">
+          <button class="btn-outline" onclick="goScreen('s-goals',1)">Begin</button>
+          <p class="wl-note">Your voice is transcribed privately. Nothing is shared.</p>
+        </div>
+      </div>
+
+      <!-- ░░░ GOALS ░░░ -->
+      <div id="s-goals" class="screen">
+        <div class="goal-tint" id="goal-tint"></div>
+
+        <div class="goal-header" style="position:relative;z-index:1;margin-top:52px">
+          <p class="step-indicator">Step 1 of 5</p>
+          <h2 class="goal-h2">What brings you here?</h2>
+          <p class="goal-sub">Choose what feels most true right now.</p>
+        </div>
+
+        <div class="hairline"></div>
+
+        <div class="goal-list" id="goal-list">
+          <!-- Rows injected by JS -->
+        </div>
+      </div>
+
+      <!-- ░░░ REVEAL ░░░ -->
+      <div id="s-reveal" class="screen">
+        <div class="goal-tint" id="reveal-tint"></div>
+        <div class="reveal-glow" id="reveal-glow"></div>
+
+        <div style="height:52px;position:relative;z-index:1"></div>
+        <div class="reveal-center">
+          <div class="reveal-illus" id="reveal-illus"></div>
+          <p class="reveal-goal-label" id="reveal-label"></p>
+          <h2 class="reveal-msg" id="reveal-msg"></h2>
+          <p class="reveal-submsg" id="reveal-submsg"></p>
+          <div class="reveal-hairline" id="reveal-hairline"></div>
+        </div>
+        <div class="reveal-bottom">
+          <button class="btn-solid" id="reveal-btn" onclick="goScreen('s-name',3)">Continue</button>
+        </div>
+      </div>
+
+      <!-- ░░░ NAME ░░░ -->
+      <div id="s-name" class="screen form-screen">
+        <div class="form-top" style="margin-top:52px">
+          <button class="back-btn" onclick="goScreen('s-goals',1)">← Back</button>
+          <p class="step-indicator">Step 2 of 5</p>
+          <h2 class="form-h2">What name should<br>I call you?</h2>
+          <p class="form-sub">Optional — leave blank and I'll use whatever's on your account.</p>
+          <input
+            type="text"
+            class="text-input"
+            id="name-input"
+            placeholder="e.g. Alex, or just skip this"
+            maxlength="100"
+          />
+        </div>
+        <div class="form-footer">
+          <button class="btn-continue" id="name-btn" onclick="goScreen('s-age',4)">Continue</button>
+        </div>
+      </div>
+
+      <!-- ░░░ AGE RANGE ░░░ -->
+      <div id="s-age" class="screen form-screen">
+        <div class="form-top" style="margin-top:52px;overflow-y:auto;max-height:calc(100% - 100px)">
+          <button class="back-btn" onclick="goScreen('s-name',3)">← Back</button>
+          <p class="step-indicator">Step 3 of 5</p>
+          <h2 class="form-h2">How old are you?</h2>
+          <p class="form-sub">Optional — helps us understand who uses DreamLog. Never shared individually.</p>
+          <div class="age-list" id="age-list">
+            <button class="age-pill" onclick="pickAge(this)">Under 18</button>
+            <button class="age-pill" onclick="pickAge(this)">18 – 24</button>
+            <button class="age-pill" onclick="pickAge(this)">25 – 34</button>
+            <button class="age-pill" onclick="pickAge(this)">35 – 44</button>
+            <button class="age-pill" onclick="pickAge(this)">45 or older</button>
+          </div>
+        </div>
+        <div class="form-footer">
+          <button class="btn-continue" id="age-btn" onclick="goScreen('s-country',5)">Skip</button>
+        </div>
+      </div>
+
+      <!-- ░░░ COUNTRY ░░░ -->
+      <div id="s-country" class="screen form-screen">
+        <div class="form-top" style="margin-top:52px">
+          <button class="back-btn" onclick="goScreen('s-age',4)">← Back</button>
+          <p class="step-indicator">Step 4 of 5</p>
+          <h2 class="form-h2">Where are you based?</h2>
+          <p class="form-sub">Used to show local support resources and pricing in your currency.</p>
+          <div class="country-search-wrap">
+            <div class="country-input-row">
+              <input
+                type="text"
+                class="country-input"
+                id="country-input"
+                placeholder="Search country…"
+                oninput="onCountrySearch(this.value)"
+                autocomplete="off"
+              />
+              <button class="country-input-clear" id="country-clear" onclick="clearCountry()">×</button>
+            </div>
+            <div class="country-dropdown" id="country-dropdown"></div>
+          </div>
+        </div>
+        <div class="form-footer" style="bottom:0">
+          <button class="btn-continue" id="country-btn" onclick="goScreen('s-gate',6)">Skip</button>
+        </div>
+      </div>
+
+      <!-- ░░░ GATE ░░░ -->
+      <div id="s-gate" class="screen">
+        <div style="height:52px;position:relative;z-index:1"></div>
+        <div class="gate-top">
+          <p class="step-indicator">Step 5 of 5</p>
+          <h2 class="gate-h2">How would you like<br>to begin?</h2>
+          <p class="gate-sub">You can always switch later — both live in the app.</p>
+        </div>
+        <div class="gate-cards">
+          <div class="gate-card" onclick="finishOnboarding()">
+            <span class="gate-card-icon">📓</span>
+            <div class="gate-card-title">Journal</div>
+            <div class="gate-card-desc">Record a voice entry and get a personalised AI reflection. Async — do it at your own pace.</div>
+          </div>
+          <div class="gate-card" onclick="finishOnboarding()">
+            <div class="gate-card-title">Reflection Session</div>
+            <div class="gate-card-desc">A live back-and-forth conversation with an AI companion grounded in your journal history.</div>
+            <span class="gate-badge">First session free</span>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /phone -->
+
+    <p class="phone-hint">Click through each screen · all 7 steps interactive</p>
+  </div><!-- /left -->
+
+  <!-- ════ DESIGN NOTES ════ -->
+  <div class="right">
+    <div class="section">
+      <p class="section-label">Base palette</p>
+      <div class="palette">
+        <div class="swatch"><div class="swatch-box" style="background:#0f0e0d"></div><div class="swatch-name">Background</div><div class="swatch-val">#0f0e0d</div></div>
+        <div class="swatch"><div class="swatch-box" style="background:#161412"></div><div class="swatch-name">Surface</div><div class="swatch-val">#161412</div></div>
+        <div class="swatch"><div class="swatch-box" style="background:#e8e3dc"></div><div class="swatch-name">Foreground</div><div class="swatch-val">#e8e3dc</div></div>
+        <div class="swatch"><div class="swatch-box" style="background:#c9956a"></div><div class="swatch-name">Accent</div><div class="swatch-val">#c9956a</div></div>
+        <div class="swatch"><div class="swatch-box" style="background:rgba(232,227,220,0.5)"></div><div class="swatch-name">Muted</div><div class="swatch-val">t1 · 50%</div></div>
+      </div>
+    </div>
+
+    <div class="section">
+      <p class="section-label">Goal accents (adaptive theme)</p>
+      <div class="goal-swatches">
+        <div class="gs-row"><div class="gs-dot" style="background:#7FA87A"></div><span class="gs-label">Stress</span><span class="gs-hex">#7FA87A</span></div>
+        <div class="gs-row"><div class="gs-dot" style="background:#9B8EC4"></div><span class="gs-label">Anxiety</span><span class="gs-hex">#9B8EC4</span></div>
+        <div class="gs-row"><div class="gs-dot" style="background:#6B8FAD"></div><span class="gs-label">Grief</span><span class="gs-hex">#6B8FAD</span></div>
+        <div class="gs-row"><div class="gs-dot" style="background:#C4857A"></div><span class="gs-label">Relationships</span><span class="gs-hex">#C4857A</span></div>
+        <div class="gs-row"><div class="gs-dot" style="background:#C9956A"></div><span class="gs-label">Career</span><span class="gs-hex">#C9956A</span></div>
+        <div class="gs-row"><div class="gs-dot" style="background:#5E9E8E"></div><span class="gs-label">Trauma</span><span class="gs-hex">#5E9E8E</span></div>
+        <div class="gs-row"><div class="gs-dot" style="background:#C4A86A"></div><span class="gs-label">Curiosity</span><span class="gs-hex">#C4A86A</span></div>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="section">
+      <p class="section-label">Design decisions</p>
+
+      <div class="note-card">
+        <div class="note-tag">Typography</div>
+        <div class="note-h">Lora serif + DM Sans — matched to design kit</div>
+        <div class="note-b">Lora (500) for headings and body prose — reads like a journal page. DM Sans (300–500) for UI chrome: labels, step indicators, buttons. This matches the design kit exactly; the mobile app uses Cormorant Garamond + Nunito — the kit moves to warmer, slightly more contemporary serif.</div>
+      </div>
+
+      <div class="note-card">
+        <div class="note-tag">Goal → Reveal flow</div>
+        <div class="note-h">Select goal → ambient tint shift → reveal screen</div>
+        <div class="note-b">Hovering a goal warms the background with its bgTint. Clicking immediately slides to the Reveal screen, which shows the goal's personalised message ("A place to exhale.", "You are safe here.") with a radial glow in the accent colour and the goal's SVG glyph enlarged inside a soft ring.</div>
+      </div>
+
+      <div class="note-card">
+        <div class="note-tag">Form steps (Name, Age, Country)</div>
+        <div class="note-h">Minimal, unhurried — same register as the rest of the app</div>
+        <div class="note-b">Each form step uses Lora italic for the subtitle ("helps us understand who uses DreamLog"). Inputs are transparent with a 1px border. The footer CTA toggles between "Continue" and "Skip" depending on whether data has been entered — no friction, no pressure.</div>
+      </div>
+
+      <div class="note-card">
+        <div class="note-tag">Onboarding flow</div>
+        <div class="note-h">7 screens · all optional past goal selection</div>
+        <div class="note-b">Welcome → Goal → Reveal → Name → Age range → Country → Journal or Therapy. Goal is the only required choice (it sets the app theme and personalises AI reflections). Every subsequent step has a Skip option. The gate at the end routes to either the record screen or the therapy persona picker.</div>
+      </div>
+
+      <div class="note-card">
+        <div class="note-tag">Animations</div>
+        <div class="note-h">Slide + stagger — no jarring cuts</div>
+        <div class="note-b">Screens slide in from the right (translateX 20px) with opacity, slide out left on exit. Goal rows stagger in with a 55ms delay per item. The reveal illustration scales in with a spring curve. Emotion bars and hairlines grow from 0 width. All transitions stay under 500ms to feel responsive, not theatrical.</div>
+      </div>
+    </div>
+  </div><!-- /right -->
+
+</div><!-- /layout -->
+
+<script>
+/* ── Goal data ── */
+const GOALS = [
+  { id:'stress',        label:'Stress',        descriptor:'Finding stillness in what overwhelms',          accent:'#7FA87A', accentDim:'rgba(127,168,122,0.12)', bgTint:'rgba(127,168,122,0.04)', message:'A place to exhale.',                        subMessage:'Here, there is no urgency. Just you and the page.' },
+  { id:'anxiety',       label:'Anxiety',       descriptor:'Quieting the noise inside',                     accent:'#9B8EC4', accentDim:'rgba(155,142,196,0.12)', bgTint:'rgba(155,142,196,0.04)', message:'You are allowed to slow down.',             subMessage:'Writing is a way of putting things down gently, one word at a time.' },
+  { id:'grief',         label:'Grief',         descriptor:'Sitting with loss without rushing through it',  accent:'#6B8FAD', accentDim:'rgba(107,143,173,0.12)', bgTint:'rgba(107,143,173,0.04)', message:'There is no timeline here.',               subMessage:'This is a space to miss things, to mourn, and to remember.' },
+  { id:'relationships', label:'Relationships', descriptor:'Understanding what you feel toward others',     accent:'#C4857A', accentDim:'rgba(196,133,122,0.12)', bgTint:'rgba(196,133,122,0.04)', message:'The people who matter are worth understanding.',subMessage:'Writing about them is a way of understanding yourself.' },
+  { id:'career',        label:'Career',        descriptor:'Clarifying what you want and why',              accent:'#C9956A', accentDim:'rgba(201,149,106,0.12)', bgTint:'rgba(201,149,106,0.04)', message:'Clarity comes from honesty.',              subMessage:"This space is for the questions you haven't asked out loud yet." },
+  { id:'trauma',        label:'Trauma',        descriptor:'Moving gently through difficult histories',     accent:'#5E9E8E', accentDim:'rgba(94,158,142,0.12)',  bgTint:'rgba(94,158,142,0.04)',  message:'You are safe here.',                       subMessage:'Write only what feels right. You set the pace, always.' },
+  { id:'curiosity',     label:'Curiosity',     descriptor:"Exploring the questions that won't leave you", accent:'#C4A86A', accentDim:'rgba(196,168,106,0.12)', bgTint:'rgba(196,168,106,0.04)', message:"Some of the best thinking happens here.",  subMessage:'Follow the questions that feel alive.' },
+];
+
+/* ── SVG Glyphs ── */
+function glyphSVG(id, color, size=22) {
+  const s = size, h = s/2;
+  const g = {
+    stress:        `<circle cx="${h}" cy="${h}" r="${s*0.136}" stroke="${color}" stroke-width="1.2" opacity="0.9"/><circle cx="${h}" cy="${h}" r="${s*0.295}" stroke="${color}" stroke-width="1" opacity="0.5"/><circle cx="${h}" cy="${h}" r="${s*0.454}" stroke="${color}" stroke-width="0.8" opacity="0.25"/>`,
+    anxiety:       `<path d="M${h} ${h} C${h} ${s*0.318}, ${s*0.682} ${s*0.227}, ${s*0.682} ${s*0.409} C${s*0.682} ${s*0.591}, ${s*0.409} ${s*0.636}, ${s*0.409} ${s*0.454} C${s*0.409} ${s*0.272}, ${s*0.591} ${s*0.181}, ${s*0.727} ${s*0.318}" stroke="${color}" stroke-width="1.2" stroke-linecap="round" fill="none" opacity="0.9"/><circle cx="${s*0.727}" cy="${s*0.318}" r="1.2" fill="${color}" opacity="0.6"/>`,
+    grief:         `<path d="M${h} ${s*0.181} C${h} ${s*0.181}, ${s*0.727} ${s*0.454}, ${h} ${s*0.727} C${s*0.272} ${s*0.454}, ${h} ${s*0.181}, ${h} ${s*0.181}Z" stroke="${color}" stroke-width="1.1" fill="none" stroke-linejoin="round" opacity="0.9"/><line x1="${h}" y1="${s*0.727}" x2="${h}" y2="${s*0.864}" stroke="${color}" stroke-width="1" stroke-linecap="round" opacity="0.4"/>`,
+    relationships: `<circle cx="${s*0.386}" cy="${h}" r="${s*0.25}" stroke="${color}" stroke-width="1.1" fill="none" opacity="0.8"/><circle cx="${s*0.614}" cy="${h}" r="${s*0.25}" stroke="${color}" stroke-width="1.1" fill="none" opacity="0.8"/>`,
+    career:        `<line x1="${s*0.136}" y1="${s*0.636}" x2="${s*0.864}" y2="${s*0.636}" stroke="${color}" stroke-width="1" stroke-linecap="round" opacity="0.4"/><polyline points="${s*0.272},${s*0.636} ${h},${s*0.318} ${s*0.727},${s*0.636}" stroke="${color}" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" fill="none" opacity="0.9"/><circle cx="${h}" cy="${s*0.227}" r="1.5" fill="${color}" opacity="0.5"/>`,
+    trauma:        `<path d="M${h} ${s*0.818} C${s*0.272} ${s*0.818}, ${s*0.136} ${s*0.659}, ${s*0.136} ${h} C${s*0.136} ${s*0.341}, ${s*0.272} ${s*0.181}, ${h} ${s*0.181} C${s*0.727} ${s*0.181}, ${s*0.864} ${s*0.341}, ${s*0.864} ${h}" stroke="${color}" stroke-width="1.1" stroke-linecap="round" fill="none" opacity="0.8"/><path d="M${h} ${s*0.818} C${s*0.363} ${s*0.818}, ${s*0.318} ${s*0.681}, ${s*0.318} ${h} C${s*0.318} ${s*0.318}, ${s*0.409} ${s*0.25}, ${h} ${s*0.25}" stroke="${color}" stroke-width="1" stroke-linecap="round" fill="none" opacity="0.45"/>`,
+    curiosity:     `<circle cx="${h}" cy="${s*0.409}" r="${s*0.204}" stroke="${color}" stroke-width="1.1" fill="none" opacity="0.8"/><path d="M${s*0.386} ${s*0.591} L${s*0.431} ${s*0.818} L${h} ${s*0.75} L${s*0.568} ${s*0.818} L${s*0.614} ${s*0.591}" stroke="${color}" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round" fill="none" opacity="0.6"/><circle cx="${h}" cy="${s*0.409}" r="1.5" fill="${color}" opacity="0.5"/>`,
+  };
+  return `<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" fill="none">${g[id]||''}</svg>`;
+}
+
+function revealIllusSVG(id, accent) {
+  return `<svg width="120" height="120" viewBox="0 0 120 120" fill="none">
+    <circle cx="60" cy="60" r="58" stroke="${accent}" stroke-width="0.6" opacity="0.15"/>
+    <circle cx="60" cy="60" r="44" stroke="${accent}" stroke-width="0.6" opacity="0.1"/>
+    <g transform="translate(49,49)">${glyphSVG(id, accent, 22)}</g>
+  </svg>`;
+}
+
+/* ── Countries ── */
+const COUNTRIES = [
+  {code:'IN',name:'India',flag:'🇮🇳'},{code:'US',name:'United States',flag:'🇺🇸'},
+  {code:'GB',name:'United Kingdom',flag:'🇬🇧'},{code:'CA',name:'Canada',flag:'🇨🇦'},
+  {code:'AU',name:'Australia',flag:'🇦🇺'},{code:'DE',name:'Germany',flag:'🇩🇪'},
+  {code:'FR',name:'France',flag:'🇫🇷'},{code:'SG',name:'Singapore',flag:'🇸🇬'},
+  {code:'NL',name:'Netherlands',flag:'🇳🇱'},{code:'SE',name:'Sweden',flag:'🇸🇪'},
+  {code:'CH',name:'Switzerland',flag:'🇨🇭'},{code:'NZ',name:'New Zealand',flag:'🇳🇿'},
+  {code:'ES',name:'Spain',flag:'🇪🇸'},{code:'IT',name:'Italy',flag:'🇮🇹'},
+  {code:'AE',name:'UAE',flag:'🇦🇪'},{code:'JP',name:'Japan',flag:'🇯🇵'},
+  {code:'BR',name:'Brazil',flag:'🇧🇷'},{code:'MX',name:'Mexico',flag:'🇲🇽'},
+  {code:'ZA',name:'South Africa',flag:'🇿🇦'},{code:'NG',name:'Nigeria',flag:'🇳🇬'},
+  {code:'PK',name:'Pakistan',flag:'🇵🇰'},{code:'BD',name:'Bangladesh',flag:'🇧🇩'},
+  {code:'OTHER',name:'Other',flag:'🌍'},
+];
+
+/* ── State ── */
+let currentScreen = 's-welcome';
+let currentStep = 0;
+let selectedGoal = null;
+let selectedAge = null;
+let selectedCountry = null;
+
+const STEP_LABELS = ['Welcome','Goal','Reveal','Name','Age','Country','Begin'];
+
+/* ── Build goal list ── */
+function buildGoalList() {
+  const list = document.getElementById('goal-list');
+  list.innerHTML = GOALS.map(g => `
+    <button
+      class="goal-row"
+      data-id="${g.id}"
+      onclick="selectGoal('${g.id}')"
+      onmouseenter="hoverGoal('${g.id}')"
+      onmouseleave="unhoverGoal()"
+    >
+      <div class="goal-accent-bar" style="background:${g.accent}"></div>
+      <div class="goal-glyph">${glyphSVG(g.id, g.accent, 22)}</div>
+      <div class="goal-text">
+        <div class="goal-label" data-id="${g.id}">${g.label}</div>
+        <div class="goal-desc" data-id="${g.id}">${g.descriptor}</div>
+      </div>
+      <div class="goal-sel-dot" style="background:${g.accent}"></div>
+    </button>
+  `).join('');
+}
+
+function hoverGoal(id) {
+  const g = GOALS.find(x => x.id === id);
+  if (!g) return;
+  document.getElementById('goal-tint').style.background = g.bgTint;
+  // Color label
+  document.querySelectorAll('.goal-label').forEach(el => {
+    el.style.color = el.dataset.id === id ? g.accent : '';
+  });
+  document.querySelectorAll('.goal-desc').forEach(el => {
+    el.style.color = el.dataset.id === id ? g.accent : '';
+  });
+}
+
+function unhoverGoal() {
+  if (!selectedGoal) {
+    document.getElementById('goal-tint').style.background = '';
+    document.querySelectorAll('.goal-label').forEach(el => el.style.color = '');
+    document.querySelectorAll('.goal-desc').forEach(el => el.style.color = '');
+  } else {
+    applyGoalHover(selectedGoal);
+  }
+}
+
+function applyGoalHover(id) {
+  const g = GOALS.find(x => x.id === id);
+  if (!g) return;
+  document.getElementById('goal-tint').style.background = g.bgTint;
+  document.querySelectorAll('.goal-label').forEach(el => {
+    el.style.color = el.dataset.id === id ? g.accent : '';
+  });
+  document.querySelectorAll('.goal-desc').forEach(el => {
+    el.style.color = el.dataset.id === id ? g.accent : '';
+  });
+}
+
+function selectGoal(id) {
+  selectedGoal = id;
+  const g = GOALS.find(x => x.id === id);
+
+  // Mark selected row
+  document.querySelectorAll('.goal-row').forEach(r => {
+    r.classList.toggle('selected', r.dataset.id === id);
+  });
+
+  // Short delay then reveal
+  setTimeout(() => {
+    populateReveal(g);
+    goScreen('s-reveal', 2);
+  }, 280);
+}
+
+function populateReveal(g) {
+  const tint = document.getElementById('reveal-tint');
+  const glow = document.getElementById('reveal-glow');
+  const illus = document.getElementById('reveal-illus');
+  const label = document.getElementById('reveal-label');
+  const msg   = document.getElementById('reveal-msg');
+  const sub   = document.getElementById('reveal-submsg');
+  const hair  = document.getElementById('reveal-hairline');
+  const btn   = document.getElementById('reveal-btn');
+
+  tint.style.background = g.bgTint;
+  glow.style.background = `radial-gradient(circle, ${g.accent}12 0%, transparent 70%)`;
+  illus.innerHTML = revealIllusSVG(g.id, g.accent);
+  label.textContent = g.label;
+  label.style.color = g.accent;
+  msg.textContent = g.message;
+  sub.textContent = g.subMessage;
+  hair.style.background = g.accent;
+  btn.style.background = g.accent;
+}
+
+/* ── Country search ── */
+function onCountrySearch(val) {
+  const inp = document.getElementById('country-input');
+  const clr = document.getElementById('country-clear');
+  const dd  = document.getElementById('country-dropdown');
+  const btn = document.getElementById('country-btn');
+
+  selectedCountry = null;
+  btn.textContent = 'Skip';
+
+  clr.style.display = val.length > 0 ? 'block' : 'none';
+
+  if (!val.trim()) { dd.style.display = 'none'; return; }
+
+  const matches = COUNTRIES.filter(c =>
+    c.name.toLowerCase().includes(val.toLowerCase()) ||
+    c.code.toLowerCase().includes(val.toLowerCase())
+  ).slice(0, 8);
+
+  if (!matches.length) {
+    dd.innerHTML = `<div class="country-option"><span style="font-family:'DM Sans',sans-serif;font-size:13px;color:rgba(232,227,220,0.28)">No match — you can skip this step</span></div>`;
+  } else {
+    dd.innerHTML = matches.map(c =>
+      `<div class="country-option" onclick="pickCountry('${c.code}','${c.name}','${c.flag}')">
+        <span class="country-flag">${c.flag}</span>
+        <span class="country-name">${c.name}</span>
+      </div>`
+    ).join('');
+  }
+  dd.style.display = 'block';
+}
+
+function pickCountry(code, name, flag) {
+  selectedCountry = code;
+  document.getElementById('country-input').value = `${flag}  ${name}`;
+  document.getElementById('country-input').style.borderColor = 'var(--a)';
+  document.getElementById('country-clear').style.display = 'block';
+  document.getElementById('country-dropdown').style.display = 'none';
+  document.getElementById('country-btn').textContent = 'Continue';
+}
+
+function clearCountry() {
+  selectedCountry = null;
+  document.getElementById('country-input').value = '';
+  document.getElementById('country-input').style.borderColor = '';
+  document.getElementById('country-clear').style.display = 'none';
+  document.getElementById('country-dropdown').style.display = 'none';
+  document.getElementById('country-btn').textContent = 'Skip';
+}
+
+/* ── Age ── */
+function pickAge(el) {
+  document.querySelectorAll('.age-pill').forEach(p => p.classList.remove('selected'));
+  if (selectedAge === el.textContent) {
+    selectedAge = null;
+    document.getElementById('age-btn').textContent = 'Skip';
+  } else {
+    selectedAge = el.textContent;
+    el.classList.add('selected');
+    document.getElementById('age-btn').textContent = 'Continue';
+  }
+}
+
+/* ── Name input ── */
+function setupNameInput() {
+  const inp = document.getElementById('name-input');
+  inp.addEventListener('input', () => {
+    document.getElementById('name-btn').textContent = inp.value.trim() ? 'Continue' : 'Continue';
+  });
+}
+
+/* ── Navigation ── */
+function goScreen(id, stepIdx) {
+  if (id === currentScreen) return;
+
+  const prev = document.getElementById(currentScreen);
+  const next = document.getElementById(id);
+
+  prev.classList.remove('active');
+  prev.classList.add('exit');
+  setTimeout(() => prev.classList.remove('exit'), 420);
+
+  next.classList.add('active');
+
+  currentScreen = id;
+  currentStep = stepIdx;
+  updateStepNav(stepIdx);
+}
+
+function updateStepNav(activeIdx) {
+  const dots = document.querySelectorAll('.step-dot');
+  dots.forEach((d, i) => {
+    d.classList.remove('active', 'visited');
+    if (i === activeIdx) d.classList.add('active');
+    else if (i < activeIdx) d.classList.add('visited');
+  });
+  document.getElementById('step-label').textContent = STEP_LABELS[activeIdx] || '';
+}
+
+function finishOnboarding() {
+  // Restart demo
+  setTimeout(() => {
+    goScreen('s-welcome', 0);
+  }, 600);
+}
+
+/* ── Init ── */
+buildGoalList();
+setupNameInput();
+</script>
+</body>
+</html>

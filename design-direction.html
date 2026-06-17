@@ -1,0 +1,1078 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DreamLog — Design v3 (interactive)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:  #18150f;
+  --sf:  #1f1c14;
+  --cd:  #26221a;
+  --bd:  rgba(232,220,200,0.07);
+  --bdm: rgba(232,220,200,0.13);
+  --t1:  #e8ddd0;
+  --t2:  rgba(232,221,208,0.5);
+  --t3:  rgba(232,221,208,0.28);
+  --t4:  rgba(232,221,208,0.14);
+  --a:   #c8955a;
+  --as:  rgba(200,149,90,0.10);
+  --am:  rgba(200,149,90,0.22);
+  --al:  rgba(200,149,90,0.38);
+  --mh:  #88b490;
+  --mm:  #b8a060;
+  --ml:  #b07868;
+  --page: #0f0e0b;
+}
+
+html, body {
+  background: var(--page);
+  color: var(--t1);
+  font-family: 'Inter', -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
+}
+body { padding: 48px 48px 80px; }
+
+/* ── Layout ── */
+.layout { display: flex; gap: 56px; align-items: flex-start; flex-wrap: wrap; }
+.left { flex-shrink: 0; display: flex; flex-direction: column; align-items: center; gap: 14px; }
+.right { flex: 1; min-width: 280px; }
+
+.ph { margin-bottom: 44px; }
+.ph h1 {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 28px; font-weight: 300; color: var(--t1); margin-bottom: 8px;
+}
+.ph p { font-size: 12.5px; color: var(--t2); line-height: 1.75; max-width: 540px; font-weight: 300; }
+
+/* ── Phone ── */
+.phone {
+  width: 320px; height: 682px;
+  border-radius: 50px;
+  background: var(--bg);
+  border: 1px solid rgba(255,255,255,0.07);
+  overflow: hidden; position: relative;
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,0.02) inset,
+    0 32px 100px rgba(0,0,0,0.88),
+    0 0 0 6px #1a1712;
+}
+
+/* ── Screens ── */
+.screen {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column;
+  opacity: 0; pointer-events: none;
+  transform: translateY(9px);
+  transition: opacity 0.22s ease, transform 0.32s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.screen.active { opacity: 1; pointer-events: all; transform: translateY(0); }
+
+/* ── Status bar ── */
+.sb {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 16px 26px 0; flex-shrink: 0;
+}
+.sb-t { font-size: 13px; font-weight: 500; color: var(--t1); letter-spacing: -0.3px; }
+.sb-r { display: flex; align-items: center; gap: 4px; }
+.sig { height: 10px; border-radius: 1.5px; background: rgba(232,220,200,0.55); }
+.bat {
+  width: 24px; height: 11px; border-radius: 3px;
+  border: 1px solid rgba(232,220,200,0.35); overflow: hidden;
+  position: relative; margin-left: 5px;
+}
+.bat-f { width: 70%; height: 100%; background: rgba(232,220,200,0.6); }
+
+/* ── Tab bar ── */
+.tb {
+  display: flex; justify-content: space-around; align-items: center;
+  padding: 10px 0 22px;
+  border-top: 1px solid var(--bd);
+  flex-shrink: 0;
+}
+.ti {
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+  cursor: pointer; padding: 4px 10px;
+  -webkit-tap-highlight-color: transparent;
+}
+.ti svg { width: 20px; height: 20px; }
+.ti-l { font-size: 9px; color: var(--t3); font-weight: 300; }
+.ti-l.on { color: var(--t1); }
+
+/* ══ HOME ══ */
+#s-home .sc-body {
+  flex: 1; display: flex; flex-direction: column;
+  padding: 8px 26px 0; overflow: hidden;
+}
+.h-top {
+  display: flex; justify-content: space-between;
+  align-items: flex-start; padding-top: 4px;
+}
+.h-sub { font-size: 10px; color: var(--t3); font-weight: 300; margin-bottom: 3px; }
+.h-name {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 23px; font-weight: 300; color: var(--t1); line-height: 1.25;
+}
+.h-str { text-align: right; }
+.h-sn { font-size: 20px; font-weight: 300; color: var(--t1); font-family: 'Cormorant Garamond', serif; line-height: 1; }
+.h-sl { font-size: 9px; color: var(--t3); margin-top: 2px; font-weight: 300; }
+
+.h-last { padding-top: 14px; margin-top: 14px; border-top: 1px solid var(--bd); }
+.h-lmeta { font-size: 9.5px; color: var(--t3); font-weight: 300; margin-bottom: 5px; }
+.h-lrow { display: flex; align-items: center; gap: 7px; margin-bottom: 5px; }
+.h-ldot { width: 5px; height: 5px; border-radius: 3px; background: var(--mh); }
+.h-ll { font-size: 10.5px; color: var(--t2); font-weight: 300; }
+.h-lq {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 13px; font-style: italic; font-weight: 300;
+  color: var(--t2); line-height: 1.65;
+}
+
+.h-center {
+  flex: 1; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 15px;
+}
+.h-hint { font-size: 11px; color: var(--t3); font-weight: 300; }
+.h-links { display: flex; gap: 24px; }
+.h-lnk {
+  font-size: 11px; color: var(--t3); font-weight: 300;
+  border-bottom: 1px solid var(--t4);
+  padding-bottom: 1px; cursor: pointer;
+  transition: color 0.15s;
+}
+.h-lnk:hover { color: var(--t2); }
+
+.h-strip { padding: 11px 26px 0; border-top: 1px solid var(--bd); }
+.h-sl2 { font-size: 9px; color: var(--t3); font-weight: 300; margin-bottom: 7px; }
+.h-bars { display: flex; gap: 4px; align-items: flex-end; height: 30px; }
+.h-bc { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; justify-content: flex-end; }
+.h-b { width: 100%; border-radius: 2px; }
+.h-bd { font-size: 7.5px; color: var(--t3); font-weight: 300; }
+
+/* ══ RECORD BUTTON (shared component) ══ */
+.rec-wrap {
+  position: relative; width: 114px; height: 114px;
+  display: flex; align-items: center; justify-content: center;
+}
+.rec-ring {
+  position: absolute; inset: -3px; border-radius: 60px;
+  border: 1px solid var(--al);
+  opacity: 0; transform: scale(1); pointer-events: none;
+}
+.is-rec .rec-ring { animation: ripple 1.9s ease-out infinite; }
+.is-rec .rec-ring:nth-child(2) { animation-delay: 0.95s; }
+@keyframes ripple {
+  0%   { transform: scale(1);    opacity: 0.5; }
+  100% { transform: scale(1.55); opacity: 0;   }
+}
+.rec-btn {
+  width: 108px; height: 108px; border-radius: 54px;
+  background: var(--a);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 4px 18px rgba(200,149,90,0.16);
+  transition: transform 0.1s, box-shadow 0.1s;
+  position: relative; z-index: 1;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+.rec-btn:active { transform: scale(0.93); box-shadow: 0 2px 8px rgba(200,149,90,0.1); }
+/* Spring release on tap */
+.rec-btn { transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s; }
+.i-mic { display: block; }
+.i-stop {
+  width: 26px; height: 26px; border-radius: 6px;
+  background: rgba(24,21,15,0.85); display: none;
+}
+.is-rec .i-mic { display: none; }
+.is-rec .i-stop { display: block; }
+
+/* ══ RECORD SCREEN ══ */
+#s-record .sc-body {
+  flex: 1; display: flex; flex-direction: column;
+  padding: 8px 26px 28px;
+}
+.r-top {
+  display: flex; justify-content: space-between; align-items: center; padding-top: 4px;
+}
+.r-cancel {
+  font-size: 13px; color: var(--t3); cursor: pointer; font-weight: 300;
+  padding: 4px 0; transition: color 0.15s;
+}
+.r-cancel:hover { color: var(--t2); }
+.r-listen { font-size: 10px; color: var(--t3); font-weight: 300; letter-spacing: 0.5px; opacity: 0; transition: opacity 0.3s; }
+.is-rec-screen .r-listen { opacity: 1; }
+
+/* Mode cards — intentional selection, not navigation */
+.mode-grid {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 7px; margin-top: 14px;
+  transition: opacity 0.2s;
+}
+.mode-card {
+  padding: 12px 11px; border-radius: 11px;
+  border: 1px solid var(--bd);
+  cursor: pointer;
+  user-select: none; -webkit-tap-highlight-color: transparent;
+  transition: background 0.18s, border-color 0.18s,
+              transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1),
+              box-shadow 0.18s;
+  opacity: 0; transform: translateY(8px);
+}
+.mode-card.in {
+  animation: cardIn 0.32s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+.mode-card:nth-child(1).in { animation-delay: 0s; }
+.mode-card:nth-child(2).in { animation-delay: 0.05s; }
+.mode-card:nth-child(3).in { animation-delay: 0.10s; }
+.mode-card:nth-child(4).in { animation-delay: 0.15s; }
+@keyframes cardIn {
+  from { opacity: 0; transform: translateY(8px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0)  scale(1); }
+}
+.mode-card:hover { background: var(--as); border-color: rgba(200,149,90,0.15); }
+.mode-card:active { transform: scale(0.95) !important; }
+.mode-card.sel {
+  background: var(--am);
+  border-color: rgba(200,149,90,0.3);
+  box-shadow: 0 2px 12px rgba(200,149,90,0.08);
+}
+.mc-name { font-size: 12.5px; font-weight: 400; color: var(--t2); margin-bottom: 3px; }
+.mode-card.sel .mc-name { color: var(--a); }
+.mc-desc { font-size: 10px; font-weight: 300; color: var(--t3); line-height: 1.4; }
+.mode-card.sel .mc-desc { color: rgba(200,149,90,0.55); }
+
+.r-main {
+  flex: 1; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 18px;
+}
+
+.wv { display: flex; gap: 3.5px; align-items: flex-end; height: 26px; opacity: 0; transition: opacity 0.3s; }
+.is-rec-screen .wv { opacity: 1; }
+.wv-b {
+  width: 2.5px; border-radius: 2px;
+  background: rgba(232,220,200,0.3);
+  height: 4px; /* default, JS overrides when recording */
+}
+
+.r-timer {
+  font-size: 28px; font-weight: 300; color: var(--t1);
+  letter-spacing: 3px; font-variant-numeric: tabular-nums;
+  opacity: 0; transition: opacity 0.3s;
+}
+.is-rec-screen .r-timer { opacity: 1; }
+.r-foot { font-size: 11px; color: var(--t3); font-weight: 300; text-align: center; }
+
+/* ══ REFLECTION ══ */
+#s-reflection .sc-body {
+  flex: 1; display: flex; flex-direction: column;
+  padding: 8px 26px 20px; overflow-y: auto; scrollbar-width: none;
+}
+#s-reflection .sc-body::-webkit-scrollbar { display: none; }
+.rf-back { font-size: 13px; color: var(--t3); cursor: pointer; padding: 2px 0 16px; display: inline-block; transition: color 0.15s; }
+.rf-back:hover { color: var(--t2); }
+.rf-date { font-size: 9.5px; color: var(--t3); font-weight: 300; margin-bottom: 5px; }
+.rf-mr { display: flex; align-items: center; gap: 8px; margin-bottom: 7px; }
+.rf-dot { width: 5px; height: 5px; border-radius: 3px; }
+.rf-ml { font-size: 11px; color: var(--t2); font-weight: 300; }
+.rf-topics { font-size: 10px; color: var(--t3); font-weight: 300; margin-bottom: 18px; line-height: 1.5; }
+.rf-body {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 14.5px; font-style: italic; font-weight: 300;
+  color: var(--t1); line-height: 1.85; margin-bottom: 18px;
+}
+.rf-quote { border-left: 1.5px solid var(--al); padding-left: 13px; margin-bottom: 18px; }
+.rf-qt {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 12.5px; font-style: italic; font-weight: 300; color: var(--t2); line-height: 1.65;
+}
+.rf-emo { display: flex; gap: 16px; margin-bottom: 22px; }
+.rf-em { display: flex; flex-direction: column; gap: 5px; }
+.rf-em-b { height: 1.5px; border-radius: 1px; }
+.rf-em-l { font-size: 9.5px; color: var(--t3); font-weight: 300; }
+.btn-fill {
+  background: var(--a); border-radius: 11px; padding: 13px;
+  text-align: center; margin-bottom: 7px; cursor: pointer; transition: opacity 0.15s;
+}
+.btn-fill:hover { opacity: 0.88; }
+.btn-fill span { font-size: 13px; font-weight: 500; color: #16120a; }
+.btn-ghost {
+  border: 1px solid var(--bdm); border-radius: 11px; padding: 12px;
+  text-align: center; margin-bottom: 7px; cursor: pointer; transition: border-color 0.15s;
+}
+.btn-ghost:hover { border-color: var(--bdm); }
+.btn-ghost span { font-size: 13px; color: var(--t2); font-weight: 300; }
+.btn-txt { padding: 10px; text-align: center; cursor: pointer; }
+.btn-txt span { font-size: 12px; color: var(--t3); font-weight: 300; }
+
+/* ══ JOURNAL ══ */
+#s-timeline .sc-body { flex: 1; padding: 12px 26px 0; overflow-y: auto; scrollbar-width: none; }
+#s-timeline .sc-body::-webkit-scrollbar { display: none; }
+.sc-head {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 21px; font-weight: 300; color: var(--t1); padding-top: 4px; margin-bottom: 18px;
+}
+.tl-item { border-top: 1px solid var(--bd); padding: 14px 0; }
+.tl-d { font-size: 9.5px; color: var(--t3); font-weight: 300; margin-bottom: 5px; }
+.tl-mr { display: flex; align-items: center; gap: 7px; margin-bottom: 5px; }
+.tl-dot { width: 5px; height: 5px; border-radius: 3px; }
+.tl-ml { font-size: 10.5px; color: var(--t2); font-weight: 300; }
+.tl-s {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 12.5px; font-style: italic; font-weight: 300; color: var(--t2); line-height: 1.6;
+}
+.tl-tp { font-size: 9px; color: var(--t3); margin-top: 6px; font-weight: 300; }
+
+/* ══ MOOD ══ */
+#s-mood .sc-body { flex: 1; padding: 12px 26px 0; }
+.md-stats { display: flex; gap: 0; margin-bottom: 22px; }
+.md-stat { flex: 1; padding: 12px 0; border-right: 1px solid var(--bd); }
+.md-stat:last-child { border-right: none; }
+.md-sn {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 26px; font-weight: 300; color: var(--t1); line-height: 1;
+}
+.md-sl { font-size: 9px; color: var(--t3); font-weight: 300; margin-top: 3px; }
+.md-cl { font-size: 9px; color: var(--t3); margin-bottom: 9px; font-weight: 300; }
+.md-chart { display: flex; gap: 5px; align-items: flex-end; height: 80px; margin-bottom: 22px; }
+.md-col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; justify-content: flex-end; }
+.md-bar { width: 100%; border-radius: 3px; }
+.md-day { font-size: 7.5px; color: var(--t3); font-weight: 300; }
+.md-emo-l { font-size: 9px; color: var(--t3); margin-bottom: 7px; font-weight: 300; }
+.md-emo-v {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 13px; font-style: italic; font-weight: 300; color: var(--t2); line-height: 2;
+}
+
+/* ══ SETTINGS ══ */
+#s-settings .sc-body { flex: 1; padding: 12px 26px 0; overflow-y: auto; scrollbar-width: none; }
+#s-settings .sc-body::-webkit-scrollbar { display: none; }
+.st-profile {
+  display: flex; align-items: center; gap: 12px;
+  padding: 14px 0; border-bottom: 1px solid var(--bd); margin-bottom: 18px;
+}
+.st-av {
+  width: 38px; height: 38px; border-radius: 19px;
+  background: var(--am); display: flex; align-items: center; justify-content: center;
+  font-family: 'Cormorant Garamond', serif; font-size: 17px; color: var(--a); flex-shrink: 0;
+}
+.st-pn { font-size: 14px; color: var(--t1); }
+.st-pm { font-size: 10px; color: var(--t3); font-weight: 300; margin-top: 2px; }
+.st-sl { font-size: 9.5px; color: var(--t3); font-weight: 300; text-transform: uppercase; letter-spacing: 0.5px; margin: 14px 0 7px; }
+.goals { display: flex; flex-direction: column; gap: 3px; }
+.gr {
+  display: flex; align-items: stretch; border-radius: 9px;
+  background: rgba(232,220,200,0.02); border: 1px solid var(--bd);
+  overflow: hidden; cursor: pointer; transition: background 0.12s;
+}
+.gr:hover { background: var(--as); }
+.gr.sel { background: var(--as); border-color: rgba(200,149,90,0.22); }
+.gr-bar { width: 3px; flex-shrink: 0; }
+.gr-body { flex: 1; padding: 8px 10px; }
+.gr-name { font-size: 12px; color: var(--t1); font-weight: 300; }
+.gr-name.sel { color: var(--a); }
+.gr-chk {
+  width: 14px; height: 14px; border-radius: 7px;
+  border: 1px solid var(--bdm); margin: auto 10px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+}
+.gr-chk.on { background: var(--a); border-color: var(--a); }
+.gr-chk.on::after {
+  content: ''; width: 5px; height: 3px;
+  border-left: 1.5px solid #16120a; border-bottom: 1.5px solid #16120a;
+  transform: rotate(-45deg) translateY(-1px);
+}
+
+/* ══ RIGHT PANEL ══ */
+.sec { margin-bottom: 40px; }
+.sec-l { font-size: 10px; font-weight: 400; color: var(--t3); text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 18px; }
+.pal { display: flex; gap: 12px; flex-wrap: wrap; }
+.sw { display: flex; flex-direction: column; gap: 5px; }
+.sw-b { width: 64px; height: 36px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.04); }
+.sw-n { font-size: 9px; color: var(--t3); font-weight: 300; }
+.sw-v { font-size: 9px; color: var(--t2); font-family: monospace; }
+.ty-row { display: flex; align-items: baseline; gap: 22px; margin-bottom: 20px; flex-wrap: wrap; }
+.ty-lbl { font-size: 10px; color: var(--t3); font-weight: 300; width: 150px; flex-shrink: 0; line-height: 1.5; }
+.changes { display: flex; flex-direction: column; gap: 9px; }
+.ch { background: rgba(232,220,200,0.02); border: 1px solid var(--bd); border-radius: 10px; padding: 14px; }
+.ch-tag { display: inline-block; font-size: 9px; font-weight: 400; color: var(--a); background: var(--as); padding: 3px 8px; border-radius: 4px; margin-bottom: 8px; }
+.ch-h { font-size: 13px; font-weight: 400; color: var(--t1); margin-bottom: 5px; }
+.ch-b { font-size: 11px; color: var(--t2); line-height: 1.7; font-weight: 300; }
+.div { height: 1px; background: var(--bd); margin: 40px 0; }
+.ph-hint { font-size: 10.5px; color: var(--t3); font-weight: 300; text-align: center; }
+
+/* ── Alive: Universal spring press states ── */
+.ti svg { transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1); }
+.ti:active svg { transform: scale(0.78) !important; }
+.rf-back { transition: opacity 0.15s, transform 0.22s cubic-bezier(0.34,1.56,0.64,1); }
+.rf-back:active { opacity: 0.4; transform: scale(0.88) !important; }
+.r-cancel { transition: opacity 0.15s, transform 0.22s cubic-bezier(0.34,1.56,0.64,1); }
+.r-cancel:active { opacity: 0.4; transform: scale(0.9) !important; }
+.btn-fill { transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1), opacity 0.15s; }
+.btn-fill:active { transform: scale(0.965) !important; opacity: 0.88; }
+.btn-ghost { transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1), border-color 0.15s; }
+.btn-ghost:active { transform: scale(0.965) !important; }
+.btn-txt { transition: opacity 0.15s; }
+.btn-txt:active { opacity: 0.45; }
+.h-lnk { transition: color 0.15s, opacity 0.15s; }
+.h-lnk:active { opacity: 0.45; }
+.tl-item { cursor: pointer; transition: opacity 0.12s; }
+.tl-item:active { opacity: 0.65; }
+.gr { transition: background 0.12s, border-color 0.15s, transform 0.25s cubic-bezier(0.34,1.56,0.64,1); }
+.gr:active { transform: scale(0.975) !important; }
+
+/* ── Alive: Tab icon bounce ── */
+@keyframes tabBounce {
+  0%   { transform: scale(1); }
+  36%  { transform: scale(1.32); }
+  66%  { transform: scale(0.9); }
+  100% { transform: scale(1); }
+}
+</style>
+</head>
+<body>
+
+<div class="ph">
+  <h1>DreamLog — v3</h1>
+  <p>
+    Tap the record button on the home screen. Choose a mode, tap the circle to start — then tap again to stop and see the reflection. Tab bar, mode picker, and goal selector all work.
+  </p>
+</div>
+
+<div class="layout">
+
+  <!-- ════════════ PHONE ════════════ -->
+  <div class="left">
+  <div class="phone">
+
+    <!-- ░░ HOME ░░ -->
+    <div id="s-home" class="screen active">
+      <div class="sb">
+        <span class="sb-t">9:41</span>
+        <div class="sb-r">
+          <div class="sig" style="width:3px;height:6px;margin-bottom:2px"></div>
+          <div class="sig" style="width:3px;height:8px;margin-bottom:0"></div>
+          <div class="sig" style="width:3px;height:10px"></div>
+          <div class="bat" style="margin-left:5px"><div class="bat-f"></div></div>
+        </div>
+      </div>
+
+      <div class="sc-body">
+        <div class="h-top">
+          <div>
+            <div class="h-sub">Sunday, 15 June</div>
+            <div class="h-name">Good morning,<br>Bharat.</div>
+          </div>
+          <div class="h-str">
+            <div class="h-sn">12</div>
+            <div class="h-sl">day streak</div>
+          </div>
+        </div>
+
+        <div class="h-last">
+          <div class="h-lmeta">Yesterday · cautious hope</div>
+          <div class="h-lrow">
+            <div class="h-ldot"></div>
+            <span class="h-ll">68 · family connection</span>
+          </div>
+          <div class="h-lq">"I forgot how much I like it — lighter than expected."</div>
+        </div>
+
+        <div class="h-center">
+          <div class="rec-wrap" onclick="goRecord()">
+            <div class="rec-ring"></div>
+            <div class="rec-ring"></div>
+            <div class="rec-btn">
+              <svg class="i-mic" width="22" height="30" viewBox="0 0 22 30" fill="none">
+                <rect x="6" y="0.5" width="10" height="16" rx="5" stroke="#16120a" stroke-width="1.8"/>
+                <path d="M1.5 14C1.5 19.8 5.9 24.5 11 24.5C16.1 24.5 20.5 19.8 20.5 14" stroke="#16120a" stroke-width="1.8" stroke-linecap="round"/>
+                <line x1="11" y1="24.5" x2="11" y2="29" stroke="#16120a" stroke-width="1.8" stroke-linecap="round"/>
+                <line x1="7" y1="29" x2="15" y2="29" stroke="#16120a" stroke-width="1.8" stroke-linecap="round"/>
+              </svg>
+            </div>
+          </div>
+          <div class="h-hint">record</div>
+          <div class="h-links">
+            <span class="h-lnk" onclick="showScreen('s-timeline')">journeys</span>
+            <span class="h-lnk" onclick="showScreen('s-reflection')">last reflection</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="h-strip">
+        <div class="h-sl2">this week</div>
+        <div class="h-bars">
+          <div class="h-bc"><div class="h-b" style="height:22px;background:rgba(136,180,144,0.4);border-top:1.5px solid #88b490"></div><div class="h-bd">M</div></div>
+          <div class="h-bc"><div class="h-b" style="height:28px;background:rgba(184,160,96,0.4);border-top:1.5px solid #b8a060"></div><div class="h-bd">T</div></div>
+          <div class="h-bc"><div class="h-b" style="height:8px;background:var(--t4);border:1px dashed rgba(232,220,200,0.1)"></div><div class="h-bd">W</div></div>
+          <div class="h-bc"><div class="h-b" style="height:30px;background:rgba(136,180,144,0.4);border-top:1.5px solid #88b490"></div><div class="h-bd">T</div></div>
+          <div class="h-bc"><div class="h-b" style="height:16px;background:rgba(176,120,104,0.4);border-top:1.5px solid #b07868"></div><div class="h-bd">F</div></div>
+          <div class="h-bc"><div class="h-b" style="height:8px;background:var(--t4);border:1px dashed rgba(232,220,200,0.1)"></div><div class="h-bd">S</div></div>
+          <div class="h-bc"><div class="h-b" style="height:8px;background:var(--t4);border:1px dashed rgba(232,220,200,0.1)"></div><div class="h-bd">S</div></div>
+        </div>
+      </div>
+
+      <div class="tb">
+        <div class="ti on" onclick="showScreen('s-home')">
+          <svg viewBox="0 0 20 20" fill="none"><path d="M3 8.5L10 3l7 5.5V17a1 1 0 01-1 1H4a1 1 0 01-1-1V8.5z" stroke="#e8ddd0" stroke-width="1.4" fill="none"/></svg>
+          <div class="ti-l on">Home</div>
+        </div>
+        <div class="ti" onclick="showScreen('s-timeline')">
+          <svg viewBox="0 0 20 20" fill="none"><rect x="3" y="4" width="14" height="2" rx="1" stroke="#7a6e60" stroke-width="1.3"/><rect x="3" y="9" width="10" height="2" rx="1" stroke="#7a6e60" stroke-width="1.3"/><rect x="3" y="14" width="12" height="2" rx="1" stroke="#7a6e60" stroke-width="1.3"/></svg>
+          <div class="ti-l">Journal</div>
+        </div>
+        <div class="ti" onclick="showScreen('s-mood')">
+          <svg viewBox="0 0 20 20" fill="none"><path d="M3 15 Q6 6 10 10 Q13 13 17 5" stroke="#7a6e60" stroke-width="1.4" stroke-linecap="round" fill="none"/></svg>
+          <div class="ti-l">Mood</div>
+        </div>
+        <div class="ti" onclick="showScreen('s-settings')">
+          <svg viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="2.5" stroke="#7a6e60" stroke-width="1.3"/><path d="M10 3v2M10 15v2M3 10h2M15 10h2" stroke="#7a6e60" stroke-width="1.3" stroke-linecap="round"/></svg>
+          <div class="ti-l">Settings</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ░░ RECORD ░░ -->
+    <div id="s-record" class="screen">
+      <div class="sb">
+        <span class="sb-t" id="r-sb-t">9:41</span>
+        <div class="sb-r">
+          <div class="sig" style="width:3px;height:6px;margin-bottom:2px"></div>
+          <div class="sig" style="width:3px;height:8px;margin-bottom:0"></div>
+          <div class="sig" style="width:3px;height:10px"></div>
+          <div class="bat" style="margin-left:5px"><div class="bat-f"></div></div>
+        </div>
+      </div>
+
+      <div class="sc-body" id="r-screen">
+        <div class="r-top">
+          <span class="r-cancel" onclick="cancelRecord()">Cancel</span>
+          <span class="r-listen" id="r-listen">listening</span>
+        </div>
+
+        <div class="mode-grid" id="mode-grid">
+          <div class="mode-card sel" onclick="pickModeCard(this)">
+            <div class="mc-name">Process</div>
+            <div class="mc-desc">Full emotional analysis</div>
+          </div>
+          <div class="mode-card" onclick="pickModeCard(this)">
+            <div class="mc-name">Rant</div>
+            <div class="mc-desc">Just be heard, no advice</div>
+          </div>
+          <div class="mode-card" onclick="pickModeCard(this)">
+            <div class="mc-name">Gratitude</div>
+            <div class="mc-desc">Notice what's going right</div>
+          </div>
+          <div class="mode-card" onclick="pickModeCard(this)">
+            <div class="mc-name">Decide</div>
+            <div class="mc-desc">Think a choice through</div>
+          </div>
+        </div>
+
+        <div class="r-main">
+          <div class="wv" id="r-wv">
+            <div class="wv-b"></div>
+            <div class="wv-b"></div>
+            <div class="wv-b"></div>
+            <div class="wv-b"></div>
+            <div class="wv-b"></div>
+            <div class="wv-b"></div>
+            <div class="wv-b"></div>
+            <div class="wv-b"></div>
+            <div class="wv-b"></div>
+          </div>
+
+          <div class="rec-wrap" id="r-wrap" onclick="toggleRecord()">
+            <div class="rec-ring"></div>
+            <div class="rec-ring"></div>
+            <div class="rec-btn">
+              <svg class="i-mic" width="22" height="30" viewBox="0 0 22 30" fill="none">
+                <rect x="6" y="0.5" width="10" height="16" rx="5" stroke="#16120a" stroke-width="1.8"/>
+                <path d="M1.5 14C1.5 19.8 5.9 24.5 11 24.5C16.1 24.5 20.5 19.8 20.5 14" stroke="#16120a" stroke-width="1.8" stroke-linecap="round"/>
+                <line x1="11" y1="24.5" x2="11" y2="29" stroke="#16120a" stroke-width="1.8" stroke-linecap="round"/>
+                <line x1="7" y1="29" x2="15" y2="29" stroke="#16120a" stroke-width="1.8" stroke-linecap="round"/>
+              </svg>
+              <div class="i-stop"></div>
+            </div>
+          </div>
+
+          <div class="r-timer" id="r-timer">0:00</div>
+        </div>
+
+        <div class="r-foot" id="r-foot">tap to begin</div>
+      </div>
+    </div>
+
+    <!-- ░░ REFLECTION ░░ -->
+    <div id="s-reflection" class="screen">
+      <div class="sb">
+        <span class="sb-t">9:54</span>
+        <div class="sb-r">
+          <div class="sig" style="width:3px;height:6px;margin-bottom:2px"></div>
+          <div class="sig" style="width:3px;height:8px;margin-bottom:0"></div>
+          <div class="sig" style="width:3px;height:10px"></div>
+          <div class="bat" style="margin-left:5px"><div class="bat-f"></div></div>
+        </div>
+      </div>
+      <div class="sc-body">
+        <span class="rf-back" onclick="showScreen('s-home')">←</span>
+        <div class="rf-date">Sunday, 15 June</div>
+        <div class="rf-mr">
+          <div class="rf-dot" style="background:var(--mh)"></div>
+          <span class="rf-ml">cautious hope · 68</span>
+        </div>
+        <div class="rf-topics">family connection · physical movement · work pressure</div>
+        <div class="rf-body">
+          Something shifted today. The walk before the meeting wasn't planned, but it gave you fifteen minutes alone that the rest of the day didn't. You noticed your sister's name came up twice — without tension this time.
+        </div>
+        <div class="rf-quote">
+          <div class="rf-qt">"I forgot how much I like it — the conversation left me lighter than expected."</div>
+        </div>
+        <div class="rf-emo">
+          <div class="rf-em">
+            <div class="rf-em-b" style="width:54px;background:var(--mh);opacity:0.6"></div>
+            <div class="rf-em-l">cautious hope</div>
+          </div>
+          <div class="rf-em">
+            <div class="rf-em-b" style="width:36px;background:var(--mm);opacity:0.55"></div>
+            <div class="rf-em-l">warmth</div>
+          </div>
+          <div class="rf-em">
+            <div class="rf-em-b" style="width:22px;background:var(--a);opacity:0.5"></div>
+            <div class="rf-em-l">tired</div>
+          </div>
+        </div>
+        <div class="btn-fill"><span>Go deeper</span></div>
+        <div class="btn-ghost"><span>Share with therapist</span></div>
+        <div class="btn-txt"><span>done for tonight</span></div>
+      </div>
+    </div>
+
+    <!-- ░░ JOURNAL ░░ -->
+    <div id="s-timeline" class="screen">
+      <div class="sb"><span class="sb-t">9:41</span><div class="sb-r"><div class="sig" style="width:3px;height:6px;margin-bottom:2px"></div><div class="sig" style="width:3px;height:8px;margin-bottom:0"></div><div class="sig" style="width:3px;height:10px"></div><div class="bat" style="margin-left:5px"><div class="bat-f"></div></div></div></div>
+      <div class="sc-body">
+        <div class="sc-head">Journal</div>
+        <div class="tl-item">
+          <div class="tl-d">Sun 15 June</div>
+          <div class="tl-mr"><div class="tl-dot" style="background:var(--mh)"></div><span class="tl-ml">cautious hope · 68</span></div>
+          <div class="tl-s">"Something shifted today. The walk before the meeting gave you fifteen minutes alone."</div>
+          <div class="tl-tp">family connection · physical movement</div>
+        </div>
+        <div class="tl-item">
+          <div class="tl-d">Fri 13 June</div>
+          <div class="tl-mr"><div class="tl-dot" style="background:var(--ml)"></div><span class="tl-ml">quiet exhaustion · 44</span></div>
+          <div class="tl-s">"The week compressed itself into one long afternoon. You kept looking at the window, not to see anything — just to have somewhere to look."</div>
+          <div class="tl-tp">work pressure · solitude</div>
+        </div>
+        <div class="tl-item">
+          <div class="tl-d">Thu 12 June</div>
+          <div class="tl-mr"><div class="tl-dot" style="background:var(--mm)"></div><span class="tl-ml">grounded · 62</span></div>
+          <div class="tl-s">"The morning run helped. Small things felt right — coffee before the calls, the short pause between tasks."</div>
+          <div class="tl-tp">routine · self-care</div>
+        </div>
+      </div>
+      <div class="tb">
+        <div class="ti" onclick="showScreen('s-home')"><svg viewBox="0 0 20 20" fill="none"><path d="M3 8.5L10 3l7 5.5V17a1 1 0 01-1 1H4a1 1 0 01-1-1V8.5z" stroke="#7a6e60" stroke-width="1.4" fill="none"/></svg><div class="ti-l">Home</div></div>
+        <div class="ti on" onclick="showScreen('s-timeline')"><svg viewBox="0 0 20 20" fill="none"><rect x="3" y="4" width="14" height="2" rx="1" stroke="#e8ddd0" stroke-width="1.3"/><rect x="3" y="9" width="10" height="2" rx="1" stroke="#e8ddd0" stroke-width="1.3"/><rect x="3" y="14" width="12" height="2" rx="1" stroke="#e8ddd0" stroke-width="1.3"/></svg><div class="ti-l on">Journal</div></div>
+        <div class="ti" onclick="showScreen('s-mood')"><svg viewBox="0 0 20 20" fill="none"><path d="M3 15 Q6 6 10 10 Q13 13 17 5" stroke="#7a6e60" stroke-width="1.4" stroke-linecap="round" fill="none"/></svg><div class="ti-l">Mood</div></div>
+        <div class="ti" onclick="showScreen('s-settings')"><svg viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="2.5" stroke="#7a6e60" stroke-width="1.3"/><path d="M10 3v2M10 15v2M3 10h2M15 10h2" stroke="#7a6e60" stroke-width="1.3" stroke-linecap="round"/></svg><div class="ti-l">Settings</div></div>
+      </div>
+    </div>
+
+    <!-- ░░ MOOD ░░ -->
+    <div id="s-mood" class="screen">
+      <div class="sb"><span class="sb-t">9:41</span><div class="sb-r"><div class="sig" style="width:3px;height:6px;margin-bottom:2px"></div><div class="sig" style="width:3px;height:8px;margin-bottom:0"></div><div class="sig" style="width:3px;height:10px"></div><div class="bat" style="margin-left:5px"><div class="bat-f"></div></div></div></div>
+      <div class="sc-body">
+        <div class="sc-head">Mood</div>
+        <div class="md-stats">
+          <div class="md-stat"><div class="md-sn">65</div><div class="md-sl">avg this week</div></div>
+          <div class="md-stat" style="padding-left:14px"><div class="md-sn">12</div><div class="md-sl">day streak</div></div>
+          <div class="md-stat" style="padding-left:14px"><div class="md-sn">5</div><div class="md-sl">entries</div></div>
+        </div>
+        <div class="md-cl">last 10 days</div>
+        <div class="md-chart">
+          <div class="md-col"><div class="md-bar" style="height:42px;background:rgba(136,180,144,0.4);border-top:1.5px solid #88b490"></div><div class="md-day">6</div></div>
+          <div class="md-col"><div class="md-bar" style="height:55px;background:rgba(184,160,96,0.4);border-top:1.5px solid #b8a060"></div><div class="md-day">7</div></div>
+          <div class="md-col"><div class="md-bar" style="height:34px;background:rgba(176,120,104,0.4);border-top:1.5px solid #b07868"></div><div class="md-day">8</div></div>
+          <div class="md-col"><div class="md-bar" style="height:62px;background:rgba(136,180,144,0.4);border-top:1.5px solid #88b490"></div><div class="md-day">9</div></div>
+          <div class="md-col"><div class="md-bar" style="height:48px;background:rgba(184,160,96,0.4);border-top:1.5px solid #b8a060"></div><div class="md-day">10</div></div>
+          <div class="md-col"><div class="md-bar" style="height:70px;background:rgba(136,180,144,0.4);border-top:1.5px solid #88b490"></div><div class="md-day">11</div></div>
+          <div class="md-col"><div class="md-bar" style="height:26px;background:var(--t4);border:1px dashed rgba(232,220,200,0.1)"></div><div class="md-day">12</div></div>
+          <div class="md-col"><div class="md-bar" style="height:57px;background:rgba(136,180,144,0.4);border-top:1.5px solid #88b490"></div><div class="md-day">13</div></div>
+          <div class="md-col"><div class="md-bar" style="height:44px;background:rgba(184,160,96,0.4);border-top:1.5px solid #b8a060"></div><div class="md-day">14</div></div>
+          <div class="md-col"><div class="md-bar" style="height:66px;background:rgba(136,180,144,0.4);border-top:1.5px solid #88b490"></div><div class="md-day">15</div></div>
+        </div>
+        <div class="md-emo-l">top this week</div>
+        <div class="md-emo-v">cautious hope · warmth · quiet exhaustion · grounded</div>
+      </div>
+      <div class="tb">
+        <div class="ti" onclick="showScreen('s-home')"><svg viewBox="0 0 20 20" fill="none"><path d="M3 8.5L10 3l7 5.5V17a1 1 0 01-1 1H4a1 1 0 01-1-1V8.5z" stroke="#7a6e60" stroke-width="1.4" fill="none"/></svg><div class="ti-l">Home</div></div>
+        <div class="ti" onclick="showScreen('s-timeline')"><svg viewBox="0 0 20 20" fill="none"><rect x="3" y="4" width="14" height="2" rx="1" stroke="#7a6e60" stroke-width="1.3"/><rect x="3" y="9" width="10" height="2" rx="1" stroke="#7a6e60" stroke-width="1.3"/><rect x="3" y="14" width="12" height="2" rx="1" stroke="#7a6e60" stroke-width="1.3"/></svg><div class="ti-l">Journal</div></div>
+        <div class="ti on" onclick="showScreen('s-mood')"><svg viewBox="0 0 20 20" fill="none"><path d="M3 15 Q6 6 10 10 Q13 13 17 5" stroke="#e8ddd0" stroke-width="1.4" stroke-linecap="round" fill="none"/></svg><div class="ti-l on">Mood</div></div>
+        <div class="ti" onclick="showScreen('s-settings')"><svg viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="2.5" stroke="#7a6e60" stroke-width="1.3"/><path d="M10 3v2M10 15v2M3 10h2M15 10h2" stroke="#7a6e60" stroke-width="1.3" stroke-linecap="round"/></svg><div class="ti-l">Settings</div></div>
+      </div>
+    </div>
+
+    <!-- ░░ SETTINGS ░░ -->
+    <div id="s-settings" class="screen">
+      <div class="sb"><span class="sb-t">9:41</span><div class="sb-r"><div class="sig" style="width:3px;height:6px;margin-bottom:2px"></div><div class="sig" style="width:3px;height:8px;margin-bottom:0"></div><div class="sig" style="width:3px;height:10px"></div><div class="bat" style="margin-left:5px"><div class="bat-f"></div></div></div></div>
+      <div class="sc-body">
+        <div class="sc-head">Settings</div>
+        <div class="st-profile">
+          <div class="st-av">B</div>
+          <div><div class="st-pn">Bharat</div><div class="st-pm">14 entries · DreamLog+</div></div>
+        </div>
+        <div class="st-sl">emotional goal</div>
+        <div class="goals">
+          <div class="gr" onclick="pickGoal(this)"><div class="gr-bar" style="background:#7B9E87"></div><div class="gr-body"><div class="gr-name">Working through anxiety</div></div><div class="gr-chk"></div></div>
+          <div class="gr sel" onclick="pickGoal(this)"><div class="gr-bar" style="background:#5B8DB8"></div><div class="gr-body"><div class="gr-name sel">Managing stress</div></div><div class="gr-chk on"></div></div>
+          <div class="gr" onclick="pickGoal(this)"><div class="gr-bar" style="background:#8FA8C4"></div><div class="gr-body"><div class="gr-name">Processing grief</div></div><div class="gr-chk"></div></div>
+          <div class="gr" onclick="pickGoal(this)"><div class="gr-bar" style="background:#C8965A"></div><div class="gr-body"><div class="gr-name">Lifting low mood</div></div><div class="gr-chk"></div></div>
+          <div class="gr" onclick="pickGoal(this)"><div class="gr-bar" style="background:#C87F7F"></div><div class="gr-body"><div class="gr-name">Relationships</div></div><div class="gr-chk"></div></div>
+          <div class="gr" onclick="pickGoal(this)"><div class="gr-bar" style="background:#5C7A62"></div><div class="gr-body"><div class="gr-name">Career &amp; purpose</div></div><div class="gr-chk"></div></div>
+        </div>
+      </div>
+      <div class="tb">
+        <div class="ti" onclick="showScreen('s-home')"><svg viewBox="0 0 20 20" fill="none"><path d="M3 8.5L10 3l7 5.5V17a1 1 0 01-1 1H4a1 1 0 01-1-1V8.5z" stroke="#7a6e60" stroke-width="1.4" fill="none"/></svg><div class="ti-l">Home</div></div>
+        <div class="ti" onclick="showScreen('s-timeline')"><svg viewBox="0 0 20 20" fill="none"><rect x="3" y="4" width="14" height="2" rx="1" stroke="#7a6e60" stroke-width="1.3"/><rect x="3" y="9" width="10" height="2" rx="1" stroke="#7a6e60" stroke-width="1.3"/><rect x="3" y="14" width="12" height="2" rx="1" stroke="#7a6e60" stroke-width="1.3"/></svg><div class="ti-l">Journal</div></div>
+        <div class="ti" onclick="showScreen('s-mood')"><svg viewBox="0 0 20 20" fill="none"><path d="M3 15 Q6 6 10 10 Q13 13 17 5" stroke="#7a6e60" stroke-width="1.4" stroke-linecap="round" fill="none"/></svg><div class="ti-l">Mood</div></div>
+        <div class="ti on" onclick="showScreen('s-settings')"><svg viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="2.5" stroke="#e8ddd0" stroke-width="1.3"/><path d="M10 3v2M10 15v2M3 10h2M15 10h2" stroke="#e8ddd0" stroke-width="1.3" stroke-linecap="round"/></svg><div class="ti-l on">Settings</div></div>
+      </div>
+    </div>
+
+  </div><!-- /phone -->
+  <div class="ph-hint">tap record · switch tabs · choose modes</div>
+  </div><!-- /left -->
+
+  <!-- ════════════ NOTES ════════════ -->
+  <div class="right">
+    <div class="sec">
+      <p class="sec-l">Palette — warm espresso</p>
+      <div class="pal">
+        <div class="sw"><div class="sw-b" style="background:#18150f"></div><div class="sw-n">Background</div><div class="sw-v">#18150f</div></div>
+        <div class="sw"><div class="sw-b" style="background:#1f1c14"></div><div class="sw-n">Surface</div><div class="sw-v">#1f1c14</div></div>
+        <div class="sw"><div class="sw-b" style="background:#e8ddd0"></div><div class="sw-n">Text primary</div><div class="sw-v">#e8ddd0</div></div>
+        <div class="sw"><div class="sw-b" style="background:#c8955a"></div><div class="sw-n">Accent</div><div class="sw-v">#c8955a</div></div>
+        <div class="sw"><div class="sw-b" style="background:#88b490"></div><div class="sw-n">High mood</div><div class="sw-v">#88b490</div></div>
+        <div class="sw"><div class="sw-b" style="background:#b8a060"></div><div class="sw-n">Mid mood</div><div class="sw-v">#b8a060</div></div>
+        <div class="sw"><div class="sw-b" style="background:#b07868"></div><div class="sw-n">Low mood</div><div class="sw-v">#b07868</div></div>
+      </div>
+    </div>
+
+    <div class="sec">
+      <p class="sec-l">Typography</p>
+      <div class="ty-row">
+        <span class="ty-lbl">Heading · Cormorant 300 · 23px</span>
+        <span style="font-family:'Cormorant Garamond',serif;font-size:23px;font-weight:300;color:var(--t1)">Good morning, Bharat.</span>
+      </div>
+      <div class="ty-row">
+        <span class="ty-lbl">Reflection · Cormorant 300 italic · 14.5px · lh 1.85</span>
+        <span style="font-family:'Cormorant Garamond',serif;font-size:14.5px;font-weight:300;font-style:italic;color:var(--t1);line-height:1.85;max-width:380px;display:block">Something shifted today. The walk wasn't planned, but it gave you fifteen minutes alone that the rest of the day didn't offer.</span>
+      </div>
+      <div class="ty-row">
+        <span class="ty-lbl">Label · Inter 300 · 9.5px uppercase</span>
+        <span style="font-size:9.5px;font-weight:300;color:var(--t3);text-transform:uppercase;letter-spacing:0.5px">this week</span>
+      </div>
+      <div class="ty-row">
+        <span class="ty-lbl">Body · Inter 300 · 12–13px</span>
+        <span style="font-size:13px;font-weight:300;color:var(--t2)">Shapes how your reflections are written. Change any time.</span>
+      </div>
+    </div>
+
+    <div class="div"></div>
+
+    <div class="sec">
+      <p class="sec-l">What's different in v3</p>
+      <div class="changes">
+        <div class="ch">
+          <div class="ch-tag">Background temperature</div>
+          <div class="ch-h">#18150f — warm espresso, not cold black</div>
+          <div class="ch-b">The background has a brown/amber bias throughout (#18150f → #1f1c14 → #26221a). Every element on the screen inherits warmth from it. Cold blacks feel clinical; this feels like a room at night with a lamp on. The parchment text (#e8ddd0) reinforces the warmth — it reads as paper, not a screen.</div>
+        </div>
+        <div class="ch">
+          <div class="ch-tag">Recording button</div>
+          <div class="ch-h">Stays amber — no red alarm</div>
+          <div class="ch-b">The button stays warm amber (#c8955a) throughout the recording. State is communicated by: icon swap (mic → rounded stop square), thin ripple rings that expand and fade like water, animated waveform bars appearing above, and a live timer. The recording should feel like being listened to — not like an active alarm.</div>
+        </div>
+        <div class="ch">
+          <div class="ch-tag">Ripple ring</div>
+          <div class="ch-h">1px border ring, not a glow blob</div>
+          <div class="ch-b">The animation during recording is a thin 1px border ring that scales from 1× to 1.55× and fades out — like a ripple on water. Two rings offset by 0.95s create a gentle pulse. This says "active" without any urgency or AI-orb association.</div>
+        </div>
+        <div class="ch">
+          <div class="ch-tag">Typography weight</div>
+          <div class="ch-h">Cormorant 300 throughout — lighter than v2</div>
+          <div class="ch-b">Dropping from weight 400 to 300 throughout makes everything feel softer and less structured. The reflection body in italic 300 at 14.5px / lh 1.85 reads like a diary page — exactly the right register for this app.</div>
+        </div>
+        <div class="ch">
+          <div class="ch-tag">Interactive</div>
+          <div class="ch-h">Full working prototype</div>
+          <div class="ch-b">Record button starts a live timer and shows the recording state with animated waveform. Tapping again goes to the reflection screen. Tab bar, mode picker, goal selector — all clickable. Use it before deciding on any code change.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+let isRec = false, timerInt = null, secs = 0;
+
+/* ── Screen navigation with per-screen entrance animations ── */
+function showScreen(id) {
+  if (isRec && id !== 's-record') { stopRec(); }
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  const screenAnims = {
+    's-home':       animHome,
+    's-record':     animRecord,
+    's-timeline':   animTimeline,
+    's-mood':       animMood,
+    's-settings':   animSettings,
+    's-reflection': animReflection,
+  };
+  if (screenAnims[id]) setTimeout(screenAnims[id], 55);
+}
+
+function goRecord() {
+  showScreen('s-record'); /* animRecord is called by showScreen */
+}
+
+function cancelRecord() {
+  stopRec();
+  showScreen('s-home');
+}
+
+function setRec(on) {
+  isRec = on;
+  const wrap = document.getElementById('r-wrap');
+  const screen = document.getElementById('r-screen');
+  const wv = document.getElementById('r-wv');
+  const listen = document.getElementById('r-listen');
+  const foot = document.getElementById('r-foot');
+  const grid = document.getElementById('mode-grid');
+
+  if (on) {
+    wrap.classList.add('is-rec');
+    screen.classList.add('is-rec-screen');
+    wv.classList.add('is-rec-screen');
+    listen.classList.add('is-rec-screen');
+    foot.textContent = "tap when you're done";
+    grid.style.opacity = '0.28';
+    grid.style.pointerEvents = 'none';
+    startWave();
+  } else {
+    wrap.classList.remove('is-rec');
+    screen.classList.remove('is-rec-screen');
+    wv.classList.remove('is-rec-screen');
+    listen.classList.remove('is-rec-screen');
+    foot.textContent = 'tap to begin';
+    document.getElementById('r-timer').textContent = '0:00';
+    secs = 0;
+    grid.style.opacity = '';
+    grid.style.pointerEvents = '';
+    stopWave();
+  }
+}
+
+function startTimer() {
+  secs = 0;
+  timerInt = setInterval(() => {
+    secs++;
+    const m = Math.floor(secs / 60);
+    const s = secs % 60;
+    document.getElementById('r-timer').textContent = m + ':' + String(s).padStart(2, '0');
+  }, 1000);
+}
+
+function stopRec() {
+  if (timerInt) { clearInterval(timerInt); timerInt = null; }
+  setRec(false);
+}
+
+function toggleRecord() {
+  if (!isRec) {
+    setRec(true);
+    startTimer();
+  } else {
+    stopRec();
+    setTimeout(() => showScreen('s-reflection'), 160);
+  }
+}
+
+function pickModeCard(el) {
+  if (isRec) return;
+  document.querySelectorAll('.mode-card').forEach(c => c.classList.remove('sel'));
+  el.classList.add('sel');
+}
+
+/* JS-driven waveform — real randomness feels alive */
+let waveInt = null;
+function startWave() {
+  const bars = document.querySelectorAll('.wv-b');
+  function tick() {
+    bars.forEach(b => {
+      const h = 3 + Math.random() * 20;
+      b.style.height = h + 'px';
+      b.style.transition = 'height ' + (120 + Math.random() * 100) + 'ms ease';
+    });
+  }
+  tick();
+  waveInt = setInterval(tick, 130);
+}
+function stopWave() {
+  if (waveInt) { clearInterval(waveInt); waveInt = null; }
+  document.querySelectorAll('.wv-b').forEach(b => {
+    b.style.height = '';
+    b.style.transition = '';
+  });
+}
+
+/* Stagger mode cards in when record screen opens */
+function animateModeCards() {
+  const cards = document.querySelectorAll('.mode-card');
+  cards.forEach(c => c.classList.remove('in'));
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      cards.forEach(c => c.classList.add('in'));
+    });
+  });
+}
+
+function pickGoal(row) {
+  document.querySelectorAll('.gr').forEach(r => {
+    r.classList.remove('sel');
+    r.querySelector('.gr-name').classList.remove('sel');
+    r.querySelector('.gr-chk').classList.remove('on');
+  });
+  row.classList.add('sel');
+  row.querySelector('.gr-name').classList.add('sel');
+  row.querySelector('.gr-chk').classList.add('on');
+}
+
+/* ── Stagger helper: collect elements from array of selectors, animate in sequence ── */
+function staggerEls(selectors, step, startDelay) {
+  step = step || 58; startDelay = startDelay || 0;
+  const els = selectors.reduce(function(acc, s) {
+    return acc.concat(Array.from(document.querySelectorAll(s)));
+  }, []);
+  els.forEach(function(el) {
+    el.style.opacity = '0';
+    el.style.transform = 'translateY(10px)';
+    el.style.transition = 'none';
+  });
+  requestAnimationFrame(function() {
+    requestAnimationFrame(function() {
+      els.forEach(function(el, i) {
+        var d = startDelay + i * step;
+        el.style.transition = 'opacity 0.28s ease ' + d + 'ms, transform 0.4s cubic-bezier(0.34,1.56,0.64,1) ' + d + 'ms';
+        el.style.opacity = '1';
+        el.style.transform = 'translateY(0)';
+      });
+    });
+  });
+}
+
+/* ── Per-screen entrance animations ── */
+
+function animHome() {
+  staggerEls(['#s-home .h-top', '#s-home .h-last', '#s-home .h-center', '#s-home .h-strip'], 70);
+  /* Mood bars grow up from 0 with stagger */
+  setTimeout(function() {
+    document.querySelectorAll('#s-home .h-b').forEach(function(b, i) {
+      var h = b.style.height;
+      b.style.height = '0';
+      b.style.transition = 'none';
+      requestAnimationFrame(function() {
+        requestAnimationFrame(function() {
+          b.style.transition = 'height 0.52s cubic-bezier(0.34,1.56,0.64,1) ' + (140 + i * 32) + 'ms';
+          b.style.height = h;
+        });
+      });
+    });
+  }, 55);
+}
+
+function animRecord() {
+  animateModeCards();
+}
+
+function animTimeline() {
+  staggerEls(['#s-timeline .sc-head', '#s-timeline .tl-item'], 68);
+}
+
+function animMood() {
+  staggerEls([
+    '#s-mood .sc-head', '#s-mood .md-stats', '#s-mood .md-cl',
+    '#s-mood .md-chart', '#s-mood .md-emo-l', '#s-mood .md-emo-v'
+  ], 58);
+  /* Chart bars grow up from 0 */
+  setTimeout(function() {
+    document.querySelectorAll('#s-mood .md-bar').forEach(function(b, i) {
+      var h = b.style.height;
+      b.style.height = '0';
+      b.style.transition = 'none';
+      requestAnimationFrame(function() {
+        requestAnimationFrame(function() {
+          b.style.transition = 'height 0.48s cubic-bezier(0.34,1.56,0.64,1) ' + (110 + i * 28) + 'ms';
+          b.style.height = h;
+        });
+      });
+    });
+  }, 65);
+}
+
+function animSettings() {
+  staggerEls([
+    '#s-settings .sc-head', '#s-settings .st-profile',
+    '#s-settings .st-sl', '#s-settings .gr'
+  ], 52);
+}
+
+function animReflection() {
+  staggerEls([
+    '#s-reflection .rf-back', '#s-reflection .rf-date', '#s-reflection .rf-mr',
+    '#s-reflection .rf-topics', '#s-reflection .rf-body', '#s-reflection .rf-quote',
+    '#s-reflection .rf-emo', '#s-reflection .btn-fill',
+    '#s-reflection .btn-ghost', '#s-reflection .btn-txt'
+  ], 48);
+  /* Emotion bars grow from 0 width */
+  setTimeout(function() {
+    document.querySelectorAll('#s-reflection .rf-em-b').forEach(function(b, i) {
+      var w = b.style.width;
+      b.style.width = '0';
+      b.style.transition = 'none';
+      requestAnimationFrame(function() {
+        requestAnimationFrame(function() {
+          b.style.transition = 'width 0.55s cubic-bezier(0.34,1.56,0.64,1) ' + (310 + i * 90) + 'ms';
+          b.style.width = w;
+        });
+      });
+    });
+  }, 80);
+}
+
+/* ── Init: tab icon bounce + first-load home entrance ── */
+document.addEventListener('DOMContentLoaded', function() {
+  document.querySelectorAll('.ti').forEach(function(ti) {
+    ti.addEventListener('click', function() {
+      var svg = this.querySelector('svg');
+      if (!svg) return;
+      svg.style.animation = 'none';
+      void svg.offsetWidth; /* force reflow to restart animation */
+      svg.style.animation = 'tabBounce 0.42s cubic-bezier(0.34,1.56,0.64,1)';
+    });
+  });
+  /* Animate home screen on first load */
+  setTimeout(animHome, 90);
+});
+
+</script>
+</body>
+</html>

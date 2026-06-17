@@ -1,5 +1,5 @@
 import 'react-native-gesture-handler';
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Animated, StyleSheet, Text, View } from 'react-native';
 import { Slot, SplashScreen, useRouter, useSegments } from 'expo-router';
 import { StripeProvider } from '@stripe/stripe-react-native';
@@ -17,14 +17,22 @@ import {
   Nunito_700Bold,
 } from '@expo-google-fonts/nunito';
 import NetInfo from '@react-native-community/netinfo';
-import { api, storeToken } from '../src/api/client';
+import { api, storeToken, clearToken } from '../src/api/client';
 import { supabase, deepLinkReady } from '../src/lib/supabase';
 import { ThemeProvider } from '../src/context/ThemeContext';
+import { AuthContext } from '../src/context/AuthContext';
 import { detectAndCacheRegion, setRegionFromCountry } from '../src/services/region';
 import { flush as flushOfflineQueue } from '../src/services/offlineQueue';
 import { registerForPushNotifications } from '../src/services/push';
 import { checkForceUpdate } from '../src/services/version';
+import {
+  hasCompletedOnboarding,
+  markOnboardingDone,
+  loadGuestPreferences,
+  clearGuestPreferences,
+} from '../src/services/guestStorage';
 import ForceUpdateScreen from '../src/components/ForceUpdateScreen';
+import AuthSheet from '../src/components/AuthSheet';
 import type { VersionInfo } from '../src/types';
 
 const STRIPE_PK = process.env.EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY ?? '';
@@ -38,7 +46,9 @@ export default function RootLayout() {
   const [greetingName, setGreetingName] = useState<string | null>(null);
   const [showGreeting, setShowGreeting] = useState(false);
   const [forceUpdate, setForceUpdate] = useState<VersionInfo | null>(null);
+  const [showAuthSheet, setShowAuthSheet] = useState(false);
   const greetingOpacity = useRef(new Animated.Value(0)).current;
+  const afterAuthCallback = useRef<(() => void) | null>(null);
   const router = useRouter();
   const segments = useSegments();
   const redirected = useRef(false);
@@ -54,31 +64,36 @@ export default function RootLayout() {
     Nunito_700Bold,
   });
 
-  // Force-update gate: runs independently of the auth check and is fail-open -
-  // checkForceUpdate resolves null on any error so a dead backend never blocks launch.
+  // requestAuth: called by protected screens when a guest user tries an action.
+  // Opens the auth sheet; on sign-in success the callback runs.
+  const requestAuth = useCallback((afterAuth: () => void) => {
+    afterAuthCallback.current = afterAuth;
+    setShowAuthSheet(true);
+  }, []);
+
+  const closeAuthSheet = useCallback(() => {
+    afterAuthCallback.current = null;
+    setShowAuthSheet(false);
+  }, []);
+
+  // Force-update gate. Fail-open — checkForceUpdate resolves null on any error.
   useEffect(() => {
     checkForceUpdate().then(setForceUpdate);
   }, []);
 
-  // Check Supabase session and, if present, fetch profile to determine onboarding state.
+  // Check Supabase session on startup. Never blocks on missing session.
   useEffect(() => {
     (async () => {
       try {
-        // Wait for any deep link to be processed first so setSession() completes
-        // before we read the session - avoids the race where a confirmation link
-        // opens the app but getSession() runs before the tokens are stored.
         await deepLinkReady;
         const { data: { session } } = await supabase.auth.getSession();
         if (!session) {
           setHasToken(false);
           return;
         }
-        // Sync the JWT into SecureStore so the axios interceptor picks it up.
         await storeToken(session.access_token);
         setHasToken(true);
         const user = await api.me();
-        // Pricing currency: the country chosen at account creation is
-        // authoritative; fall back to device-locale detection when unset.
         if (user.country) {
           setRegionFromCountry(user.country).catch(() => {});
         } else {
@@ -96,76 +111,112 @@ export default function RootLayout() {
     })();
   }, []);
 
-  // Once fonts + auth check done, hide splash and redirect exactly once.
+  // After fonts + auth check: hide splash, route once.
   useEffect(() => {
     if (!ready || (!fontsLoaded && !fontError)) return;
-    SplashScreen.hideAsync();
-    if (redirected.current) return;
-    redirected.current = true;
+    (async () => {
+      SplashScreen.hideAsync();
+      if (redirected.current) return;
+      redirected.current = true;
 
-    const seg0 = segments[0] as string;
-    const inAuth = seg0 === 'auth';
-    const inOnboarding = seg0 === 'onboarding';
+      const seg0 = segments[0] as string;
+      const inAuth        = seg0 === 'auth';
+      const inOnboarding  = seg0 === 'onboarding';
+      const onboardingDone = await hasCompletedOnboarding();
 
-    if (!hasToken && !inAuth) {
-      router.replace('/auth');
-    } else if (hasToken && needsOnboarding && !inOnboarding) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      router.replace('/onboarding' as any);
-    } else if (hasToken && !needsOnboarding && (inAuth || inOnboarding)) {
-      router.replace('/(tabs)');
-    } else if (hasToken && !needsOnboarding && greetingName) {
-      // Show greeting overlay for 2 seconds, then fade out.
-      setShowGreeting(true);
-      Animated.sequence([
-        Animated.timing(greetingOpacity, { toValue: 1, duration: 400, useNativeDriver: true }),
-        Animated.delay(1400),
-        Animated.timing(greetingOpacity, { toValue: 0, duration: 400, useNativeDriver: true }),
-      ]).start(() => setShowGreeting(false));
-    }
+      if (!hasToken) {
+        // Guest user path
+        if (!onboardingDone) {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          router.replace('/onboarding' as any);
+        } else if (inAuth || inOnboarding) {
+          // Returning guest lands on tabs
+          router.replace('/(tabs)');
+        }
+        // Otherwise they're already navigating freely
+        return;
+      }
+
+      // Authenticated user path
+      if (!onboardingDone) await markOnboardingDone();
+
+      if (needsOnboarding && !inOnboarding) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        router.replace('/onboarding' as any);
+      } else if (!needsOnboarding && (inAuth || inOnboarding)) {
+        router.replace('/(tabs)');
+      } else if (!needsOnboarding && greetingName) {
+        setShowGreeting(true);
+        Animated.sequence([
+          Animated.timing(greetingOpacity, { toValue: 1, duration: 400, useNativeDriver: true }),
+          Animated.delay(1400),
+          Animated.timing(greetingOpacity, { toValue: 0, duration: 400, useNativeDriver: true }),
+        ]).start(() => setShowGreeting(false));
+      }
+    })();
   }, [ready, fontsLoaded, fontError]);
 
-  // Register this device's FCM token for morning nudges and weekly-review
-  // pushes. Fail-silent: never blocks startup.
+  // FCM push registration
   useEffect(() => {
     if (!ready || !hasToken) return;
     registerForPushNotifications();
   }, [ready, hasToken]);
 
-  // Flush the offline upload queue whenever connectivity is restored.
-  // flush() is internally guarded against overlapping runs.
+  // Flush offline queue on reconnect
   useEffect(() => {
     if (!ready || !hasToken) return;
     const unsubscribe = NetInfo.addEventListener((state) => {
-      if (state.isConnected) {
-        flushOfflineQueue();
-      }
+      if (state.isConnected) flushOfflineQueue();
     });
     return () => unsubscribe();
   }, [ready, hasToken]);
 
-  // After startup, listen for auth state changes triggered by deep links (e.g. email
-  // confirmation). This handles the case where the user taps the confirmation link and
-  // Supabase fires SIGNED_IN after the initial redirect logic has already run.
+  // Auth state changes (deep links, email confirmation, in-sheet sign-in, sign-out)
   useEffect(() => {
     if (!ready) return;
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (event === 'SIGNED_IN' && session) {
         try {
           await storeToken(session.access_token);
+          setHasToken(true);
           registerForPushNotifications();
-          const user = await api.me();
-          if (!user.goal) {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            router.replace('/onboarding' as any);
+
+          // Sync any preferences collected during guest onboarding
+          const prefs = await loadGuestPreferences();
+          const hasPrefs = prefs.goal || prefs.name || prefs.ageRange || prefs.country;
+          if (hasPrefs) {
+            api.updateMe({
+              ...(prefs.goal                                   ? { goal: prefs.goal }                : {}),
+              ...(prefs.name                                   ? { preferred_name: prefs.name }      : {}),
+              ...(prefs.ageRange                               ? { age_range: prefs.ageRange }       : {}),
+              ...(prefs.country && prefs.country !== 'OTHER'  ? { country: prefs.country }          : {}),
+            }).catch(() => {});
+            await clearGuestPreferences();
+          }
+
+          if (afterAuthCallback.current) {
+            // In-sheet sign-in: run the pending action, close sheet
+            const cb = afterAuthCallback.current;
+            afterAuthCallback.current = null;
+            setShowAuthSheet(false);
+            cb();
           } else {
-            router.replace('/(tabs)');
+            // Deep link / normal sign-in: navigate to tabs
+            const user = await api.me().catch(() => null);
+            if (user && !user.goal) {
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              router.replace('/onboarding' as any);
+            } else {
+              router.replace('/(tabs)');
+            }
           }
         } catch {
-          // ignore - startup effect will handle recovery on next launch
+          // ignore
         }
       } else if (event === 'SIGNED_OUT') {
-        router.replace('/auth');
+        setHasToken(false);
+        clearToken().catch(() => {});
+        // Stay on tabs as guest — don't force redirect to /auth
       }
     });
     return () => subscription.unsubscribe();
@@ -178,13 +229,20 @@ export default function RootLayout() {
   return (
     <StripeProvider publishableKey={STRIPE_PK} merchantIdentifier="merchant.com.dreamlog">
       <ThemeProvider>
-        <Slot />
-        {showGreeting && greetingName ? (
-          <Animated.View style={[styles.greetingOverlay, { opacity: greetingOpacity }]}>
-            <Text style={styles.greetingText}>Hello, {greetingName}</Text>
-          </Animated.View>
-        ) : null}
-        {forceUpdate ? <ForceUpdateScreen info={forceUpdate} /> : null}
+        <AuthContext.Provider value={{ isAuthenticated: hasToken, requestAuth }}>
+          <Slot />
+          {showGreeting && greetingName ? (
+            <Animated.View style={[styles.greetingOverlay, { opacity: greetingOpacity }]}>
+              <Text style={styles.greetingText}>Hello, {greetingName}</Text>
+            </Animated.View>
+          ) : null}
+          {forceUpdate ? <ForceUpdateScreen info={forceUpdate} /> : null}
+          <AuthSheet
+            visible={showAuthSheet}
+            prompt="Sign in to continue"
+            onClose={closeAuthSheet}
+          />
+        </AuthContext.Provider>
       </ThemeProvider>
     </StripeProvider>
   );

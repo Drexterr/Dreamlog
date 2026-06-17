@@ -3,9 +3,7 @@
     "name": "DreamLog",
     "slug": "dreamlog",
     "version": "1.0.0",
-    "runtimeVersion": {
-      "policy": "appVersion"
-    },
+    "runtimeVersion": "1.0.0",
     "updates": {
       "url": "https://u.expo.dev/50f4468b-705b-4288-a7a2-e60b6fb5138a",
       "checkAutomatically": "ON_LOAD",

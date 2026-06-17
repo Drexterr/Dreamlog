@@ -13,6 +13,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { api } from '../../src/api/client';
 import { useTheme } from '../../src/context/ThemeContext';
+import { useAuth } from '../../src/context/AuthContext';
 import type { TherapySessionSummary } from '../../src/types';
 import { PERSONA_META } from '../../src/types';
 import { getCachedRegion, THERAPY_SESSION_PRICE } from '../../src/services/region';
@@ -83,11 +84,11 @@ const glowStyles = StyleSheet.create({
 // ── Feature chips ─────────────────────────────────────────────────────────────
 
 const FEATURES = [
-  { icon: '🎙', label: 'Voice or text' },
-  { icon: '⏱', label: 'Up to 60 min' },
-  { icon: '🧠', label: 'Journal-aware AI' },
-  { icon: '📝', label: 'Post-session summary' },
-  { icon: '🛡', label: 'Crisis detection' },
+  { label: 'Voice or text' },
+  { label: 'Up to 60 min' },
+  { label: 'Journal-aware AI' },
+  { label: 'Post-session summary' },
+  { label: 'Crisis detection' },
 ];
 
 // ── Persona preview strip ─────────────────────────────────────────────────────
@@ -121,7 +122,6 @@ function SessionCard({
         {/* Top row */}
         <View style={cardStyles.topRow}>
           <View style={cardStyles.dateRow}>
-            {persona && <Text style={cardStyles.personaEmoji}>{persona.emoji}</Text>}
             <View>
               <Text style={[cardStyles.personaName, { color: colors.textPrimary }]}>
                 {persona?.label ?? 'Session'}
@@ -193,6 +193,7 @@ const cardStyles = StyleSheet.create({
 export default function TherapyIndexScreen() {
   const { colors } = useTheme();
   const router = useRouter();
+  const { isAuthenticated, requestAuth } = useAuth();
   const [sessions, setSessions] = useState<TherapySessionSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [priceDisplay, setPriceDisplay] = useState(THERAPY_SESSION_PRICE.inr);
@@ -205,7 +206,13 @@ export default function TherapyIndexScreen() {
       .finally(() => setLoading(false));
   }, []);
 
-  const handleStart = () => router.push('/therapy/persona-picker' as any);
+  const handleStart = () => {
+    if (isAuthenticated) {
+      router.push('/therapy/persona-picker' as any);
+    } else {
+      requestAuth(() => router.push('/therapy/persona-picker' as any));
+    }
+  };
 
   const handleResume = (s: TherapySessionSummary) => {
     if (s.status === 'active') {
@@ -258,7 +265,6 @@ export default function TherapyIndexScreen() {
           >
             {FEATURES.map((f) => (
               <View key={f.label} style={[styles.featureChip, { backgroundColor: colors.card, borderColor: colors.border }]}>
-                <Text style={styles.featureIcon}>{f.icon}</Text>
                 <Text style={[styles.featureLabel, { color: colors.textSecondary }]}>{f.label}</Text>
               </View>
             ))}
@@ -274,7 +280,7 @@ export default function TherapyIndexScreen() {
               <View style={{ flex: 1 }}>
                 <Text style={[styles.resumeTitle, { color: colors.purple300 }]}>Session in progress</Text>
                 <Text style={[styles.resumeSub, { color: colors.textSecondary }]}>
-                  {activeSession.persona ? `${PERSONA_META[activeSession.persona]?.emoji} ${PERSONA_META[activeSession.persona]?.label}` : 'Reflection Session'}
+                  {activeSession.persona ? (PERSONA_META[activeSession.persona]?.label ?? 'Reflection Session') : 'Reflection Session'}
                   {' · '}
                   {activeSession.turn_count} turn{activeSession.turn_count !== 1 ? 's' : ''}
                 </Text>
@@ -294,7 +300,6 @@ export default function TherapyIndexScreen() {
               const meta = PERSONA_META[key];
               return (
                 <View key={key} style={[styles.personaCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
-                  <Text style={styles.personaEmoji}>{meta.emoji}</Text>
                   <Text style={[styles.personaName, { color: colors.textPrimary }]}>{meta.label}</Text>
                   <Text style={[styles.personaTagline, { color: colors.textMuted }]} numberOfLines={2}>
                     {meta.tagline}

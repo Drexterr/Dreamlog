@@ -99,9 +99,7 @@ export default function ChangeGoalScreen() {
                       <ActivityIndicator size="small" color={colors.brand} />
                     ) : isSelected ? (
                       <Text style={[styles.checkmark, { color: colors.brand }]}>✓</Text>
-                    ) : (
-                      <Text style={{ fontSize: 16 }}>{g.emoji}</Text>
-                    )}
+                    ) : null}
                   </View>
                   <Text style={[styles.goalDesc, { color: colors.textMuted }]}>{g.description}</Text>
                 </TouchableOpacity>

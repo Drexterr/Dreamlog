@@ -125,7 +125,7 @@ const InsightCard = forwardRef<View, InsightCardProps>(
           {streak > 0 && (
             <View style={[styles.statBox, styles.statBoxHL]}>
               <Text style={[styles.statValue, styles.statValueHL]}>{streak}</Text>
-              <Text style={styles.statLabel}>day streak 🔥</Text>
+              <Text style={styles.statLabel}>day streak</Text>
             </View>
           )}
         </View>

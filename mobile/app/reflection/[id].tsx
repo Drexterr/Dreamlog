@@ -357,7 +357,7 @@ export default function ReflectionScreen() {
                   onPress={handleDone}
                   activeOpacity={0.8}
                 >
-                  <Text style={[styles.goodnightText, { color: colors.textMuted }]}>Goodnight ✨</Text>
+                  <Text style={[styles.goodnightText, { color: colors.textMuted }]}>I'm here whenever you need me.</Text>
                 </TouchableOpacity>
               </Animated.View>
             </>

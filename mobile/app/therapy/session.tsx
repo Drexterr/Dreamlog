@@ -460,11 +460,10 @@ export default function TherapySessionScreen() {
             onPress={() => setInputMode('voice')}
             activeOpacity={0.7}
           >
-            <Text style={[styles.backToVoiceText, { color: colors.brand }]}>🎙 Voice</Text>
+            <Text style={[styles.backToVoiceText, { color: colors.brand }]}>Voice</Text>
           </TouchableOpacity>
           <View style={{ alignItems: 'center' }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
-              {personaMeta && <Text style={{ fontSize: 14 }}>{personaMeta.emoji}</Text>}
               <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>
                 {personaMeta ? personaMeta.label : 'Reflection Session'}
               </Text>
@@ -547,7 +546,6 @@ export default function TherapySessionScreen() {
           <View style={{ width: 60 }} />
           <View style={{ alignItems: 'center' }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
-              {personaMeta && <Text style={{ fontSize: 14 }}>{personaMeta.emoji}</Text>}
               <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>
                 {personaMeta ? personaMeta.label : 'Reflection Session'}
               </Text>

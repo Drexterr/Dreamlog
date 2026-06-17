@@ -23,10 +23,10 @@ import PatternRadar from '../../src/components/PatternRadar';
 const MILESTONES = [7, 21, 50, 100];
 
 function getMilestoneLabel(streak: number): string | null {
-  if (streak === 7) return '🔥 One Week Streak!';
-  if (streak === 21) return '⚡ 21-Day Streak!';
-  if (streak === 50) return '💫 50-Day Streak!';
-  if (streak === 100) return '🏆 100-Day Legend!';
+  if (streak === 7) return 'One week. Every single day.';
+  if (streak === 21) return '21 days in a row.';
+  if (streak === 50) return '50 days of showing up.';
+  if (streak === 100) return '100 days. Exceptional.';
   return null;
 }
 

@@ -1,14 +1,3 @@
-/**
- * Home screen - the first thing the user sees.
- *
- * Features:
- * - Greeting based on time of day
- * - Streak badge (top right)
- * - Breathing orb (center) - tap to start recording
- * - Mini mood bar for the current week (bottom)
- * - Star field background
- */
-
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   View,
@@ -22,150 +11,122 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { api } from '../../src/api/client';
 import { useTheme } from '../../src/context/ThemeContext';
+import { useAuth } from '../../src/context/AuthContext';
 import type { DailyMood, StreakInfo } from '../../src/types';
 
-// ── Star field ───────────────────────────────────────────────────────────────
-const STARS = Array.from({ length: 28 }, (_, i) => ({
-  id: i,
-  left: Math.random() * 100,
-  top: Math.random() * 100,
-  size: Math.random() > 0.8 ? 2 : 1,
-  delay: Math.random() * 4000,
-}));
-
-function StarField() {
-  const { theme, colors } = useTheme();
-  const anims = useRef(STARS.map(() => new Animated.Value(0.1))).current;
-
-  useEffect(() => {
-    const loops = anims.map((anim, i) => {
-      const loop = Animated.loop(
-        Animated.sequence([
-          Animated.delay(STARS[i].delay),
-          Animated.timing(anim, { toValue: 0.4, duration: 2000, useNativeDriver: true }),
-          Animated.timing(anim, { toValue: 0.1, duration: 2000, useNativeDriver: true }),
-        ]),
-      );
-      loop.start();
-      return loop;
-    });
-    return () => loops.forEach((l) => l.stop());
-  }, []);
-
-  // Show star field only in curious (purple) theme
-  if (theme !== 'curious') return null;
-
-  return (
-    <View style={StyleSheet.absoluteFill} pointerEvents="none">
-      {STARS.map((star, i) => (
-        <Animated.View
-          key={star.id}
-          style={{
-            position: 'absolute',
-            width: star.size,
-            height: star.size,
-            borderRadius: star.size / 2,
-            backgroundColor: colors.purple300,
-            left: `${star.left}%`,
-            top: `${star.top}%`,
-            opacity: anims[i],
-          }}
-        />
-      ))}
-    </View>
-  );
+// ── Format date label ─────────────────────────────────────────────────────────
+function formatEntryDate(iso: string): string {
+  const d = new Date(iso);
+  const now = new Date();
+  const yesterday = new Date(now);
+  yesterday.setDate(now.getDate() - 1);
+  if (d.toDateString() === now.toDateString()) return 'Today';
+  if (d.toDateString() === yesterday.toDateString()) return 'Yesterday';
+  return d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
 }
 
-// ── Breathing orb ─────────────────────────────────────────────────────────────
-function BreathingOrb({ onPress }: { onPress: () => void }) {
-  const { colors } = useTheme();
-  const scaleAnim = useRef(new Animated.Value(1)).current;
-  const glowAnim = useRef(new Animated.Value(0.3)).current;
+// ── Record button ─────────────────────────────────────────────────────────────
+function RecordButton({ onPress, colors }: { onPress: () => void; colors: any }) {
+  const scaleAnim = useRef(new Animated.Value(0.84)).current;
 
   useEffect(() => {
-    const loop = Animated.loop(
-      Animated.sequence([
-        Animated.parallel([
-          Animated.timing(scaleAnim, { toValue: 1.08, duration: 4000, useNativeDriver: true }),
-          Animated.timing(glowAnim, { toValue: 0.6, duration: 4000, useNativeDriver: true }),
-        ]),
-        Animated.parallel([
-          Animated.timing(scaleAnim, { toValue: 1, duration: 4000, useNativeDriver: true }),
-          Animated.timing(glowAnim, { toValue: 0.3, duration: 4000, useNativeDriver: true }),
-        ]),
-      ]),
-    );
-    loop.start();
-    return () => loop.stop();
+    Animated.spring(scaleAnim, {
+      toValue: 1,
+      useNativeDriver: true,
+      tension: 55,
+      friction: 7,
+      delay: 250,
+    }).start();
   }, []);
 
+  const handlePressIn = useCallback(() => {
+    Animated.spring(scaleAnim, { toValue: 0.93, useNativeDriver: true, tension: 140, friction: 9 }).start();
+  }, [scaleAnim]);
+
+  const handlePressOut = useCallback(() => {
+    Animated.spring(scaleAnim, { toValue: 1, useNativeDriver: true, tension: 55, friction: 7 }).start();
+    onPress();
+  }, [scaleAnim, onPress]);
+
   return (
-    <TouchableOpacity onPress={onPress} activeOpacity={0.9}>
-      <View style={styles.orbContainer}>
-        {/* Glow ring */}
-        <Animated.View style={[styles.orbGlow, { backgroundColor: colors.purple600, opacity: glowAnim }]} />
-        {/* Core orb */}
-        <Animated.View
-          style={[
-            styles.orb,
-            {
-              backgroundColor: colors.purple700,
-              shadowColor: colors.purple500,
-              transform: [{ scale: scaleAnim }],
-            },
-          ]}
-        >
-          {/* Mic icon */}
-          <View style={styles.micWrap}>
-            <View style={styles.micBody} />
-            <View style={styles.micBase} />
-            <View style={styles.micLine} />
+    <TouchableOpacity activeOpacity={1} onPressIn={handlePressIn} onPressOut={handlePressOut}>
+      <Animated.View
+        style={[
+          styles.recBtn,
+          { backgroundColor: colors.brand, shadowColor: colors.brand, transform: [{ scale: scaleAnim }] },
+        ]}
+      >
+        <View style={styles.micWrap}>
+          <View style={[styles.micHead, { borderColor: colors.brandCore }]} />
+          <View style={styles.micArcWrap}>
+            <View style={[styles.micArc, { borderColor: colors.brandCore }]} />
           </View>
-        </Animated.View>
-      </View>
+          <View style={[styles.micStand, { backgroundColor: colors.brandCore }]} />
+          <View style={[styles.micFoot, { borderTopColor: colors.brandCore }]} />
+        </View>
+      </Animated.View>
     </TouchableOpacity>
   );
 }
 
-// ── Mini mood bar ─────────────────────────────────────────────────────────────
-function MiniMoodBar({ days }: { days: DailyMood[] }) {
-  const { colors, moodToColor } = useTheme();
+// ── Weekly mood strip ─────────────────────────────────────────────────────────
+function WeekStrip({ days, colors, moodToColor }: { days: DailyMood[]; colors: any; moodToColor: (n: number) => string }) {
   const dayLabels = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
-
-  // Build a 7-slot array aligned to weekday
   const today = new Date();
-  const todayDow = today.getDay(); // 0=Sun
+  const todayDow = today.getDay();
   const slots = Array.from({ length: 7 }, (_, i) => {
-    const offset = i - ((todayDow + 6) % 7); // Monday=0
+    const offset = i - ((todayDow + 6) % 7);
     const d = new Date(today);
     d.setDate(today.getDate() + offset);
     const key = d.toISOString().slice(0, 10);
     return days.find((m) => m.day === key) ?? null;
   });
 
+  const barAnims = useRef(slots.map(() => new Animated.Value(0))).current;
+
+  useEffect(() => {
+    Animated.stagger(
+      38,
+      barAnims.map((a) =>
+        Animated.spring(a, { toValue: 1, useNativeDriver: false, tension: 70, friction: 8 }),
+      ),
+    ).start();
+  }, []);
+
   return (
-    <View style={styles.moodBarWrap}>
-      <Text style={[styles.moodBarLabel, { color: colors.textSecondary }]}>THIS WEEK</Text>
-      <View style={styles.moodBars}>
-        {slots.map((slot, i) => (
-          <View key={i} style={styles.moodBarCol}>
-            {slot ? (
-              <View
-                style={[
-                  styles.moodBarFill,
-                  {
-                    height: Math.max(8, (slot.avg_mood / 100) * 40),
-                    backgroundColor: moodToColor(slot.avg_mood) + '55',
-                    borderTopColor: moodToColor(slot.avg_mood),
-                  },
-                ]}
+    <View style={styles.stripWrap}>
+      <Text style={[styles.stripLabel, { color: colors.textMuted }]}>this week</Text>
+      <View style={styles.stripBars}>
+        {slots.map((slot, i) => {
+          const targetH = slot ? Math.max(8, (slot.avg_mood / 100) * 38) : 8;
+          const color = slot ? moodToColor(slot.avg_mood) : null;
+          return (
+            <View key={i} style={styles.stripCol}>
+              <Animated.View
+                style={
+                  slot
+                    ? {
+                        width: '100%',
+                        borderRadius: 3,
+                        borderTopWidth: 1.5,
+                        borderTopColor: color!,
+                        backgroundColor: color! + '44',
+                        height: barAnims[i].interpolate({ inputRange: [0, 1], outputRange: [0, targetH] }),
+                      }
+                    : {
+                        width: '100%',
+                        height: 8,
+                        borderRadius: 3,
+                        borderWidth: 1,
+                        borderStyle: 'dashed',
+                        borderColor: colors.borderFaint,
+                      }
+                }
               />
-            ) : (
-              <View style={[styles.moodBarEmpty, { borderColor: colors.border }]} />
-            )}
-            <Text style={[styles.moodBarDay, { color: colors.textMuted }]}>{dayLabels[i]}</Text>
-          </View>
-        ))}
+              <Text style={[styles.stripDay, { color: colors.textMuted }]}>{dayLabels[i]}</Text>
+            </View>
+          );
+        })}
       </View>
     </View>
   );
@@ -174,244 +135,335 @@ function MiniMoodBar({ days }: { days: DailyMood[] }) {
 // ── Home screen ───────────────────────────────────────────────────────────────
 export default function HomeScreen() {
   const router = useRouter();
-  const { colors } = useTheme();
-  const [greeting, setGreeting] = useState('Good evening');
+  const { colors, moodToColor } = useTheme();
+  const { isAuthenticated, requestAuth } = useAuth();
+
+  const [userName, setUserName] = useState('');
   const [streak, setStreak] = useState<StreakInfo | null>(null);
   const [weekMoods, setWeekMoods] = useState<DailyMood[]>([]);
+  const [lastEntry, setLastEntry] = useState<{
+    dateLabel: string;
+    emotionLabel: string;
+    moodScore: number;
+    quote: string;
+    topic: string;
+  } | null>(null);
 
-  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const topAnim    = useRef(new Animated.Value(0)).current;
+  const lastAnim   = useRef(new Animated.Value(0)).current;
+  const centerAnim = useRef(new Animated.Value(0)).current;
+  const linksAnim  = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    const h = new Date().getHours();
-    if (h < 12) setGreeting('Good morning');
-    else if (h < 17) setGreeting('Good afternoon');
-    else if (h < 21) setGreeting('Good evening');
-    else setGreeting('Hey there');
+    Animated.stagger(70, [
+      Animated.spring(topAnim,    { toValue: 1, useNativeDriver: true, tension: 70, friction: 8 }),
+      Animated.spring(lastAnim,   { toValue: 1, useNativeDriver: true, tension: 70, friction: 8 }),
+      Animated.spring(centerAnim, { toValue: 1, useNativeDriver: true, tension: 70, friction: 8 }),
+      Animated.spring(linksAnim,  { toValue: 1, useNativeDriver: true, tension: 70, friction: 8 }),
+    ]).start();
 
-    Animated.timing(fadeAnim, { toValue: 1, duration: 800, useNativeDriver: true }).start();
+    if (!isAuthenticated) return;
 
-    // Load streak + mood data.
+    api.me().then((u) => setUserName(u.preferred_name || u.name || '')).catch(() => {});
     api.streak().then(setStreak).catch(() => {});
     api.weeklyMood().then((r) => setWeekMoods(r.days ?? [])).catch(() => {});
-  }, []);
 
-  const handleOrbPress = useCallback(() => {
-    router.push('/record');
-  }, [router]);
+    api.getTimeline(1, 1).then((res) => {
+      const item = res.items?.[0];
+      if (item?.analysis && item.entry.status === 'completed') {
+        const a = item.analysis;
+        setLastEntry({
+          dateLabel:    formatEntryDate(item.entry.created_at),
+          emotionLabel: a.emotional_tone?.[0]?.emotion ?? '',
+          moodScore:    a.mood_score,
+          quote:        a.key_quotes?.[0] ?? '',
+          topic:        a.topics?.[0] ?? '',
+        });
+      }
+    }).catch(() => {});
+  }, [isAuthenticated]);
+
+  const handleRecord = useCallback(() => {
+    if (isAuthenticated) {
+      router.push('/record');
+    } else {
+      requestAuth(() => router.push('/record'));
+    }
+  }, [isAuthenticated, requestAuth, router]);
+
+  const greeting = (() => {
+    const h = new Date().getHours();
+    if (h < 12) return 'Good morning';
+    if (h < 17) return 'Good afternoon';
+    if (h < 21) return 'Good evening';
+    return 'Hey there';
+  })();
+
+  const todayLabel = new Date().toLocaleDateString('en-US', {
+    weekday: 'long', day: 'numeric', month: 'long',
+  });
+
+  const topTranslate    = topAnim.interpolate({ inputRange: [0, 1], outputRange: [10, 0] });
+  const lastTranslate   = lastAnim.interpolate({ inputRange: [0, 1], outputRange: [10, 0] });
+  const centerTranslate = centerAnim.interpolate({ inputRange: [0, 1], outputRange: [12, 0] });
+  const linksTranslate  = linksAnim.interpolate({ inputRange: [0, 1], outputRange: [8, 0] });
 
   return (
     <View style={[styles.container, { backgroundColor: colors.bg }]}>
       <StatusBar barStyle="light-content" />
-      <StarField />
 
       <SafeAreaView style={styles.safe}>
-        {/* Streak badge - absolute in top-right, within safe area */}
-        {streak && streak.current_streak > 0 && (
-          <View style={[styles.streakBadge, { borderColor: colors.border, backgroundColor: colors.card }]}>
-            <Text style={styles.streakEmoji}>🔥</Text>
-            <Text style={[styles.streakText, { color: colors.purple300 }]}>{streak.current_streak} days</Text>
+
+        {/* ── Top row: greeting + streak ── */}
+        <Animated.View style={[styles.topRow, { opacity: topAnim, transform: [{ translateY: topTranslate }] }]}>
+          <View>
+            <Text style={[styles.dateSub, { color: colors.textMuted }]}>{todayLabel}</Text>
+            <Text style={[styles.greetingName, { color: colors.textPrimary }]}>
+              {greeting}{userName ? `,\n${userName}.` : '.'}
+            </Text>
           </View>
+          {streak && streak.current_streak > 0 && (
+            <View style={styles.streakBlock}>
+              <Text style={[styles.streakNum, { color: colors.textPrimary }]}>{streak.current_streak}</Text>
+              <Text style={[styles.streakLabel, { color: colors.textMuted }]}>day streak</Text>
+            </View>
+          )}
+        </Animated.View>
+
+        {/* ── Last entry snippet (authenticated users only) ── */}
+        {lastEntry && isAuthenticated && (
+          <Animated.View
+            style={[
+              styles.lastWrap,
+              { borderTopColor: colors.borderFaint, opacity: lastAnim, transform: [{ translateY: lastTranslate }] },
+            ]}
+          >
+            <Text style={[styles.lastMeta, { color: colors.textMuted }]}>
+              {lastEntry.dateLabel}{lastEntry.emotionLabel ? ` · ${lastEntry.emotionLabel}` : ''}
+            </Text>
+            {lastEntry.topic ? (
+              <View style={styles.lastRow}>
+                <View style={[styles.lastDot, { backgroundColor: moodToColor(lastEntry.moodScore) }]} />
+                <Text style={[styles.lastScore, { color: colors.textSecondary }]}>
+                  {lastEntry.moodScore}{lastEntry.topic ? ` · ${lastEntry.topic}` : ''}
+                </Text>
+              </View>
+            ) : null}
+            {lastEntry.quote ? (
+              <Text style={[styles.lastQuote, { color: colors.textSecondary }]} numberOfLines={2}>
+                "{lastEntry.quote}"
+              </Text>
+            ) : null}
+          </Animated.View>
         )}
 
-        {/* Centered content - grows to fill available space */}
-        <Animated.View style={[styles.centerContent, { opacity: fadeAnim }]}>
-          <View style={styles.greetingWrap}>
-            <Text style={[styles.greetingSub, { color: colors.textSecondary }]}>{greeting}</Text>
-            <Text style={[styles.greetingMain, { color: colors.textPrimary }]}>How was your day?</Text>
-          </View>
-          <BreathingOrb onPress={handleOrbPress} />
-          <Text style={[styles.tapHint, { color: colors.textMuted }]}>tap to start talking</Text>
-          <View style={styles.quickLinks}>
-            <TouchableOpacity
-              style={[styles.quickBtn, { borderColor: colors.border, backgroundColor: colors.card }]}
-              onPress={() => router.push('/journeys')}
-              activeOpacity={0.8}
-            >
-              <Text style={[styles.quickBtnText, { color: colors.textSecondary }]}>Guided Journeys →</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.quickBtn, { borderColor: colors.border, backgroundColor: colors.card }]}
-              onPress={() => router.push('/therapy' as any)}
-              activeOpacity={0.8}
-            >
-              <Text style={[styles.quickBtnText, { color: colors.textSecondary }]}>🌿 Reflection Session →</Text>
-            </TouchableOpacity>
-          </View>
+        {/* ── Guest hint (shown only to unauthenticated users) ── */}
+        {!isAuthenticated && (
+          <Animated.View
+            style={[
+              styles.lastWrap,
+              { borderTopColor: colors.borderFaint, opacity: lastAnim, transform: [{ translateY: lastTranslate }] },
+            ]}
+          >
+            <Text style={[styles.guestHint, { color: colors.textMuted }]}>
+              Tap record to start your first entry
+            </Text>
+          </Animated.View>
+        )}
+
+        {/* ── Center: record button ── */}
+        <Animated.View
+          style={[styles.centerWrap, { opacity: centerAnim, transform: [{ translateY: centerTranslate }] }]}
+        >
+          <RecordButton onPress={handleRecord} colors={colors} />
+          <Text style={[styles.recHint, { color: colors.textMuted }]}>record</Text>
         </Animated.View>
 
-        {/* Mini mood bar - always below center content, never overlaps */}
-        <Animated.View style={[styles.moodSection, { opacity: fadeAnim }]}>
-          <MiniMoodBar days={weekMoods} />
+        {/* ── Quick links ── */}
+        <Animated.View
+          style={[styles.quickLinks, { opacity: linksAnim, transform: [{ translateY: linksTranslate }] }]}
+        >
+          <TouchableOpacity onPress={() => router.push('/journeys')} activeOpacity={0.7}>
+            <Text style={[styles.quickLnk, { color: colors.textMuted, borderBottomColor: colors.borderFaint }]}>
+              guided journeys
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => router.push('/reflection' as any)} activeOpacity={0.7}>
+            <Text style={[styles.quickLnk, { color: colors.textMuted, borderBottomColor: colors.borderFaint }]}>
+              last reflection
+            </Text>
+          </TouchableOpacity>
         </Animated.View>
+
+        {/* ── Mood strip ── */}
+        <View style={[styles.stripSection, { borderTopColor: colors.borderFaint }]}>
+          <WeekStrip days={weekMoods} colors={colors} moodToColor={moodToColor} />
+        </View>
+
       </SafeAreaView>
     </View>
   );
 }
 
-const ORB_SIZE = 148;
+const REC_SIZE = 108;
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
+  container: { flex: 1 },
   safe: {
     flex: 1,
-    paddingHorizontal: 24,
-    paddingBottom: 20,
+    paddingHorizontal: 26,
+    paddingBottom: 16,
   },
 
-  // Streak
-  streakBadge: {
-    position: 'absolute',
-    top: 16,
-    right: 0,
+  topRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    paddingTop: 8,
+    marginBottom: 20,
+  },
+  dateSub: {
+    fontSize: 10,
+    fontFamily: 'Nunito_400Regular',
+    fontWeight: '300',
+    marginBottom: 4,
+    letterSpacing: 0.3,
+  },
+  greetingName: {
+    fontSize: 24,
+    fontFamily: 'CormorantGaramond_300Light',
+    fontWeight: '300',
+    lineHeight: 30,
+  },
+  streakBlock: { alignItems: 'flex-end' },
+  streakNum: {
+    fontSize: 26,
+    fontFamily: 'CormorantGaramond_300Light',
+    fontWeight: '300',
+    lineHeight: 28,
+  },
+  streakLabel: {
+    fontSize: 9,
+    fontFamily: 'Nunito_400Regular',
+    fontWeight: '300',
+    marginTop: 2,
+  },
+
+  lastWrap: {
+    paddingTop: 16,
+    marginBottom: 4,
+    borderTopWidth: 1,
+  },
+  lastMeta: {
+    fontSize: 9.5,
+    fontFamily: 'Nunito_400Regular',
+    fontWeight: '300',
+    marginBottom: 5,
+  },
+  lastRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
-    borderRadius: 20,
-    paddingHorizontal: 14,
-    paddingVertical: 6,
-    borderWidth: 1,
-    zIndex: 1,
+    gap: 7,
+    marginBottom: 5,
   },
-  streakEmoji: { fontSize: 14 },
-  streakText: {
+  lastDot: { width: 5, height: 5, borderRadius: 3 },
+  lastScore: {
+    fontSize: 10.5,
+    fontFamily: 'Nunito_400Regular',
+    fontWeight: '300',
+  },
+  lastQuote: {
     fontSize: 13,
-    fontFamily: 'Nunito_600SemiBold',
+    fontFamily: 'CormorantGaramond_300Light',
+    fontStyle: 'italic',
+    fontWeight: '300',
+    lineHeight: 20,
+  },
+  guestHint: {
+    fontSize: 13,
+    fontFamily: 'Nunito_400Regular',
+    fontWeight: '300',
+    fontStyle: 'italic',
   },
 
-  // Center content - fills available vertical space, centres children
-  centerContent: {
+  centerWrap: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
+    gap: 14,
   },
-
-  // Greeting
-  greetingWrap: { alignItems: 'center', marginBottom: 44 },
-  greetingSub: {
-    fontSize: 13,
-    fontFamily: 'Nunito_400Regular',
-    letterSpacing: 1,
-    marginBottom: 8,
-  },
-  greetingMain: {
-    fontSize: 28,
-    fontFamily: 'CormorantGaramond_300Light',
-    fontWeight: '300',
-    letterSpacing: 0.5,
-  },
-
-  // Orb
-  orbContainer: {
-    width: ORB_SIZE + 40,
-    height: ORB_SIZE + 40,
+  recBtn: {
+    width: REC_SIZE,
+    height: REC_SIZE,
+    borderRadius: REC_SIZE / 2,
     alignItems: 'center',
     justifyContent: 'center',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.18,
+    shadowRadius: 16,
+    elevation: 8,
   },
-  orbGlow: {
-    position: 'absolute',
-    width: ORB_SIZE + 40,
-    height: ORB_SIZE + 40,
-    borderRadius: (ORB_SIZE + 40) / 2,
-  },
-  orb: {
-    width: ORB_SIZE,
-    height: ORB_SIZE,
-    borderRadius: ORB_SIZE / 2,
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.5,
-    shadowRadius: 24,
-    elevation: 12,
-  },
-  // Simple mic shape
-  micWrap: { alignItems: 'center', gap: 4 },
-  micBody: {
-    width: 20,
-    height: 28,
-    borderRadius: 10,
-    borderWidth: 2.5,
-    borderColor: 'rgba(255,255,255,0.85)',
-  },
-  micBase: {
-    width: 28,
-    height: 10,
-    borderTopLeftRadius: 14,
-    borderTopRightRadius: 14,
+  micWrap: { alignItems: 'center', gap: 3 },
+  micHead: { width: 16, height: 22, borderRadius: 8, borderWidth: 2 },
+  micArcWrap: { overflow: 'hidden', width: 26, height: 13 },
+  micArc: {
+    width: 26,
+    height: 26,
+    borderRadius: 13,
     borderWidth: 2,
-    borderBottomWidth: 0,
-    borderColor: 'rgba(255,255,255,0.85)',
+    borderBottomColor: 'transparent',
+    borderLeftColor: 'transparent',
+    borderRightColor: 'transparent',
+    transform: [{ rotate: '180deg' }],
   },
-  micLine: {
-    width: 2,
-    height: 6,
-    backgroundColor: 'rgba(255,255,255,0.85)',
-    borderRadius: 1,
+  micStand: { width: 2, height: 5, borderRadius: 1 },
+  micFoot: { width: 14, height: 0, borderTopWidth: 2, borderRadius: 1 },
+  recHint: {
+    fontSize: 11,
+    fontFamily: 'Nunito_400Regular',
+    fontWeight: '300',
   },
 
-  tapHint: {
-    marginTop: 20,
-    fontSize: 12,
-    fontFamily: 'Nunito_400Regular',
-    letterSpacing: 0.5,
-  },
   quickLinks: {
-    marginTop: 16,
-    gap: 8,
-    alignItems: 'center',
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: 24,
+    marginBottom: 20,
   },
-  quickBtn: {
-    borderWidth: 1,
-    borderRadius: 20,
-    paddingHorizontal: 18,
-    paddingVertical: 8,
-  },
-  quickBtnText: {
-    fontSize: 12,
+  quickLnk: {
+    fontSize: 11,
     fontFamily: 'Nunito_400Regular',
+    fontWeight: '300',
+    borderBottomWidth: 1,
+    paddingBottom: 1,
+  },
+
+  stripSection: {
+    borderTopWidth: 1,
+    paddingTop: 12,
+  },
+  stripWrap: {},
+  stripLabel: {
+    fontSize: 9,
+    fontFamily: 'Nunito_400Regular',
+    fontWeight: '300',
+    marginBottom: 8,
     letterSpacing: 0.3,
   },
-
-  // Mini mood bar - always below the orb section, no absolute positioning
-  moodSection: {
-    width: '100%',
-    paddingTop: 16,
-  },
-  moodBarWrap: {},
-  moodBarLabel: {
-    fontSize: 10,
-    fontFamily: 'Nunito_600SemiBold',
-    letterSpacing: 1.5,
-    marginBottom: 10,
-  },
-  moodBars: {
+  stripBars: {
     flexDirection: 'row',
-    gap: 6,
+    gap: 5,
     alignItems: 'flex-end',
-    height: 52,
+    height: 44,
   },
-  moodBarCol: {
+  stripCol: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'flex-end',
     gap: 4,
   },
-  moodBarFill: {
-    width: '100%',
-    borderRadius: 4,
-    borderTopWidth: 2,
-  },
-  moodBarEmpty: {
-    width: '100%',
-    height: 8,
-    borderRadius: 4,
-    borderWidth: 1,
-    borderStyle: 'dashed',
-  },
-  moodBarDay: {
-    fontSize: 9,
+  stripDay: {
+    fontSize: 8,
     fontFamily: 'Nunito_400Regular',
   },
 });

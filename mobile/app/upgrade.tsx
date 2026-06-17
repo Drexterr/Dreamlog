@@ -206,7 +206,7 @@ export default function UpgradeScreen() {
                   <View>
                     <View style={styles.titleRow}>
                       <Text style={[styles.cardTitle, { color: colors.textPrimary }]}>
-                        {card.emoji}  {card.title}
+                        {card.title}
                       </Text>
                       {card.subtitle && (
                         <View style={[styles.badge, { backgroundColor: colors.purple600 }]}>

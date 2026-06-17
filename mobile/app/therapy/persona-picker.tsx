@@ -77,7 +77,6 @@ export default function PersonaPickerScreen() {
                 activeOpacity={0.7}
               >
                 <View style={styles.cardRow}>
-                  <Text style={styles.cardEmoji}>{meta.emoji}</Text>
                   <View style={styles.cardText}>
                     <Text style={[styles.cardLabel, { color: colors.textPrimary }]}>
                       {meta.label}

@@ -1,4 +1,4 @@
-// DreamLog design tokens - dark purple night aesthetic
+// DreamLog design tokens — warm espresso
 
 export type ThemeKey = 'stress' | 'anxiety' | 'grief' | 'depression' | 'relationships' | 'career' | 'trauma' | 'curious';
 
@@ -229,36 +229,36 @@ export const THEMES: Record<ThemeKey, ThemeColors> = {
     purple200: '#F0E8D8',
   },
   curious: {
-    bg:       '#0f0c1e',
-    bgDeep:   '#130f28',
-    card:     'rgba(139,92,246,0.06)',
-    cardSolid:'#161625',
-    textPrimary:   '#e8e0f0',
-    textSecondary: 'rgba(196,181,253,0.6)',
-    textMuted:     'rgba(196,181,253,0.35)',
-    textFaint:     'rgba(196,181,253,0.2)',
-    border:     'rgba(139,92,246,0.15)',
-    borderFaint:'rgba(139,92,246,0.08)',
-    brand: '#7B6FA0',
-    brandGlow: 'rgba(123, 111, 160, 0.3)',
-    brandCore: '#221530',
-    moodGreen:  '#86efac',
-    moodYellow: '#fde68a',
-    moodOrange: '#fdba74',
-    moodRed:    '#fca5a5',
-    danger: '#f87171',
-    info:   '#93c5fd',
-    purple900: '#4c1d95',
-    purple700: '#6d28d9',
-    purple600: '#7c3aed',
-    purple500: '#8b5cf6',
-    purple400: '#a78bfa',
-    purple300: '#c4b5fd',
-    purple200: '#ddd6fe',
+    bg:       '#18150f',
+    bgDeep:   '#1f1c14',
+    card:     'rgba(200,149,90,0.06)',
+    cardSolid:'#26221a',
+    textPrimary:   '#e8ddd0',
+    textSecondary: 'rgba(232,221,208,0.5)',
+    textMuted:     'rgba(232,221,208,0.28)',
+    textFaint:     'rgba(232,221,208,0.14)',
+    border:     'rgba(200,149,90,0.12)',
+    borderFaint:'rgba(200,149,90,0.06)',
+    brand: '#c8955a',
+    brandGlow: 'rgba(200,149,90,0.22)',
+    brandCore: '#16120a',
+    moodGreen:  '#88b490',
+    moodYellow: '#b8a060',
+    moodOrange: '#b07868',
+    moodRed:    '#c47878',
+    danger: '#db8b8b',
+    info:   '#88b490',
+    purple900: '#18150f',
+    purple700: '#26221a',
+    purple600: '#c8955a',
+    purple500: '#c8955a',
+    purple400: '#d4a870',
+    purple300: 'rgba(232,221,208,0.5)',
+    purple200: '#e8ddd0',
   }
 };
 
-// Default fallbacks to purple (curious) theme
+// Default palette — warm espresso (curious theme)
 export const Colors: ThemeColors = THEMES.curious;
 
 export function moodToColor(score: number, currentColors: ThemeColors = Colors): string {

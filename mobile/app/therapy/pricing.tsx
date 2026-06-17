@@ -80,10 +80,10 @@ function buildSessionOptions(currency: RegionCurrency): SessionOption[] {
 // ── Persona showcase ──────────────────────────────────────────────────────────
 
 const PERSONAS = [
-  { emoji: '🌿', name: 'Comforting', desc: 'Warm and validating' },
-  { emoji: '🧠', name: 'Rational', desc: 'Structured & Socratic' },
-  { emoji: '🔄', name: 'CBT', desc: 'Pattern-aware' },
-  { emoji: '🧘', name: 'Mindful', desc: 'Grounding & present' },
+  { name: 'Comforting', desc: 'Warm and validating' },
+  { name: 'Rational', desc: 'Structured & Socratic' },
+  { name: 'CBT', desc: 'Pattern-aware' },
+  { name: 'Mindful', desc: 'Grounding & present' },
 ];
 
 // ── Option card ───────────────────────────────────────────────────────────────
@@ -313,7 +313,6 @@ export default function TherapyPricingScreen() {
             <View style={styles.personaRow}>
               {PERSONAS.map((p) => (
                 <View key={p.name} style={[styles.personaChip, { backgroundColor: colors.card, borderColor: colors.border }]}>
-                  <Text style={styles.personaEmoji}>{p.emoji}</Text>
                   <Text style={[styles.personaName, { color: colors.textPrimary }]}>{p.name}</Text>
                   <Text style={[styles.personaDesc, { color: colors.textMuted }]}>{p.desc}</Text>
                 </View>

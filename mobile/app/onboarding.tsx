@@ -6,7 +6,6 @@ import {
   TouchableOpacity,
   StyleSheet,
   ScrollView,
-  ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
   Dimensions,
@@ -14,15 +13,16 @@ import {
   Easing,
 } from 'react-native';
 import { useRouter } from 'expo-router';
-import { api } from '../src/api/client';
-import { setRegionFromCountry } from '../src/services/region';
 import { Fonts, THEMES } from '../src/theme';
 import { useTheme } from '../src/context/ThemeContext';
+import {
+  saveGuestPreferences,
+  markOnboardingDone,
+} from '../src/services/guestStorage';
+import { setRegionFromCountry } from '../src/services/region';
 import type { AgeRange, UserGoal } from '../src/types';
 
 const { width: SW, height: SH } = Dimensions.get('window');
-
-// Flood fill circle - starts at this diameter and scales up.
 const FLOOD_D = 100;
 const FLOOD_R = FLOOD_D / 2;
 
@@ -34,15 +34,69 @@ const AGE_RANGES: { key: AgeRange; label: string }[] = [
   { key: '45_plus',  label: '45 or older' },
 ];
 
-const GOALS: { key: UserGoal; label: string; description: string; emoji: string }[] = [
-  { key: 'anxiety',       label: 'Working through anxiety', description: 'Worry, uncertainty, restless thoughts', emoji: '🌱' },
-  { key: 'stress',        label: 'Managing stress',       description: 'Overwhelm, pressure, too much on my plate', emoji: '🌊' },
-  { key: 'grief',         label: 'Processing grief',       description: "Loss, endings, things that can't be undone", emoji: '🕊️' },
-  { key: 'depression',    label: 'Lifting low mood',      description: 'Sadness, low motivation, feeling flat', emoji: '☀️' },
-  { key: 'relationships', label: 'Understanding relationships', description: 'Connection, conflict, how I show up for others', emoji: '❤️' },
-  { key: 'career',        label: 'Career & purpose',      description: "Work, direction, what I'm building toward", emoji: '🌲' },
-  { key: 'trauma',        label: 'Processing past / trauma', description: 'Difficult memories, healing, working through trauma', emoji: '🩹' },
-  { key: 'curious',       label: 'Just exploring',         description: "No agenda - I'm curious about my inner life", emoji: '🌌' },
+const GOALS: {
+  key: UserGoal;
+  label: string;
+  description: string;
+  revealMessage: string;
+  revealSub: string;
+}[] = [
+  {
+    key: 'anxiety',
+    label: 'Working through anxiety',
+    description: 'Worry, uncertainty, restless thoughts',
+    revealMessage: 'A place to exhale.',
+    revealSub: "You don't have to solve everything tonight. We'll listen.",
+  },
+  {
+    key: 'stress',
+    label: 'Managing stress',
+    description: 'Overwhelm, pressure, too much on my plate',
+    revealMessage: 'A place to slow down.',
+    revealSub: 'When everything is loud, your voice still matters.',
+  },
+  {
+    key: 'grief',
+    label: 'Processing grief',
+    description: "Loss, endings, things that can't be undone",
+    revealMessage: 'A place to sit with it.',
+    revealSub: 'There is no timeline for this. We hold space, not clocks.',
+  },
+  {
+    key: 'depression',
+    label: 'Lifting low mood',
+    description: 'Sadness, low motivation, feeling flat',
+    revealMessage: 'A place to find light.',
+    revealSub: "Even small words matter. We'll help you find yours.",
+  },
+  {
+    key: 'relationships',
+    label: 'Understanding relationships',
+    description: 'Connection, conflict, how I show up for others',
+    revealMessage: 'A place to understand.',
+    revealSub: "The patterns are there. We'll help you see them.",
+  },
+  {
+    key: 'career',
+    label: 'Career & purpose',
+    description: "Work, direction, what I'm building toward",
+    revealMessage: 'A place to think out loud.',
+    revealSub: 'Your thoughts have more clarity than you think.',
+  },
+  {
+    key: 'trauma',
+    label: 'Processing past / trauma',
+    description: 'Difficult memories, healing, working through it',
+    revealMessage: 'A place to be honest.',
+    revealSub: 'At your pace, in your words. Always.',
+  },
+  {
+    key: 'curious',
+    label: 'Just exploring',
+    description: "No agenda - I'm curious about my inner life",
+    revealMessage: 'A place to explore.',
+    revealSub: "Curiosity is its own kind of wisdom. We're here for it.",
+  },
 ];
 
 const COUNTRIES: { code: string; name: string; flag: string }[] = [
@@ -78,64 +132,81 @@ const COUNTRIES: { code: string; name: string; flag: string }[] = [
   { code: 'OTHER', name: 'Other', flag: '🌍' },
 ];
 
+// Step map:
+//   0 = welcome
+//   1 = goal (flood fill)
+//   2 = reveal
+//   3 = name
+//   4 = age range
+//   5 = country
+//   6 = journal / therapy gate
+type Step = 0 | 1 | 2 | 3 | 4 | 5 | 6;
+
 export default function OnboardingScreen() {
   const router = useRouter();
   const { colors, setTheme } = useTheme();
 
-  const [step, setStep] = useState<1 | 2 | 3 | 4 | 5>(1);
+  const [step, setStep] = useState<Step>(0);
   const [selectedGoal, setSelectedGoal] = useState<UserGoal | null>(null);
   const [preferredName, setPreferredName] = useState('');
   const [selectedAgeRange, setSelectedAgeRange] = useState<AgeRange | null>(null);
   const [selectedCountry, setSelectedCountry] = useState<string | null>(null);
   const [countrySearch, setCountrySearch] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
 
-  // ── Flood fill animation state ──────────────────────────────────────────────
-  const floodAnim    = useRef(new Animated.Value(0)).current;
+  // Flood fill state (step 1 → 2)
+  const floodAnim      = useRef(new Animated.Value(0)).current;
   const contentOpacity = useRef(new Animated.Value(1)).current;
-  const floodActive  = useRef(false);
-  const floodColor   = useRef(colors.bg);
-  const floodOriginX = useRef(SW / 2);
-  const floodOriginY = useRef(SH / 2);
+  const floodActive    = useRef(false);
+  const floodColor     = useRef(colors.bg);
+  const floodOriginX   = useRef(SW / 2);
+  const floodOriginY   = useRef(SH / 2);
+
+  // Welcome screen entrance
+  const welcomeAnim    = useRef(new Animated.Value(0)).current;
+  const welcomeStarted = useRef(false);
+  if (step === 0 && !welcomeStarted.current) {
+    welcomeStarted.current = true;
+    Animated.timing(welcomeAnim, {
+      toValue: 1,
+      duration: 900,
+      easing: Easing.out(Easing.cubic),
+      useNativeDriver: true,
+    }).start();
+  }
+
+  const goalMeta = selectedGoal ? GOALS.find((g) => g.key === selectedGoal) : null;
 
   const filteredCountries = countrySearch.trim()
-    ? COUNTRIES.filter(c =>
+    ? COUNTRIES.filter((c) =>
         c.name.toLowerCase().includes(countrySearch.toLowerCase()) ||
-        c.code.toLowerCase().includes(countrySearch.toLowerCase())
+        c.code.toLowerCase().includes(countrySearch.toLowerCase()),
       )
     : COUNTRIES;
 
-  // ── Goal tap: start flood fill, advance step after animation ────────────────
+  // ── Goal tap: flood fill then advance ──────────────────────────────────────
   function handleGoalSelect(goal: UserGoal, pageX: number, pageY: number) {
     if (floodActive.current) return;
     floodActive.current = true;
-
     setSelectedGoal(goal);
 
-    const targetBg = THEMES[goal].bg;
-    floodColor.current  = targetBg;
+    const targetBg       = THEMES[goal].bg;
+    floodColor.current   = targetBg;
     floodOriginX.current = pageX > 0 ? pageX : SW / 2;
     floodOriginY.current = pageY > 0 ? pageY : SH / 2;
-
     floodAnim.setValue(0);
     contentOpacity.setValue(1);
 
-    // Scale needed so the circle fully covers the screen from the tap origin.
     const dx = Math.max(floodOriginX.current, SW - floodOriginX.current);
     const dy = Math.max(floodOriginY.current, SH - floodOriginY.current);
-    const maxDist = Math.sqrt(dx * dx + dy * dy);
-    const targetScale = (maxDist / FLOOD_R) * 1.15;
+    const targetScale = (Math.sqrt(dx * dx + dy * dy) / FLOOD_R) * 1.15;
 
     Animated.parallel([
-      // Flood circle expands - starts gently, builds momentum, settles softly.
       Animated.timing(floodAnim, {
         toValue: targetScale,
         duration: 1250,
         easing: Easing.bezier(0.35, 0.01, 0.08, 1),
         useNativeDriver: true,
       }),
-      // Cards hold full opacity for 800 ms, then fade out over 450 ms.
       Animated.sequence([
         Animated.delay(800),
         Animated.timing(contentOpacity, {
@@ -146,58 +217,68 @@ export default function OnboardingScreen() {
         }),
       ]),
     ]).start(() => {
-      // Apply theme now - bg already matches floodColor, seamless swap.
       setTheme(goal);
-      api.updateMe({ goal }).catch(() => {});
       contentOpacity.setValue(1);
       floodActive.current = false;
-      setStep(2);
+      setStep(2); // reveal screen
     });
   }
 
-  // ── Save profile (step 4 → 5) ───────────────────────────────────────────────
-  async function handleSaveAndContinue() {
-    if (!selectedGoal) return;
-    setLoading(true);
-    setError('');
-    try {
-      await api.updateMe({
-        goal: selectedGoal,
-        ...(preferredName.trim() ? { preferred_name: preferredName.trim() } : {}),
-        ...(selectedAgeRange ? { age_range: selectedAgeRange } : {}),
-        ...(selectedCountry && selectedCountry !== 'OTHER' ? { country: selectedCountry } : {}),
-      });
-      // Pricing currency follows the chosen country (India → INR, Europe → EUR, else USD).
-      await setRegionFromCountry(selectedCountry === 'OTHER' ? null : selectedCountry);
-      setStep(5);
-    } catch {
-      setError('Something went wrong. Please try again.');
-    } finally {
-      setLoading(false);
+  // ── Finish: save locally, navigate to tabs as guest ────────────────────────
+  async function handleFinish() {
+    await saveGuestPreferences({
+      ...(selectedGoal                                   ? { goal: selectedGoal }           : {}),
+      ...(preferredName.trim()                           ? { name: preferredName.trim() }    : {}),
+      ...(selectedAgeRange                               ? { ageRange: selectedAgeRange }    : {}),
+      ...(selectedCountry && selectedCountry !== 'OTHER' ? { country: selectedCountry }      : {}),
+    });
+    if (selectedCountry) {
+      setRegionFromCountry(selectedCountry === 'OTHER' ? null : selectedCountry).catch(() => {});
     }
+    await markOnboardingDone();
+    setStep(6);
   }
 
-  function handleChooseJournal() {
-    router.replace('/(tabs)');
-  }
-
-  function handleChooseTherapy() {
-    router.replace('/therapy/persona-picker' as any);
-  }
-
+  // ── Render ─────────────────────────────────────────────────────────────────
   return (
     <KeyboardAvoidingView
       style={[styles.root, { backgroundColor: colors.bg }]}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
-      {/* ── Step 1: Goal (with flood fill animation) ── */}
+
+      {/* ── Step 0: Welcome ── */}
+      {step === 0 && (
+        <View style={styles.welcomeWrap}>
+          <Animated.View
+            style={[
+              styles.welcomeInner,
+              {
+                opacity: welcomeAnim,
+                transform: [{ translateY: welcomeAnim.interpolate({ inputRange: [0, 1], outputRange: [24, 0] }) }],
+              },
+            ]}
+          >
+            <Text style={[styles.wordmark, { color: colors.purple300 }]}>DreamLog</Text>
+            <Text style={[styles.welcomeHeading, { color: colors.textPrimary }]}>
+              A private space{'\n'}for honest thought.
+            </Text>
+            <Text style={[styles.welcomeSub, { color: colors.textSecondary }]}>
+              No tracking. No judgment.{'\n'}Just you and the page.
+            </Text>
+            <TouchableOpacity
+              style={[styles.beginBtn, { borderColor: colors.brand }]}
+              onPress={() => setStep(1)}
+              activeOpacity={0.8}
+            >
+              <Text style={[styles.beginBtnText, { color: colors.brand }]}>Begin</Text>
+            </TouchableOpacity>
+          </Animated.View>
+        </View>
+      )}
+
+      {/* ── Step 1: Goal selection (flood fill) ── */}
       {step === 1 && (
         <View style={styles.floodContainer}>
-          {/*
-            Flood fill circle - rendered BEFORE the ScrollView so it sits
-            behind the card content (later siblings paint on top in RN).
-            pointerEvents="none" so taps pass through to the cards.
-          */}
           <Animated.View
             pointerEvents="none"
             style={[
@@ -205,24 +286,24 @@ export default function OnboardingScreen() {
               {
                 backgroundColor: floodColor.current,
                 left: floodOriginX.current - FLOOD_R,
-                top:  floodOriginY.current - FLOOD_R,
+                top: floodOriginY.current - FLOOD_R,
                 transform: [{ scale: floodAnim }],
               },
             ]}
           />
-
-          {/* Cards layer - higher zIndex so they always render above the flood */}
           <Animated.ScrollView
             contentContainerStyle={styles.scroll}
             keyboardShouldPersistTaps="handled"
             style={[styles.scrollLayer, { opacity: contentOpacity }]}
           >
             <Text style={[styles.wordmark, { color: colors.purple300 }]}>DreamLog</Text>
+            <TouchableOpacity style={styles.backTop} onPress={() => setStep(0)}>
+              <Text style={[styles.backTopText, { color: colors.textMuted }]}>← Back</Text>
+            </TouchableOpacity>
             <Text style={[styles.heading, { color: colors.textPrimary }]}>What brings you here?</Text>
             <Text style={[styles.sub, { color: colors.textSecondary }]}>
-              Tap any goal - it shapes how we reflect your words back to you.
+              Tap any goal — it shapes how we reflect your words back to you.
             </Text>
-
             <View style={styles.goalList}>
               {GOALS.map((g) => {
                 const isSelected = selectedGoal === g.key;
@@ -231,24 +312,15 @@ export default function OnboardingScreen() {
                     key={g.key}
                     style={[
                       styles.goalCard,
-                      {
-                        backgroundColor: colors.card,
-                        borderColor: isSelected ? colors.brand : colors.border,
-                      },
+                      { backgroundColor: colors.card, borderColor: isSelected ? colors.brand : colors.border },
                       isSelected && { backgroundColor: colors.brandGlow },
                     ]}
-                    onPress={(event) => {
-                      const { pageX, pageY } = event.nativeEvent;
-                      handleGoalSelect(g.key, pageX, pageY);
-                    }}
+                    onPress={(e) => handleGoalSelect(g.key, e.nativeEvent.pageX, e.nativeEvent.pageY)}
                     activeOpacity={0.7}
                   >
-                    <View style={styles.goalHeaderRow}>
-                      <Text style={[styles.goalLabel, { color: isSelected ? colors.purple300 : colors.textPrimary }]}>
-                        {g.label}
-                      </Text>
-                      <Text style={{ fontSize: 16 }}>{g.emoji}</Text>
-                    </View>
+                    <Text style={[styles.goalLabel, { color: isSelected ? colors.purple300 : colors.textPrimary }]}>
+                      {g.label}
+                    </Text>
                     <Text style={[styles.goalDesc, { color: colors.textMuted }]}>{g.description}</Text>
                   </TouchableOpacity>
                 );
@@ -258,160 +330,55 @@ export default function OnboardingScreen() {
         </View>
       )}
 
-      {/* ── Step 4: Country - custom layout so dropdown can overlay freely ── */}
-      {step === 4 && (
-        <View style={styles.countryStep}>
-          {/* Top: wordmark + back + heading + subtitle + search + dropdown */}
-          <View style={styles.countryTop}>
-            <Text style={[styles.wordmark, { color: colors.purple300 }]}>DreamLog</Text>
-            <TouchableOpacity style={styles.backTop} onPress={() => setStep(3)}>
-              <Text style={[styles.backTopText, { color: colors.textMuted }]}>← Back</Text>
-            </TouchableOpacity>
-
-            <Text style={[styles.heading, { color: colors.textPrimary }]}>Where are you based?</Text>
-            <Text style={[styles.sub, { color: colors.textSecondary }]}>
-              Used to show local support resources and pricing in your currency.
-            </Text>
-
-            {/* Search input + dropdown container */}
-            <View style={styles.countrySearchWrap}>
-              <View style={styles.countryInputRow}>
-                <TextInput
-                  style={[
-                    styles.countryInput,
-                    {
-                      backgroundColor: colors.card,
-                      borderColor: selectedCountry ? colors.brand : colors.border,
-                      color: colors.textPrimary,
-                    },
-                  ]}
-                  placeholder="Search country…"
-                  placeholderTextColor={colors.textMuted}
-                  value={countrySearch}
-                  onChangeText={(t) => {
-                    setCountrySearch(t);
-                    if (selectedCountry) setSelectedCountry(null);
-                  }}
-                  autoFocus
-                  returnKeyType="search"
-                />
-                {/* Checkmark when selected, clear × when typing */}
-                {selectedCountry ? (
-                  <TouchableOpacity
-                    style={styles.inputAccessory}
-                    onPress={() => { setSelectedCountry(null); setCountrySearch(''); }}
-                  >
-                    <Text style={[styles.inputAccessoryText, { color: colors.brand }]}>✓</Text>
-                  </TouchableOpacity>
-                ) : countrySearch.length > 0 ? (
-                  <TouchableOpacity
-                    style={styles.inputAccessory}
-                    onPress={() => setCountrySearch('')}
-                  >
-                    <Text style={[styles.inputAccessoryText, { color: colors.textMuted }]}>×</Text>
-                  </TouchableOpacity>
-                ) : null}
-              </View>
-
-              {/* Dropdown - absolutely positioned below input */}
-              {!selectedCountry && countrySearch.trim().length > 0 && filteredCountries.length > 0 && (
-                <View style={[
-                  styles.dropdown,
-                  { backgroundColor: colors.cardSolid, borderColor: colors.border },
-                ]}>
-                  <ScrollView
-                    keyboardShouldPersistTaps="handled"
-                    showsVerticalScrollIndicator={false}
-                    style={{ maxHeight: 260 }}
-                  >
-                    {filteredCountries.map((c, i) => (
-                      <TouchableOpacity
-                        key={c.code}
-                        style={[
-                          styles.dropdownItem,
-                          { borderBottomColor: colors.borderFaint },
-                          i === filteredCountries.length - 1 && { borderBottomWidth: 0 },
-                        ]}
-                        onPress={() => { setSelectedCountry(c.code); setCountrySearch(c.name); }}
-                        activeOpacity={0.7}
-                      >
-                        <Text style={styles.dropdownFlag}>{c.flag}</Text>
-                        <Text style={[styles.dropdownName, { color: colors.textPrimary }]}>{c.name}</Text>
-                      </TouchableOpacity>
-                    ))}
-                  </ScrollView>
-                </View>
-              )}
-
-              {/* No results */}
-              {!selectedCountry && countrySearch.trim().length > 0 && filteredCountries.length === 0 && (
-                <View style={[styles.dropdown, styles.dropdownEmpty, { backgroundColor: colors.cardSolid, borderColor: colors.border }]}>
-                  <Text style={[styles.dropdownEmptyText, { color: colors.textMuted }]}>No match - you can skip this step</Text>
-                </View>
-              )}
-            </View>
-          </View>
-
-          {/* Bottom: error + Continue/Skip button */}
-          <View style={styles.countryFooter}>
-            {error ? <Text style={[styles.error, { color: colors.danger }]}>{error}</Text> : null}
+      {/* ── Step 2: Reveal ── */}
+      {step === 2 && goalMeta && (
+        <View style={[styles.revealWrap, { backgroundColor: colors.bg }]}>
+          {/* Radial glow */}
+          <View style={[styles.revealGlow, { backgroundColor: colors.brandGlow }]} />
+          <View style={styles.revealContent}>
+            <Text style={[styles.revealEyebrow, { color: colors.brand }]}>for {goalMeta.label.toLowerCase()}</Text>
+            <Text style={[styles.revealMessage, { color: colors.textPrimary }]}>{goalMeta.revealMessage}</Text>
+            <Text style={[styles.revealSub, { color: colors.textSecondary }]}>{goalMeta.revealSub}</Text>
             <TouchableOpacity
-              style={[styles.btn, { backgroundColor: colors.brand }, loading && styles.btnDisabled]}
-              onPress={handleSaveAndContinue}
-              disabled={loading}
+              style={[styles.revealBtn, { backgroundColor: colors.brand }]}
+              onPress={() => setStep(3)}
               activeOpacity={0.8}
             >
-              {loading ? (
-                <ActivityIndicator color={colors.textPrimary} />
-              ) : (
-                <Text style={[styles.btnText, { color: colors.textPrimary }]}>
-                  {selectedCountry ? 'Continue' : 'Skip'}
-                </Text>
-              )}
+              <Text style={[styles.revealBtnText, { color: colors.textPrimary }]}>Continue</Text>
             </TouchableOpacity>
           </View>
         </View>
       )}
 
-      {/* ── Steps 2, 3, 5: plain scroll ── */}
-      {(step === 2 || step === 3 || step === 5) && (
+      {/* ── Steps 3 + 4 + 5 via ScrollView ── */}
+      {(step === 3 || step === 4 || step === 5) && (
         <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
           <Text style={[styles.wordmark, { color: colors.purple300 }]}>DreamLog</Text>
 
-          {/* ── Step 2: Preferred Name ── */}
-          {step === 2 && (
+          {/* ── Step 3: Name ── */}
+          {step === 3 && (
             <>
-              <TouchableOpacity style={styles.backTop} onPress={() => setStep(1)}>
+              <TouchableOpacity style={styles.backTop} onPress={() => setStep(2)}>
                 <Text style={[styles.backTopText, { color: colors.textMuted }]}>← Back</Text>
               </TouchableOpacity>
-
-              <Text style={[styles.heading, { color: colors.textPrimary }]}>What name should I call you?</Text>
+              <Text style={[styles.heading, { color: colors.textPrimary }]}>What should I call you?</Text>
               <Text style={[styles.sub, { color: colors.textSecondary }]}>
-                Optional - leave it blank and I'll use whatever's on your account.
+                Optional — leave blank to use your account name.
               </Text>
-
               <TextInput
-                style={[
-                  styles.input,
-                  {
-                    backgroundColor: colors.card,
-                    borderColor: colors.border,
-                    color: colors.textPrimary,
-                  },
-                ]}
-                placeholder="e.g. Alex, or just skip this"
+                style={[styles.input, { backgroundColor: colors.card, borderColor: colors.border, color: colors.textPrimary }]}
+                placeholder="e.g. Alex, or skip this"
                 placeholderTextColor={colors.textMuted}
                 value={preferredName}
                 onChangeText={setPreferredName}
                 maxLength={100}
                 autoFocus
                 returnKeyType="done"
-                onSubmitEditing={() => setStep(3)}
+                onSubmitEditing={() => setStep(4)}
               />
-
               <TouchableOpacity
                 style={[styles.btn, { backgroundColor: colors.brand }]}
-                onPress={() => setStep(3)}
+                onPress={() => setStep(4)}
                 activeOpacity={0.8}
               >
                 <Text style={[styles.btnText, { color: colors.textPrimary }]}>Continue</Text>
@@ -419,18 +386,16 @@ export default function OnboardingScreen() {
             </>
           )}
 
-          {/* ── Step 3: Age Range ── */}
-          {step === 3 && (
+          {/* ── Step 4: Age Range ── */}
+          {step === 4 && (
             <>
-              <TouchableOpacity style={styles.backTop} onPress={() => setStep(2)}>
+              <TouchableOpacity style={styles.backTop} onPress={() => setStep(3)}>
                 <Text style={[styles.backTopText, { color: colors.textMuted }]}>← Back</Text>
               </TouchableOpacity>
-
               <Text style={[styles.heading, { color: colors.textPrimary }]}>How old are you?</Text>
               <Text style={[styles.sub, { color: colors.textSecondary }]}>
-                Optional - helps us understand who uses DreamLog. We never share individual data.
+                Optional — helps us understand who uses DreamLog. Never shared.
               </Text>
-
               <View style={styles.ageList}>
                 {AGE_RANGES.map((a) => {
                   const isSelected = selectedAgeRange === a.key;
@@ -439,10 +404,7 @@ export default function OnboardingScreen() {
                       key={a.key}
                       style={[
                         styles.ageCard,
-                        {
-                          backgroundColor: colors.card,
-                          borderColor: isSelected ? colors.brand : colors.border,
-                        },
+                        { backgroundColor: colors.card, borderColor: isSelected ? colors.brand : colors.border },
                         isSelected && { backgroundColor: colors.brandGlow },
                       ]}
                       onPress={() => setSelectedAgeRange(isSelected ? null : a.key)}
@@ -455,10 +417,9 @@ export default function OnboardingScreen() {
                   );
                 })}
               </View>
-
               <TouchableOpacity
                 style={[styles.btn, { backgroundColor: colors.brand }]}
-                onPress={() => setStep(4)}
+                onPress={() => setStep(5)}
                 activeOpacity={0.8}
               >
                 <Text style={[styles.btnText, { color: colors.textPrimary }]}>
@@ -468,59 +429,157 @@ export default function OnboardingScreen() {
             </>
           )}
 
-          {/* ── Step 5: Journal vs Therapy gate ── */}
+          {/* ── Step 5: Country (inline, no separate layout) ── */}
           {step === 5 && (
             <>
-              <Text style={[styles.heading, { color: colors.textPrimary }]}>How would you like to begin?</Text>
+              <TouchableOpacity style={styles.backTop} onPress={() => setStep(4)}>
+                <Text style={[styles.backTopText, { color: colors.textMuted }]}>← Back</Text>
+              </TouchableOpacity>
+              <Text style={[styles.heading, { color: colors.textPrimary }]}>Where are you based?</Text>
               <Text style={[styles.sub, { color: colors.textSecondary }]}>
-                You can always switch later - both live in the app.
+                Used to show local support resources and pricing in your currency.
               </Text>
-
-              <View style={styles.modeCards}>
-                <TouchableOpacity
-                  style={[styles.modeCard, { backgroundColor: colors.card, borderColor: colors.border }]}
-                  onPress={handleChooseJournal}
-                  activeOpacity={0.75}
-                >
-                  <Text style={styles.modeEmoji}>📓</Text>
-                  <Text style={[styles.modeLabel, { color: colors.textPrimary }]}>Journal</Text>
-                  <Text style={[styles.modeDesc, { color: colors.textSecondary }]}>
-                    Record a voice entry and get a personalised AI reflection. Async - do it at your own pace.
-                  </Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  style={[styles.modeCard, { backgroundColor: colors.card, borderColor: colors.border }]}
-                  onPress={handleChooseTherapy}
-                  activeOpacity={0.75}
-                >
-                  <Text style={styles.modeEmoji}>🌿</Text>
-                  <Text style={[styles.modeLabel, { color: colors.textPrimary }]}>Reflection Session</Text>
-                  <Text style={[styles.modeDesc, { color: colors.textSecondary }]}>
-                    A live back-and-forth conversation with an AI companion grounded in your journal history.
-                  </Text>
-                  <View style={[styles.modeBadge, { backgroundColor: colors.brandGlow }]}>
-                    <Text style={[styles.modeBadgeText, { color: colors.brand }]}>First session free</Text>
+              <View style={styles.countrySearchWrap}>
+                <View style={styles.countryInputRow}>
+                  <TextInput
+                    style={[
+                      styles.countryInput,
+                      { backgroundColor: colors.card, borderColor: selectedCountry ? colors.brand : colors.border, color: colors.textPrimary },
+                    ]}
+                    placeholder="Search country…"
+                    placeholderTextColor={colors.textMuted}
+                    value={countrySearch}
+                    onChangeText={(t) => { setCountrySearch(t); if (selectedCountry) setSelectedCountry(null); }}
+                    autoFocus
+                    returnKeyType="search"
+                  />
+                  {selectedCountry ? (
+                    <TouchableOpacity style={styles.inputAccessory} onPress={() => { setSelectedCountry(null); setCountrySearch(''); }}>
+                      <Text style={[styles.inputAccessoryText, { color: colors.brand }]}>✓</Text>
+                    </TouchableOpacity>
+                  ) : countrySearch.length > 0 ? (
+                    <TouchableOpacity style={styles.inputAccessory} onPress={() => setCountrySearch('')}>
+                      <Text style={[styles.inputAccessoryText, { color: colors.textMuted }]}>×</Text>
+                    </TouchableOpacity>
+                  ) : null}
+                </View>
+                {!selectedCountry && countrySearch.trim().length > 0 && filteredCountries.length > 0 && (
+                  <View style={[styles.dropdown, { backgroundColor: colors.cardSolid, borderColor: colors.border }]}>
+                    <ScrollView keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false} style={{ maxHeight: 220 }}>
+                      {filteredCountries.map((c, i) => (
+                        <TouchableOpacity
+                          key={c.code}
+                          style={[styles.dropdownItem, { borderBottomColor: colors.borderFaint }, i === filteredCountries.length - 1 && { borderBottomWidth: 0 }]}
+                          onPress={() => { setSelectedCountry(c.code); setCountrySearch(c.name); }}
+                          activeOpacity={0.7}
+                        >
+                          <Text style={styles.dropdownFlag}>{c.flag}</Text>
+                          <Text style={[styles.dropdownName, { color: colors.textPrimary }]}>{c.name}</Text>
+                        </TouchableOpacity>
+                      ))}
+                    </ScrollView>
                   </View>
-                </TouchableOpacity>
+                )}
+                {!selectedCountry && countrySearch.trim().length > 0 && filteredCountries.length === 0 && (
+                  <View style={[styles.dropdown, styles.dropdownEmpty, { backgroundColor: colors.cardSolid, borderColor: colors.border }]}>
+                    <Text style={[styles.dropdownEmptyText, { color: colors.textMuted }]}>No match — you can skip this step</Text>
+                  </View>
+                )}
               </View>
+              <TouchableOpacity
+                style={[styles.btn, { backgroundColor: colors.brand, marginTop: 24 }]}
+                onPress={handleFinish}
+                activeOpacity={0.8}
+              >
+                <Text style={[styles.btnText, { color: colors.textPrimary }]}>
+                  {selectedCountry ? 'Continue' : 'Skip'}
+                </Text>
+              </TouchableOpacity>
             </>
           )}
         </ScrollView>
       )}
+
+      {/* ── Step 6: Journal vs Therapy gate ── */}
+      {step === 6 && (
+        <ScrollView contentContainerStyle={styles.scroll}>
+          <Text style={[styles.wordmark, { color: colors.purple300 }]}>DreamLog</Text>
+          <Text style={[styles.heading, { color: colors.textPrimary }]}>How would you like to begin?</Text>
+          <Text style={[styles.sub, { color: colors.textSecondary }]}>
+            You can always switch later — both live in the app.
+          </Text>
+          <View style={styles.modeCards}>
+            <TouchableOpacity
+              style={[styles.modeCard, { backgroundColor: colors.card, borderColor: colors.border }]}
+              onPress={() => router.replace('/(tabs)')}
+              activeOpacity={0.75}
+            >
+              <Text style={styles.modeEmoji}>📓</Text>
+              <Text style={[styles.modeLabel, { color: colors.textPrimary }]}>Journal</Text>
+              <Text style={[styles.modeDesc, { color: colors.textSecondary }]}>
+                Record a voice entry and get a personalised AI reflection. At your own pace.
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.modeCard, { backgroundColor: colors.card, borderColor: colors.border }]}
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              onPress={() => router.replace('/therapy/persona-picker' as any)}
+              activeOpacity={0.75}
+            >
+              <Text style={[styles.modeLabel, { color: colors.textPrimary }]}>Reflection Session</Text>
+              <Text style={[styles.modeDesc, { color: colors.textSecondary }]}>
+                A live conversation with an AI companion grounded in your journal history.
+              </Text>
+              <View style={[styles.modeBadge, { backgroundColor: colors.brandGlow }]}>
+                <Text style={[styles.modeBadgeText, { color: colors.brand }]}>First session free</Text>
+              </View>
+            </TouchableOpacity>
+          </View>
+        </ScrollView>
+      )}
+
     </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
-  root: {
+  root: { flex: 1 },
+
+  // Welcome
+  welcomeWrap: {
     flex: 1,
+    justifyContent: 'center',
+    paddingHorizontal: 32,
+    paddingBottom: 64,
   },
-  // ── Flood fill container (wraps step 1) ──────────────────────────────────────
-  floodContainer: {
-    flex: 1,
-    position: 'relative',
+  welcomeInner: { alignItems: 'flex-start' },
+  welcomeHeading: {
+    fontFamily: Fonts.serif,
+    fontSize: 36,
+    lineHeight: 44,
+    marginBottom: 16,
+    letterSpacing: 0.5,
   },
+  welcomeSub: {
+    fontFamily: Fonts.sans,
+    fontSize: 16,
+    lineHeight: 24,
+    marginBottom: 48,
+  },
+  beginBtn: {
+    borderWidth: 1.5,
+    borderRadius: 12,
+    paddingVertical: 14,
+    paddingHorizontal: 40,
+  },
+  beginBtnText: {
+    fontFamily: Fonts.sansSB,
+    fontSize: 16,
+    letterSpacing: 0.5,
+  },
+
+  // Flood fill
+  floodContainer: { flex: 1, position: 'relative' },
   floodCircle: {
     position: 'absolute',
     width: FLOOD_D,
@@ -528,11 +587,56 @@ const styles = StyleSheet.create({
     borderRadius: FLOOD_R,
     zIndex: 1,
   },
-  scrollLayer: {
-    flex: 1,
-    zIndex: 2,
+  scrollLayer: { flex: 1, zIndex: 2 },
+
+  // Reveal
+  revealWrap: { flex: 1, justifyContent: 'center' },
+  revealGlow: {
+    position: 'absolute',
+    width: SH * 0.7,
+    height: SH * 0.7,
+    borderRadius: SH * 0.35,
+    alignSelf: 'center',
+    top: '15%',
+    opacity: 0.25,
   },
-  // ─────────────────────────────────────────────────────────────────────────────
+  revealContent: {
+    paddingHorizontal: 32,
+    paddingBottom: 64,
+    zIndex: 1,
+  },
+  revealEyebrow: {
+    fontFamily: Fonts.sans,
+    fontSize: 12,
+    letterSpacing: 2,
+    textTransform: 'uppercase',
+    marginBottom: 16,
+    opacity: 0.8,
+  },
+  revealMessage: {
+    fontFamily: Fonts.serif,
+    fontSize: 48,
+    lineHeight: 56,
+    marginBottom: 20,
+  },
+  revealSub: {
+    fontFamily: Fonts.sans,
+    fontSize: 16,
+    lineHeight: 24,
+    marginBottom: 48,
+  },
+  revealBtn: {
+    alignSelf: 'flex-start',
+    borderRadius: 12,
+    paddingVertical: 14,
+    paddingHorizontal: 40,
+  },
+  revealBtnText: {
+    fontFamily: Fonts.sansSB,
+    fontSize: 16,
+  },
+
+  // Shared scroll layout
   scroll: {
     flexGrow: 1,
     paddingHorizontal: 24,
@@ -557,50 +661,20 @@ const styles = StyleSheet.create({
     marginBottom: 32,
     lineHeight: 22,
   },
-  backTop: {
-    marginBottom: 20,
-    alignSelf: 'flex-start',
-  },
-  backTopText: {
-    fontFamily: Fonts.sans,
-    fontSize: 14,
-  },
-  goalList: {
-    gap: 10,
-    marginBottom: 32,
-  },
-  goalCard: {
-    borderWidth: 1,
-    borderRadius: 12,
-    padding: 16,
-  },
-  goalHeaderRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 3,
-  },
-  goalLabel: {
-    fontFamily: Fonts.sansSB,
-    fontSize: 15,
-  },
-  goalDesc: {
-    fontFamily: Fonts.sans,
-    fontSize: 13,
-    lineHeight: 18,
-  },
-  btn: {
-    borderRadius: 12,
-    paddingVertical: 16,
-    alignItems: 'center',
-  },
-  btnDisabled: {
-    opacity: 0.4,
-  },
-  btnText: {
-    fontFamily: Fonts.sansSB,
-    fontSize: 16,
-  },
+  backTop: { marginBottom: 20, alignSelf: 'flex-start' },
+  backTopText: { fontFamily: Fonts.sans, fontSize: 14 },
+
+  // Goal list
+  goalList: { gap: 10, marginBottom: 32 },
+  goalCard: { borderWidth: 1, borderRadius: 12, padding: 16 },
+  goalLabel: { fontFamily: Fonts.sansSB, fontSize: 15, marginBottom: 3 },
+  goalDesc: { fontFamily: Fonts.sans, fontSize: 13, lineHeight: 18 },
+
+  // Button
+  btn: { borderRadius: 12, paddingVertical: 16, alignItems: 'center' },
+  btnText: { fontFamily: Fonts.sansSB, fontSize: 16 },
+
+  // Input
   input: {
     borderWidth: 1,
     borderRadius: 12,
@@ -610,45 +684,15 @@ const styles = StyleSheet.create({
     fontSize: 16,
     marginBottom: 24,
   },
-  searchInput: {
-    borderWidth: 1,
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    fontFamily: Fonts.sans,
-    fontSize: 15,
-    marginBottom: 16,
-  },
-  error: {
-    fontFamily: Fonts.sans,
-    fontSize: 13,
-    marginBottom: 16,
-  },
 
-  // ── Country step layout ──────────────────────────────────────────────────────
-  countryStep: {
-    flex: 1,
-    paddingHorizontal: 24,
-    paddingTop: 64,
-    justifyContent: 'space-between',
-  },
-  countryTop: {
-    flex: 1,
-  },
-  countryFooter: {
-    paddingBottom: 48,
-    paddingTop: 12,
-  },
-  // search input row (input + accessory icon)
-  countrySearchWrap: {
-    position: 'relative',
-    zIndex: 10,
-  },
-  countryInputRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    position: 'relative',
-  },
+  // Age range
+  ageList: { gap: 10, marginBottom: 32 },
+  ageCard: { borderWidth: 1, borderRadius: 12, paddingVertical: 14, paddingHorizontal: 16, alignItems: 'center' },
+  ageLabel: { fontFamily: Fonts.sansSB, fontSize: 15 },
+
+  // Country
+  countrySearchWrap: { position: 'relative', zIndex: 10 },
+  countryInputRow: { flexDirection: 'row', alignItems: 'center', position: 'relative' },
   countryInput: {
     flex: 1,
     borderWidth: 1,
@@ -659,16 +703,8 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.sans,
     fontSize: 15,
   },
-  inputAccessory: {
-    position: 'absolute',
-    right: 14,
-    padding: 4,
-  },
-  inputAccessoryText: {
-    fontSize: 18,
-    fontFamily: Fonts.sansSB,
-  },
-  // dropdown
+  inputAccessory: { position: 'absolute', right: 14, padding: 4 },
+  inputAccessoryText: { fontSize: 18, fontFamily: Fonts.sansSB },
   dropdown: {
     position: 'absolute',
     top: 54,
@@ -692,69 +728,17 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     borderBottomWidth: 1,
   },
-  dropdownFlag: {
-    fontSize: 20,
-  },
-  dropdownName: {
-    fontFamily: Fonts.sansSB,
-    fontSize: 14,
-  },
-  dropdownEmpty: {
-    paddingVertical: 14,
-    paddingHorizontal: 16,
-  },
-  dropdownEmptyText: {
-    fontFamily: Fonts.sans,
-    fontSize: 13,
-  },
-  ageList: {
-    gap: 10,
-    marginBottom: 32,
-  },
-  ageCard: {
-    borderWidth: 1,
-    borderRadius: 12,
-    paddingVertical: 14,
-    paddingHorizontal: 16,
-    alignItems: 'center',
-  },
-  ageLabel: {
-    fontFamily: Fonts.sansSB,
-    fontSize: 15,
-  },
-  modeCards: {
-    gap: 14,
-    marginBottom: 16,
-  },
-  modeCard: {
-    borderWidth: 1,
-    borderRadius: 16,
-    padding: 20,
-    gap: 6,
-  },
-  modeEmoji: {
-    fontSize: 32,
-    marginBottom: 4,
-  },
-  modeLabel: {
-    fontFamily: Fonts.sansSB,
-    fontSize: 18,
-    marginBottom: 2,
-  },
-  modeDesc: {
-    fontFamily: Fonts.sans,
-    fontSize: 14,
-    lineHeight: 20,
-  },
-  modeBadge: {
-    alignSelf: 'flex-start',
-    borderRadius: 6,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    marginTop: 8,
-  },
-  modeBadgeText: {
-    fontFamily: Fonts.sansSB,
-    fontSize: 12,
-  },
+  dropdownFlag: { fontSize: 20 },
+  dropdownName: { fontFamily: Fonts.sansSB, fontSize: 14 },
+  dropdownEmpty: { paddingVertical: 14, paddingHorizontal: 16 },
+  dropdownEmptyText: { fontFamily: Fonts.sans, fontSize: 13 },
+
+  // Journal/Therapy gate
+  modeCards: { gap: 14, marginBottom: 16 },
+  modeCard: { borderWidth: 1, borderRadius: 16, padding: 20, gap: 6 },
+  modeEmoji: { fontSize: 32, marginBottom: 4 },
+  modeLabel: { fontFamily: Fonts.sansSB, fontSize: 18, marginBottom: 2 },
+  modeDesc: { fontFamily: Fonts.sans, fontSize: 14, lineHeight: 20 },
+  modeBadge: { alignSelf: 'flex-start', borderRadius: 6, paddingHorizontal: 8, paddingVertical: 3, marginTop: 8 },
+  modeBadgeText: { fontFamily: Fonts.sansSB, fontSize: 12 },
 });

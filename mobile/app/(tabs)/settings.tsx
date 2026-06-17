@@ -327,8 +327,8 @@ export default function SettingsScreen() {
   };
 
   const goalMeta = user?.goal
-    ? (GOAL_META[user.goal] ?? { label: 'Just exploring', emoji: '🌌' })
-    : { label: 'Not set', emoji: '🌌' };
+    ? (GOAL_META[user.goal] ?? { label: 'Just exploring', emoji: '' })
+    : { label: 'Not set', emoji: '' };
 
   const displayName = user?.preferred_name || user?.name || '-';
   const avatarText = user ? initials(user.preferred_name || user.name || '?') : '?';
@@ -379,7 +379,7 @@ export default function SettingsScreen() {
           </TouchableOpacity>
 
           {/* Subscription */}
-          <Text style={[styles.sectionLabel, { color: colors.textSecondary }]}>SUBSCRIPTION</Text>
+          <Text style={[styles.sectionLabel, { color: colors.textSecondary }]}>Subscription</Text>
           <View style={[styles.section, { backgroundColor: colors.card, borderColor: colors.borderFaint }]}>
             <View style={styles.settingRow}>
               <View style={{ flex: 1 }}>
@@ -419,10 +419,10 @@ export default function SettingsScreen() {
           </View>
 
           {/* Emotional Goal */}
-          <Text style={[styles.sectionLabel, { color: colors.textSecondary }]}>EMOTIONAL GOAL</Text>
+          <Text style={[styles.sectionLabel, { color: colors.textSecondary }]}>Emotional goal</Text>
           <View style={[styles.section, { backgroundColor: colors.card, borderColor: colors.borderFaint }]}>
             <SettingRow
-              label={`${goalMeta.emoji}  ${goalMeta.label}`}
+              label={goalMeta.label}
               sub="Shapes how your reflections are written"
               colors={colors}
               onPress={() => setShowGoalModal(true)}
@@ -430,7 +430,7 @@ export default function SettingsScreen() {
           </View>
 
           {/* Reminders */}
-          <Text style={[styles.sectionLabel, { color: colors.textSecondary }]}>REMINDERS</Text>
+          <Text style={[styles.sectionLabel, { color: colors.textSecondary }]}>Reminders</Text>
           <View style={[styles.section, { backgroundColor: colors.card, borderColor: colors.borderFaint }]}>
             <SettingRow
               label="Morning nudge"
@@ -464,7 +464,7 @@ export default function SettingsScreen() {
           </View>
 
           {/* Therapy */}
-          <Text style={[styles.sectionLabel, { color: colors.textSecondary }]}>THERAPY</Text>
+          <Text style={[styles.sectionLabel, { color: colors.textSecondary }]}>Therapy</Text>
           <View style={[styles.section, { backgroundColor: colors.card, borderColor: colors.borderFaint }]}>
             <SettingRow
               label="Voice language"
@@ -480,7 +480,7 @@ export default function SettingsScreen() {
           </View>
 
           {/* Privacy */}
-          <Text style={[styles.sectionLabel, { color: colors.textSecondary }]}>PRIVACY</Text>
+          <Text style={[styles.sectionLabel, { color: colors.textSecondary }]}>Privacy</Text>
           <View style={[styles.section, { backgroundColor: colors.card, borderColor: colors.borderFaint }]}>
             <SettingRow label="Export my data" colors={colors} onPress={() => router.push('/export')} />
             <View style={[styles.rowDivider, { backgroundColor: colors.borderFaint }]} />
@@ -488,7 +488,7 @@ export default function SettingsScreen() {
           </View>
 
           {/* Support */}
-          <Text style={[styles.sectionLabel, { color: colors.textSecondary }]}>SUPPORT</Text>
+          <Text style={[styles.sectionLabel, { color: colors.textSecondary }]}>Support</Text>
           <View style={[styles.section, { backgroundColor: colors.card, borderColor: colors.borderFaint }]}>
             <SettingRow
               label="Get help now"
@@ -608,7 +608,6 @@ export default function SettingsScreen() {
                   onPress={() => handleSelectVoiceLanguage('auto')}
                   activeOpacity={0.75}
                 >
-                  <Text style={styles.voiceOptionEmoji}>✨</Text>
                   <View style={{ flex: 1 }}>
                     <Text style={[styles.voiceOptionLabel, { color: voiceLanguage === 'auto' ? colors.purple300 : colors.textPrimary }]}>
                       Auto
@@ -813,10 +812,9 @@ export default function SettingsScreen() {
                       <Text style={[styles.goalPickerLabel, { color: isSelected ? colors.purple300 : colors.textPrimary }]}>
                         {g.label}
                       </Text>
-                      {isSelected
-                        ? <Text style={[styles.goalPickerCheck, { color: colors.brand }]}>✓</Text>
-                        : <Text style={{ fontSize: 15 }}>{g.emoji}</Text>
-                      }
+                      {isSelected && (
+                        <Text style={[styles.goalPickerCheck, { color: colors.brand }]}>✓</Text>
+                      )}
                     </View>
                     <Text style={[styles.goalPickerDesc, { color: colors.textMuted }]}>{g.description}</Text>
                   </TouchableOpacity>
@@ -986,8 +984,9 @@ const styles = StyleSheet.create({
 
   sectionLabel: {
     fontSize: 10,
-    fontFamily: 'Nunito_600SemiBold',
-    letterSpacing: 1.5,
+    fontFamily: 'Nunito_400Regular',
+    fontWeight: '300',
+    letterSpacing: 0.3,
     marginBottom: 8,
     marginTop: 4,
   },
