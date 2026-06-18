@@ -58,7 +58,7 @@ export async function uploadRecording(
       const uploadResult = await FileSystem.uploadAsync(upload_url, localUri, {
         httpMethod: 'PUT',
         uploadType: FileSystem.FileSystemUploadType.BINARY_CONTENT,
-        headers: { 'Content-Type': 'audio/aac' },
+        headers: { 'Content-Type': 'audio/mp4' },
       });
 
       if (uploadResult.status < 200 || uploadResult.status >= 300) {

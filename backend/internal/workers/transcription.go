@@ -178,7 +178,7 @@ func (w *TranscriptionWorker) handle(ctx context.Context, job *models.Transcript
 	defer audioReader.Close()
 
 	log.Info("worker: transcribing via whisper")
-	whisperResult, err := w.transcriber.Transcribe(ctx, audioReader, job.EntryID.String()+".aac")
+	whisperResult, err := w.transcriber.Transcribe(ctx, audioReader, job.EntryID.String()+".m4a")
 	if err != nil {
 		return fmt.Errorf("whisper: %w", err)
 	}
