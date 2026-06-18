@@ -39,7 +39,39 @@ import {
 } from '../src/services/guestStorage';
 import ForceUpdateScreen from '../src/components/ForceUpdateScreen';
 import AuthSheet from '../src/components/AuthSheet';
+import { useTheme } from '../src/context/ThemeContext';
 import type { VersionInfo } from '../src/types';
+
+function GreetingOverlay({ name, opacity }: { name: string; opacity: Animated.Value }) {
+  const { colors } = useTheme();
+  return (
+    <Animated.View
+      style={[
+        StyleSheet.absoluteFillObject,
+        { backgroundColor: colors.bg, alignItems: 'center', justifyContent: 'center', zIndex: 999, opacity },
+      ]}
+    >
+      {/* Ambient glow */}
+      <View
+        style={{
+          position: 'absolute',
+          width: 280,
+          height: 280,
+          borderRadius: 140,
+          backgroundColor: colors.brand,
+          opacity: 0.12,
+          transform: [{ scaleY: 0.55 }],
+        }}
+      />
+      <Text style={{ fontFamily: 'Nunito_300Light', fontSize: 11, color: colors.brand, letterSpacing: 4, textTransform: 'uppercase', marginBottom: 16 }}>
+        DreamLog
+      </Text>
+      <Text style={{ fontFamily: 'CormorantGaramond_300Light', fontSize: 38, color: colors.textPrimary, letterSpacing: 1 }}>
+        Hello, {name}
+      </Text>
+    </Animated.View>
+  );
+}
 
 const STRIPE_PK = process.env.EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY ?? '';
 
@@ -244,9 +276,7 @@ export default function RootLayout() {
         <AuthContext.Provider value={{ isAuthenticated: hasToken, requestAuth }}>
           <Slot />
           {showGreeting && greetingName ? (
-            <Animated.View style={[styles.greetingOverlay, { opacity: greetingOpacity }]}>
-              <Text style={styles.greetingText}>Hello, {greetingName}</Text>
-            </Animated.View>
+            <GreetingOverlay name={greetingName} opacity={greetingOpacity} />
           ) : null}
           {forceUpdate ? <ForceUpdateScreen info={forceUpdate} /> : null}
           <AuthSheet
@@ -260,18 +290,3 @@ export default function RootLayout() {
   );
 }
 
-const styles = StyleSheet.create({
-  greetingOverlay: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: '#0f0c1e',
-    alignItems: 'center',
-    justifyContent: 'center',
-    zIndex: 999,
-  },
-  greetingText: {
-    fontFamily: 'CormorantGaramond_300Light',
-    fontSize: 36,
-    color: '#e2d9f3',
-    letterSpacing: 1,
-  },
-});
