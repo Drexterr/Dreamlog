@@ -19,11 +19,6 @@ import { supabase } from '../src/lib/supabase';
 import { api } from '../src/api/client';
 import { useTheme } from '../src/context/ThemeContext';
 
-GoogleSignin.configure({
-  webClientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID,
-  scopes: ['email', 'profile'],
-});
-
 type Mode = 'login' | 'register';
 
 function GoogleLogo() {

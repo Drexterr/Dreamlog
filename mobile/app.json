@@ -28,7 +28,7 @@
     },
     "plugins": [
       "expo-router",
-      "expo-updates",
+      ["expo-updates", { "channel": "preview" }],
       [
         "expo-av",
         {

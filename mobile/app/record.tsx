@@ -8,6 +8,7 @@ import {
   StatusBar,
   Alert,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import NetInfo from '@react-native-community/netinfo';
@@ -138,15 +139,7 @@ function RecordingOrb({
           {recording ? (
             <Waveform colors={colors} />
           ) : (
-            /* Mic icon — visible only when idle */
-            <View style={styles.micWrap}>
-              <View style={[styles.micHead, { borderColor: colors.brandCore }]} />
-              <View style={styles.micArcWrap}>
-                <View style={[styles.micArc, { borderColor: colors.brandCore }]} />
-              </View>
-              <View style={[styles.micStand, { backgroundColor: colors.brandCore }]} />
-              <View style={[styles.micFoot, { borderTopColor: colors.brandCore }]} />
-            </View>
+            <Ionicons name="mic" size={48} color={colors.brandCore} />
           )}
         </Animated.View>
       </View>
@@ -463,28 +456,6 @@ const styles = StyleSheet.create({
     shadowRadius: 20,
     elevation: 10,
   },
-  // Mic icon (View-based)
-  micWrap: { alignItems: 'center', gap: 3 },
-  micHead: {
-    width: 18,
-    height: 24,
-    borderRadius: 9,
-    borderWidth: 2,
-  },
-  micArcWrap: { overflow: 'hidden', width: 28, height: 14 },
-  micArc: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    borderWidth: 2,
-    borderBottomColor: 'transparent',
-    borderLeftColor: 'transparent',
-    borderRightColor: 'transparent',
-    transform: [{ rotate: '180deg' }],
-  },
-  micStand: { width: 2, height: 5, borderRadius: 1 },
-  micFoot:  { width: 16, height: 0, borderTopWidth: 2, borderRadius: 1 },
-
   // Below orb
   belowOrb: { minHeight: 28, alignItems: 'center', justifyContent: 'center' },
   timer: {
