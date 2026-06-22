@@ -21,10 +21,11 @@ import { useTheme } from '../src/context/ThemeContext';
 
 type Mode = 'login' | 'register';
 
+// TODO: replace with react-native-svg version on next native build
 function GoogleLogo() {
   return (
     <View style={googleLogoStyles.container}>
-      <View style={googleLogoStyles.blue} />
+      <View style={googleLogoStyles.ring} />
       <View style={googleLogoStyles.bar} />
       <Text style={googleLogoStyles.letter}>G</Text>
     </View>
@@ -40,7 +41,7 @@ const googleLogoStyles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  blue: {
+  ring: {
     position: 'absolute',
     width: 20,
     height: 20,

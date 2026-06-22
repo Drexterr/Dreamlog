@@ -225,7 +225,7 @@ export default function ReflectionScreen() {
             )}
             <TouchableOpacity
               style={[styles.goodnightBtn, { borderColor: colors.borderFaint, alignSelf: 'stretch' }]}
-              onPress={() => router.back()}
+              onPress={() => router.replace('/(tabs)')}
               activeOpacity={0.8}
             >
               <Text style={[styles.goodnightText, { color: colors.textMuted }]}>Go back</Text>

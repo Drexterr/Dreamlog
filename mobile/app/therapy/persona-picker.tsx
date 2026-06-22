@@ -39,7 +39,7 @@ export default function PersonaPickerScreen() {
       const status = err?.response?.status;
       if (status === 402) {
         // No session credits - send straight to the therapy pricing screen.
-        router.replace('/therapy/pricing' as any);
+        router.push('/therapy/pricing' as any);
       } else {
         Alert.alert('Could not start session', 'Please try again in a moment.');
       }
@@ -50,6 +50,9 @@ export default function PersonaPickerScreen() {
 
   return (
     <SafeAreaView style={[styles.safe, { backgroundColor: colors.bg }]}>
+      <TouchableOpacity style={styles.backBtn} onPress={() => router.back()} activeOpacity={0.7}>
+        <Text style={[styles.backBtnText, { color: colors.textMuted }]}>← Back</Text>
+      </TouchableOpacity>
       <ScrollView contentContainerStyle={styles.container}>
         <View style={styles.header}>
           <Text style={[styles.title, { color: colors.textPrimary }]}>Choose your companion</Text>
@@ -119,6 +122,8 @@ export default function PersonaPickerScreen() {
 
 const styles = StyleSheet.create({
   safe: { flex: 1 },
+  backBtn: { paddingHorizontal: 20, paddingVertical: 12 },
+  backBtnText: { fontSize: 14, fontFamily: 'Nunito_400Regular' },
   container: { padding: 24, paddingBottom: 48 },
   header: { marginBottom: 28 },
   title: { fontSize: 26, fontFamily: 'CormorantGaramond_600SemiBold', marginBottom: 8 },

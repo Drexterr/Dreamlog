@@ -63,6 +63,9 @@ export default function TherapySummaryScreen() {
 
   return (
     <SafeAreaView style={[styles.safe, { backgroundColor: colors.bg }]}>
+      <TouchableOpacity style={styles.backBtn} onPress={() => router.replace('/therapy' as any)} activeOpacity={0.7}>
+        <Text style={[styles.backBtnText, { color: colors.textMuted }]}>← Sessions</Text>
+      </TouchableOpacity>
       <ScrollView contentContainerStyle={styles.container}>
         {/* Header */}
         <Text style={[styles.title, { color: colors.textPrimary }]}>Session Complete</Text>
@@ -133,6 +136,8 @@ export default function TherapySummaryScreen() {
 
 const styles = StyleSheet.create({
   safe: { flex: 1 },
+  backBtn: { paddingHorizontal: 20, paddingVertical: 12 },
+  backBtnText: { fontSize: 14, fontFamily: 'Nunito_400Regular' },
   container: { padding: 24, paddingBottom: 48 },
   title: { fontSize: 28, fontFamily: 'CormorantGaramond_600SemiBold', marginBottom: 6 },
   date: { fontSize: 14, fontFamily: 'Nunito_400Regular', marginBottom: 28 },

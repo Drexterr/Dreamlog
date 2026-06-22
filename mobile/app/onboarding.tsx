@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useEffect, useState, useRef, type ComponentProps } from 'react';
 import {
   View,
   Text,
@@ -12,9 +12,11 @@ import {
   Animated,
   Easing,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { Fonts, THEMES } from '../src/theme';
 import { useTheme } from '../src/context/ThemeContext';
+import type { ThemeColors } from '../src/theme';
 import {
   saveGuestPreferences,
   markOnboardingDone,
@@ -25,6 +27,62 @@ import type { AgeRange, UserGoal } from '../src/types';
 const { width: SW, height: SH } = Dimensions.get('window');
 const FLOOD_D = 100;
 const FLOOD_R = FLOOD_D / 2;
+
+// ── Intro slides data ─────────────────────────────────────────────────────────
+
+const INTRO_SLIDES = [
+  {
+    icon: 'mic-outline' as const,
+    title: 'Speak, don\'t type',
+    body: 'Press record. Say what\'s true.\nYour voice carries everything.',
+  },
+  {
+    icon: 'heart-outline' as const,
+    title: 'Heard, not handled',
+    body: 'An AI reads your words with care and\nwrites a reflection back — warmth, not advice.',
+  },
+  {
+    icon: 'trending-up-outline' as const,
+    title: 'See yourself clearly',
+    body: 'Over time, your moods and emotions\nbecome a map. Patterns find you.',
+  },
+] as const;
+
+// ── Breathing orb shown on each intro slide ────────────────────────────────────
+
+function IntroOrb({ icon, colors }: { icon: ComponentProps<typeof Ionicons>['name']; colors: ThemeColors }) {
+  const breathe = useRef(new Animated.Value(1)).current;
+  const glow    = useRef(new Animated.Value(0.18)).current;
+
+  useEffect(() => {
+    const b = Animated.loop(
+      Animated.sequence([
+        Animated.timing(breathe, { toValue: 1.07, duration: 2600, easing: Easing.inOut(Easing.sin), useNativeDriver: true }),
+        Animated.timing(breathe, { toValue: 1.00, duration: 2600, easing: Easing.inOut(Easing.sin), useNativeDriver: true }),
+      ]),
+    );
+    const g = Animated.loop(
+      Animated.sequence([
+        Animated.timing(glow, { toValue: 0.32, duration: 2600, easing: Easing.inOut(Easing.sin), useNativeDriver: true }),
+        Animated.timing(glow, { toValue: 0.18, duration: 2600, easing: Easing.inOut(Easing.sin), useNativeDriver: true }),
+      ]),
+    );
+    b.start(); g.start();
+    return () => { b.stop(); g.stop(); };
+  }, []);
+
+  return (
+    <Animated.View style={[introOrbStyles.outer, { backgroundColor: colors.brandGlow, transform: [{ scale: breathe }] }]}>
+      <Animated.View style={[introOrbStyles.inner, { backgroundColor: colors.brand, opacity: glow }]} />
+      <Ionicons name={icon} size={52} color={colors.brand} />
+    </Animated.View>
+  );
+}
+
+const introOrbStyles = StyleSheet.create({
+  outer: { width: 156, height: 156, borderRadius: 78, alignItems: 'center', justifyContent: 'center' },
+  inner: { position: 'absolute', width: 110, height: 110, borderRadius: 55 },
+});
 
 const AGE_RANGES: { key: AgeRange; label: string }[] = [
   { key: 'under_18', label: 'Under 18' },
@@ -133,14 +191,15 @@ const COUNTRIES: { code: string; name: string; flag: string }[] = [
 ];
 
 // Step map:
-//   0 = welcome
-//   1 = goal (flood fill)
-//   2 = reveal
-//   3 = name
-//   4 = age range
-//   5 = country
-//   6 = journal / therapy gate
-type Step = 0 | 1 | 2 | 3 | 4 | 5 | 6;
+//   0       = welcome
+//   'intro' = feature intro slides (new)
+//   1       = goal (flood fill)
+//   2       = reveal
+//   3       = name
+//   4       = age range
+//   5       = country
+//   6       = journal / therapy gate
+type Step = 0 | 'intro' | 1 | 2 | 3 | 4 | 5 | 6;
 
 export default function OnboardingScreen() {
   const router = useRouter();
@@ -152,6 +211,11 @@ export default function OnboardingScreen() {
   const [selectedAgeRange, setSelectedAgeRange] = useState<AgeRange | null>(null);
   const [selectedCountry, setSelectedCountry] = useState<string | null>(null);
   const [countrySearch, setCountrySearch] = useState('');
+
+  // Intro slides state
+  const [introSlide, setIntroSlide] = useState(0);
+  const introAnim    = useRef(new Animated.Value(0)).current;
+  const introStarted = useRef(false);
 
   // Flood fill state (step 1 → 2)
   const floodAnim      = useRef(new Animated.Value(0)).current;
@@ -169,6 +233,18 @@ export default function OnboardingScreen() {
     Animated.timing(welcomeAnim, {
       toValue: 1,
       duration: 900,
+      easing: Easing.out(Easing.cubic),
+      useNativeDriver: true,
+    }).start();
+  }
+
+  // Intro slides entrance — fade + slide-up on first render of this step
+  if (step === 'intro' && !introStarted.current) {
+    introStarted.current = true;
+    introAnim.setValue(0);
+    Animated.timing(introAnim, {
+      toValue: 1,
+      duration: 550,
       easing: Easing.out(Easing.cubic),
       useNativeDriver: true,
     }).start();
@@ -224,6 +300,29 @@ export default function OnboardingScreen() {
     });
   }
 
+  // ── Advance intro slides ────────────────────────────────────────────────────
+  function advanceIntro() {
+    const isLast = introSlide >= INTRO_SLIDES.length - 1;
+    Animated.timing(introAnim, {
+      toValue: 0,
+      duration: 220,
+      easing: Easing.in(Easing.quad),
+      useNativeDriver: true,
+    }).start(() => {
+      if (isLast) {
+        setStep(1);
+      } else {
+        setIntroSlide((s) => s + 1);
+        Animated.timing(introAnim, {
+          toValue: 1,
+          duration: 400,
+          easing: Easing.out(Easing.cubic),
+          useNativeDriver: true,
+        }).start();
+      }
+    });
+  }
+
   // ── Finish: save locally, navigate to tabs as guest ────────────────────────
   async function handleFinish() {
     await saveGuestPreferences({
@@ -267,13 +366,76 @@ export default function OnboardingScreen() {
             </Text>
             <TouchableOpacity
               style={[styles.beginBtn, { borderColor: colors.brand }]}
-              onPress={() => setStep(1)}
+              onPress={() => { introStarted.current = false; setStep('intro'); }}
               activeOpacity={0.8}
             >
               <Text style={[styles.beginBtnText, { color: colors.brand }]}>Begin</Text>
             </TouchableOpacity>
           </Animated.View>
         </View>
+      )}
+
+      {/* ── Intro slides ── */}
+      {step === 'intro' && (
+        <Animated.View
+          style={[
+            styles.introWrap,
+            {
+              opacity: introAnim,
+              transform: [{ translateY: introAnim.interpolate({ inputRange: [0, 1], outputRange: [28, 0] }) }],
+            },
+          ]}
+        >
+          {/* Skip — top right */}
+          <TouchableOpacity
+            style={styles.introSkip}
+            onPress={() => { introAnim.setValue(0); setStep(1); }}
+            hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+          >
+            <Text style={[styles.introSkipText, { color: colors.textMuted }]}>Skip</Text>
+          </TouchableOpacity>
+
+          {/* Centered content */}
+          <View style={styles.introContent}>
+            {/* Breathing orb — keyed so it remounts (resets animation) per slide */}
+            <IntroOrb key={introSlide} icon={INTRO_SLIDES[introSlide].icon} colors={colors} />
+
+            {/* Progress dots */}
+            <View style={styles.introDots}>
+              {INTRO_SLIDES.map((_, i) => (
+                <View
+                  key={i}
+                  style={[
+                    styles.introDot,
+                    { backgroundColor: i === introSlide ? colors.brand : colors.border },
+                    i === introSlide && styles.introDotActive,
+                  ]}
+                />
+              ))}
+            </View>
+
+            {/* Text */}
+            <Text style={[styles.introTitle, { color: colors.textPrimary }]}>
+              {INTRO_SLIDES[introSlide].title}
+            </Text>
+            <Text style={[styles.introBody, { color: colors.textSecondary }]}>
+              {INTRO_SLIDES[introSlide].body}
+            </Text>
+          </View>
+
+          {/* Button pinned to bottom */}
+          <View style={styles.introBtnWrap}>
+            <TouchableOpacity
+              style={[styles.introBtn, { backgroundColor: colors.brand }]}
+              onPress={advanceIntro}
+              activeOpacity={0.8}
+            >
+              <Text style={[styles.introBtnText, { color: colors.textPrimary }]}>
+                {introSlide < INTRO_SLIDES.length - 1 ? 'Continue' : 'Get started'}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </Animated.View>
       )}
 
       {/* ── Step 1: Goal selection (flood fill) ── */}
@@ -523,7 +685,7 @@ export default function OnboardingScreen() {
             <TouchableOpacity
               style={[styles.modeCard, { backgroundColor: colors.card, borderColor: colors.border }]}
               // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              onPress={() => router.replace('/therapy/persona-picker' as any)}
+              onPress={() => router.push('/therapy/persona-picker' as any)}
               activeOpacity={0.75}
             >
               <Text style={[styles.modeLabel, { color: colors.textPrimary }]}>Reflection Session</Text>
@@ -544,6 +706,70 @@ export default function OnboardingScreen() {
 
 const styles = StyleSheet.create({
   root: { flex: 1 },
+
+  // Intro slides
+  introWrap: {
+    flex: 1,
+    paddingHorizontal: 32,
+    paddingTop: 56,
+    paddingBottom: 40,
+  },
+  introSkip: {
+    position: 'absolute',
+    top: 56,
+    right: 28,
+  },
+  introSkipText: {
+    fontFamily: Fonts.sans,
+    fontSize: 14,
+    letterSpacing: 0.2,
+  },
+  introContent: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'flex-start',
+    paddingBottom: 32,
+  },
+  introDots: {
+    flexDirection: 'row',
+    gap: 7,
+    marginTop: 44,
+    marginBottom: 28,
+  },
+  introDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+  },
+  introDotActive: {
+    width: 20,
+    borderRadius: 3,
+  },
+  introTitle: {
+    fontFamily: Fonts.serif,
+    fontSize: 34,
+    lineHeight: 42,
+    letterSpacing: 0.4,
+    marginBottom: 14,
+  },
+  introBody: {
+    fontFamily: Fonts.sans,
+    fontSize: 16,
+    lineHeight: 26,
+  },
+  introBtnWrap: {
+    paddingBottom: 8,
+  },
+  introBtn: {
+    borderRadius: 14,
+    paddingVertical: 17,
+    alignItems: 'center',
+  },
+  introBtnText: {
+    fontFamily: Fonts.sansSB,
+    fontSize: 16,
+    letterSpacing: 0.4,
+  },
 
   // Welcome
   welcomeWrap: {

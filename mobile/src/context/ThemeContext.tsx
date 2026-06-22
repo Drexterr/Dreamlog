@@ -1,8 +1,11 @@
-import React, { createContext, useContext, useState, useRef, useEffect } from 'react';
+import React, { createContext, useContext, useState, useRef, useEffect, useCallback } from 'react';
 import { StyleSheet, Animated, Dimensions, Easing } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { THEMES, moodToColor } from '../theme';
 import type { ThemeKey } from '../theme';
 import { api } from '../api/client';
+
+const THEME_KEY = 'dreamlog:theme';
 
 interface ThemeContextProps {
   theme: ThemeKey;
@@ -21,7 +24,7 @@ const { width: SW, height: SH } = Dimensions.get('window');
 const BUBBLE_RADIUS = 50;
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setTheme] = useState<ThemeKey>('curious');
+  const [theme, setThemeState] = useState<ThemeKey>('curious');
   const [bubbleColor, setBubbleColor] = useState<string>(THEMES.curious.bg);
   const [isAnimating, setIsAnimating] = useState(false);
 
@@ -29,14 +32,33 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const bubbleOpacity  = useRef(new Animated.Value(0)).current;
   const bubblePosition = useRef({ x: SW / 2, y: SH / 2 });
 
-  // Align theme with persisted goal on mount.
+  // Persists the theme and updates state together.
+  const setTheme = useCallback((newTheme: ThemeKey) => {
+    setThemeState(newTheme);
+    setBubbleColor(THEMES[newTheme].bg);
+    AsyncStorage.setItem(THEME_KEY, newTheme).catch(() => {});
+  }, []);
+
   useEffect(() => {
     (async () => {
       try {
+        const saved = await AsyncStorage.getItem(THEME_KEY);
+        if (saved && THEMES[saved as ThemeKey]) {
+          // AsyncStorage has a value — trust it, never let the API overwrite it.
+          setThemeState(saved as ThemeKey);
+          setBubbleColor(THEMES[saved as ThemeKey].bg);
+          return;
+        }
+      } catch { /* ignore */ }
+
+      // AsyncStorage is empty (first install, or cleared). Seed it from the API
+      // so the theme is correct without the user having to visit settings first.
+      try {
         const user = await api.me();
-        if (user.goal && THEMES[user.goal]) {
-          setTheme(user.goal as ThemeKey);
+        if (user.goal && THEMES[user.goal as ThemeKey]) {
+          setThemeState(user.goal as ThemeKey);
           setBubbleColor(THEMES[user.goal as ThemeKey].bg);
+          AsyncStorage.setItem(THEME_KEY, user.goal).catch(() => {});
         }
       } catch { /* keep default */ }
     })();
@@ -74,7 +96,8 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
       // fade the circle out to reveal the re-themed UI (same soft reveal as
       // the onboarding goal animation). An instant removal here makes the
       // screen flash one flat color and then snap, which feels broken.
-      setTheme(newTheme);
+      setThemeState(newTheme);
+      AsyncStorage.setItem(THEME_KEY, newTheme).catch(() => {});
       api.updateMe({ goal: newTheme }).catch(() => {});
       Animated.timing(bubbleOpacity, {
         toValue: 0,
@@ -90,7 +113,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     });
   };
 
-  const currentColors = THEMES[theme];
+  const currentColors = THEMES[theme as ThemeKey];
 
   return (
     <ThemeContext.Provider

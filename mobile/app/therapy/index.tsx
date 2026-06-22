@@ -239,7 +239,7 @@ export default function TherapyIndexScreen() {
           {/* Back */}
           <TouchableOpacity
             style={styles.backBtn}
-            onPress={() => router.replace('/(tabs)')}
+            onPress={() => router.back()}
             activeOpacity={0.7}
           >
             <Text style={[styles.backText, { color: colors.textMuted }]}>← Journal</Text>

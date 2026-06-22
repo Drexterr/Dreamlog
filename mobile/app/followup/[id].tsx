@@ -134,7 +134,7 @@ export default function FollowUpScreen() {
         {/* Header */}
         <View style={[styles.header, { borderBottomColor: colors.borderFaint }]}>
           <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>Continue</Text>
-          <TouchableOpacity onPress={() => router.replace('/(tabs)')} style={styles.closeBtn}>
+          <TouchableOpacity onPress={() => router.back()} style={styles.closeBtn}>
             <Text style={[styles.closeText, { color: colors.textMuted }]}>Goodnight</Text>
           </TouchableOpacity>
         </View>

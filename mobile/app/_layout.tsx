@@ -31,6 +31,7 @@ import { detectAndCacheRegion, setRegionFromCountry } from '../src/services/regi
 import { flush as flushOfflineQueue } from '../src/services/offlineQueue';
 import { registerForPushNotifications } from '../src/services/push';
 import { checkForceUpdate } from '../src/services/version';
+import { runStartupUpdateCheck } from '../src/services/updates';
 import {
   hasCompletedOnboarding,
   markOnboardingDone,
@@ -117,6 +118,12 @@ export default function RootLayout() {
   // Force-update gate. Fail-open — checkForceUpdate resolves null on any error.
   useEffect(() => {
     checkForceUpdate().then(setForceUpdate);
+  }, []);
+
+  // OTA: on cold start, pull and apply the newest JS bundle (one reload max).
+  // Fail-silent; no-op in dev/Expo Go. Logs under "[OTA]" for adb logcat/Metro.
+  useEffect(() => {
+    runStartupUpdateCheck();
   }, []);
 
   // Check Supabase session on startup. Never blocks on missing session.

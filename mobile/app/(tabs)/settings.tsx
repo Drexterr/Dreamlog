@@ -21,6 +21,11 @@ import { clearToken, api } from '../../src/api/client';
 import { supabase } from '../../src/lib/supabase';
 import { useTheme } from '../../src/context/ThemeContext';
 import { useAuth } from '../../src/context/AuthContext';
+import {
+  getUpdateSnapshot,
+  checkAndApplyUpdate,
+  type UpdateSnapshot,
+} from '../../src/services/updates';
 import type { AgeRange, Plan, User, UserGoal, VoiceLanguage } from '../../src/types';
 
 const GOAL_META: Record<UserGoal, { label: string; emoji: string }> = {
@@ -183,6 +188,10 @@ export default function SettingsScreen() {
   const [voiceLangSearch, setVoiceLangSearch] = useState('');
   const [showHourPicker, setShowHourPicker] = useState(false);
   const [showCrisisModal, setShowCrisisModal] = useState(false);
+  const [showUpdateModal, setShowUpdateModal] = useState(false);
+  const [updateSnapshot, setUpdateSnapshot] = useState<UpdateSnapshot | null>(null);
+  const [updateLog, setUpdateLog] = useState<string[]>([]);
+  const [checkingUpdate, setCheckingUpdate] = useState(false);
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [showGoalModal, setShowGoalModal] = useState(false);
   const [savingHour, setSavingHour] = useState(false);
@@ -210,6 +219,28 @@ export default function SettingsScreen() {
   };
 
   useEffect(() => { if (isAuthenticated) loadProfile(); }, [isAuthenticated]);
+
+  const openUpdateModal = () => {
+    setUpdateSnapshot(getUpdateSnapshot());
+    setUpdateLog([]);
+    setShowUpdateModal(true);
+  };
+
+  const handleCheckUpdate = async () => {
+    if (checkingUpdate) return;
+    setCheckingUpdate(true);
+    setUpdateLog([]);
+    const append = (line: string) =>
+      setUpdateLog((prev) => [...prev, line]);
+    try {
+      const result = await checkAndApplyUpdate(append);
+      // Refresh the snapshot so updateId/embedded reflect any change.
+      setUpdateSnapshot(getUpdateSnapshot());
+      if (result === 'up-to-date') append('—');
+    } finally {
+      setCheckingUpdate(false);
+    }
+  };
 
   const handleNudgeToggle = async (value: boolean) => {
     setNudgeEnabled(value);
@@ -506,7 +537,9 @@ export default function SettingsScreen() {
             <View style={[styles.rowDivider, { backgroundColor: colors.borderFaint }]} />
             <SettingRow
               label="About DreamLog"
+              sub="Tap to check for updates"
               colors={colors}
+              onPress={openUpdateModal}
               right={<Text style={[styles.valueText, { color: colors.purple300 }]}>v1.0.0</Text>}
             />
           </View>
@@ -913,6 +946,106 @@ export default function SettingsScreen() {
           </View>
         </BlurView>
       </Modal>
+
+      {/* App updates diagnostic modal */}
+      <Modal
+        visible={showUpdateModal}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setShowUpdateModal(false)}
+      >
+        <BlurView intensity={55} tint="dark" style={styles.modalOverlay}>
+          <TouchableOpacity
+            style={styles.modalDismiss}
+            activeOpacity={1}
+            onPress={() => setShowUpdateModal(false)}
+          />
+          <View
+            style={[styles.modalSheet, { backgroundColor: colors.cardSolid, borderColor: colors.border }]}
+            onStartShouldSetResponder={() => true}
+          >
+            <View style={[styles.modalHandle, { backgroundColor: colors.border }]} />
+            <Text style={[styles.modalTitle, { color: colors.textPrimary }]}>App updates</Text>
+            <Text style={[styles.modalSub, { color: colors.textMuted }]}>
+              Over-the-air JS update status for this build.
+            </Text>
+
+            {/* Status snapshot */}
+            <View style={[styles.profileInfoCard, { backgroundColor: colors.card, borderColor: colors.borderFaint }]}>
+              <View style={styles.profileInfoRow}>
+                <Text style={[styles.profileInfoLabel, { color: colors.textMuted }]}>OTA enabled</Text>
+                <Text
+                  style={[
+                    styles.profileInfoValue,
+                    { color: updateSnapshot?.enabled ? colors.moodGreen : colors.danger },
+                  ]}
+                >
+                  {updateSnapshot?.enabled ? 'Yes' : 'No (dev/debug build)'}
+                </Text>
+              </View>
+              <View style={[styles.rowDivider, { backgroundColor: colors.borderFaint }]} />
+              <View style={styles.profileInfoRow}>
+                <Text style={[styles.profileInfoLabel, { color: colors.textMuted }]}>Channel</Text>
+                <Text style={[styles.profileInfoValue, { color: colors.textPrimary }]}>
+                  {updateSnapshot?.channel ?? '-'}
+                </Text>
+              </View>
+              <View style={[styles.rowDivider, { backgroundColor: colors.borderFaint }]} />
+              <View style={styles.profileInfoRow}>
+                <Text style={[styles.profileInfoLabel, { color: colors.textMuted }]}>Runtime</Text>
+                <Text style={[styles.profileInfoValue, { color: colors.textPrimary }]}>
+                  {updateSnapshot?.runtimeVersion ?? '-'}
+                </Text>
+              </View>
+              <View style={[styles.rowDivider, { backgroundColor: colors.borderFaint }]} />
+              <View style={styles.profileInfoRow}>
+                <Text style={[styles.profileInfoLabel, { color: colors.textMuted }]}>Running</Text>
+                <Text style={[styles.profileInfoValue, { color: colors.textPrimary }]} numberOfLines={1}>
+                  {updateSnapshot?.isEmbeddedLaunch
+                    ? 'Embedded (no OTA yet)'
+                    : (updateSnapshot?.updateId?.slice(0, 8) ?? '-')}
+                </Text>
+              </View>
+            </View>
+
+            {/* Live log */}
+            {updateLog.length > 0 && (
+              <View style={[styles.updateLogBox, { backgroundColor: colors.card, borderColor: colors.borderFaint }]}>
+                {updateLog.map((line, i) => (
+                  <Text key={i} style={[styles.updateLogLine, { color: colors.textSecondary }]}>
+                    {line}
+                  </Text>
+                ))}
+              </View>
+            )}
+
+            {/* Check button */}
+            <TouchableOpacity
+              style={[
+                styles.updateActionBtn,
+                { backgroundColor: colors.purple600, shadowColor: colors.purple500 },
+                checkingUpdate && { opacity: 0.6 },
+              ]}
+              onPress={handleCheckUpdate}
+              disabled={checkingUpdate}
+              activeOpacity={0.85}
+            >
+              {checkingUpdate ? (
+                <ActivityIndicator color="#fff" size="small" />
+              ) : (
+                <Text style={styles.updateActionBtnText}>Check for updates now</Text>
+              )}
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[styles.closeBtn, { borderColor: colors.borderFaint, marginTop: 8 }]}
+              onPress={() => setShowUpdateModal(false)}
+            >
+              <Text style={[styles.closeBtnText, { color: colors.textMuted }]}>Close</Text>
+            </TouchableOpacity>
+          </View>
+        </BlurView>
+      </Modal>
     </View>
   );
 }
@@ -1249,5 +1382,33 @@ const styles = StyleSheet.create({
   closeBtnText: {
     fontSize: 14,
     fontFamily: 'Nunito_600SemiBold',
+  },
+  updateLogBox: {
+    marginTop: 14,
+    borderWidth: 1,
+    borderRadius: 12,
+    padding: 12,
+    gap: 4,
+  },
+  updateLogLine: {
+    fontSize: 12,
+    lineHeight: 17,
+    fontFamily: 'Nunito_400Regular',
+  },
+  updateActionBtn: {
+    borderRadius: 14,
+    paddingVertical: 15,
+    alignItems: 'center',
+    marginTop: 16,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.4,
+    shadowRadius: 12,
+    elevation: 6,
+  },
+  updateActionBtnText: {
+    color: '#fff',
+    fontSize: 15,
+    fontFamily: 'Nunito_600SemiBold',
+    letterSpacing: 0.3,
   },
 });
