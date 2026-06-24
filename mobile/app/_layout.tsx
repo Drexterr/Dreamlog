@@ -27,6 +27,8 @@ import { api, storeToken, clearToken } from '../src/api/client';
 import { supabase, deepLinkReady } from '../src/lib/supabase';
 import { ThemeProvider } from '../src/context/ThemeContext';
 import { AuthContext } from '../src/context/AuthContext';
+import { GuidedTourProvider } from '../src/context/GuidedTourContext';
+import GuidedTour from '../src/components/GuidedTour';
 import { detectAndCacheRegion, setRegionFromCountry } from '../src/services/region';
 import { flush as flushOfflineQueue } from '../src/services/offlineQueue';
 import { registerForPushNotifications } from '../src/services/push';
@@ -52,23 +54,13 @@ function GreetingOverlay({ name, opacity }: { name: string; opacity: Animated.Va
         { backgroundColor: colors.bg, alignItems: 'center', justifyContent: 'center', zIndex: 999, opacity },
       ]}
     >
-      {/* Ambient glow */}
-      <View
-        style={{
-          position: 'absolute',
-          width: 280,
-          height: 280,
-          borderRadius: 140,
-          backgroundColor: colors.brand,
-          opacity: 0.12,
-          transform: [{ scaleY: 0.55 }],
-        }}
-      />
-      <Text style={{ fontFamily: 'Nunito_300Light', fontSize: 11, color: colors.brand, letterSpacing: 4, textTransform: 'uppercase', marginBottom: 16 }}>
-        DreamLog
-      </Text>
-      <Text style={{ fontFamily: 'CormorantGaramond_300Light', fontSize: 38, color: colors.textPrimary, letterSpacing: 1 }}>
+      <Text style={{ fontFamily: 'CormorantGaramond_300Light', fontSize: 40, color: colors.textPrimary, letterSpacing: 0.5 }}>
         Hello, {name}
+      </Text>
+      {/* Thin hairline accent */}
+      <View style={{ width: 28, height: 1, backgroundColor: colors.brand, opacity: 0.6, marginTop: 22, marginBottom: 14 }} />
+      <Text style={{ fontFamily: 'Nunito_300Light', fontSize: 12, color: colors.textMuted, letterSpacing: 0.5 }}>
+        good to see you
       </Text>
     </Animated.View>
   );
@@ -144,8 +136,24 @@ export default function RootLayout() {
         } else {
           detectAndCacheRegion().catch(() => {});
         }
-        setNeedsOnboarding(!user.goal);
-        if (user.goal) {
+        // Sync any guest preferences saved during onboarding but not yet sent to the
+        // backend. This happens when the user is already authenticated during onboarding —
+        // no SIGNED_IN event fires, so the SIGNED_IN handler never syncs them.
+        let effectiveGoal = user.goal;
+        if (!effectiveGoal) {
+          const prefs = await loadGuestPreferences();
+          if (prefs.goal) {
+            api.updateMe({
+              goal: prefs.goal,
+              ...(prefs.name     ? { preferred_name: prefs.name }  : {}),
+              ...(prefs.ageRange ? { age_range: prefs.ageRange }   : {}),
+              ...(prefs.country && prefs.country !== 'OTHER' ? { country: prefs.country } : {}),
+            }).then(() => clearGuestPreferences()).catch(() => {});
+            effectiveGoal = prefs.goal;
+          }
+        }
+        setNeedsOnboarding(!effectiveGoal);
+        if (effectiveGoal) {
           setGreetingName(user.preferred_name || user.name || null);
         }
       } catch {
@@ -187,7 +195,10 @@ export default function RootLayout() {
       // Authenticated user path
       if (!onboardingDone) await markOnboardingDone();
 
-      if (needsOnboarding && !inOnboarding) {
+      if (needsOnboarding && !onboardingDone && !inOnboarding) {
+        // Only route to onboarding if the user hasn't locally completed it yet.
+        // If onboardingDone=true but backend has no goal, the startup sync above will
+        // fix it asynchronously — don't loop them back through onboarding.
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         router.replace('/onboarding' as any);
       } else if (!needsOnboarding && (inAuth || inOnboarding || atRootIndex)) {
@@ -281,16 +292,19 @@ export default function RootLayout() {
     <StripeProvider publishableKey={STRIPE_PK} merchantIdentifier="merchant.com.dreamlog">
       <ThemeProvider>
         <AuthContext.Provider value={{ isAuthenticated: hasToken, requestAuth }}>
-          <Slot />
-          {showGreeting && greetingName ? (
-            <GreetingOverlay name={greetingName} opacity={greetingOpacity} />
-          ) : null}
-          {forceUpdate ? <ForceUpdateScreen info={forceUpdate} /> : null}
-          <AuthSheet
-            visible={showAuthSheet}
-            prompt="Sign in to continue"
-            onClose={closeAuthSheet}
-          />
+          <GuidedTourProvider>
+            <Slot />
+            <GuidedTour />
+            {showGreeting && greetingName ? (
+              <GreetingOverlay name={greetingName} opacity={greetingOpacity} />
+            ) : null}
+            {forceUpdate ? <ForceUpdateScreen info={forceUpdate} /> : null}
+            <AuthSheet
+              visible={showAuthSheet}
+              prompt="Sign in to continue"
+              onClose={closeAuthSheet}
+            />
+          </GuidedTourProvider>
         </AuthContext.Provider>
       </ThemeProvider>
     </StripeProvider>

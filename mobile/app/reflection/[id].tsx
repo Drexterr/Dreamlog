@@ -323,6 +323,40 @@ export default function ReflectionScreen() {
                 )}
               </View>
 
+              {/* Dream Decoder — dual-lens reading (dream-mode entries only) */}
+              {(analysis.psychological_lens || analysis.vedic_lens || (analysis.dream_symbols?.length ?? 0) > 0) && (
+                <Animated.View style={[styles.dreamWrap, { opacity: fadeAnim }]}>
+                  <Text style={[styles.dreamHeader, { color: colors.textMuted }]}>DREAM DECODER</Text>
+
+                  {(analysis.dream_symbols?.length ?? 0) > 0 && (
+                    <View style={styles.dreamSymbolRow}>
+                      {analysis.dream_symbols!.slice(0, 6).map((sym) => (
+                        <View key={sym} style={[styles.dreamSymbol, { backgroundColor: colors.card, borderColor: colors.borderFaint }]}>
+                          <Text style={[styles.dreamSymbolText, { color: colors.textSecondary }]}>{sym}</Text>
+                        </View>
+                      ))}
+                    </View>
+                  )}
+                  {analysis.dream_type ? (
+                    <Text style={[styles.dreamType, { color: colors.textMuted }]}>{analysis.dream_type} dream</Text>
+                  ) : null}
+
+                  {analysis.psychological_lens ? (
+                    <View style={[styles.lensCard, { backgroundColor: colors.card, borderColor: colors.borderFaint }]}>
+                      <Text style={[styles.lensTitle, { color: colors.brand }]}>Psychological lens</Text>
+                      <Text style={[styles.lensText, { color: colors.textSecondary }]}>{analysis.psychological_lens}</Text>
+                    </View>
+                  ) : null}
+
+                  {analysis.vedic_lens ? (
+                    <View style={[styles.lensCard, { backgroundColor: colors.card, borderColor: colors.borderFaint }]}>
+                      <Text style={[styles.lensTitle, { color: colors.brand }]}>Vedic lens</Text>
+                      <Text style={[styles.lensText, { color: colors.textSecondary }]}>{analysis.vedic_lens}</Text>
+                    </View>
+                  ) : null}
+                </Animated.View>
+              )}
+
               {/* Key quote */}
               {analysis?.key_quotes?.[0] && (
                 <Animated.View style={[styles.quoteCard, { borderLeftColor: colors.border, opacity: fadeAnim }]}>
@@ -495,6 +529,31 @@ const styles = StyleSheet.create({
   toneItem: { alignItems: 'center', gap: 6 },
   toneDot: { width: 10, height: 10, borderRadius: 5 },
   toneLabel: { fontSize: 11, fontFamily: 'Nunito_400Regular' },
+
+  // ── Dream Decoder ─────────────────────────────────────────────────────────
+  dreamWrap: { marginBottom: 28, gap: 12 },
+  dreamHeader: {
+    fontSize: 10,
+    fontFamily: 'Nunito_600SemiBold',
+    letterSpacing: 1.5,
+  },
+  dreamSymbolRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  dreamSymbol: { borderRadius: 12, borderWidth: 1, paddingHorizontal: 12, paddingVertical: 4 },
+  dreamSymbolText: { fontSize: 11, fontFamily: 'Nunito_400Regular' },
+  dreamType: {
+    fontSize: 11,
+    fontFamily: 'Nunito_400Regular',
+    letterSpacing: 0.3,
+    textTransform: 'capitalize',
+    marginTop: -4,
+  },
+  lensCard: { borderRadius: 16, borderWidth: 1, padding: 16, gap: 8 },
+  lensTitle: { fontSize: 13, fontFamily: 'Nunito_600SemiBold', letterSpacing: 0.3 },
+  lensText: {
+    fontSize: 14,
+    fontFamily: 'CormorantGaramond_400Regular',
+    lineHeight: 23,
+  },
 
   quoteCard: { borderLeftWidth: 2, paddingLeft: 16, marginBottom: 36 },
   quoteText: {

@@ -1,245 +1,147 @@
-/**
- * Timeline screen - list of journal entries with analysis.
- * Matches the dark card aesthetic from DreamLog_UI.jsx TimelineScreen.
- */
-
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback } from 'react';
 import {
   View,
   Text,
-  FlatList,
-  TextInput,
   TouchableOpacity,
+  ScrollView,
   StyleSheet,
   StatusBar,
-  RefreshControl,
-  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
-import { api } from '../../src/api/client';
 import { useTheme } from '../../src/context/ThemeContext';
-import type { TimelineEntry } from '../../src/types';
+import { useAuth } from '../../src/context/AuthContext';
 
-function MoodDot({ score, size = 8 }: { score: number; size?: number }) {
-  const { moodToColor } = useTheme();
-  return (
-    <View
-      style={{
-        width: size,
-        height: size,
-        borderRadius: size / 2,
-        backgroundColor: moodToColor(score),
-        flexShrink: 0,
-      }}
-    />
-  );
-}
-
-function formatDate(iso: string): string {
-  const d = new Date(iso);
-  const now = new Date();
-  const diff = now.getTime() - d.getTime();
-  if (diff < 86_400_000 && now.getDate() === d.getDate()) return 'Today';
-  if (diff < 172_800_000) return 'Yesterday';
-  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-}
-
-function formatTime(iso: string): string {
-  return new Date(iso).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
-}
-
-function formatDuration(sec: number): string {
-  const m = Math.floor(sec / 60);
-  const s = Math.floor(sec % 60);
-  return m > 0 ? `${m}:${String(s).padStart(2, '0')}` : `0:${String(s).padStart(2, '0')}`;
-}
-
-function EntryCard({ item, index, onPress }: { item: TimelineEntry; index: number; onPress: () => void }) {
-  const { entry, analysis } = item;
-  const moodScore = analysis?.mood_score ?? 0;
-  const isRecent = index === 0;
+// ── Feature card ──────────────────────────────────────────────────────────────
+function FeatureCard({
+  icon,
+  title,
+  description,
+  cta,
+  onPress,
+  badge,
+}: {
+  icon: string;
+  title: string;
+  description: string;
+  cta: string;
+  onPress: () => void;
+  badge?: string;
+}) {
   const { colors } = useTheme();
-
   return (
     <TouchableOpacity
+      style={[styles.featureCard, { backgroundColor: colors.card, borderColor: colors.border }]}
       onPress={onPress}
       activeOpacity={0.8}
-      style={[
-        styles.card,
-        isRecent && {
-          backgroundColor: colors.card,
-          borderColor: colors.border,
-        },
-      ]}
     >
-      <View style={styles.cardHeader}>
-        <View style={styles.cardMeta}>
-          {analysis && <MoodDot score={moodScore} />}
-          <Text style={[styles.cardDate, { color: colors.textSecondary }]}>{formatDate(entry.created_at)}</Text>
-          <Text style={[styles.cardTime, { color: colors.textMuted }]}>{formatTime(entry.created_at)}</Text>
+      <View style={styles.featureTop}>
+        <View style={styles.featureTitleRow}>
+          <Text style={[styles.featureIcon, { color: colors.purple300 }]}>{icon}</Text>
+          <Text style={[styles.featureTitle, { color: colors.textPrimary }]}>{title}</Text>
         </View>
-        <Text style={[styles.cardDuration, { color: colors.textMuted }]}>{formatDuration(entry.duration_sec)}</Text>
+        {badge && (
+          <View style={[styles.badge, { borderColor: colors.purple600 }]}>
+            <Text style={[styles.badgeText, { color: colors.purple300 }]}>{badge}</Text>
+          </View>
+        )}
       </View>
-
-      {/* Summary or status */}
-      {analysis?.summary ? (
-        <Text style={[styles.cardSummary, { color: colors.textSecondary }]} numberOfLines={2}>
-          {analysis.summary}
-        </Text>
-      ) : (
-        <Text style={[styles.cardPending, { color: colors.textFaint }]}>
-          {entry.status === 'failed'
-            ? entry.error_msg ?? 'Transcription failed'
-            : entry.status === 'completed'
-            ? 'No analysis yet'
-            : 'Processing…'}
-        </Text>
-      )}
-
-      {/* Topic badges */}
-      {analysis?.topics?.length > 0 && (
-        <View style={styles.topicRow}>
-          {analysis.topics.slice(0, 3).map((t) => (
-            <View key={t} style={[styles.topicBadge, { backgroundColor: colors.brandGlow }]}>
-              <Text style={[styles.topicText, { color: colors.textMuted }]}>{t}</Text>
-            </View>
-          ))}
-        </View>
-      )}
+      <Text style={[styles.featureDesc, { color: colors.textSecondary }]}>{description}</Text>
+      <View style={styles.featureCTARow}>
+        <Text style={[styles.featureCTA, { color: colors.purple300 }]}>{cta}</Text>
+        <Text style={[styles.featureArrow, { color: colors.purple300 }]}>→</Text>
+      </View>
     </TouchableOpacity>
   );
 }
 
-export default function TimelineScreen() {
+// ── Entries card (compact link) ───────────────────────────────────────────────
+function EntriesCard({ onPress }: { onPress: () => void }) {
+  const { colors } = useTheme();
+  return (
+    <TouchableOpacity
+      style={[styles.entriesCard, { backgroundColor: colors.card, borderColor: colors.border }]}
+      onPress={onPress}
+      activeOpacity={0.8}
+    >
+      <View style={styles.entriesLeft}>
+        <Text style={[styles.entriesTitle, { color: colors.textPrimary }]}>Journal entries</Text>
+        <Text style={[styles.entriesDesc, { color: colors.textMuted }]}>Search and browse your full history</Text>
+      </View>
+      <Text style={[styles.featureArrow, { color: colors.textMuted }]}>→</Text>
+    </TouchableOpacity>
+  );
+}
+
+// ── Explore screen ────────────────────────────────────────────────────────────
+export default function ExploreScreen() {
   const router = useRouter();
   const { colors } = useTheme();
-  const [entries, setEntries] = useState<TimelineEntry[]>([]);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [searching, setSearching] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
-  const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const { isAuthenticated, requestAuth } = useAuth();
 
-  const loadTimeline = useCallback(async () => {
-    try {
-      const resp = await api.getTimeline(1, 30);
-      setEntries(resp.entries);
-    } catch (err) {
-      console.error('timeline load', err);
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
-  }, []);
+  const handleTherapy = useCallback(() => {
+    router.push('/therapy');
+  }, [router]);
 
-  useEffect(() => {
-    loadTimeline();
-  }, []);
+  const handleDream = useCallback(() => {
+    const go = () => router.push({ pathname: '/record', params: { mode: 'dream' } } as any);
+    if (isAuthenticated) go();
+    else requestAuth(go);
+  }, [isAuthenticated, requestAuth, router]);
 
-  const onRefresh = useCallback(() => {
-    setRefreshing(true);
-    loadTimeline();
-  }, [loadTimeline]);
+  const handleJourneys = useCallback(() => {
+    router.push('/journeys');
+  }, [router]);
 
-  // Debounced full-text search
-  const handleSearch = useCallback((q: string) => {
-    setSearchQuery(q);
-    if (searchTimer.current) clearTimeout(searchTimer.current);
-    if (!q.trim()) {
-      loadTimeline();
-      return;
-    }
-    searchTimer.current = setTimeout(async () => {
-      setSearching(true);
-      try {
-        const res = await api.searchEntries(q.trim(), 20);
-        // Wrap plain entries in TimelineEntry shape
-        setEntries(res.entries.map((e) => ({ entry: e })));
-      } catch {
-        // keep current results
-      } finally {
-        setSearching(false);
-      }
-    }, 400);
-  }, [loadTimeline]);
-
-  if (loading) {
-    return (
-      <View style={[styles.container, { backgroundColor: colors.bg }]}>
-        <SafeAreaView style={styles.center}>
-          <ActivityIndicator color={colors.purple400} />
-        </SafeAreaView>
-      </View>
-    );
-  }
+  const handleEntries = useCallback(() => {
+    router.push('/entries' as any);
+  }, [router]);
 
   return (
     <View style={[styles.container, { backgroundColor: colors.bg }]}>
       <StatusBar barStyle="light-content" />
       <SafeAreaView style={styles.safe}>
-        {/* Header */}
-        <View style={styles.header}>
-          <Text style={[styles.title, { color: colors.textPrimary }]}>Your entries</Text>
-          <Text style={[styles.subtitle, { color: colors.textMuted }]}>
-            {entries.length} {entries.length === 1 ? 'entry' : 'entries'}
-          </Text>
-        </View>
-
-        {/* Search */}
-        <View style={[styles.searchBar, { backgroundColor: colors.card, borderColor: colors.borderFaint }]}>
-          <View style={styles.searchIcon}>
-            <View style={[styles.searchCircle, { borderColor: colors.textMuted }]} />
-            <View style={[styles.searchHandle, { backgroundColor: colors.textMuted }]} />
+        <ScrollView
+          contentContainerStyle={styles.scroll}
+          showsVerticalScrollIndicator={false}
+        >
+          {/* Header */}
+          <View style={styles.header}>
+            <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>Explore</Text>
+            <Text style={[styles.headerSub, { color: colors.textMuted }]}>tools & your journal</Text>
           </View>
-          <TextInput
-            style={[styles.searchInput, { color: colors.textPrimary }]}
-            value={searchQuery}
-            onChangeText={handleSearch}
-            placeholder="Search your entries..."
-            placeholderTextColor={colors.textFaint}
-            returnKeyType="search"
-            autoCapitalize="none"
-            autoCorrect={false}
-          />
-          {searching && <ActivityIndicator size="small" color={colors.purple400} />}
-        </View>
 
-        {/* List */}
-        <FlatList
-          data={entries}
-          keyExtractor={(item) => item.entry.id}
-          contentContainerStyle={styles.list}
-          removeClippedSubviews
-          maxToRenderPerBatch={10}
-          updateCellsBatchingPeriod={50}
-          windowSize={10}
-          refreshControl={
-            <RefreshControl
-              refreshing={refreshing}
-              onRefresh={onRefresh}
-              tintColor={colors.purple400}
-            />
-          }
-          ListEmptyComponent={
-            <View style={styles.emptyWrap}>
-              <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
-                {searchQuery ? 'No matching entries.' : 'No entries yet.\nRecord your first journal.'}
-              </Text>
-            </View>
-          }
-          renderItem={({ item, index }) => (
-            <EntryCard
-              item={item}
-              index={index}
-              onPress={() => {
-                if (item.analysis) {
-                  router.push(`/reflection/${item.entry.id}`);
-                }
-              }}
-            />
-          )}
-        />
+          {/* Entries */}
+          <Text style={[styles.sectionLabel, { color: colors.textMuted }]}>YOUR JOURNAL</Text>
+          <EntriesCard onPress={handleEntries} />
+
+          {/* Features */}
+          <Text style={[styles.sectionLabel, { color: colors.textMuted, marginTop: 28 }]}>TOOLS</Text>
+
+          <FeatureCard
+            icon="◎"
+            title="Therapy Mode"
+            description="A real-time AI conversation grounded in your journal history. Voice or text, up to 60 minutes."
+            cta="Start a session"
+            onPress={handleTherapy}
+          />
+
+          <FeatureCard
+            icon="◐"
+            title="Dream Decoder"
+            description="Record a dream and receive dual interpretations — Jungian depth psychology and Vedic Svapna Shastra."
+            cta="Record a dream"
+            onPress={handleDream}
+          />
+
+          <FeatureCard
+            icon="⊹"
+            title="Guided Journeys"
+            description="Structured multi-step reflections for stress, grief, decisions, and self-compassion."
+            cta="Browse journeys"
+            onPress={handleJourneys}
+          />
+        </ScrollView>
       </SafeAreaView>
     </View>
   );
@@ -248,106 +150,111 @@ export default function TimelineScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   safe: { flex: 1 },
-  center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+  scroll: { paddingHorizontal: 22, paddingBottom: 48 },
 
-  header: { paddingHorizontal: 20, paddingTop: 20, paddingBottom: 8 },
-  title: {
-    fontSize: 26,
+  header: {
+    paddingTop: 20,
+    paddingBottom: 24,
+  },
+  headerTitle: {
+    fontSize: 30,
     fontFamily: 'CormorantGaramond_300Light',
     marginBottom: 2,
   },
-  subtitle: {
+  headerSub: {
     fontSize: 11,
     fontFamily: 'Nunito_400Regular',
-    letterSpacing: 0.5,
+    letterSpacing: 0.4,
   },
 
-  searchBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderRadius: 14,
-    borderWidth: 1,
-    marginHorizontal: 20,
+  sectionLabel: {
+    fontSize: 10,
+    fontFamily: 'Nunito_600SemiBold',
+    letterSpacing: 1.5,
     marginBottom: 12,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    gap: 10,
-  },
-  searchIcon: { width: 16, height: 16, position: 'relative' },
-  searchCircle: {
-    width: 10, height: 10, borderRadius: 5,
-    borderWidth: 1.5,
-  },
-  searchHandle: {
-    position: 'absolute', bottom: 0, right: 0,
-    width: 5, height: 1.5,
-    transform: [{ rotate: '45deg' }],
-  },
-  searchInput: {
-    flex: 1,
-    fontSize: 14,
-    fontFamily: 'Nunito_400Regular',
-    padding: 0,
   },
 
-  list: { paddingHorizontal: 16, paddingBottom: 40 },
-
-  card: {
-    padding: 18,
-    borderRadius: 16,
-    marginBottom: 4,
-    backgroundColor: 'transparent',
-    borderWidth: 1,
-    borderColor: 'transparent',
-  },
-  cardHeader: {
+  // Entries compact card
+  entriesCard: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 8,
+    borderRadius: 14,
+    borderWidth: 1,
+    paddingHorizontal: 18,
+    paddingVertical: 16,
   },
-  cardMeta: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  cardDate: {
+  entriesLeft: { gap: 2 },
+  entriesTitle: {
+    fontSize: 15,
+    fontFamily: 'CormorantGaramond_500Medium',
+    letterSpacing: 0.2,
+  },
+  entriesDesc: {
+    fontSize: 12,
+    fontFamily: 'Nunito_400Regular',
+  },
+
+  // Feature cards
+  featureCard: {
+    borderRadius: 16,
+    borderWidth: 1,
+    padding: 20,
+    marginBottom: 12,
+    gap: 10,
+  },
+  featureTop: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
+  },
+  featureTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    flex: 1,
+  },
+  featureIcon: {
+    fontSize: 18,
+    lineHeight: 22,
+  },
+  featureTitle: {
+    fontSize: 17,
+    fontFamily: 'CormorantGaramond_500Medium',
+    letterSpacing: 0.2,
+  },
+  featureDesc: {
     fontSize: 13,
+    fontFamily: 'Nunito_400Regular',
+    lineHeight: 20,
+    paddingLeft: 28,
+  },
+  featureCTARow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+    gap: 6,
+    paddingTop: 2,
+  },
+  featureCTA: {
+    fontSize: 12,
     fontFamily: 'Nunito_600SemiBold',
+    letterSpacing: 0.3,
   },
-  cardTime: {
-    fontSize: 11,
-    fontFamily: 'Nunito_400Regular',
-  },
-  cardDuration: {
-    fontSize: 11,
-    fontFamily: 'Nunito_400Regular',
-    letterSpacing: 0.5,
-  },
-  cardSummary: {
+  featureArrow: {
     fontSize: 14,
     fontFamily: 'Nunito_400Regular',
-    lineHeight: 22,
-    marginBottom: 10,
   },
-  cardPending: {
-    fontSize: 13,
-    fontFamily: 'Nunito_400Regular',
-    fontStyle: 'italic',
-    marginBottom: 8,
-  },
-  topicRow: { flexDirection: 'row', gap: 6, flexWrap: 'wrap' },
-  topicBadge: {
+
+  badge: {
+    borderWidth: 1,
     borderRadius: 8,
     paddingHorizontal: 8,
     paddingVertical: 2,
   },
-  topicText: {
-    fontSize: 10,
-    fontFamily: 'Nunito_400Regular',
-  },
-
-  emptyWrap: { paddingTop: 60, alignItems: 'center' },
-  emptyText: {
-    fontSize: 14,
-    fontFamily: 'Nunito_400Regular',
-    textAlign: 'center',
-    lineHeight: 22,
+  badgeText: {
+    fontSize: 9,
+    fontFamily: 'Nunito_600SemiBold',
+    letterSpacing: 0.8,
   },
 });

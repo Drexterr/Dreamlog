@@ -13,6 +13,7 @@ import { useRouter } from 'expo-router';
 import { api } from '../../src/api/client';
 import { useTheme } from '../../src/context/ThemeContext';
 import { useAuth } from '../../src/context/AuthContext';
+import { useGuidedTour } from '../../src/context/GuidedTourContext';
 import type { DailyMood, StreakInfo } from '../../src/types';
 
 // ── Format date label ─────────────────────────────────────────────────────────
@@ -131,11 +132,17 @@ export default function HomeScreen() {
   const router = useRouter();
   const { colors, moodToColor } = useTheme();
   const { isAuthenticated, requestAuth } = useAuth();
+  const { registerRef, checkAndStartTour } = useGuidedTour();
+
+  // Refs for guided tour spotlight targets
+  const recordRef    = useRef<View>(null);
+  const weekStripRef = useRef<View>(null);
 
   const [userName, setUserName] = useState('');
   const [streak, setStreak] = useState<StreakInfo | null>(null);
   const [weekMoods, setWeekMoods] = useState<DailyMood[]>([]);
   const [lastEntry, setLastEntry] = useState<{
+    id: string;
     dateLabel: string;
     emotionLabel: string;
     moodScore: number;
@@ -146,14 +153,16 @@ export default function HomeScreen() {
   const topAnim    = useRef(new Animated.Value(0)).current;
   const lastAnim   = useRef(new Animated.Value(0)).current;
   const centerAnim = useRef(new Animated.Value(0)).current;
-  const linksAnim  = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
+    registerRef('record', recordRef);
+    registerRef('week_strip', weekStripRef);
+    checkAndStartTour();
+
     Animated.stagger(70, [
       Animated.spring(topAnim,    { toValue: 1, useNativeDriver: true, tension: 70, friction: 8 }),
       Animated.spring(lastAnim,   { toValue: 1, useNativeDriver: true, tension: 70, friction: 8 }),
       Animated.spring(centerAnim, { toValue: 1, useNativeDriver: true, tension: 70, friction: 8 }),
-      Animated.spring(linksAnim,  { toValue: 1, useNativeDriver: true, tension: 70, friction: 8 }),
     ]).start();
 
     if (!isAuthenticated) return;
@@ -163,10 +172,11 @@ export default function HomeScreen() {
     api.weeklyMood().then((r) => setWeekMoods(r.days ?? [])).catch(() => {});
 
     api.getTimeline(1, 1).then((res) => {
-      const item = res.items?.[0];
+      const item = res.entries?.[0];
       if (item?.analysis && item.entry.status === 'completed') {
         const a = item.analysis;
         setLastEntry({
+          id:           item.entry.id,
           dateLabel:    formatEntryDate(item.entry.created_at),
           emotionLabel: a.emotional_tone?.[0]?.emotion ?? '',
           moodScore:    a.mood_score,
@@ -185,6 +195,10 @@ export default function HomeScreen() {
     }
   }, [isAuthenticated, requestAuth, router]);
 
+  const openLastReflection = useCallback(() => {
+    if (lastEntry) router.push(`/reflection/${lastEntry.id}` as any);
+  }, [lastEntry, router]);
+
   const greeting = (() => {
     const h = new Date().getHours();
     if (h < 12) return 'Good morning';
@@ -200,7 +214,6 @@ export default function HomeScreen() {
   const topTranslate    = topAnim.interpolate({ inputRange: [0, 1], outputRange: [10, 0] });
   const lastTranslate   = lastAnim.interpolate({ inputRange: [0, 1], outputRange: [10, 0] });
   const centerTranslate = centerAnim.interpolate({ inputRange: [0, 1], outputRange: [12, 0] });
-  const linksTranslate  = linksAnim.interpolate({ inputRange: [0, 1], outputRange: [8, 0] });
 
   return (
     <View style={[styles.container, { backgroundColor: colors.bg }]}>
@@ -224,7 +237,7 @@ export default function HomeScreen() {
           )}
         </Animated.View>
 
-        {/* ── Last entry snippet (authenticated users only) ── */}
+        {/* ── Last entry snippet (authenticated users only) — taps into the reflection ── */}
         {lastEntry && isAuthenticated && (
           <Animated.View
             style={[
@@ -232,22 +245,27 @@ export default function HomeScreen() {
               { borderTopColor: colors.borderFaint, opacity: lastAnim, transform: [{ translateY: lastTranslate }] },
             ]}
           >
-            <Text style={[styles.lastMeta, { color: colors.textMuted }]}>
-              {lastEntry.dateLabel}{lastEntry.emotionLabel ? ` · ${lastEntry.emotionLabel}` : ''}
-            </Text>
-            {lastEntry.topic ? (
-              <View style={styles.lastRow}>
-                <View style={[styles.lastDot, { backgroundColor: moodToColor(lastEntry.moodScore) }]} />
-                <Text style={[styles.lastScore, { color: colors.textSecondary }]}>
-                  {lastEntry.moodScore}{lastEntry.topic ? ` · ${lastEntry.topic}` : ''}
+            <TouchableOpacity onPress={openLastReflection} activeOpacity={0.7}>
+              <View style={styles.lastHeaderRow}>
+                <Text style={[styles.lastMeta, { color: colors.textMuted }]}>
+                  {lastEntry.dateLabel}{lastEntry.emotionLabel ? ` · ${lastEntry.emotionLabel}` : ''}
                 </Text>
+                <Text style={[styles.lastChevron, { color: colors.textMuted }]}>›</Text>
               </View>
-            ) : null}
-            {lastEntry.quote ? (
-              <Text style={[styles.lastQuote, { color: colors.textSecondary }]} numberOfLines={2}>
-                "{lastEntry.quote}"
-              </Text>
-            ) : null}
+              {lastEntry.topic ? (
+                <View style={styles.lastRow}>
+                  <View style={[styles.lastDot, { backgroundColor: moodToColor(lastEntry.moodScore) }]} />
+                  <Text style={[styles.lastScore, { color: colors.textSecondary }]}>
+                    {lastEntry.moodScore}{lastEntry.topic ? ` · ${lastEntry.topic}` : ''}
+                  </Text>
+                </View>
+              ) : null}
+              {lastEntry.quote ? (
+                <Text style={[styles.lastQuote, { color: colors.textSecondary }]} numberOfLines={2}>
+                  "{lastEntry.quote}"
+                </Text>
+              ) : null}
+            </TouchableOpacity>
           </Animated.View>
         )}
 
@@ -269,28 +287,14 @@ export default function HomeScreen() {
         <Animated.View
           style={[styles.centerWrap, { opacity: centerAnim, transform: [{ translateY: centerTranslate }] }]}
         >
-          <RecordButton onPress={handleRecord} colors={colors} />
+          <View ref={recordRef} collapsable={false}>
+            <RecordButton onPress={handleRecord} colors={colors} />
+          </View>
           <Text style={[styles.recHint, { color: colors.textMuted }]}>record</Text>
         </Animated.View>
 
-        {/* ── Quick links ── */}
-        <Animated.View
-          style={[styles.quickLinks, { opacity: linksAnim, transform: [{ translateY: linksTranslate }] }]}
-        >
-          <TouchableOpacity onPress={() => router.push('/journeys')} activeOpacity={0.7}>
-            <Text style={[styles.quickLnk, { color: colors.textMuted, borderBottomColor: colors.borderFaint }]}>
-              guided journeys
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity onPress={() => router.push('/reflection' as any)} activeOpacity={0.7}>
-            <Text style={[styles.quickLnk, { color: colors.textMuted, borderBottomColor: colors.borderFaint }]}>
-              last reflection
-            </Text>
-          </TouchableOpacity>
-        </Animated.View>
-
         {/* ── Mood strip ── */}
-        <View style={[styles.stripSection, { borderTopColor: colors.borderFaint }]}>
+        <View ref={weekStripRef} collapsable={false} style={[styles.stripSection, { borderTopColor: colors.borderFaint }]}>
           <WeekStrip days={weekMoods} colors={colors} moodToColor={moodToColor} />
         </View>
 
@@ -348,6 +352,16 @@ const styles = StyleSheet.create({
     marginBottom: 4,
     borderTopWidth: 1,
   },
+  lastHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  lastChevron: {
+    fontSize: 16,
+    fontFamily: 'Nunito_400Regular',
+    lineHeight: 16,
+  },
   lastMeta: {
     fontSize: 9.5,
     fontFamily: 'Nunito_400Regular',
@@ -401,20 +415,6 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontFamily: 'Nunito_400Regular',
     fontWeight: '300',
-  },
-
-  quickLinks: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    gap: 24,
-    marginBottom: 20,
-  },
-  quickLnk: {
-    fontSize: 11,
-    fontFamily: 'Nunito_400Regular',
-    fontWeight: '300',
-    borderBottomWidth: 1,
-    paddingBottom: 1,
   },
 
   stripSection: {

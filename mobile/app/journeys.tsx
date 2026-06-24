@@ -12,6 +12,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { api } from '../src/api/client';
 import { useTheme } from '../src/context/ThemeContext';
+import { useAuth } from '../src/context/AuthContext';
 import type { JourneySession, JourneyTemplate } from '../src/types';
 
 // ── Tag pill ──────────────────────────────────────────────────────────────────
@@ -114,6 +115,7 @@ function SessionCard({ session }: { session: JourneySession }) {
 export default function JourneysScreen() {
   const router = useRouter();
   const { colors } = useTheme();
+  const { isAuthenticated, requestAuth } = useAuth();
 
   const [templates, setTemplates] = useState<JourneyTemplate[]>([]);
   const [sessions, setSessions] = useState<JourneySession[]>([]);
@@ -124,18 +126,23 @@ export default function JourneysScreen() {
   const load = useCallback(() => {
     setLoading(true);
     setError(null);
-    Promise.all([api.listJourneys(), api.listJourneySessions()])
+    // Guests can browse the catalogue (GET /journeys is public) but have no
+    // sessions of their own — skip that call so a 401 doesn't blank the screen.
+    const sessionsP: Promise<{ sessions: JourneySession[] }> = isAuthenticated
+      ? api.listJourneySessions()
+      : Promise.resolve({ sessions: [] });
+    Promise.all([api.listJourneys(), sessionsP])
       .then(([tmplRes, sessRes]) => {
         setTemplates(tmplRes.journeys ?? []);
         setSessions(sessRes.sessions ?? []);
       })
       .catch(() => setError('Could not load journeys.'))
       .finally(() => setLoading(false));
-  }, []);
+  }, [isAuthenticated]);
 
   useEffect(() => { load(); }, [load]);
 
-  const handleStart = useCallback(async (journeyID: string) => {
+  const doStart = useCallback(async (journeyID: string) => {
     setStarting(journeyID);
     try {
       const session = await api.startJourney(journeyID);
@@ -147,6 +154,12 @@ export default function JourneysScreen() {
       setStarting(null);
     }
   }, [router]);
+
+  // Guests must sign in before starting — the catalogue stays browsable.
+  const handleStart = useCallback((journeyID: string) => {
+    if (isAuthenticated) doStart(journeyID);
+    else requestAuth(() => doStart(journeyID));
+  }, [isAuthenticated, requestAuth, doStart]);
 
   const activeSessions = sessions.filter((s) => s.status === 'in_progress');
   const completedSessions = sessions.filter((s) => s.status === 'completed');
@@ -190,6 +203,11 @@ export default function JourneysScreen() {
             {/* Templates */}
             <View style={styles.section}>
               <Text style={[styles.sectionLabel, { color: colors.textMuted }]}>START A JOURNEY</Text>
+              {!isAuthenticated && (
+                <Text style={[styles.guestHint, { color: colors.textMuted }]}>
+                  Browse freely — sign in when you’re ready to begin one.
+                </Text>
+              )}
               {templates.map((t) => (
                 <TemplateCard key={t.id} template={t} onStart={handleStart} starting={starting} />
               ))}
@@ -329,6 +347,14 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontFamily: 'Nunito_400Regular',
     lineHeight: 17,
+  },
+
+  guestHint: {
+    fontSize: 12,
+    fontFamily: 'Nunito_400Regular',
+    fontStyle: 'italic',
+    marginBottom: 12,
+    marginTop: -4,
   },
 
   errorText: { fontSize: 14, fontFamily: 'Nunito_400Regular', textAlign: 'center' },

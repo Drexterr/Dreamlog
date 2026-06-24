@@ -2,6 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { UserGoal, AgeRange } from '../types';
 
 const ONBOARDING_DONE = '@dreamlog/onboarding_done';
+const TOUR_PENDING    = '@dreamlog/tour_pending';
 const GUEST_GOAL      = '@dreamlog/guest_goal';
 const GUEST_NAME      = '@dreamlog/guest_name';
 const GUEST_AGE       = '@dreamlog/guest_age';
@@ -9,6 +10,10 @@ const GUEST_COUNTRY   = '@dreamlog/guest_country';
 
 export async function markOnboardingDone(): Promise<void> {
   await AsyncStorage.setItem(ONBOARDING_DONE, '1');
+}
+
+export async function markTourPending(): Promise<void> {
+  await AsyncStorage.setItem(TOUR_PENDING, '1');
 }
 
 export async function hasCompletedOnboarding(): Promise<boolean> {

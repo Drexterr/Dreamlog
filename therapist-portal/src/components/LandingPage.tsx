@@ -378,9 +378,9 @@ function PricingCard({ name, price, period, sub, features, cta, featured, downlo
   sub: string; features: string[]; cta: string; featured?: boolean; downloadHref: string; ready: boolean;
 }) {
   return (
-    <div className={featured ? 'pricing-featured' : 'pricing-card'} style={{ background: featured ? 'rgba(200,149,90,0.06)' : 'var(--bg-card)', border: `1px solid ${featured ? 'rgba(200,149,90,0.28)' : 'var(--border)'}`, borderRadius: 20, padding: '28px 24px', display: 'flex', flexDirection: 'column', position: 'relative' }}>
+    <div className={featured ? 'pricing-featured' : 'pricing-card'} style={{ background: featured ? 'rgba(212,165,106,0.07)' : 'var(--bg-card)', border: `1px solid ${featured ? 'rgba(212,165,106,0.35)' : 'var(--border)'}`, borderRadius: 20, padding: '28px 24px', display: 'flex', flexDirection: 'column', position: 'relative' }}>
       {featured && (
-        <div style={{ position: 'absolute', top: -12, left: '50%', transform: 'translateX(-50%)', background: 'var(--gold)', color: '#18150f', fontSize: '0.65rem', fontWeight: 700, letterSpacing: '1.5px', textTransform: 'uppercase', padding: '4px 12px', borderRadius: 100, whiteSpace: 'nowrap' }}>Most popular</div>
+        <div style={{ position: 'absolute', top: -12, left: '50%', transform: 'translateX(-50%)', background: 'var(--gold)', color: '#18150f', fontSize: '0.65rem', fontWeight: 800, letterSpacing: '1.5px', textTransform: 'uppercase', padding: '5px 14px', borderRadius: 100, whiteSpace: 'nowrap' }}>Most popular</div>
       )}
       <div style={{ marginBottom: 20 }}>
         <div style={{ fontSize: '0.82rem', fontWeight: 600, color: 'var(--muted)', marginBottom: 8 }}>{name}</div>
@@ -411,6 +411,49 @@ function FAQ({ q, a }: { q: string; a: string }) {
         <span style={{ color: 'var(--muted)', fontSize: '1.2rem', flexShrink: 0, transform: open ? 'rotate(45deg)' : 'none', transition: 'transform 0.2s ease', display: 'inline-block' }}>+</span>
       </div>
       {open && <p style={{ margin: '12px 0 0', fontSize: '0.88rem', color: 'var(--muted)', lineHeight: 1.7 }}>{a}</p>}
+    </div>
+  );
+}
+
+/* ── Insight ticker ───────────────────────────────────────────────────────── */
+function InsightTicker() {
+  const items = [
+    'You mentioned "tired" in 9 of your last 14 entries',
+    'Your entries are 40% longer on weekends',
+    "You've brought up your sister three weeks in a row",
+    'Tone is noticeably lighter when you record before noon',
+    'Recurring theme this month: feeling behind',
+    'You asked a question at the end of 6 out of 7 entries',
+    'The word "fine" appeared 31 times — usually at the start',
+    'Most hopeful entry: last Tuesday, 8:47am',
+  ];
+  const all = [...items, ...items];
+  return (
+    <div style={{
+      borderTop: '1px solid var(--border)',
+      borderBottom: '1px solid var(--border)',
+      overflow: 'hidden',
+      padding: '15px 0',
+      cursor: 'default',
+      maskImage: 'linear-gradient(90deg, transparent 0%, black 8%, black 92%, transparent 100%)',
+      WebkitMaskImage: 'linear-gradient(90deg, transparent 0%, black 8%, black 92%, transparent 100%)',
+    }}>
+      <div className="ticker-track" style={{ display: 'inline-flex', whiteSpace: 'nowrap' }}>
+        {all.map((item, i) => (
+          <span key={i} style={{
+            fontSize: '0.76rem',
+            color: 'var(--muted)',
+            padding: '0 40px',
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '40px',
+            flexShrink: 0,
+          }}>
+            <span style={{ color: 'var(--gold)', opacity: 0.35, fontSize: '0.42rem' }}>◆</span>
+            {item}
+          </span>
+        ))}
+      </div>
     </div>
   );
 }
@@ -519,6 +562,8 @@ export default function LandingPage() {
   return (
     <div style={{ background: 'var(--bg)', color: 'var(--text)', overflowX: 'hidden' }}>
 
+      <a href="#main-content" className="skip-link">Skip to main content</a>
+
       {/* Paper grain — subtle noise layer reinforcing the journal/editorial feel */}
       <div aria-hidden="true" style={{
         position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 9999,
@@ -535,57 +580,56 @@ export default function LandingPage() {
         <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
           <a href="#features" className="nav-link" style={{ padding: '8px 14px', fontSize: '0.86rem', color: 'var(--muted)', fontWeight: 500 }}>Features</a>
           <a href="#pricing" className="nav-link" style={{ padding: '8px 14px', fontSize: '0.86rem', color: 'var(--muted)', fontWeight: 500 }}>Pricing</a>
-          <a href="/login" className="nav-link" style={{ padding: '8px 14px', fontSize: '0.86rem', color: 'var(--muted)', fontWeight: 500 }}>For Therapists</a>
-          <a href={dlHref} className="btn-primary" style={{ padding: '9px 18px', fontSize: '0.84rem', borderRadius: 10 }}>Download App</a>
+          <a href="/login" className="nav-link" style={{ padding: '8px 14px', fontSize: '0.86rem', color: 'var(--muted)', fontWeight: 500 }}>Therapist Portal</a>
+          <a href={dlHref} className="btn-primary" style={{ padding: '9px 20px', fontSize: '0.84rem', borderRadius: 100 }}>Download Free</a>
         </div>
       </nav>
 
       {/* ── Hero ──────────────────────────────────────────────────────── */}
-      <section className="landing-section" style={{ paddingTop: 150, paddingBottom: 120, position: 'relative', overflow: 'hidden' }}>
-        {/* Asymmetric warm wash — top-left corner bleed, not a centered orb */}
-        <div style={{
-          position: 'absolute', top: '-20%', left: '-10%',
-          width: '65%', height: '90%',
-          background: 'radial-gradient(ellipse 55% 65% at 28% 38%, rgba(200,149,90,0.07) 0%, rgba(180,130,70,0.03) 45%, transparent 70%)',
-          pointerEvents: 'none', transform: 'rotate(-8deg)',
+      <section id="main-content" className="landing-section" style={{ paddingTop: 160, paddingBottom: 100, position: 'relative', overflow: 'hidden', minHeight: '100dvh', display: 'flex', alignItems: 'center' }}>
+        {/* Ambient glow — top-left bleed */}
+        <div aria-hidden="true" style={{
+          position: 'absolute', top: '-10%', left: '-5%',
+          width: '55%', height: '80%',
+          background: 'radial-gradient(ellipse 60% 70% at 30% 40%, rgba(200,149,90,0.06) 0%, transparent 65%)',
+          pointerEvents: 'none',
         }} />
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 80, position: 'relative' }}>
-          <div style={{ flex: 1, maxWidth: 500 }}>
-            <div className="eyebrow" style={{ marginBottom: 20, animation: 'heroIn 0.6s ease both', animationDelay: '0.05s' }}>A PRIVATE EMOTIONAL JOURNAL</div>
-            <h1 className="serif" style={{ fontSize: 'clamp(2.6rem, 5vw, 4.2rem)', fontWeight: 300, lineHeight: 1.12, margin: '0 0 24px', color: 'var(--text)', animation: 'heroIn 0.7s ease both', animationDelay: '0.15s' }}>
-              Your thoughts,{' '}
-              <em style={{ color: 'var(--gold)', fontStyle: 'italic' }}>out loud.</em>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 60, position: 'relative', width: '100%' }}>
+          {/* Left: copy — takes 55% */}
+          <div style={{ flex: '0 0 55%', maxWidth: 640 }}>
+            <h1 className="serif" style={{ fontSize: 'clamp(3.8rem, 6.5vw, 7rem)', fontWeight: 300, lineHeight: 1.05, margin: '0 0 28px', color: 'var(--text)', animation: 'heroIn 0.8s cubic-bezier(0.16,1,0.3,1) both', animationDelay: '0.1s', letterSpacing: '-0.02em' }}>
+              Your thoughts,<br /><em style={{ color: 'var(--gold)' }}>out loud.</em>
             </h1>
-            <p style={{ fontSize: '1.05rem', color: 'var(--muted)', lineHeight: 1.75, margin: '0 0 36px', maxWidth: 420, animation: 'heroIn 0.7s ease both', animationDelay: '0.28s' }}>
-              Talk for two minutes or twenty. DreamLog listens, transcribes, and reflects back what your mind has been quietly trying to process, grounded in everything you&apos;ve shared before.
+            <p style={{ fontSize: '1.05rem', color: 'var(--muted)', lineHeight: 1.75, margin: '0 0 36px', maxWidth: 440, animation: 'heroIn 0.8s cubic-bezier(0.16,1,0.3,1) both', animationDelay: '0.22s' }}>
+              Record your day in your own voice. DreamLog transcribes it, cross-references your last five entries, and shows you what you keep coming back to.
             </p>
-            <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', animation: 'heroIn 0.7s ease both', animationDelay: '0.4s' }}>
-              <a href={dlHref} className="btn-primary" style={{ padding: '13px 26px', fontSize: '0.92rem', borderRadius: 12 }}>Start Journaling →</a>
-              <a href="/login" className="btn-ghost" style={{ padding: '13px 26px', fontSize: '0.92rem', borderRadius: 12 }}>For Therapists</a>
+            <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', animation: 'heroIn 0.8s cubic-bezier(0.16,1,0.3,1) both', animationDelay: '0.34s' }}>
+              <a href={dlHref} className="btn-primary" style={{ padding: '14px 28px', fontSize: '0.92rem' }}>Start journaling free</a>
+              <a href="/login" className="btn-ghost" style={{ padding: '14px 28px', fontSize: '0.92rem' }}>Therapist portal</a>
             </div>
-            <p className="serif" style={{ margin: '28px 0 0', fontSize: '0.92rem', color: 'var(--muted)', fontStyle: 'italic', animation: 'heroIn 0.7s ease both', animationDelay: '0.52s' }}>
-              &ldquo;I finally have a place where I can understand myself.&rdquo;
-            </p>
           </div>
-          <div style={{ flexShrink: 0, paddingRight: 200 }} className="hero-mock">
+          {/* Right: phone mockup with floating cards */}
+          <div className="hero-mock" style={{ flex: 1, display: 'flex', justifyContent: 'center', animation: 'heroIn 1s cubic-bezier(0.16,1,0.3,1) both', animationDelay: '0.3s' }}>
             <AppMockup />
           </div>
         </div>
       </section>
 
 
+      <InsightTicker />
+
       {/* ── How it works ──────────────────────────────────────────────── */}
-      <section className="landing-section reveal" id="how" style={{ paddingTop: 80, paddingBottom: 80 }}>
+      <section className="landing-section reveal" id="how">
         <h2 className="serif" style={{ fontSize: 'clamp(1.8rem, 3.5vw, 2.6rem)', fontWeight: 300, margin: '0 0 72px', maxWidth: 420 }}>
-          Three quiet steps.<br />Then it remembers.
+          Three steps.<br />Then it connects the dots.
         </h2>
-        <div className="how-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 0, position: 'relative' }}>
+        <div className="how-grid stagger" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 0, position: 'relative' }}>
           {/* connecting line */}
           <div style={{ position: 'absolute', top: 18, left: '16.66%', right: '16.66%', height: 1, background: 'linear-gradient(90deg, transparent, var(--border-mid), var(--border-mid), transparent)', pointerEvents: 'none' }} />
           {[
-            { n: '1', title: 'Speak freely', body: 'Open DreamLog and talk. No typing, no prompts. Just your voice and as much time as you need.' },
-            { n: '2', title: 'AI reflects', body: "Your thoughts become an emotional reflection, grounded in what you've shared in past entries, not just today's." },
-            { n: '3', title: 'Understand yourself', body: 'See recurring emotions, the people who keep appearing, and the slow shape of your own growth.' },
+            { n: '1', title: 'Speak freely', body: 'Open DreamLog and talk. No typing, no prompts. Two minutes or an hour — it just records.' },
+            { n: '2', title: 'AI reflects', body: "Your words get transcribed and cross-referenced with your last five entries. That's where the patterns come from." },
+            { n: '3', title: 'See the pattern', body: 'The same names keep appearing. The same worries. The same small hope. You start to see what actually matters to you.' },
           ].map((step, i) => (
             <div key={step.n} style={{ paddingRight: i < 2 ? 48 : 0 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 28 }}>
@@ -608,10 +652,10 @@ export default function LandingPage() {
               It feels like a journal,<br />not a dashboard.
             </h2>
             <p style={{ fontSize: '0.95rem', color: 'var(--muted)', lineHeight: 1.8, margin: 0 }}>
-              No metrics. No streaks. No guilt. DreamLog summarises what your week was actually made of, and lets you begin to notice what keeps coming back.
+              No scores. No streaks. No productivity guilt. Just a summary of what you actually said this week — the names, the feelings, the question worth sitting with.
             </p>
             <p style={{ fontSize: '0.95rem', color: 'var(--muted)', lineHeight: 1.8, margin: '16px 0 0' }}>
-              There&apos;s a pull pattern around <span style={{ color: 'var(--text)' }}>family</span>. You speak about your <span style={{ color: 'var(--text)' }}>father</span> gently, without realising it. Two of your last three entries began with that name.
+              The card on the right shows what a Tuesday reflection looks like. DreamLog picked up the morning walk, a quiet worry about <span style={{ color: 'var(--text)' }}>family</span>, and left one question worth carrying into Wednesday.
             </p>
           </div>
 
@@ -647,35 +691,47 @@ export default function LandingPage() {
 
       {/* ── Therapy mode ──────────────────────────────────────────────── */}
       <section className="landing-section reveal" id="therapy">
-        <div className="therapy-intro-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 64, alignItems: 'center', marginBottom: 48 }}>
+        {/* Split panel: text left, orb fills entire right */}
+        <div style={{
+          display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 0,
+          background: 'var(--bg-card)', border: '1px solid var(--border)',
+          borderRadius: 24, overflow: 'hidden', marginBottom: 44,
+        }}>
           {/* Left: copy */}
-          <div>
-            <h2 className="serif" style={{ fontSize: 'clamp(1.8rem, 3vw, 2.5rem)', fontWeight: 300, margin: '0 0 20px', lineHeight: 1.2 }}>
-              A conversation that already<br />knows your story.
+          <div style={{ padding: '56px 52px', display: 'flex', flexDirection: 'column', justifyContent: 'center', borderRight: '1px solid var(--border)' }}>
+            <h2 className="serif" style={{ fontSize: 'clamp(2rem, 3.8vw, 3.4rem)', fontWeight: 300, margin: '0 0 20px', lineHeight: 1.05, letterSpacing: '-0.025em' }}>
+              A conversation<br />that already knows<br /><em style={{ color: 'var(--gold)' }}>your story.</em>
             </h2>
-            <p style={{ fontSize: '0.95rem', color: 'var(--muted)', lineHeight: 1.8, margin: 0 }}>
-              Not a chatbot. A companion voice that has read everything you&apos;ve ever said to it, and comes prepared. Up to an hour. Voice or text. Four distinct tones to match where you are.
+            <p style={{ fontSize: '0.95rem', color: 'var(--muted)', lineHeight: 1.8, margin: '0 0 28px', maxWidth: 380 }}>
+              Not a chatbot. A companion that has read everything you&apos;ve said to it, and comes prepared. Up to an hour. Voice or text. Four distinct tones.
             </p>
-            <p style={{ fontSize: '0.82rem', color: 'var(--muted-2)', margin: '20px 0 0', lineHeight: 1.7 }}>
-              {p('therapy')} per session · included monthly with Pro · not a replacement for therapy
+            <p style={{ fontSize: '0.78rem', color: 'var(--muted-2)', margin: 0, lineHeight: 1.8 }}>
+              {p('therapy')} per session · included monthly with Pro<br /><em>not a replacement for therapy</em>
             </p>
           </div>
-          {/* Right: breathing orb */}
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '40px 0' }}>
+          {/* Right: orb fills the whole panel */}
+          <div style={{
+            position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center',
+            minHeight: 420, padding: '60px 40px', overflow: 'hidden',
+            background: 'radial-gradient(ellipse 70% 70% at 50% 50%, rgba(200,149,90,0.04) 0%, transparent 70%)',
+          }}>
+            <div aria-hidden="true" style={{ position: 'absolute', inset: 0, margin: 'auto', width: 380, height: 380, borderRadius: '50%', border: '1px solid rgba(200,149,90,0.06)', animation: 'breathIdle 7s ease-in-out infinite', pointerEvents: 'none' }} />
+            <div aria-hidden="true" style={{ position: 'absolute', inset: 0, margin: 'auto', width: 300, height: 300, borderRadius: '50%', border: '1px solid rgba(200,149,90,0.09)', animation: 'breathIdle 7s ease-in-out 1s infinite', pointerEvents: 'none' }} />
+            <div aria-hidden="true" style={{ position: 'absolute', inset: 0, margin: 'auto', width: 220, height: 220, borderRadius: '50%', border: '1px solid rgba(200,149,90,0.12)', animation: 'breathIdle 7s ease-in-out 2s infinite', pointerEvents: 'none' }} />
             <BreathingOrb />
           </div>
         </div>
-        <div className="therapy-personas-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 14 }}>
+        <div className="therapy-personas-grid stagger" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 14 }}>
           {[
             { icon: <IconHeart />, name: 'Comforting', sub: 'Warm, validating, feelings-first. Holds space before it asks anything.' },
             { icon: <IconCompass />, name: 'Rational', sub: 'Structured and Socratic. Helps you think clearly without judgment.' },
             { icon: <IconLens />, name: 'CBT-Informed', sub: 'Names thought patterns gently. Asks what the evidence actually says.' },
             { icon: <IconBreath />, name: 'Mindful', sub: 'Grounding and present. Works with breath, not despite it.' },
-          ].map(p => (
-            <div key={p.name} className="card" style={{ padding: '22px 20px' }}>
-              <div style={{ color: 'var(--gold)', marginBottom: 14 }}>{p.icon}</div>
-              <div style={{ fontWeight: 600, fontSize: '0.92rem', color: 'var(--text)', marginBottom: 9 }}>{p.name}</div>
-              <p style={{ fontSize: '0.82rem', color: 'var(--muted)', margin: 0, lineHeight: 1.65 }}>{p.sub}</p>
+          ].map(persona => (
+            <div key={persona.name} className="card" style={{ padding: '22px 20px' }}>
+              <div style={{ color: 'var(--gold)', marginBottom: 14 }}>{persona.icon}</div>
+              <div style={{ fontWeight: 600, fontSize: '0.92rem', color: 'var(--text)', marginBottom: 9 }}>{persona.name}</div>
+              <p style={{ fontSize: '0.82rem', color: 'var(--muted)', margin: 0, lineHeight: 1.65 }}>{persona.sub}</p>
             </div>
           ))}
         </div>
@@ -689,31 +745,38 @@ export default function LandingPage() {
         <p style={{ fontSize: '0.95rem', color: 'var(--muted)', margin: '0 0 40px', lineHeight: 1.75, maxWidth: 520 }}>
           Mysterious, considered, modern. Not mystical. Not fortune-telling. Just two thoughtful ways to look at the images your mind made last night.
         </p>
-        <div className="dream-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-          {[
-            {
-              icon: 'Ψ', label: 'PSYCHOLOGICAL REFLECTION', name: 'Jungian lens',
-              body: "Read your dream as an inner conversation. The shadows, the figures, the unresolved themes, surfaced gently, without prescription.",
-              quote: "The man you couldn't find in the dream might be the part of you that hasn't been allowed to speak.",
-            },
-            {
-              icon: 'ॐ', label: 'INDIAN SYMBOLIC REFLECTION', name: 'Vedic lens',
-              body: "Interpret your dream through traditional Indian symbolism: rivers, doors, animals, time of night. Cultural, careful, contextual.",
-              quote: "The river that wouldn't carry you may signify a passage you have not yet asked permission to cross.",
-            },
-          ].map(lens => (
-            <div key={lens.name} className="card dream-card" style={{ padding: '32px 36px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20 }}>
-                <div className="eyebrow">{lens.label}</div>
-                <span className="dream-symbol" style={{ fontSize: '1.5rem', color: 'var(--gold)', lineHeight: 1, opacity: 0.75 }}>{lens.icon}</span>
-              </div>
-              <h3 style={{ fontSize: '1.3rem', fontWeight: 600, color: 'var(--text)', margin: '0 0 14px' }}>{lens.name}</h3>
-              <p style={{ fontSize: '0.9rem', color: 'var(--text)', margin: '0 0 22px', lineHeight: 1.75, opacity: 0.8 }}>{lens.body}</p>
-              <p className="serif" style={{ fontStyle: 'italic', fontSize: '0.95rem', color: 'var(--muted)', margin: 0, lineHeight: 1.7, borderLeft: '2px solid var(--border-mid)', paddingLeft: 14 }}>
-                &ldquo;{lens.quote}&rdquo;
-              </p>
-            </div>
-          ))}
+        {/* Single split-panel — not two equal cards */}
+        <div className="dream-split" style={{
+          display: 'grid', gridTemplateColumns: '1fr 1px 1fr', gap: 0,
+          background: 'var(--bg-card)', border: '1px solid var(--border)',
+          borderRadius: 20, overflow: 'hidden',
+        }}>
+          {/* Jungian */}
+          <div className="dream-panel" style={{ padding: '48px 44px', position: 'relative', overflow: 'hidden' }}>
+            <div aria-hidden="true" style={{ position: 'absolute', right: -24, top: -16, fontSize: '9rem', color: 'rgba(200,149,90,0.05)', fontFamily: 'Georgia, serif', userSelect: 'none', lineHeight: 1, pointerEvents: 'none' }}>Ψ</div>
+            <div style={{ fontSize: '0.58rem', letterSpacing: '2.5px', color: 'var(--muted-2)', textTransform: 'uppercase', marginBottom: 20 }}>Psychological</div>
+            <h3 className="serif" style={{ fontSize: '1.7rem', fontWeight: 300, color: 'var(--text)', margin: '0 0 16px', fontStyle: 'italic', lineHeight: 1.2 }}>Jungian lens</h3>
+            <p style={{ fontSize: '0.88rem', color: 'var(--muted)', margin: '0 0 28px', lineHeight: 1.8 }}>
+              Read your dream as an inner conversation. The shadows, the figures, the unresolved themes — surfaced gently, without prescription.
+            </p>
+            <p className="serif" style={{ fontStyle: 'italic', fontSize: '1rem', color: 'var(--text)', margin: 0, lineHeight: 1.7, opacity: 0.8 }}>
+              &ldquo;The man you couldn&apos;t find in the dream might be the part of you that hasn&apos;t been allowed to speak.&rdquo;
+            </p>
+          </div>
+          {/* Divider */}
+          <div style={{ background: 'var(--border)' }} />
+          {/* Vedic */}
+          <div className="dream-panel" style={{ padding: '48px 44px', position: 'relative', overflow: 'hidden', background: 'rgba(200,149,90,0.02)' }}>
+            <div aria-hidden="true" style={{ position: 'absolute', right: -20, top: -10, fontSize: '9rem', color: 'rgba(200,149,90,0.05)', fontFamily: 'Georgia, serif', userSelect: 'none', lineHeight: 1, pointerEvents: 'none' }}>ॐ</div>
+            <div style={{ fontSize: '0.58rem', letterSpacing: '2.5px', color: 'var(--muted-2)', textTransform: 'uppercase', marginBottom: 20 }}>Indian symbolic</div>
+            <h3 className="serif" style={{ fontSize: '1.7rem', fontWeight: 300, color: 'var(--text)', margin: '0 0 16px', fontStyle: 'italic', lineHeight: 1.2 }}>Vedic lens</h3>
+            <p style={{ fontSize: '0.88rem', color: 'var(--muted)', margin: '0 0 28px', lineHeight: 1.8 }}>
+              Interpret your dream through traditional Indian symbolism: rivers, doors, animals, time of night. Cultural, careful, contextual.
+            </p>
+            <p className="serif" style={{ fontStyle: 'italic', fontSize: '1rem', color: 'var(--text)', margin: 0, lineHeight: 1.7, opacity: 0.8 }}>
+              &ldquo;The river that wouldn&apos;t carry you may signify a passage you have not yet asked permission to cross.&rdquo;
+            </p>
+          </div>
         </div>
       </section>
 
@@ -722,28 +785,29 @@ export default function LandingPage() {
       {/* ── Features ──────────────────────────────────────────────────── */}
       <section className="landing-section reveal" id="features">
         <h2 className="serif" style={{ fontSize: 'clamp(1.8rem, 3vw, 2.5rem)', fontWeight: 300, margin: '0 0 48px' }}>
-          Quiet tools for<br />understanding yourself.
+          What&apos;s inside<br />DreamLog.
         </h2>
 
-        {/* 3 hero features — staggered slide-up */}
-        <div className="features-hero-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 2, marginBottom: 2 }}>
-          {[
-            { icon: <IconMic />, name: 'Voice Journaling', body: "Speak naturally. No typing, no prompts. DreamLog captures your thoughts the way they actually arrive, unfiltered, in your own voice." },
-            { icon: <IconSparkle />, name: 'AI Emotional Reflection', body: "Your entries become a private mirror. Mood, themes, recurring phrases, the quiet things you didn't say out loud, surfaced gently after every recording." },
-            { icon: <IconChat />, name: 'Therapy Mode', body: "A companion conversation that already understands your emotional history. Up to an hour, voice or text, four distinct tones." },
-          ].map((f, i) => (
-            <div key={f.name} className="feat-hero reveal" style={{
-              background: i === 1 ? 'rgba(200,149,90,0.04)' : 'var(--bg-card)',
-              border: `1px solid ${i === 1 ? 'rgba(200,149,90,0.18)' : 'var(--border)'}`,
-              borderRadius: i === 0 ? '16px 0 0 16px' : i === 2 ? '0 16px 16px 0' : 0,
-              padding: '32px 28px 36px',
-              transitionDelay: `${i * 0.1}s`,
-            }}>
-              <div className="feat-icon" style={{ color: 'var(--gold)', marginBottom: 20, opacity: 0.75 }}>{f.icon}</div>
-              <div style={{ fontWeight: 700, fontSize: '1rem', color: 'var(--text)', marginBottom: 12, letterSpacing: '-0.01em' }}>{f.name}</div>
-              <p style={{ fontSize: '0.88rem', color: 'var(--muted)', margin: 0, lineHeight: 1.8 }}>{f.body}</p>
+        {/* Bento feature grid — 2-col top, 1 wide bottom */}
+        <div className="features-bento" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2, marginBottom: 2 }}>
+          <div className="feat-hero reveal" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: '16px 0 0 0', padding: '36px 32px 40px', transitionDelay: '0s' }}>
+            <div className="feat-icon" style={{ color: 'var(--gold)', marginBottom: 20, opacity: 0.75 }}><IconMic /></div>
+            <div style={{ fontWeight: 700, fontSize: '1.05rem', color: 'var(--text)', marginBottom: 12, letterSpacing: '-0.01em' }}>Voice journaling</div>
+            <p style={{ fontSize: '0.88rem', color: 'var(--muted)', margin: 0, lineHeight: 1.8 }}>Speak naturally. No typing, no prompts. DreamLog captures your thoughts the way they actually arrive — unfiltered, in your own voice.</p>
+          </div>
+          <div className="feat-hero reveal" style={{ background: 'rgba(200,149,90,0.04)', border: '1px solid rgba(200,149,90,0.18)', borderRadius: '0 16px 0 0', padding: '36px 32px 40px', transitionDelay: '0.1s' }}>
+            <div className="feat-icon" style={{ color: 'var(--gold)', marginBottom: 20, opacity: 0.75 }}><IconSparkle /></div>
+            <div style={{ fontWeight: 700, fontSize: '1.05rem', color: 'var(--text)', marginBottom: 12, letterSpacing: '-0.01em' }}>AI emotional reflection</div>
+            <p style={{ fontSize: '0.88rem', color: 'var(--muted)', margin: 0, lineHeight: 1.8 }}>Your entries become a private mirror. Mood, themes, recurring phrases — the quiet things you didn't say out loud, surfaced gently after every recording.</p>
+          </div>
+          <div className="feat-hero feat-wide reveal" style={{ gridColumn: '1 / -1', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: '0 0 16px 16px', padding: '28px 36px', transitionDelay: '0.2s' }}>
+            <div className="feat-icon" style={{ color: 'var(--gold)', opacity: 0.75 }}><IconChat /></div>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontWeight: 700, fontSize: '1.05rem', color: 'var(--text)', marginBottom: 10, letterSpacing: '-0.01em' }}>Therapy mode</div>
+              <p style={{ fontSize: '0.88rem', color: 'var(--muted)', margin: 0, lineHeight: 1.75 }}>A companion conversation that already understands your emotional history. Up to an hour, voice or text, four distinct tones.</p>
             </div>
-          ))}
+            <a href="#therapy" style={{ flexShrink: 0, fontSize: '0.8rem', color: 'var(--gold)', fontWeight: 600, letterSpacing: 0.3, whiteSpace: 'nowrap', borderBottom: '1px solid rgba(212,165,106,0.3)', paddingBottom: 2, transition: 'border-color 0.2s ease', textDecoration: 'none' }}>Explore Therapy Mode →</a>
+          </div>
         </div>
 
         {/* 6 secondary features — hover accent rows */}
@@ -772,57 +836,65 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ── Testimonials ──────────────────────────────────────────────── */}
-      <section className="landing-section reveal">
-        <div className="testimonials-grid" style={{ display: 'grid', gridTemplateColumns: '55fr 45fr', gap: 16, alignItems: 'stretch' }}>
-          {/* Large pull quote */}
-          <div className="testimonial-large reveal-left" style={{ background: 'rgba(200,149,90,0.04)', border: '1px solid rgba(200,149,90,0.14)', borderRadius: 20, padding: '44px 48px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-            <div className="serif" style={{ fontSize: '1.4rem', fontWeight: 300, fontStyle: 'italic', lineHeight: 1.7, color: 'var(--text)', marginBottom: 32 }}>
-              &ldquo;It noticed I kept mentioning my father without realising it. Three entries in a row. Nobody had ever pointed that out before.&rdquo;
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-              <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'rgba(200,149,90,0.12)', border: '1px solid rgba(200,149,90,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.7rem', color: 'var(--gold)', fontFamily: "'Cormorant Garamond', serif", fontWeight: 600 }}>A</div>
-              <span style={{ fontSize: '0.8rem', color: 'var(--muted)' }}>A user, 41, after the weekly review</span>
-            </div>
-          </div>
-          {/* Two smaller quotes stacked */}
-          <div className="reveal-right" style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-            <div className="testimonial-small" style={{ flex: 1, background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 20, padding: '28px 32px' }}>
-              <p className="serif" style={{ fontStyle: 'italic', fontSize: '1rem', lineHeight: 1.75, color: 'var(--text)', margin: '0 0 20px' }}>
-                &ldquo;I&apos;ve kept journals for years but always gave up after a week. Talking feels different. Something about hearing my own voice makes the reflection land.&rdquo;
-              </p>
-              <p style={{ fontSize: '0.78rem', color: 'var(--muted)', margin: 0 }}>Priya, 28, 3-month user</p>
-            </div>
-            <div className="testimonial-small" style={{ flex: 1, background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 20, padding: '28px 32px' }}>
-              <p className="serif" style={{ fontStyle: 'italic', fontSize: '1rem', lineHeight: 1.75, color: 'var(--text)', margin: '0 0 20px' }}>
-                &ldquo;The AI doesn&apos;t say what I want to hear. It says what I actually said. That&apos;s a harder and better thing.&rdquo;
-              </p>
-              <p style={{ fontSize: '0.78rem', color: 'var(--muted)', margin: 0 }}>A user, 34, six weeks in</p>
-            </div>
+      {/* ── Pull quote — woven in, not a testimonials box ─────────────── */}
+      <div className="reveal" style={{ maxWidth: 1320, margin: '0 auto', padding: '0 60px 80px' }}>
+        <div style={{ borderTop: '1px solid var(--border)', paddingTop: 64 }}>
+          <div className="serif" style={{ fontSize: 'clamp(0.7rem, 0.9vw, 0.85rem)', fontWeight: 300, letterSpacing: '0.05em', color: 'var(--muted-2)', marginBottom: 24, fontStyle: 'normal' }}>— Rohit, 41, after his first weekly review</div>
+          <p className="serif reveal-left" style={{ fontSize: 'clamp(1.6rem, 3vw, 2.4rem)', fontWeight: 300, fontStyle: 'italic', lineHeight: 1.55, color: 'var(--text)', margin: '0 0 40px', maxWidth: 820 }}>
+            &ldquo;It noticed I kept mentioning my father without realising it. Three entries in a row. Nobody had ever pointed that out before.&rdquo;
+          </p>
+          <div style={{ display: 'flex', gap: 48, flexWrap: 'wrap' }}>
+            {[
+              { quote: '"Talking feels different. Something about hearing my own voice makes the reflection land."', attr: 'Priya, 28 — 3-month user' },
+              { quote: '"It says what I actually said. That\'s a harder and better thing."', attr: 'Ananya, 34 — six weeks in' },
+            ].map(t => (
+              <div key={t.attr} style={{ flex: '1 1 260px' }}>
+                <p className="serif" style={{ fontStyle: 'italic', fontSize: '0.95rem', color: 'var(--muted)', margin: '0 0 10px', lineHeight: 1.7 }}>&ldquo;{t.quote}&rdquo;</p>
+                <span style={{ fontSize: '0.76rem', color: 'var(--muted-2)' }}>{t.attr}</span>
+              </div>
+            ))}
           </div>
         </div>
-      </section>
+      </div>
 
       {/* ── Pricing ───────────────────────────────────────────────────── */}
       <section className="landing-section reveal" id="pricing">
-        <h2 className="serif" style={{ fontSize: 'clamp(1.8rem, 3vw, 2.5rem)', fontWeight: 300, margin: '0 0 10px' }}>Honest pricing.</h2>
-        <p style={{ fontSize: '0.9rem', color: 'var(--muted)', margin: '0 0 44px' }}>Most people start Free. You never need to upgrade. It&apos;s allowed.</p>
-        <div className="pricing-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16 }}>
-          <PricingCard name="Free" price={p('free')} period="forever" sub="10 entries a month. Reflections, mood tracking, 3-turn follow-ups." features={['10 entries / month', 'AI emotional reflection', '7-day mood chart', '3-turn follow-up conversation', 'Crisis detection always on']} cta="Download Free" downloadHref={dlHref} ready={ready} />
-          <PricingCard name="DreamLog+" price={p('plus')} period={per} sub="Unlimited entries. All modes. The complete journaling product." features={['Unlimited entries', 'All 5 journaling modes', 'Dream Decoder (Jungian + Vedic)', 'Life Graph & Mood History', 'Weekly + Annual Reviews', 'Life Chapters', 'PDF export', 'Therapist share (5/month)']} cta="Get DreamLog+" downloadHref={dlHref} featured ready={ready} />
-          <PricingCard name="DreamLog Pro" price={p('pro')} period={per} sub="Everything in Plus, + 1 therapy." features={['Everything in Plus', '1 Therapy Session / month', `Extra sessions at ${currency === 'INR' ? '₹299' : currency === 'EUR' ? '€3.99' : '$4.99'}`, 'Unlimited therapist share', 'Priority processing']} cta="Get DreamLog Pro" downloadHref={dlHref} ready={ready} />
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', gap: 24, marginBottom: 44, flexWrap: 'wrap' }}>
+          <h2 className="serif" style={{ fontSize: 'clamp(2.2rem, 4vw, 3.6rem)', fontWeight: 300, margin: 0, lineHeight: 1.05, letterSpacing: '-0.02em' }}>Honest<br />pricing.</h2>
+          <p style={{ fontSize: '0.9rem', color: 'var(--muted)', margin: 0, maxWidth: 260, lineHeight: 1.7, textAlign: 'right' }}>Most people start Free. You never need to upgrade. It&apos;s allowed.</p>
         </div>
-        <p style={{ marginTop: 16, fontSize: '0.78rem', color: 'var(--muted-2)', textAlign: 'center' }}>
-          All subscriptions are managed in-app after download. One-time 30-day passes, no auto-renew.
+        {/* Free — horizontal starter row, breaks the 3-tower pattern */}
+        <div className="pricing-free-row" style={{ display: 'flex', alignItems: 'center', gap: 20, background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 16, padding: '18px 28px', marginBottom: 12, flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, flexShrink: 0 }}>
+            <span style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--muted)' }}>Free</span>
+            <span className="serif" style={{ fontSize: '1.7rem', fontWeight: 300, color: 'var(--text)', opacity: ready ? 1 : 0, transition: 'opacity 0.3s' }}>{p('free')}</span>
+            <span style={{ fontSize: '0.75rem', color: 'var(--muted-2)' }}>forever</span>
+          </div>
+          <div style={{ flex: 1, display: 'flex', gap: 20, flexWrap: 'wrap' }}>
+            {['10 entries / month', 'AI reflection', '7-day mood chart', '3-turn follow-up', 'Crisis detection'].map(f => (
+              <span key={f} style={{ fontSize: '0.8rem', color: 'var(--muted)', display: 'inline-flex', gap: 7, alignItems: 'center' }}>
+                <span style={{ color: 'var(--gold)', fontSize: '0.7rem' }}>✓</span>{f}
+              </span>
+            ))}
+          </div>
+          <a href={dlHref} className="btn-ghost" style={{ padding: '9px 22px', whiteSpace: 'nowrap', flexShrink: 0, fontSize: '0.84rem' }}>Download Free</a>
+        </div>
+
+        {/* Plus + Pro — 2 columns, Plus naturally dominates with more features */}
+        <div className="pricing-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+          <PricingCard name="DreamLog+" price={p('plus')} period={per} sub="Unlimited entries. All modes. The complete journaling product." features={['Unlimited entries', 'All 5 journaling modes', 'Dream Decoder (Jungian + Vedic)', 'Life Graph & Mood History', 'Weekly + Annual Reviews', 'Life Chapters', 'PDF export', 'Therapist share (5/month)']} cta="Get DreamLog+" downloadHref={dlHref} featured ready={ready} />
+          <PricingCard name="DreamLog Pro" price={p('pro')} period={per} sub="Everything in Plus, plus one therapy session every month." features={['Everything in Plus', '1 Therapy Session / month', `Extra sessions at ${currency === 'INR' ? '₹299' : currency === 'EUR' ? '€3.99' : '$4.99'}`, 'Unlimited therapist share', 'Priority processing']} cta="Get DreamLog Pro" downloadHref={dlHref} ready={ready} />
+        </div>
+        <p style={{ marginTop: 14, fontSize: '0.76rem', color: 'var(--muted-2)', textAlign: 'right' }}>
+          30-day passes · managed in-app · no auto-renew
         </p>
       </section>
 
       {/* ── Corporate Wellness ────────────────────────────────────────── */}
       <section style={{ background: 'var(--bg-card-2)', borderTop: '1px solid var(--border)', borderBottom: '1px solid var(--border)' }}>
-        <div className="b2b-inner" style={{ maxWidth: 1320, margin: '0 auto', padding: '64px 60px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 60, alignItems: 'start' }}>
+        <div className="b2b-inner" style={{ maxWidth: 1320, margin: '0 auto', padding: '80px 60px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 60, alignItems: 'start' }}>
           <div>
-            <div style={{ fontSize: '0.6rem', letterSpacing: '2.5px', textTransform: 'uppercase', color: 'var(--gold)', fontWeight: 600, marginBottom: 18, opacity: 0.7 }}>FOR ORGANISATIONS</div>
-            <h2 className="serif" style={{ fontSize: 'clamp(1.6rem, 3vw, 2.4rem)', fontWeight: 300, margin: '0 0 16px', lineHeight: 1.2, color: 'var(--text)' }}>
+            <h2 className="serif" style={{ fontSize: 'clamp(1.6rem, 3vw, 2.4rem)', fontWeight: 300, margin: '0 0 16px', lineHeight: 1.15, color: 'var(--text)' }}>
               DreamLog for teams<br />who actually care.
             </h2>
             <p style={{ fontSize: '0.9rem', color: 'var(--muted)', lineHeight: 1.8, margin: '0 0 28px', maxWidth: 420 }}>
@@ -854,9 +926,8 @@ export default function LandingPage() {
       <section className="landing-section-sm reveal">
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 48, flexWrap: 'wrap' }}>
           <div style={{ flex: 1, minWidth: 280 }}>
-            <div style={{ fontSize: '0.6rem', letterSpacing: '2.5px', textTransform: 'uppercase', color: 'var(--gold)', fontWeight: 600, marginBottom: 16, opacity: 0.7 }}>FOR CLINICIANS</div>
             <h2 className="serif" style={{ fontSize: 'clamp(1.5rem, 2.5vw, 2rem)', fontWeight: 300, margin: '0 0 14px' }}>
-              For the therapists who send their clients here.
+              For the therapists<br />who send their clients here.
             </h2>
             <p style={{ fontSize: '0.9rem', color: 'var(--muted)', lineHeight: 1.75, margin: '0 0 24px' }}>
               Your clients own the data. You only see what they choose to share, and only while the link is live.
@@ -887,14 +958,29 @@ export default function LandingPage() {
       {/* ── FAQ ───────────────────────────────────────────────────────── */}
       <section className="landing-section-sm reveal">
         <div className="faq-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 60px' }}>
-          <div>
-            <FAQ q="Is this actually private?" a="Audio is deleted immediately after transcription. Transcripts live on our servers, encrypted. We don't sell data or train on your entries. You can export or delete everything at any time." />
-            <FAQ q="How is this different from a general AI chat?" a="It knows your history. Every reflection is grounded in your last 5 entries: the emotions, topics, and patterns that recur. A general chat has no memory. DreamLog does." />
-            <FAQ q="Does it work in Hindi or Hinglish?" a="Yes. Your language is detected automatically. Reflections are generated in the same language. Hindi and Hinglish support is included from DreamLog+." />
+          <div className="faq-col stagger">
+            <div className="faq-item">
+              <h3>Is this actually private?</h3>
+              <p>Audio is deleted immediately after transcription. Transcripts live on our servers, encrypted. We don't sell data or train on your entries. You can export or delete everything at any time.</p>
+            </div>
+            <div className="faq-item">
+              <h3>How is this different from a general AI chat?</h3>
+              <p>It knows your history. Every reflection is grounded in your last 5 entries — the emotions, topics, and patterns that recur. A general chat has no memory. DreamLog does.</p>
+            </div>
+            <div className="faq-item">
+              <h3>Does it work in Hindi or Hinglish?</h3>
+              <p>Yes. Your language is detected automatically. Reflections are generated in the same language. Hindi and Hinglish support is included from DreamLog+.</p>
+            </div>
           </div>
-          <div>
-            <FAQ q="Can I share this with my therapist?" a="Yes. From Settings, you generate a passcode-protected link. Your therapist sees mood trends and AI summaries, never raw transcripts or recordings." />
-            <FAQ q="What happens if I say something in crisis?" a="Two-stage detection runs on every entry. If distress is detected, you get crisis resources immediately: iCall, Vandrevala Foundation, 988 (US). The entry is flagged and handled separately." />
+          <div className="faq-col stagger">
+            <div className="faq-item">
+              <h3>Can I share this with my therapist?</h3>
+              <p>Yes. From Settings, you generate a passcode-protected link. Your therapist sees mood trends and AI summaries, never raw transcripts or recordings.</p>
+            </div>
+            <div className="faq-item">
+              <h3>What happens if I say something in crisis?</h3>
+              <p>Two-stage detection runs on every entry. If distress is detected, you get crisis resources immediately: iCall, Vandrevala Foundation, 988 (US). The entry is flagged and handled separately.</p>
+            </div>
           </div>
         </div>
       </section>
@@ -902,54 +988,62 @@ export default function LandingPage() {
       <hr className="section-divider" />
 
       {/* ── Download CTA ──────────────────────────────────────────────── */}
-      <section id="download" className="landing-section reveal" style={{ textAlign: 'center', padding: '100px 40px 80px' }}>
-        <h2 className="serif" style={{ fontSize: 'clamp(2rem, 4vw, 3.2rem)', fontWeight: 300, margin: '0 0 20px', lineHeight: 1.2 }}>
-          Your thoughts are<br /><em style={{ color: 'var(--gold)' }}>worth understanding.</em>
-        </h2>
-        <p style={{ fontSize: '0.95rem', color: 'var(--muted)', margin: '0 0 36px' }}>
-          Available on iOS and Android. Free to start.
-        </p>
-        <DownloadButtons androidUrl={version.android_store_url} iosUrl={version.ios_store_url} />
-        {version.ios_store_url === '#' && (
-          <p style={{ marginTop: 16, fontSize: '0.78rem', color: 'var(--muted-2)' }}>
-            Store listings coming soon. <a href="mailto:support@dreamlog.app" style={{ color: 'var(--muted)' }}>Get notified</a>
-          </p>
-        )}
+      <section id="download" className="landing-section reveal">
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: 40, alignItems: 'end', flexWrap: 'wrap' }}>
+          <h2 className="serif" style={{ fontSize: 'clamp(3rem, 6vw, 6.5rem)', fontWeight: 300, margin: 0, lineHeight: 1.0, letterSpacing: '-0.025em' }}>
+            Your thoughts<br />are worth<br /><em style={{ color: 'var(--gold)' }}>understanding.</em>
+          </h2>
+          <div style={{ paddingBottom: 8, display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 16 }}>
+            <DownloadButtons androidUrl={version.android_store_url} iosUrl={version.ios_store_url} />
+            {version.ios_store_url === '#' && (
+              <p style={{ margin: 0, fontSize: '0.78rem', color: 'var(--muted-2)', textAlign: 'right' }}>
+                Store listings coming soon.{' '}
+                <a href="mailto:support@dreamlog.app" style={{ color: 'var(--muted)' }}>Get notified</a>
+              </p>
+            )}
+            <p style={{ margin: 0, fontSize: '0.82rem', color: 'var(--muted-2)' }}>Available on iOS and Android. Free to start.</p>
+          </div>
+        </div>
       </section>
 
-      {/* ── Footer ────────────────────────────────────────────────────── */}
-      <footer style={{ borderTop: '1px solid var(--border)', padding: '48px 60px', maxWidth: 1320, margin: '0 auto' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr auto auto auto', gap: 40, alignItems: 'start' }}>
-          <div>
-            <a href="/" style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
-              <div style={{ width: 26, height: 26, borderRadius: 6, background: 'var(--gold)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: "'Cormorant Garamond', serif", fontStyle: 'italic', fontWeight: 700, fontSize: '0.95rem', color: '#18150f' }}>D</div>
-              <span className="serif" style={{ fontSize: '1rem', fontWeight: 600 }}>DreamLog</span>
-            </a>
-            <p style={{ fontSize: '0.8rem', color: 'var(--muted-2)', lineHeight: 1.7, margin: 0, maxWidth: 240 }}>
-              Voice journaling with AI reflection. Built for honesty, not performance.
-            </p>
-          </div>
-          <div>
-            <div style={{ fontSize: '0.72rem', letterSpacing: '1.5px', textTransform: 'uppercase', color: 'var(--muted-2)', fontWeight: 600, marginBottom: 12 }}>Product</div>
-            {[{ label: 'Features', href: '#features' }, { label: 'Therapy Mode', href: '#therapy' }, { label: 'Dream Decoder', href: '#dream' }, { label: 'Pricing', href: '#pricing' }, { label: 'For Therapists', href: '/login' }].map(l => (
-              <a key={l.label} href={l.href} style={{ display: 'block', fontSize: '0.84rem', color: 'var(--muted)', marginBottom: 8 }}>{l.label}</a>
-            ))}
-          </div>
-          <div>
-            <div style={{ fontSize: '0.72rem', letterSpacing: '1.5px', textTransform: 'uppercase', color: 'var(--muted-2)', fontWeight: 600, marginBottom: 12 }}>Company</div>
-            <a href="/privacy" style={{ display: 'block', fontSize: '0.84rem', color: 'var(--muted)', marginBottom: 8 }}>Privacy Policy</a>
-            <a href="/terms" style={{ display: 'block', fontSize: '0.84rem', color: 'var(--muted)', marginBottom: 8 }}>Terms</a>
-            <a href="mailto:support@dreamlog.app" style={{ display: 'block', fontSize: '0.84rem', color: 'var(--muted)', marginBottom: 8 }}>Support</a>
-          </div>
-          <div>
-            <div style={{ fontSize: '0.72rem', letterSpacing: '1.5px', textTransform: 'uppercase', color: 'var(--muted-2)', fontWeight: 600, marginBottom: 12 }}>If you need help</div>
-            {[{ label: 'iCall: 9152987821', href: 'tel:9152987821' }, { label: 'Vandrevala: 1860-2662-345', href: 'tel:18602662345' }, { label: '988 (US/Canada)', href: 'tel:988' }].map(r => (
-              <a key={r.label} href={r.href} style={{ display: 'block', fontSize: '0.8rem', color: 'var(--muted-2)', marginBottom: 7 }}>{r.label}</a>
+      {/* ── Footer — minimal, no link-farm ───────────────────────────── */}
+      <footer style={{ borderTop: '1px solid var(--border)', padding: '36px 60px', maxWidth: 1320, margin: '0 auto' }}>
+        {/* Top row: brand left, nav links right */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 32, flexWrap: 'wrap' }}>
+          <a href="/" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <div style={{ width: 26, height: 26, borderRadius: 6, background: 'var(--gold)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: "'Cormorant Garamond', serif", fontStyle: 'italic', fontWeight: 700, fontSize: '0.95rem', color: '#18150f' }}>D</div>
+            <span className="serif" style={{ fontSize: '1rem', fontWeight: 600 }}>DreamLog</span>
+          </a>
+          <div style={{ display: 'flex', gap: 28, flexWrap: 'wrap', alignItems: 'center' }}>
+            {[
+              { label: 'Features', href: '#features' },
+              { label: 'Pricing', href: '#pricing' },
+              { label: 'Therapist Portal', href: '/login' },
+              { label: 'Privacy', href: '/privacy' },
+              { label: 'Terms', href: '/terms' },
+              { label: 'Support', href: 'mailto:support@dreamlog.app' },
+            ].map(l => (
+              <a key={l.label} href={l.href} style={{ fontSize: '0.82rem', color: 'var(--muted)', transition: 'color 0.15s ease' }}
+                onMouseEnter={e => (e.currentTarget.style.color = 'var(--text)')}
+                onMouseLeave={e => (e.currentTarget.style.color = 'var(--muted)')}
+              >{l.label}</a>
             ))}
           </div>
         </div>
-        <div style={{ marginTop: 48, paddingTop: 24, borderTop: '1px solid var(--border)', fontSize: '0.75rem', color: 'var(--muted-2)' }}>
-          © 2026 DreamLog · <a href="mailto:support@dreamlog.app" style={{ color: 'var(--muted-2)' }}>support@dreamlog.app</a>
+
+        {/* Bottom row: copyright left, crisis lines right */}
+        <div style={{ marginTop: 24, paddingTop: 20, borderTop: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
+          <span style={{ fontSize: '0.74rem', color: 'var(--muted-2)' }}>© 2026 DreamLog · Built for honesty, not performance.</span>
+          <div style={{ display: 'flex', gap: 20, flexWrap: 'wrap' }}>
+            <span style={{ fontSize: '0.7rem', color: 'var(--muted-2)', opacity: 0.6 }}>If you need help:</span>
+            {[
+              { label: 'iCall 9152987821', href: 'tel:9152987821' },
+              { label: 'Vandrevala 1860-2662-345', href: 'tel:18602662345' },
+              { label: '988', href: 'tel:988' },
+            ].map(r => (
+              <a key={r.label} href={r.href} style={{ fontSize: '0.7rem', color: 'var(--muted-2)' }}>{r.label}</a>
+            ))}
+          </div>
         </div>
       </footer>
 
@@ -965,7 +1059,6 @@ export default function LandingPage() {
           .dream-grid            { grid-template-columns: 1fr !important; }
           .features-hero-grid    { grid-template-columns: repeat(2, 1fr) !important; }
           .pricing-grid          { grid-template-columns: 1fr !important; }
-          .testimonials-grid     { grid-template-columns: 1fr !important; }
           .b2b-inner             { padding: 56px 40px !important; gap: 40px !important; }
         }
 
@@ -976,8 +1069,8 @@ export default function LandingPage() {
           .landing-nav > div:last-child a:not(.btn-primary) { display: none; }
 
           /* Section padding */
-          .landing-section    { padding: 64px 20px 56px !important; }
-          .landing-section-sm { padding: 40px 20px !important; }
+          .landing-section    { padding: 72px 20px !important; }
+          .landing-section-sm { padding: 48px 20px !important; }
 
           /* Hero flex row → column */
           .landing-section > div[style*="space-between"] { flex-direction: column !important; gap: 40px !important; }
@@ -989,31 +1082,39 @@ export default function LandingPage() {
           /* Journal mirror: 2-col → 1-col */
           .journal-grid { grid-template-columns: 1fr !important; gap: 32px !important; }
 
-          /* Therapy intro + orb: 2-col → 1-col */
+          /* Therapy split panel: 2-col → 1-col */
           .therapy-intro-grid { grid-template-columns: 1fr !important; gap: 32px !important; }
+          #therapy > div:first-child { grid-template-columns: 1fr !important; }
+          #therapy > div:first-child > div:first-child { border-right: none !important; border-bottom: 1px solid var(--border) !important; padding: 36px 28px !important; }
+          #therapy > div:first-child > div:last-child { min-height: 280px !important; padding: 40px 20px !important; }
+          #therapy > div:first-child > div:last-child > div:nth-child(1),
+          #therapy > div:first-child > div:last-child > div:nth-child(2),
+          #therapy > div:first-child > div:last-child > div:nth-child(3) { width: 200px !important; height: 200px !important; }
 
           /* Therapy personas: 4-col → 2-col */
           .therapy-personas-grid { grid-template-columns: repeat(2, 1fr) !important; }
 
-          /* Dream decoder: 2-col → 1-col */
-          .dream-grid { grid-template-columns: 1fr !important; }
+          /* Dream split: columns → rows */
+          .dream-split { grid-template-columns: 1fr !important; }
+          .dream-split > div:nth-child(2) { height: 1px !important; width: 100% !important; }
+          .dream-panel { padding: 36px 28px !important; }
 
-          /* Feature hero cards: 3-col → 1-col; fix border-radius */
-          .features-hero-grid { grid-template-columns: 1fr !important; }
-          .features-hero-grid .feat-hero:first-child { border-radius: 16px 16px 0 0 !important; }
-          .features-hero-grid .feat-hero:last-child  { border-radius: 0 0 16px 16px !important; }
-          .features-hero-grid .feat-hero:not(:first-child):not(:last-child) { border-radius: 0 !important; }
+          /* Feature bento: 2-col top + wide bottom → 1-col */
+          .features-bento { grid-template-columns: 1fr !important; }
+          .features-bento .feat-hero:nth-child(1) { border-radius: 16px 16px 0 0 !important; }
+          .features-bento .feat-hero:nth-child(2) { border-radius: 0 !important; }
+          .features-bento .feat-hero:nth-child(3) { border-radius: 0 0 16px 16px !important; }
+          .feat-wide { flex-direction: column !important; align-items: flex-start !important; gap: 16px !important; }
 
           /* Feature sub-grid: 2-col → 1-col */
           .features-sub-grid { grid-template-columns: 1fr !important; }
           .features-sub-grid > div { border-right: none !important; border-top: 1px solid var(--border) !important; }
           .features-sub-grid > div:first-child { border-top: none !important; }
 
-          /* Testimonials: stacked */
-          .testimonials-grid { grid-template-columns: 1fr !important; }
-
-          /* Pricing: 3-col → 1-col */
+          /* Pricing: 2-col → 1-col */
           .pricing-grid { grid-template-columns: 1fr !important; }
+          .pricing-free-row { flex-direction: column !important; align-items: flex-start !important; gap: 16px !important; }
+          .pricing-free-row > a { align-self: stretch; text-align: center; }
 
           /* B2B: 2-col → 1-col */
           .b2b-inner { grid-template-columns: 1fr !important; padding: 48px 20px !important; gap: 32px !important; }
@@ -1025,7 +1126,8 @@ export default function LandingPage() {
           .faq-grid { grid-template-columns: 1fr !important; }
 
           /* Download buttons */
-          #download > div { flex-direction: column !important; align-items: center; }
+          #download > div { grid-template-columns: 1fr !important; gap: 32px !important; }
+          #download > div > div:last-child { align-items: flex-start !important; }
 
           /* Footer */
           footer > div:first-child { grid-template-columns: 1fr 1fr !important; gap: 28px !important; }

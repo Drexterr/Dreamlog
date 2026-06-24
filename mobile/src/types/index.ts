@@ -1,5 +1,7 @@
 export type EntryStatus = 'pending' | 'processing' | 'completed' | 'failed';
-export type EntryMode = 'processing' | 'rant' | 'gratitude' | 'decision';
+export type EntryMode = 'processing' | 'rant' | 'gratitude' | 'decision' | 'dream';
+
+export type DreamType = 'nightmare' | 'lucid' | 'recurring' | 'vivid' | 'surreal' | 'mundane';
 
 export interface EmotionalTone {
   emotion: string;
@@ -33,6 +35,11 @@ export interface EntryAnalysis {
   reflection: string;
   morning_nudge: string;
   is_crisis: boolean;
+  // Dream Decoder — only present when the entry was recorded in 'dream' mode.
+  dream_symbols?: string[];
+  dream_type?: DreamType;
+  psychological_lens?: string;  // Jungian / depth-psychology reading
+  vedic_lens?: string;          // Vedic Svapna Shastra reading
   created_at: string;
   updated_at: string;
 }

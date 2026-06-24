@@ -1,7 +1,7 @@
 # DreamLog API Contract
 
 **Base URL (dev):** `http://localhost:8080`
-**Auth:** All endpoints except `/health`, `/version`, `/auth/register`, `/auth/login` require `Authorization: Bearer <jwt>`
+**Auth:** All endpoints except `/health`, `/version`, `/auth/register`, `/auth/login`, `GET /share/:token`, and `GET /journeys` require `Authorization: Bearer <jwt>`
 
 Claude: Read this file before touching any handler in `backend/internal/handlers/`. The request/response shapes here are the contract the mobile app is built against - do not change field names or types without updating both sides.
 
@@ -820,7 +820,9 @@ Errors: `403` not an admin · `404` company not found.
 ## Guided Journeys
 
 ### GET /journeys
-Returns all available journey templates.
+Returns all available journey templates. **Public** (no auth) - the catalogue is
+static seeded content, so guests can browse journeys before signing in. Starting a
+journey (`POST /journeys/:journeyID/start`) still requires auth.
 
 Response `200`:
 ```json

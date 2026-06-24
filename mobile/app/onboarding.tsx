@@ -20,6 +20,7 @@ import type { ThemeColors } from '../src/theme';
 import {
   saveGuestPreferences,
   markOnboardingDone,
+  markTourPending,
 } from '../src/services/guestStorage';
 import { setRegionFromCountry } from '../src/services/region';
 import type { AgeRange, UserGoal } from '../src/types';
@@ -217,6 +218,13 @@ export default function OnboardingScreen() {
   const introAnim    = useRef(new Animated.Value(0)).current;
   const introStarted = useRef(false);
 
+  // Reveal screen entrance animations (step 2)
+  const revealLineAnim  = useRef(new Animated.Value(0)).current;
+  const revealLabelAnim = useRef(new Animated.Value(0)).current;
+  const revealMsgAnim   = useRef(new Animated.Value(0)).current;
+  const revealSubAnim   = useRef(new Animated.Value(0)).current;
+  const revealBtnAnim   = useRef(new Animated.Value(0)).current;
+
   // Flood fill state (step 1 → 2)
   const floodAnim      = useRef(new Animated.Value(0)).current;
   const contentOpacity = useRef(new Animated.Value(1)).current;
@@ -296,7 +304,16 @@ export default function OnboardingScreen() {
       setTheme(goal);
       contentOpacity.setValue(1);
       floodActive.current = false;
-      setStep(2); // reveal screen
+      // Reset & play reveal entrance
+      [revealLineAnim, revealLabelAnim, revealMsgAnim, revealSubAnim, revealBtnAnim].forEach((a) => a.setValue(0));
+      setStep(2);
+      Animated.stagger(90, [
+        Animated.timing(revealLineAnim,  { toValue: 1, duration: 400, useNativeDriver: false }),
+        Animated.timing(revealLabelAnim, { toValue: 1, duration: 320, useNativeDriver: true }),
+        Animated.timing(revealMsgAnim,   { toValue: 1, duration: 380, useNativeDriver: true }),
+        Animated.timing(revealSubAnim,   { toValue: 1, duration: 340, useNativeDriver: true }),
+        Animated.timing(revealBtnAnim,   { toValue: 1, duration: 300, useNativeDriver: true }),
+      ]).start();
     });
   }
 
@@ -335,6 +352,7 @@ export default function OnboardingScreen() {
       setRegionFromCountry(selectedCountry === 'OTHER' ? null : selectedCountry).catch(() => {});
     }
     await markOnboardingDone();
+    await markTourPending(); // triggers the in-app guided tour after landing on home
     setStep(6);
   }
 
@@ -495,19 +513,83 @@ export default function OnboardingScreen() {
       {/* ── Step 2: Reveal ── */}
       {step === 2 && goalMeta && (
         <View style={[styles.revealWrap, { backgroundColor: colors.bg }]}>
-          {/* Radial glow */}
-          <View style={[styles.revealGlow, { backgroundColor: colors.brandGlow }]} />
           <View style={styles.revealContent}>
-            <Text style={[styles.revealEyebrow, { color: colors.brand }]}>for {goalMeta.label.toLowerCase()}</Text>
-            <Text style={[styles.revealMessage, { color: colors.textPrimary }]}>{goalMeta.revealMessage}</Text>
-            <Text style={[styles.revealSub, { color: colors.textSecondary }]}>{goalMeta.revealSub}</Text>
-            <TouchableOpacity
-              style={[styles.revealBtn, { backgroundColor: colors.brand }]}
-              onPress={() => setStep(3)}
-              activeOpacity={0.8}
+
+            {/* Animated top line expanding left → right */}
+            <Animated.View
+              style={[
+                styles.revealTopLine,
+                {
+                  backgroundColor: colors.brand,
+                  width: revealLineAnim.interpolate({ inputRange: [0, 1], outputRange: ['0%', '40%'] }),
+                },
+              ]}
+            />
+
+            {/* Goal label */}
+            <Animated.Text
+              style={[
+                styles.revealLabel,
+                {
+                  color: colors.textMuted,
+                  opacity: revealLabelAnim,
+                  transform: [{ translateY: revealLabelAnim.interpolate({ inputRange: [0, 1], outputRange: [6, 0] }) }],
+                },
+              ]}
             >
-              <Text style={[styles.revealBtnText, { color: colors.textPrimary }]}>Continue</Text>
-            </TouchableOpacity>
+              {goalMeta.label.toLowerCase()}
+            </Animated.Text>
+
+            {/* Main message */}
+            <Animated.Text
+              style={[
+                styles.revealMessage,
+                {
+                  color: colors.textPrimary,
+                  opacity: revealMsgAnim,
+                  transform: [{ translateY: revealMsgAnim.interpolate({ inputRange: [0, 1], outputRange: [10, 0] }) }],
+                },
+              ]}
+            >
+              {goalMeta.revealMessage}
+            </Animated.Text>
+
+            {/* Thin mid-rule */}
+            <View style={[styles.revealMidRule, { backgroundColor: colors.border }]} />
+
+            {/* Sub-text */}
+            <Animated.Text
+              style={[
+                styles.revealSub,
+                {
+                  color: colors.textSecondary,
+                  opacity: revealSubAnim,
+                  transform: [{ translateY: revealSubAnim.interpolate({ inputRange: [0, 1], outputRange: [6, 0] }) }],
+                },
+              ]}
+            >
+              {goalMeta.revealSub}
+            </Animated.Text>
+
+            {/* Continue — right-aligned text link */}
+            <Animated.View
+              style={[
+                styles.revealBtnRow,
+                {
+                  opacity: revealBtnAnim,
+                  transform: [{ translateY: revealBtnAnim.interpolate({ inputRange: [0, 1], outputRange: [4, 0] }) }],
+                },
+              ]}
+            >
+              <TouchableOpacity
+                style={[styles.revealBtn, { borderColor: colors.brand }]}
+                onPress={() => setStep(3)}
+                activeOpacity={0.7}
+              >
+                <Text style={[styles.revealBtnText, { color: colors.brand }]}>Continue →</Text>
+              </TouchableOpacity>
+            </Animated.View>
+
           </View>
         </View>
       )}
@@ -815,51 +897,56 @@ const styles = StyleSheet.create({
   },
   scrollLayer: { flex: 1, zIndex: 2 },
 
-  // Reveal
+  // Reveal — editorial, no glows
   revealWrap: { flex: 1, justifyContent: 'center' },
-  revealGlow: {
-    position: 'absolute',
-    width: SH * 0.7,
-    height: SH * 0.7,
-    borderRadius: SH * 0.35,
-    alignSelf: 'center',
-    top: '15%',
-    opacity: 0.25,
-  },
   revealContent: {
     paddingHorizontal: 32,
     paddingBottom: 64,
-    zIndex: 1,
   },
-  revealEyebrow: {
+  revealTopLine: {
+    height: 1.5,
+    borderRadius: 1,
+    marginBottom: 22,
+  },
+  revealLabel: {
     fontFamily: Fonts.sans,
     fontSize: 12,
-    letterSpacing: 2,
-    textTransform: 'uppercase',
-    marginBottom: 16,
-    opacity: 0.8,
+    fontStyle: 'italic',
+    marginBottom: 20,
+    letterSpacing: 0.2,
   },
   revealMessage: {
     fontFamily: Fonts.serif,
-    fontSize: 48,
-    lineHeight: 56,
+    fontSize: 36,
+    lineHeight: 44,
+    marginBottom: 24,
+    letterSpacing: 0.3,
+  },
+  revealMidRule: {
+    height: 1,
+    width: 36,
+    borderRadius: 1,
     marginBottom: 20,
   },
   revealSub: {
     fontFamily: Fonts.sans,
-    fontSize: 16,
+    fontSize: 15,
     lineHeight: 24,
     marginBottom: 48,
   },
+  revealBtnRow: {
+    alignItems: 'flex-end',
+  },
   revealBtn: {
-    alignSelf: 'flex-start',
-    borderRadius: 12,
-    paddingVertical: 14,
-    paddingHorizontal: 40,
+    borderWidth: 1,
+    borderRadius: 10,
+    paddingVertical: 11,
+    paddingHorizontal: 24,
   },
   revealBtnText: {
     fontFamily: Fonts.sansSB,
-    fontSize: 16,
+    fontSize: 14,
+    letterSpacing: 0.4,
   },
 
   // Shared scroll layout

@@ -1,6 +1,8 @@
 import { Tabs } from 'expo-router';
+import { useEffect, useRef } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { useTheme } from '../../src/context/ThemeContext';
+import { useGuidedTour } from '../../src/context/GuidedTourContext';
 
 // SVG-free tab icons using React Native Views + Text
 function HomeIcon({ focused }: { focused: boolean }) {
@@ -12,17 +14,23 @@ function HomeIcon({ focused }: { focused: boolean }) {
   );
 }
 
-function TimelineIcon({ focused }: { focused: boolean }) {
+function ExploreIcon({ focused }: { focused: boolean }) {
   const { colors } = useTheme();
+  const { registerRef } = useGuidedTour();
+  const ref = useRef<View>(null);
+  useEffect(() => { registerRef('tab_explore', ref); }, []);
+  const c = focused ? colors.purple300 : colors.textMuted;
   return (
-    <View style={[styles.iconWrap, focused && styles.iconWrapActive]}>
-      <View style={styles.tlWrap}>
-        {[0, 1, 2].map((i) => (
-          <View key={i} style={styles.tlRow}>
-            <View style={[styles.tlDot, { backgroundColor: focused ? colors.purple300 : colors.textMuted }]} />
-            <View style={[styles.tlLine, { backgroundColor: focused ? `${colors.purple300}80` : colors.textFaint }]} />
-          </View>
-        ))}
+    <View ref={ref} collapsable={false} style={[styles.iconWrap, focused && styles.iconWrapActive]}>
+      <View style={styles.gridWrap}>
+        <View style={styles.gridRow}>
+          <View style={[styles.gridDot, { backgroundColor: c }]} />
+          <View style={[styles.gridDot, { backgroundColor: c }]} />
+        </View>
+        <View style={styles.gridRow}>
+          <View style={[styles.gridDot, { backgroundColor: c }]} />
+          <View style={[styles.gridDot, { backgroundColor: c }]} />
+        </View>
       </View>
     </View>
   );
@@ -30,8 +38,11 @@ function TimelineIcon({ focused }: { focused: boolean }) {
 
 function MoodIcon({ focused }: { focused: boolean }) {
   const { colors } = useTheme();
+  const { registerRef } = useGuidedTour();
+  const ref = useRef<View>(null);
+  useEffect(() => { registerRef('tab_mood', ref); }, []);
   return (
-    <View style={[styles.iconWrap, focused && styles.iconWrapActive]}>
+    <View ref={ref} collapsable={false} style={[styles.iconWrap, focused && styles.iconWrapActive]}>
       <View style={styles.chartWrap}>
         {[6, 10, 4, 12, 8].map((h, i) => (
           <View
@@ -49,8 +60,11 @@ function MoodIcon({ focused }: { focused: boolean }) {
 
 function SettingsIcon({ focused }: { focused: boolean }) {
   const { colors } = useTheme();
+  const { registerRef } = useGuidedTour();
+  const ref = useRef<View>(null);
+  useEffect(() => { registerRef('tab_settings', ref); }, []);
   return (
-    <View style={[styles.iconWrap, focused && styles.iconWrapActive]}>
+    <View ref={ref} collapsable={false} style={[styles.iconWrap, focused && styles.iconWrapActive]}>
       <View style={[styles.gearOuter, { borderColor: focused ? colors.purple300 : colors.textMuted }]}>
         <View style={[styles.gearInner, { backgroundColor: focused ? colors.purple300 : colors.textMuted }]} />
       </View>
@@ -81,8 +95,8 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="timeline"
         options={{
-          title: 'Timeline',
-          tabBarIcon: ({ focused }) => <TimelineIcon focused={focused} />,
+          title: 'Explore',
+          tabBarIcon: ({ focused }) => <ExploreIcon focused={focused} />,
         }}
       />
       <Tabs.Screen
@@ -126,11 +140,10 @@ const styles = StyleSheet.create({
   iconWrapActive: {},
   iconEmoji: { fontSize: 18 },
 
-  // Timeline icon
-  tlWrap: { gap: 3 },
-  tlRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  tlDot: { width: 5, height: 5, borderRadius: 2.5 },
-  tlLine: { width: 12, height: 1.5, borderRadius: 1 },
+  // Explore icon (2×2 grid)
+  gridWrap: { gap: 3.5 },
+  gridRow: { flexDirection: 'row', gap: 3.5 },
+  gridDot: { width: 5, height: 5, borderRadius: 1.5 },
 
   // Mood icon (mini bars)
   chartWrap: { flexDirection: 'row', alignItems: 'flex-end', gap: 2, height: 14 },

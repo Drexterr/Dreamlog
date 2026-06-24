@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import NetInfo from '@react-native-community/netinfo';
 import { useRecorder } from '../src/hooks/useRecorder';
 import { uploadRecording } from '../src/services/upload';
@@ -161,7 +161,10 @@ const MODES: { key: EntryMode; label: string; description: string }[] = [
   { key: 'rant',       label: 'Rant',      description: 'Just be heard, no advice' },
   { key: 'gratitude',  label: 'Gratitude', description: "Notice what's going right" },
   { key: 'decision',   label: 'Decide',    description: 'Think a choice through' },
+  { key: 'dream',      label: 'Dream',     description: 'Decode a dream you had' },
 ];
+
+const VALID_MODES = MODES.map((m) => m.key);
 
 function ModeGrid({
   selected,
@@ -224,6 +227,7 @@ function ModeGrid({
 // ── Main screen ───────────────────────────────────────────────────────────────
 export default function RecordScreen() {
   const router = useRouter();
+  const params = useLocalSearchParams<{ mode?: string }>();
   const { isAuthenticated, requestAuth } = useAuth();
   const recorder = useRecorder();
 
@@ -237,7 +241,9 @@ export default function RecordScreen() {
   const { colors } = useTheme();
   const [phase, setPhase] = useState<'idle' | 'recording' | 'uploading'>('idle');
   const [uploadLabel, setUploadLabel] = useState('');
-  const [mode, setMode] = useState<EntryMode | null>(null);
+  const [mode, setMode] = useState<EntryMode | null>(
+    VALID_MODES.includes(params.mode as EntryMode) ? (params.mode as EntryMode) : null,
+  );
 
   const handleStop = useCallback(async () => {
     if (phase !== 'recording') return;

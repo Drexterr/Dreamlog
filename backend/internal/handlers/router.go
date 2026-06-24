@@ -157,7 +157,9 @@ func NewRouter(deps Deps) http.Handler {
 
 	// Guided Journeys
 	journeyHandler := NewJourneyHandler(services.NewJourneyService(deps.JourneyRepo))
-	auth.GET("/journeys", journeyHandler.ListTemplates)
+	// Public - the template catalogue is static seeded content (no user data), so
+	// guests can browse journeys before signing in. Starting one still requires auth.
+	r.GET("/journeys", journeyHandler.ListTemplates)
 	auth.POST("/journeys/:journeyID/start", journeyHandler.StartSession)
 	auth.GET("/journeys/sessions", journeyHandler.ListSessions)
 	auth.GET("/journeys/sessions/:sessionID", journeyHandler.GetSession)
