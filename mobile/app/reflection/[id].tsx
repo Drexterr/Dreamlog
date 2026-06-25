@@ -168,7 +168,42 @@ export default function ReflectionScreen() {
   const handleDone = () => router.replace('/(tabs)');
 
   const handleTellMeMore = () => {
-    if (id) router.push(`/followup/${id}`);
+    if (!id || !analysis) return;
+
+    const parts: string[] = [];
+
+    if (analysis.summary) {
+      parts.push(`Here's a deeper look at what came through in your entry:\n\n${analysis.summary}`);
+    }
+
+    if ((analysis.emotional_tone?.length ?? 0) > 0) {
+      const top = analysis.emotional_tone.slice(0, 3).map((e) => e.emotion).join(', ');
+      parts.push(`The emotional texture I noticed: ${top}.`);
+    }
+
+    const questions: string[] = [];
+    if ((analysis.topics?.length ?? 0) > 0) {
+      questions.push(`What's been weighing on you most around ${analysis.topics[0]}?`);
+      if (analysis.topics[1]) {
+        questions.push(`How are you feeling about ${analysis.topics[1]} right now?`);
+      }
+    }
+    if ((analysis.key_quotes?.length ?? 0) > 0) {
+      questions.push(`You mentioned "${analysis.key_quotes[0]}" — what's behind that for you?`);
+    }
+    if (questions.length === 0) {
+      questions.push('What feels most present for you from what you shared?');
+    }
+
+    parts.push(
+      `A few things I'd like to explore with you:\n${questions.slice(0, 3).map((q) => `• ${q}`).join('\n')}`
+    );
+    parts.push('Where would you like to begin?');
+
+    router.push({
+      pathname: '/followup/[id]',
+      params: { id, seedMessage: parts.join('\n\n') },
+    } as any);
   };
 
   const handleShareTherapist = () => {
@@ -391,7 +426,7 @@ export default function ReflectionScreen() {
                   onPress={handleDone}
                   activeOpacity={0.8}
                 >
-                  <Text style={[styles.goodnightText, { color: colors.textMuted }]}>I'm here whenever you need me.</Text>
+                  <Text style={[styles.goodnightText, { color: colors.textMuted }]}>Done</Text>
                 </TouchableOpacity>
               </Animated.View>
             </>

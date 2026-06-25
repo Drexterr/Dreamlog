@@ -49,7 +49,7 @@ function TypingBubble({ colors }: { colors: any }) {
 }
 
 export default function FollowUpScreen() {
-  const { id: entryId } = useLocalSearchParams<{ id: string }>();
+  const { id: entryId, seedMessage } = useLocalSearchParams<{ id: string; seedMessage?: string }>();
   const router = useRouter();
   const { colors } = useTheme();
 
@@ -65,15 +65,18 @@ export default function FollowUpScreen() {
     api.getOrCreateConversation(entryId)
       .then((conv) => {
         setConversation(conv);
-        if (conv.messages.length > 0) {
-          setMessages(conv.messages);
-        }
-        if (conv.messages.length === 0) {
+        const existing = conv.messages ?? [];
+        if (existing.length > 0) {
+          setMessages(existing);
+        } else {
+          const content = seedMessage && seedMessage.trim().length > 0
+            ? seedMessage.trim()
+            : "What would you like to explore further from your reflection?";
           setMessages([{
             id: 'seed',
             conversation_id: conv.id,
             role: 'assistant',
-            content: "What would you like to explore further from your reflection tonight?",
+            content,
             created_at: new Date().toISOString(),
           }]);
         }
@@ -135,7 +138,7 @@ export default function FollowUpScreen() {
         <View style={[styles.header, { borderBottomColor: colors.borderFaint }]}>
           <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>Continue</Text>
           <TouchableOpacity onPress={() => router.back()} style={styles.closeBtn}>
-            <Text style={[styles.closeText, { color: colors.textMuted }]}>Goodnight</Text>
+            <Text style={[styles.closeText, { color: colors.textMuted }]}>Done</Text>
           </TouchableOpacity>
         </View>
 
@@ -177,7 +180,7 @@ export default function FollowUpScreen() {
         {/* Input / closed banner */}
         {isClosed ? (
           <View style={[styles.closedBanner, { borderTopColor: colors.borderFaint }]}>
-            <Text style={[styles.closedText, { color: colors.textMuted }]}>This reflection is complete. Goodnight.</Text>
+            <Text style={[styles.closedText, { color: colors.textMuted }]}>You've reached the end of this conversation.</Text>
             <TouchableOpacity
               style={[styles.goodnightBtn, { backgroundColor: colors.card, borderColor: colors.border }]}
               onPress={() => router.replace('/(tabs)')}

@@ -12,7 +12,7 @@ type Conversation struct {
 	UserID    uuid.UUID             `json:"user_id"`
 	TurnCount int                   `json:"turn_count"`
 	IsClosed  bool                  `json:"is_closed"`
-	Messages  []ConversationMessage `json:"messages,omitempty"`
+	Messages  []ConversationMessage `json:"messages"`
 	CreatedAt time.Time             `json:"created_at"`
 	UpdatedAt time.Time             `json:"updated_at"`
 }
