@@ -20,17 +20,22 @@ func NewNudgeRepository(db *pgxpool.Pool) *NudgeRepository {
 
 // Create inserts a new nudge record.
 func (r *NudgeRepository) Create(ctx context.Context, userID uuid.UUID, entryID *uuid.UUID, message string, scheduledAt time.Time, timezone string) (*models.Nudge, error) {
+	return r.CreateWithType(ctx, userID, entryID, message, scheduledAt, timezone, "morning")
+}
+
+// CreateWithType inserts a nudge with an explicit type ("morning" | "reengagement").
+func (r *NudgeRepository) CreateWithType(ctx context.Context, userID uuid.UUID, entryID *uuid.UUID, message string, scheduledAt time.Time, timezone, nudgeType string) (*models.Nudge, error) {
 	const q = `
-		INSERT INTO nudges (user_id, entry_id, message, scheduled_at, timezone)
-		VALUES ($1, $2, $3, $4, $5)
+		INSERT INTO nudges (user_id, entry_id, message, scheduled_at, timezone, nudge_type)
+		VALUES ($1, $2, $3, $4, $5, $6)
 		RETURNING id, user_id, entry_id, message, scheduled_at, timezone, status, sent_at, created_at`
 
 	n := &models.Nudge{}
-	err := r.db.QueryRow(ctx, q, userID, entryID, message, scheduledAt, timezone).Scan(
+	err := r.db.QueryRow(ctx, q, userID, entryID, message, scheduledAt, timezone, nudgeType).Scan(
 		&n.ID, &n.UserID, &n.EntryID, &n.Message, &n.ScheduledAt, &n.Timezone, &n.Status, &n.SentAt, &n.CreatedAt,
 	)
 	if err != nil {
-		return nil, fmt.Errorf("nudges.Create: %w", err)
+		return nil, fmt.Errorf("nudges.CreateWithType: %w", err)
 	}
 	return n, nil
 }
@@ -93,6 +98,66 @@ func (r *NudgeRepository) UpsertDevice(ctx context.Context, userID uuid.UUID, to
 		return fmt.Errorf("nudges.UpsertDevice: %w", err)
 	}
 	return nil
+}
+
+// LapsedUserAtNudgeHour returns user IDs + timezones for users who:
+//   - have nudge_enabled = true
+//   - have at least one FCM device token
+//   - have at least one completed entry ever (active users)
+//   - have NOT had a completed entry in the last lapseHours hours
+//   - have NOT received a reengagement nudge in the last 23 hours
+//   - whose current local hour matches their fcm_nudge_hour
+//
+// Called by the reengagement scheduler every minute.
+type LapsedUser struct {
+	UserID   uuid.UUID
+	Timezone string
+}
+
+func (r *NudgeRepository) LapsedUsersAtNudgeHour(ctx context.Context, lapseHours int) ([]LapsedUser, error) {
+	const q = `
+		SELECT DISTINCT u.id, COALESCE(NULLIF(u.timezone, ''), 'UTC')
+		FROM users u
+		JOIN user_devices ud ON ud.user_id = u.id
+		WHERE u.nudge_enabled = true
+		  AND u.deleted_at IS NULL
+		  -- at least one completed entry ever
+		  AND EXISTS (
+		      SELECT 1 FROM entries e
+		      WHERE e.user_id = u.id AND e.status = 'completed'
+		  )
+		  -- no completed entry within the lapse window
+		  AND NOT EXISTS (
+		      SELECT 1 FROM entries e
+		      WHERE e.user_id = u.id
+		        AND e.status = 'completed'
+		        AND e.created_at > NOW() - ($1 || ' hours')::INTERVAL
+		  )
+		  -- no reengagement nudge sent in last 23 hours (dedup)
+		  AND NOT EXISTS (
+		      SELECT 1 FROM nudges n
+		      WHERE n.user_id = u.id
+		        AND n.nudge_type = 'reengagement'
+		        AND n.created_at > NOW() - INTERVAL '23 hours'
+		  )
+		  -- current local hour matches their configured nudge hour
+		  AND EXTRACT(HOUR FROM NOW() AT TIME ZONE COALESCE(NULLIF(u.timezone, ''), 'UTC'))::int = u.fcm_nudge_hour`
+
+	rows, err := r.db.Query(ctx, q, lapseHours)
+	if err != nil {
+		return nil, fmt.Errorf("nudges.LapsedUsersAtNudgeHour: %w", err)
+	}
+	defer rows.Close()
+
+	var users []LapsedUser
+	for rows.Next() {
+		var u LapsedUser
+		if err := rows.Scan(&u.UserID, &u.Timezone); err != nil {
+			return nil, fmt.Errorf("nudges.LapsedUsersAtNudgeHour scan: %w", err)
+		}
+		users = append(users, u)
+	}
+	return users, rows.Err()
 }
 
 // GetDeviceTokens returns all FCM tokens for a user.

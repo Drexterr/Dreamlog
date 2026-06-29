@@ -107,6 +107,7 @@ func main() {
 	})
 
 	nudgeScheduler := workers.NewNudgeScheduler(nudgeRepo, fcmSvc, log)
+	reengagementScheduler := workers.NewReengagementScheduler(nudgeRepo, fcmSvc, log)
 
 	weeklyReviewScheduler := workers.NewWeeklyReviewScheduler(workers.WeeklyReviewSchedulerDeps{
 		ReviewRepo:    weeklyReviewRepo,
@@ -142,6 +143,7 @@ func main() {
 
 	// Run schedulers in background goroutines.
 	go nudgeScheduler.Run(ctx)
+	go reengagementScheduler.Run(ctx)
 	go weeklyReviewScheduler.Run(ctx)
 	go yearInReviewScheduler.Run(ctx)
 

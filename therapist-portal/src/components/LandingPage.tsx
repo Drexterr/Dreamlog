@@ -459,7 +459,7 @@ function InsightTicker() {
 }
 
 /* ── Breathing orb ────────────────────────────────────────────────────────── */
-function BreathingOrb() {
+function BreathingOrb({ ambient }: { ambient?: boolean }) {
   const [phase, setPhase] = useState<'idle' | 'inhale' | 'hold' | 'exhale'>('idle');
   const [label, setLabel] = useState('Tap to breathe');
   const [running, setRunning] = useState(false);
@@ -494,6 +494,12 @@ function BreathingOrb() {
       <div style={{
         position: 'relative', width: 160, height: 160, cursor: running ? 'default' : 'pointer',
       }}>
+        {/* Ambient rings: top/left 50% + negative pixel margins = layout-based centering, no transform conflict with animation */}
+        {ambient && (<>
+          <div aria-hidden="true" style={{ position: 'absolute', top: '50%', left: '50%', marginTop: -190, marginLeft: -190, width: 380, height: 380, borderRadius: '50%', border: '1px solid rgba(200,149,90,0.06)', animation: 'breathIdle 7s ease-in-out infinite', pointerEvents: 'none' }} />
+          <div aria-hidden="true" style={{ position: 'absolute', top: '50%', left: '50%', marginTop: -150, marginLeft: -150, width: 300, height: 300, borderRadius: '50%', border: '1px solid rgba(200,149,90,0.09)', animation: 'breathIdle 7s ease-in-out 1s infinite', pointerEvents: 'none' }} />
+          <div aria-hidden="true" style={{ position: 'absolute', top: '50%', left: '50%', marginTop: -110, marginLeft: -110, width: 220, height: 220, borderRadius: '50%', border: '1px solid rgba(200,149,90,0.12)', animation: 'breathIdle 7s ease-in-out 2s infinite', pointerEvents: 'none' }} />
+        </>)}
         {/* Outer ring — always animated in idle, transition-driven when guided */}
         <div style={{
           position: 'absolute', inset: 0, borderRadius: '50%',
@@ -601,7 +607,7 @@ export default function LandingPage() {
               Your thoughts,<br /><em style={{ color: 'var(--gold)' }}>out loud.</em>
             </h1>
             <p style={{ fontSize: '1.05rem', color: 'var(--muted)', lineHeight: 1.75, margin: '0 0 36px', maxWidth: 440, animation: 'heroIn 0.8s cubic-bezier(0.16,1,0.3,1) both', animationDelay: '0.22s' }}>
-              Record your day in your own voice. DreamLog transcribes it, cross-references your last five entries, and shows you what you keep coming back to.
+              Record your day in your own voice. DreamLog listens, finds the threads you keep returning to, and shows you what you actually mean — not just what you said.
             </p>
             <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', animation: 'heroIn 0.8s cubic-bezier(0.16,1,0.3,1) both', animationDelay: '0.34s' }}>
               <a href={dlHref} className="btn-primary" style={{ padding: '14px 28px', fontSize: '0.92rem' }}>Start journaling free</a>
@@ -617,6 +623,23 @@ export default function LandingPage() {
 
 
       <InsightTicker />
+
+      {/* ── Hero testimonial — single standout quote ───────────────────── */}
+      <div className="reveal" style={{ maxWidth: 1320, margin: '0 auto', padding: '72px 60px' }}>
+        <div style={{
+          background: 'var(--bg-card)', border: '1px solid var(--border-mid)',
+          borderRadius: 20, padding: '52px 56px',
+          display: 'grid', gridTemplateColumns: '3px 1fr', gap: 40, alignItems: 'center',
+        }}>
+          <div style={{ background: 'var(--gold)', borderRadius: 2, alignSelf: 'stretch', opacity: 0.6 }} />
+          <div>
+            <p className="serif" style={{ fontSize: 'clamp(1.4rem, 2.6vw, 2rem)', fontWeight: 300, fontStyle: 'italic', lineHeight: 1.6, color: 'var(--text)', margin: '0 0 20px' }}>
+              &ldquo;Something I couldn&apos;t say to anyone, I could finally say to myself.&rdquo;
+            </p>
+            <span style={{ fontSize: '0.8rem', color: 'var(--muted-2)', letterSpacing: '0.03em' }}>— A user, 31 · on the third week of journaling</span>
+          </div>
+        </div>
+      </div>
 
       {/* ── How it works ──────────────────────────────────────────────── */}
       <section className="landing-section reveal" id="how">
@@ -715,10 +738,7 @@ export default function LandingPage() {
             minHeight: 420, padding: '60px 40px', overflow: 'hidden',
             background: 'radial-gradient(ellipse 70% 70% at 50% 50%, rgba(200,149,90,0.04) 0%, transparent 70%)',
           }}>
-            <div aria-hidden="true" style={{ position: 'absolute', inset: 0, margin: 'auto', width: 380, height: 380, borderRadius: '50%', border: '1px solid rgba(200,149,90,0.06)', animation: 'breathIdle 7s ease-in-out infinite', pointerEvents: 'none' }} />
-            <div aria-hidden="true" style={{ position: 'absolute', inset: 0, margin: 'auto', width: 300, height: 300, borderRadius: '50%', border: '1px solid rgba(200,149,90,0.09)', animation: 'breathIdle 7s ease-in-out 1s infinite', pointerEvents: 'none' }} />
-            <div aria-hidden="true" style={{ position: 'absolute', inset: 0, margin: 'auto', width: 220, height: 220, borderRadius: '50%', border: '1px solid rgba(200,149,90,0.12)', animation: 'breathIdle 7s ease-in-out 2s infinite', pointerEvents: 'none' }} />
-            <BreathingOrb />
+            <BreathingOrb ambient />
           </div>
         </div>
         <div className="therapy-personas-grid stagger" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 14 }}>
@@ -785,7 +805,7 @@ export default function LandingPage() {
       {/* ── Features ──────────────────────────────────────────────────── */}
       <section className="landing-section reveal" id="features">
         <h2 className="serif" style={{ fontSize: 'clamp(1.8rem, 3vw, 2.5rem)', fontWeight: 300, margin: '0 0 48px' }}>
-          What&apos;s inside<br />DreamLog.
+          Built for the thoughts<br />you can&apos;t type.
         </h2>
 
         {/* Bento feature grid — 2-col top, 1 wide bottom */}
@@ -836,21 +856,23 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ── Pull quote — woven in, not a testimonials box ─────────────── */}
+      {/* ── Pull quotes — woven in, not a testimonials box ────────────── */}
       <div className="reveal" style={{ maxWidth: 1320, margin: '0 auto', padding: '0 60px 80px' }}>
         <div style={{ borderTop: '1px solid var(--border)', paddingTop: 64 }}>
-          <div className="serif" style={{ fontSize: 'clamp(0.7rem, 0.9vw, 0.85rem)', fontWeight: 300, letterSpacing: '0.05em', color: 'var(--muted-2)', marginBottom: 24, fontStyle: 'normal' }}>— Rohit, 41, after his first weekly review</div>
-          <p className="serif reveal-left" style={{ fontSize: 'clamp(1.6rem, 3vw, 2.4rem)', fontWeight: 300, fontStyle: 'italic', lineHeight: 1.55, color: 'var(--text)', margin: '0 0 40px', maxWidth: 820 }}>
+          <div className="serif" style={{ fontSize: 'clamp(0.7rem, 0.9vw, 0.85rem)', fontWeight: 300, letterSpacing: '0.05em', color: 'var(--muted-2)', marginBottom: 24, fontStyle: 'normal' }}>— Rohit, 41 · after his first weekly review</div>
+          <p className="serif reveal-left" style={{ fontSize: 'clamp(1.6rem, 3vw, 2.4rem)', fontWeight: 300, fontStyle: 'italic', lineHeight: 1.55, color: 'var(--text)', margin: '0 0 48px', maxWidth: 820 }}>
             &ldquo;It noticed I kept mentioning my father without realising it. Three entries in a row. Nobody had ever pointed that out before.&rdquo;
           </p>
-          <div style={{ display: 'flex', gap: 48, flexWrap: 'wrap' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 32 }}>
             {[
-              { quote: '"Talking feels different. Something about hearing my own voice makes the reflection land."', attr: 'Priya, 28 — 3-month user' },
-              { quote: '"It says what I actually said. That\'s a harder and better thing."', attr: 'Ananya, 34 — six weeks in' },
+              { quote: 'Talking feels different. Something about hearing my own voice makes the reflection land.', attr: 'Priya, 28 · 3-month user' },
+              { quote: "It says what I actually said. That's a harder and better thing.", attr: 'Ananya, 34 · six weeks in' },
+              { quote: 'I was sceptical. Then it named the feeling I\'d been trying to describe for two years.', attr: 'Karan, 29 · using Dream Mode' },
+              { quote: 'My therapist asked how I got so clear about what I was feeling. I showed her DreamLog.', attr: 'Meera, 37 · Plus subscriber' },
             ].map(t => (
-              <div key={t.attr} style={{ flex: '1 1 260px' }}>
-                <p className="serif" style={{ fontStyle: 'italic', fontSize: '0.95rem', color: 'var(--muted)', margin: '0 0 10px', lineHeight: 1.7 }}>&ldquo;{t.quote}&rdquo;</p>
-                <span style={{ fontSize: '0.76rem', color: 'var(--muted-2)' }}>{t.attr}</span>
+              <div key={t.attr} style={{ paddingLeft: 16, borderLeft: '1px solid var(--border)' }}>
+                <p className="serif" style={{ fontStyle: 'italic', fontSize: '0.95rem', color: 'var(--muted)', margin: '0 0 10px', lineHeight: 1.75 }}>&ldquo;{t.quote}&rdquo;</p>
+                <span style={{ fontSize: '0.74rem', color: 'var(--muted-2)', letterSpacing: '0.02em' }}>{t.attr}</span>
               </div>
             ))}
           </div>
@@ -1017,8 +1039,10 @@ export default function LandingPage() {
           <div style={{ display: 'flex', gap: 28, flexWrap: 'wrap', alignItems: 'center' }}>
             {[
               { label: 'Features', href: '#features' },
-              { label: 'Pricing', href: '#pricing' },
-              { label: 'Therapist Portal', href: '/login' },
+              { label: 'Pricing', href: '/pricing' },
+              { label: 'For Therapists', href: '/therapists' },
+              { label: 'For Teams', href: '/teams' },
+              { label: 'About', href: '/about' },
               { label: 'Privacy', href: '/privacy' },
               { label: 'Terms', href: '/terms' },
               { label: 'Support', href: 'mailto:support@dreamlog.app' },

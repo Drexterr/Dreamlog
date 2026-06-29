@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/dreamlog/backend/internal/models"
+	"github.com/dreamlog/backend/internal/repositories"
 	"github.com/dreamlog/backend/internal/services"
 	"github.com/google/uuid"
 )
@@ -58,6 +59,15 @@ type nudgeScheduler interface {
 // nudgeDispatcher is the subset of NudgeRepository used by NudgeScheduler.
 type nudgeDispatcher interface {
 	PendingDue(ctx context.Context) ([]*models.Nudge, error)
+	GetDeviceTokens(ctx context.Context, userID uuid.UUID) ([]string, error)
+	MarkSent(ctx context.Context, id uuid.UUID) error
+	MarkFailed(ctx context.Context, id uuid.UUID, errMsg string) error
+}
+
+// reengagementRepo is the subset of NudgeRepository used by ReengagementScheduler.
+type reengagementRepo interface {
+	LapsedUsersAtNudgeHour(ctx context.Context, lapseHours int) ([]repositories.LapsedUser, error)
+	CreateWithType(ctx context.Context, userID uuid.UUID, entryID *uuid.UUID, message string, scheduledAt time.Time, timezone, nudgeType string) (*models.Nudge, error)
 	GetDeviceTokens(ctx context.Context, userID uuid.UUID) ([]string, error)
 	MarkSent(ctx context.Context, id uuid.UUID) error
 	MarkFailed(ctx context.Context, id uuid.UUID, errMsg string) error
