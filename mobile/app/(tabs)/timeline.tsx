@@ -97,6 +97,10 @@ export default function ExploreScreen() {
     router.push('/entries' as any);
   }, [router]);
 
+  const handleRelationships = useCallback(() => {
+    router.push('/relationships' as any);
+  }, [router]);
+
   return (
     <View style={[styles.container, { backgroundColor: colors.bg }]}>
       <StatusBar barStyle="light-content" />
@@ -140,6 +144,14 @@ export default function ExploreScreen() {
             description="Structured multi-step reflections for stress, grief, decisions, and self-compassion."
             cta="Browse journeys"
             onPress={handleJourneys}
+          />
+
+          <FeatureCard
+            icon="❖"
+            title="Relationship Map"
+            description="The people woven through your reflections — who comes up, how often, and the feeling around each one."
+            cta="View your map"
+            onPress={handleRelationships}
           />
         </ScrollView>
       </SafeAreaView>

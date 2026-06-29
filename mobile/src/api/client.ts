@@ -19,8 +19,10 @@ import {
   ListEntriesResponse,
   MoodHistoryResponse,
   PatternRadarResponse,
+  PersonDetail,
   Plan,
   PresignResponse,
+  RelationshipsResponse,
   ShareLinksResponse,
   StreakInfo,
   TimelineResponse,
@@ -216,6 +218,13 @@ export const api = {
     http
       .post<JourneySession>(`/journeys/sessions/${sessionID}/advance`, { entry_id: entryID })
       .then((r) => r.data),
+
+  // ── Relationship Map (7e) ─────────────────────────────────────────────────
+  getRelationships: (): Promise<RelationshipsResponse> =>
+    http.get<RelationshipsResponse>('/relationships').then((r) => r.data),
+
+  getPersonDetail: (personID: string): Promise<PersonDetail> =>
+    http.get<PersonDetail>(`/relationships/${personID}`).then((r) => r.data),
 
   // ── PDF Export (5d) ───────────────────────────────────────────────────────
   // Returns the full URL + auth header needed by expo-file-system.downloadAsync.

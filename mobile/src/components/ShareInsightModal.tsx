@@ -19,7 +19,8 @@ import {
 } from 'react-native';
 import { captureRef } from 'react-native-view-shot';
 import InsightCard, { CARD_WIDTH, CARD_HEIGHT } from './InsightCard';
-import { Colors } from '../theme';
+import { useTheme } from '../context/ThemeContext';
+import type { ThemeColors } from '../theme';
 import { api } from '../api/client';
 import type { MoodArcDay } from '../types';
 
@@ -46,6 +47,8 @@ export default function ShareInsightModal({
 }: ShareInsightModalProps) {
   const cardRef = useRef<View>(null);
   const [sharing, setSharing] = useState(false);
+  const { colors } = useTheme();
+  const styles = getStyles(colors);
 
   const handleShare = async () => {
     if (!cardRef.current) return;
@@ -134,78 +137,79 @@ export default function ShareInsightModal({
   );
 }
 
-const styles = StyleSheet.create({
-  overlay: {
-    flex: 1,
-    backgroundColor: 'rgba(10,5,20,0.9)',
-    justifyContent: 'flex-end',
-  },
-  sheet: {
-    backgroundColor: Colors.cardSolid,
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    paddingTop: 24,
-    paddingBottom: 40,
-    paddingHorizontal: 20,
-    borderTopWidth: 1,
-    borderTopColor: Colors.borderFaint,
-  },
-  sheetTitle: {
-    fontSize: 20,
-    color: Colors.textPrimary,
-    fontFamily: 'CormorantGaramond_400Regular',
-    textAlign: 'center',
-    marginBottom: 4,
-  },
-  sheetSub: {
-    fontSize: 12,
-    color: Colors.textMuted,
-    fontFamily: 'Nunito_400Regular',
-    textAlign: 'center',
-    marginBottom: 20,
-  },
-  previewScroll: {
-    paddingHorizontal: 4,
-    paddingBottom: 8,
-  },
-  cardWrapper: {
-    borderRadius: 16,
-    overflow: 'hidden',
-    // Scale down the 375-wide card to fit narrower screens while keeping aspect ratio.
-    transform: [{ scale: 0.85 }],
-    transformOrigin: 'top left',
-    marginRight: -CARD_WIDTH * 0.15, // compensate for scale shrink
-  },
-  actions: {
-    flexDirection: 'row',
-    gap: 12,
-    marginTop: 16,
-  },
-  cancelBtn: {
-    flex: 1,
-    paddingVertical: 14,
-    borderRadius: 14,
-    backgroundColor: Colors.card,
-    alignItems: 'center',
-  },
-  cancelText: {
-    color: Colors.textSecondary,
-    fontFamily: 'Nunito_400Regular',
-    fontSize: 15,
-  },
-  shareBtn: {
-    flex: 2,
-    paddingVertical: 14,
-    borderRadius: 14,
-    backgroundColor: Colors.purple400,
-    alignItems: 'center',
-  },
-  shareBtnDisabled: {
-    opacity: 0.6,
-  },
-  shareText: {
-    color: '#fff',
-    fontFamily: 'Nunito_600SemiBold',
-    fontSize: 15,
-  },
-});
+const getStyles = (colors: ThemeColors) =>
+  StyleSheet.create({
+    overlay: {
+      flex: 1,
+      backgroundColor: 'rgba(10,5,20,0.9)',
+      justifyContent: 'flex-end',
+    },
+    sheet: {
+      backgroundColor: colors.cardSolid,
+      borderTopLeftRadius: 24,
+      borderTopRightRadius: 24,
+      paddingTop: 24,
+      paddingBottom: 40,
+      paddingHorizontal: 20,
+      borderTopWidth: 1,
+      borderTopColor: colors.borderFaint,
+    },
+    sheetTitle: {
+      fontSize: 20,
+      color: colors.textPrimary,
+      fontFamily: 'CormorantGaramond_400Regular',
+      textAlign: 'center',
+      marginBottom: 4,
+    },
+    sheetSub: {
+      fontSize: 12,
+      color: colors.textMuted,
+      fontFamily: 'Nunito_400Regular',
+      textAlign: 'center',
+      marginBottom: 20,
+    },
+    previewScroll: {
+      paddingHorizontal: 4,
+      paddingBottom: 8,
+    },
+    cardWrapper: {
+      borderRadius: 16,
+      overflow: 'hidden',
+      // Scale down the 375-wide card to fit narrower screens while keeping aspect ratio.
+      transform: [{ scale: 0.85 }],
+      transformOrigin: 'top left',
+      marginRight: -CARD_WIDTH * 0.15, // compensate for scale shrink
+    },
+    actions: {
+      flexDirection: 'row',
+      gap: 12,
+      marginTop: 16,
+    },
+    cancelBtn: {
+      flex: 1,
+      paddingVertical: 14,
+      borderRadius: 14,
+      backgroundColor: colors.card,
+      alignItems: 'center',
+    },
+    cancelText: {
+      color: colors.textSecondary,
+      fontFamily: 'Nunito_400Regular',
+      fontSize: 15,
+    },
+    shareBtn: {
+      flex: 2,
+      paddingVertical: 14,
+      borderRadius: 14,
+      backgroundColor: colors.brand,
+      alignItems: 'center',
+    },
+    shareBtnDisabled: {
+      opacity: 0.6,
+    },
+    shareText: {
+      color: '#fff',
+      fontFamily: 'Nunito_600SemiBold',
+      fontSize: 15,
+    },
+  });

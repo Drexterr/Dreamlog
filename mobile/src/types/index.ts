@@ -463,3 +463,40 @@ export interface VersionInfo {
   android_store_url: string;
   ios_store_url: string;
 }
+
+// ── Relationship Map (Phase 7e) ───────────────────────────────────────────────
+
+export type PersonRole = 'family' | 'friend' | 'colleague' | 'romantic' | 'other';
+export type PersonSentiment = 'positive' | 'neutral' | 'negative';
+
+export interface Person {
+  id: string;
+  user_id: string;
+  name: string;
+  role: PersonRole;
+  mention_count: number;
+  positive_count: number;
+  negative_count: number;
+  last_mentioned_at: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface PersonMention {
+  id: string;
+  person_id: string;
+  entry_id: string;
+  user_id: string;
+  sentiment: PersonSentiment;
+  context: string;
+  created_at: string;
+}
+
+export interface RelationshipsResponse {
+  people: Person[];
+}
+
+export interface PersonDetail {
+  person: Person;
+  mentions: PersonMention[];
+}
