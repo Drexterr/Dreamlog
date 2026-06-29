@@ -17,6 +17,22 @@ import { getCachedRegion, THERAPY_SESSION_PRICE } from '../../src/services/regio
 
 const PERSONAS: TherapyPersona[] = ['comforting', 'rational', 'cbt', 'mindful'];
 
+// Per-persona accent colors — each companion has its own visual identity
+const PERSONA_ACCENT: Record<TherapyPersona, string> = {
+  comforting: '#C4A06A',
+  rational:   '#6A9EC4',
+  cbt:        '#7AAA88',
+  mindful:    '#9A8AC0',
+};
+
+// Short descriptive lines that feel more human than a feature spec
+const PERSONA_DESC: Record<TherapyPersona, string> = {
+  comforting: 'Starts with how you feel, not what you think.',
+  rational:   'Asks the questions you haven\'t asked yourself.',
+  cbt:        'Spots the story you\'re telling yourself.',
+  mindful:    'Brings you back to right now.',
+};
+
 export default function PersonaPickerScreen() {
   const { colors } = useTheme();
   const router = useRouter();
@@ -25,9 +41,7 @@ export default function PersonaPickerScreen() {
   const [priceDisplay, setPriceDisplay] = useState(THERAPY_SESSION_PRICE.inr);
 
   useEffect(() => {
-    getCachedRegion().then((r) => {
-      setPriceDisplay(THERAPY_SESSION_PRICE[r ?? 'usd']);
-    });
+    getCachedRegion().then((r) => setPriceDisplay(THERAPY_SESSION_PRICE[r ?? 'usd']));
   }, []);
 
   const handleStart = async () => {
@@ -38,7 +52,6 @@ export default function PersonaPickerScreen() {
     } catch (err: any) {
       const status = err?.response?.status;
       if (status === 402) {
-        // No session credits - send straight to the therapy pricing screen.
         router.push('/therapy/pricing' as any);
       } else {
         Alert.alert('Could not start session', 'Please try again in a moment.');
@@ -51,19 +64,21 @@ export default function PersonaPickerScreen() {
   return (
     <SafeAreaView style={[styles.safe, { backgroundColor: colors.bg }]}>
       <TouchableOpacity style={styles.backBtn} onPress={() => router.back()} activeOpacity={0.7}>
-        <Text style={[styles.backBtnText, { color: colors.textMuted }]}>← Back</Text>
+        <Text style={[styles.backBtnText, { color: colors.textMuted }]}>Back</Text>
       </TouchableOpacity>
-      <ScrollView contentContainerStyle={styles.container}>
+
+      <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
         <View style={styles.header}>
-          <Text style={[styles.title, { color: colors.textPrimary }]}>Choose your companion</Text>
-          <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
-            Each companion has a different style. You can switch next session.
+          <Text style={[styles.title, { color: colors.textPrimary }]}>Who do you want{'\n'}with you today?</Text>
+          <Text style={[styles.subtitle, { color: colors.textMuted }]}>
+            You can change this next time.
           </Text>
         </View>
 
         <View style={styles.cards}>
           {PERSONAS.map((p) => {
             const meta = PERSONA_META[p];
+            const accent = PERSONA_ACCENT[p];
             const isSelected = selected === p;
             return (
               <TouchableOpacity
@@ -71,26 +86,33 @@ export default function PersonaPickerScreen() {
                 style={[
                   styles.card,
                   {
-                    backgroundColor: colors.card,
-                    borderColor: isSelected ? colors.brand : colors.border,
-                    borderWidth: isSelected ? 2 : 1,
+                    backgroundColor: isSelected ? `${accent}12` : colors.card,
+                    borderColor: isSelected ? accent : colors.border,
                   },
                 ]}
                 onPress={() => setSelected(p)}
-                activeOpacity={0.7}
+                activeOpacity={0.75}
               >
-                <View style={styles.cardRow}>
-                  <View style={styles.cardText}>
+                {/* Left accent bar */}
+                <View style={[
+                  styles.cardBar,
+                  { backgroundColor: isSelected ? accent : 'transparent' },
+                ]} />
+
+                <View style={styles.cardBody}>
+                  <View style={styles.cardTop}>
                     <Text style={[styles.cardLabel, { color: colors.textPrimary }]}>
                       {meta.label}
                     </Text>
-                    <Text style={[styles.cardTagline, { color: colors.textSecondary }]}>
-                      {meta.tagline}
-                    </Text>
+                    {isSelected && (
+                      <View style={[styles.checkmark, { borderColor: accent }]}>
+                        <View style={[styles.checkmarkInner, { backgroundColor: accent }]} />
+                      </View>
+                    )}
                   </View>
-                  {isSelected && (
-                    <View style={[styles.selectedDot, { backgroundColor: colors.brand }]} />
-                  )}
+                  <Text style={[styles.cardDesc, { color: colors.textSecondary }]}>
+                    {PERSONA_DESC[p]}
+                  </Text>
                 </View>
               </TouchableOpacity>
             );
@@ -98,7 +120,9 @@ export default function PersonaPickerScreen() {
         </View>
 
         <TouchableOpacity
-          style={[styles.startBtn, { backgroundColor: starting ? colors.border : colors.brand }]}
+          style={[styles.startBtn, {
+            backgroundColor: starting ? colors.border : PERSONA_ACCENT[selected],
+          }]}
           onPress={handleStart}
           disabled={starting}
           activeOpacity={0.8}
@@ -113,7 +137,7 @@ export default function PersonaPickerScreen() {
         </TouchableOpacity>
 
         <Text style={[styles.note, { color: colors.textMuted }]}>
-          First session free · {priceDisplay}/session · Included in Pro (2/month)
+          First session free  ·  {priceDisplay}/session
         </Text>
       </ScrollView>
     </SafeAreaView>
@@ -122,29 +146,65 @@ export default function PersonaPickerScreen() {
 
 const styles = StyleSheet.create({
   safe: { flex: 1 },
-  backBtn: { paddingHorizontal: 20, paddingVertical: 12 },
-  backBtnText: { fontSize: 14, fontFamily: 'Nunito_400Regular' },
-  container: { padding: 24, paddingBottom: 48 },
+  backBtn: { paddingHorizontal: 20, paddingTop: 12, paddingBottom: 4 },
+  backBtnText: { fontSize: 13, fontFamily: 'Nunito_400Regular' },
+  container: { paddingHorizontal: 20, paddingBottom: 48, paddingTop: 8 },
+
   header: { marginBottom: 28 },
-  title: { fontSize: 26, fontFamily: 'CormorantGaramond_600SemiBold', marginBottom: 8 },
-  subtitle: { fontSize: 15, fontFamily: 'Nunito_400Regular', lineHeight: 22 },
-  cards: { gap: 12, marginBottom: 32 },
-  card: {
-    borderRadius: 14,
-    padding: 16,
+  title: {
+    fontSize: 28,
+    fontFamily: 'CormorantGaramond_300Light',
+    lineHeight: 36,
+    marginBottom: 8,
   },
-  cardRow: { flexDirection: 'row', alignItems: 'center', gap: 14 },
-  cardEmoji: { fontSize: 28 },
-  cardText: { flex: 1 },
-  cardLabel: { fontSize: 16, fontFamily: 'Nunito_700Bold', marginBottom: 2 },
-  cardTagline: { fontSize: 13, fontFamily: 'Nunito_400Regular', lineHeight: 18 },
-  selectedDot: { width: 10, height: 10, borderRadius: 5 },
+  subtitle: { fontSize: 13, fontFamily: 'Nunito_400Regular' },
+
+  cards: { gap: 10, marginBottom: 32 },
+  card: {
+    borderRadius: 12,
+    borderWidth: 1,
+    flexDirection: 'row',
+    overflow: 'hidden',
+  },
+  cardBar: {
+    width: 3,
+  },
+  cardBody: {
+    flex: 1,
+    padding: 16,
+    gap: 5,
+  },
+  cardTop: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  cardLabel: { fontSize: 15, fontFamily: 'Nunito_700Bold' },
+  checkmark: {
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    borderWidth: 1.5,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  checkmarkInner: {
+    width: 9,
+    height: 9,
+    borderRadius: 4.5,
+  },
+  cardDesc: {
+    fontSize: 13,
+    fontFamily: 'Nunito_400Regular',
+    lineHeight: 19,
+  },
+
   startBtn: {
     borderRadius: 12,
     paddingVertical: 16,
     alignItems: 'center',
     marginBottom: 12,
   },
-  startBtnText: { color: '#fff', fontSize: 17, fontFamily: 'Nunito_700Bold' },
+  startBtnText: { color: '#fff', fontSize: 16, fontFamily: 'Nunito_700Bold' },
   note: { fontSize: 12, fontFamily: 'Nunito_400Regular', textAlign: 'center' },
 });
