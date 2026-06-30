@@ -6,6 +6,7 @@ import (
 	"errors"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 	"time"
 
@@ -24,6 +25,10 @@ type fakeRelationshipRepo struct {
 	mapErr    error
 	detail    *models.PersonDetail
 	detailErr error
+	updated   *models.Person
+	updateErr error
+	merged    *models.Person
+	mergeErr  error
 }
 
 func (f *fakeRelationshipRepo) GetMap(_ context.Context, _ uuid.UUID) ([]*models.Person, error) {
@@ -31,6 +36,12 @@ func (f *fakeRelationshipRepo) GetMap(_ context.Context, _ uuid.UUID) ([]*models
 }
 func (f *fakeRelationshipRepo) GetDetail(_ context.Context, _, _ uuid.UUID) (*models.PersonDetail, error) {
 	return f.detail, f.detailErr
+}
+func (f *fakeRelationshipRepo) UpdatePerson(_ context.Context, _, _ uuid.UUID, _ models.UpdatePersonInput) (*models.Person, error) {
+	return f.updated, f.updateErr
+}
+func (f *fakeRelationshipRepo) MergePeople(_ context.Context, _, _, _ uuid.UUID) (*models.Person, error) {
+	return f.merged, f.mergeErr
 }
 
 // ── Router & JWT ──────────────────────────────────────────────────────────────
@@ -50,6 +61,8 @@ func relTestRouter(repo relationshipMapRepo) *gin.Engine {
 	h := NewRelationshipHandler(repo)
 	r.GET("/relationships", h.GetMap)
 	r.GET("/relationships/:id", h.GetPersonDetail)
+	r.PATCH("/relationships/:id", h.UpdatePerson)
+	r.POST("/relationships/:id/merge", h.MergePerson)
 	return r
 }
 
@@ -307,5 +320,105 @@ func TestGetRelationshipMap_PersonFields(t *testing.T) {
 	}
 	if got.Role != models.PersonRoleFamily {
 		t.Errorf("role: want family, got %q", got.Role)
+	}
+}
+
+// ── Tests: UpdatePerson ───────────────────────────────────────────────────────
+
+func patchReq(t *testing.T, path, body string) *http.Request {
+	t.Helper()
+	req, _ := http.NewRequest(http.MethodPatch, path, strings.NewReader(body))
+	req.Header.Set("Authorization", "Bearer "+relJWT(t))
+	req.Header.Set("Content-Type", "application/json")
+	return req
+}
+
+func TestUpdatePerson_Hide_Returns200(t *testing.T) {
+	p := samplePerson()
+	p.Hidden = true
+	repo := &fakeRelationshipRepo{updated: p}
+	r := relTestRouter(repo)
+
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, patchReq(t, "/relationships/"+p.ID.String(), `{"hidden":true}`))
+
+	if w.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d: %s", w.Code, w.Body.String())
+	}
+	var got models.Person
+	if err := json.Unmarshal(w.Body.Bytes(), &got); err != nil {
+		t.Fatalf("unmarshal: %v", err)
+	}
+	if !got.Hidden {
+		t.Error("expected hidden=true")
+	}
+}
+
+func TestUpdatePerson_EmptyBody_Returns400(t *testing.T) {
+	r := relTestRouter(&fakeRelationshipRepo{})
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, patchReq(t, "/relationships/"+uuid.New().String(), `{}`))
+	if w.Code != http.StatusBadRequest {
+		t.Fatalf("expected 400, got %d", w.Code)
+	}
+}
+
+func TestUpdatePerson_InvalidRole_Returns400(t *testing.T) {
+	r := relTestRouter(&fakeRelationshipRepo{})
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, patchReq(t, "/relationships/"+uuid.New().String(), `{"role":"boss"}`))
+	if w.Code != http.StatusBadRequest {
+		t.Fatalf("expected 400, got %d", w.Code)
+	}
+}
+
+func TestUpdatePerson_NotFound_Returns404(t *testing.T) {
+	r := relTestRouter(&fakeRelationshipRepo{updated: nil})
+	w := httptest.NewRecorder()
+	r.ServeHTTP(w, patchReq(t, "/relationships/"+uuid.New().String(), `{"name":"Mom"}`))
+	if w.Code != http.StatusNotFound {
+		t.Fatalf("expected 404, got %d", w.Code)
+	}
+}
+
+// ── Tests: MergePerson ────────────────────────────────────────────────────────
+
+func mergeReq(t *testing.T, path, body string) *http.Request {
+	t.Helper()
+	req, _ := http.NewRequest(http.MethodPost, path, strings.NewReader(body))
+	req.Header.Set("Authorization", "Bearer "+relJWT(t))
+	req.Header.Set("Content-Type", "application/json")
+	return req
+}
+
+func TestMergePerson_Returns200(t *testing.T) {
+	target := samplePerson()
+	r := relTestRouter(&fakeRelationshipRepo{merged: target})
+	w := httptest.NewRecorder()
+	body := `{"source_id":"` + uuid.New().String() + `"}`
+	r.ServeHTTP(w, mergeReq(t, "/relationships/"+target.ID.String()+"/merge", body))
+	if w.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d: %s", w.Code, w.Body.String())
+	}
+}
+
+func TestMergePerson_SelfMerge_Returns400(t *testing.T) {
+	id := uuid.New()
+	r := relTestRouter(&fakeRelationshipRepo{})
+	w := httptest.NewRecorder()
+	body := `{"source_id":"` + id.String() + `"}`
+	r.ServeHTTP(w, mergeReq(t, "/relationships/"+id.String()+"/merge", body))
+	if w.Code != http.StatusBadRequest {
+		t.Fatalf("expected 400, got %d", w.Code)
+	}
+}
+
+func TestMergePerson_NotFound_Returns404(t *testing.T) {
+	r := relTestRouter(&fakeRelationshipRepo{merged: nil})
+	w := httptest.NewRecorder()
+	body := `{"source_id":"` + uuid.New().String() + `"}`
+	r.ServeHTTP(w, mergeReq(t, "/relationships/"+uuid.New().String()+"/merge", body))
+	if w.Code != http.StatusNotFound {
+		t.Fatalf("expected 404, got %d", w.Code)
 	}
 }

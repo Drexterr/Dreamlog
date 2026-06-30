@@ -710,10 +710,10 @@ Errors: `404` chapter not found · `500` if Claude is unavailable.
 
 ## Relationship Map
 
-Automatically populated by Claude during the entry analysis pipeline. No user action required - people mentioned in journal entries are extracted and tracked.
+Automatically populated by Claude during the entry analysis pipeline. No user action required - people mentioned in journal entries are extracted and tracked. The top extracted people (with sentiment lean) are also injected into Therapy Mode's context snapshot at session start.
 
 ### GET /relationships
-Returns all people extracted from the user's entries.
+Returns all **non-hidden** people extracted from the user's entries.
 
 Response `200`:
 ```json
@@ -728,6 +728,7 @@ Response `200`:
       "positive_count": 8,
       "negative_count": 2,
       "last_mentioned_at": "RFC3339",
+      "hidden": false,
       "created_at": "RFC3339",
       "updated_at": "RFC3339"
     }
@@ -757,6 +758,34 @@ Response `200`:
 ```
 
 Errors: `400` invalid UUID · `404` person not found or belongs to different user.
+
+### PATCH /relationships/:id
+Rename, re-categorize, or hide/unhide a person. All fields optional; at least one required. Hidden people are excluded from `GET /relationships` (and from Therapy context) but their journal entries are untouched.
+
+```json
+// Request (any subset)
+{
+  "name": "string",
+  "role": "family | friend | colleague | romantic | other",
+  "hidden": true
+}
+
+// Response 200 - Person (same shape as list item)
+```
+
+Errors: `400` invalid UUID / empty name / invalid role / no fields · `404` not found · `409` a person with that name already exists (use merge instead).
+
+### POST /relationships/:id/merge
+Folds another person (`source_id`) into this one (`:id`): the source's mentions are reassigned to the target, the target's counts are recomputed, and the source is deleted. Used to clean up duplicates (e.g. "Mom" and "mother").
+
+```json
+// Request
+{ "source_id": "uuid" }
+
+// Response 200 - the updated target Person
+```
+
+Errors: `400` invalid UUID / `source_id` equals `:id` · `404` either person not found or belongs to different user.
 
 ---
 

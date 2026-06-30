@@ -19,10 +19,12 @@ import {
   ListEntriesResponse,
   MoodHistoryResponse,
   PatternRadarResponse,
+  Person,
   PersonDetail,
   Plan,
   PresignResponse,
   RelationshipsResponse,
+  UpdatePersonInput,
   ShareLinksResponse,
   StreakInfo,
   TimelineResponse,
@@ -225,6 +227,12 @@ export const api = {
 
   getPersonDetail: (personID: string): Promise<PersonDetail> =>
     http.get<PersonDetail>(`/relationships/${personID}`).then((r) => r.data),
+
+  updatePerson: (personID: string, input: UpdatePersonInput): Promise<Person> =>
+    http.patch<Person>(`/relationships/${personID}`, input).then((r) => r.data),
+
+  mergePerson: (targetID: string, sourceID: string): Promise<Person> =>
+    http.post<Person>(`/relationships/${targetID}/merge`, { source_id: sourceID }).then((r) => r.data),
 
   // ── PDF Export (5d) ───────────────────────────────────────────────────────
   // Returns the full URL + auth header needed by expo-file-system.downloadAsync.

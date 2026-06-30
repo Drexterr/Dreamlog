@@ -478,8 +478,15 @@ export interface Person {
   positive_count: number;
   negative_count: number;
   last_mentioned_at: string;
+  hidden: boolean;
   created_at: string;
   updated_at: string;
+}
+
+export interface UpdatePersonInput {
+  name?: string;
+  role?: PersonRole;
+  hidden?: boolean;
 }
 
 export interface PersonMention {

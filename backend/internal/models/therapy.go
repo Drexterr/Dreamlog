@@ -54,6 +54,7 @@ type TherapyContextSnapshot struct {
 	TopTopics            []string `json:"top_topics"`
 	RecentSummaries      []string `json:"recent_summaries"`        // last 5 entry summaries, oldest first
 	PastSessionSummaries []string `json:"past_session_summaries"`  // last 3 completed session summaries, oldest first
+	TopPeople            []string `json:"top_people,omitempty"`    // most-mentioned people + sentiment lean, e.g. "Mom — mostly warm"
 	Country              string   `json:"country"`                 // user's country at session start (ISO 3166-1 alpha-2)
 	VoiceLanguage        string   `json:"voice_language,omitempty"` // user's TTS preference at session start: auto | english | hindi
 }

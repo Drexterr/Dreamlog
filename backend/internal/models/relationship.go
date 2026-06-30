@@ -36,8 +36,17 @@ type Person struct {
 	PositiveCount   int        `json:"positive_count"`
 	NegativeCount   int        `json:"negative_count"`
 	LastMentionedAt time.Time  `json:"last_mentioned_at"`
+	Hidden          bool       `json:"hidden"`
 	CreatedAt       time.Time  `json:"created_at"`
 	UpdatedAt       time.Time  `json:"updated_at"`
+}
+
+// UpdatePersonInput carries optional edits to a person. Nil fields are left
+// unchanged. Used for rename, re-categorize, and hide/unhide.
+type UpdatePersonInput struct {
+	Name   *string `json:"name"`
+	Role   *string `json:"role"`
+	Hidden *bool   `json:"hidden"`
 }
 
 // PersonMention is one extracted mention of a person in an entry.

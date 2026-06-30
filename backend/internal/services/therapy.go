@@ -42,10 +42,17 @@ type therapyStorageClient interface {
 	Delete(ctx context.Context, key string) error
 }
 
+// therapyPeopleRepo supplies relationship context for the session snapshot.
+// Optional: may be nil (context simply omits people).
+type therapyPeopleRepo interface {
+	TopPeople(ctx context.Context, userID uuid.UUID, limit int) ([]string, error)
+}
+
 // TherapyService orchestrates therapy session lifecycle.
 type TherapyService struct {
 	repo          therapyRepo
 	analysisRepo  therapyAnalysisRepo
+	people        therapyPeopleRepo // optional; nil = no relationship context
 	claude        *ClaudeService
 	transcription *TranscriptionService
 	storage       therapyStorageClient
@@ -57,6 +64,7 @@ type TherapyService struct {
 func NewTherapyService(
 	repo therapyRepo,
 	analysisRepo therapyAnalysisRepo,
+	people therapyPeopleRepo,
 	claude *ClaudeService,
 	transcription *TranscriptionService,
 	storage therapyStorageClient,
@@ -67,6 +75,7 @@ func NewTherapyService(
 	return &TherapyService{
 		repo:          repo,
 		analysisRepo:  analysisRepo,
+		people:        people,
 		claude:        claude,
 		transcription: transcription,
 		storage:       storage,
@@ -458,6 +467,13 @@ func (s *TherapyService) loadContextSnapshot(ctx context.Context, userID uuid.UU
 		snapshot.PastSessionSummaries = pastSummaries
 	}
 
+	// Relationship awareness: top mentioned people + sentiment lean (optional dep).
+	if s.people != nil {
+		if people, perr := s.people.TopPeople(ctx, userID, 5); perr == nil {
+			snapshot.TopPeople = people
+		}
+	}
+
 	contextLoaded := snapshot.MoodAvg30d != nil || len(snapshot.RecentSummaries) > 0
 	return snapshot, contextLoaded, nil
 }
@@ -490,6 +506,7 @@ func snapshotToPromptContext(snap models.TherapyContextSnapshot, name string) Th
 		TopTopics:            snap.TopTopics,
 		RecentSummaries:      snap.RecentSummaries,
 		PastSessionSummaries: snap.PastSessionSummaries,
+		TopPeople:            snap.TopPeople,
 	}
 }
 

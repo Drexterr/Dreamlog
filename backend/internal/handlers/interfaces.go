@@ -94,6 +94,8 @@ type shareQuotaChecker interface {
 type relationshipMapRepo interface {
 	GetMap(ctx context.Context, userID uuid.UUID) ([]*models.Person, error)
 	GetDetail(ctx context.Context, personID, userID uuid.UUID) (*models.PersonDetail, error)
+	UpdatePerson(ctx context.Context, personID, userID uuid.UUID, input models.UpdatePersonInput) (*models.Person, error)
+	MergePeople(ctx context.Context, targetID, sourceID, userID uuid.UUID) (*models.Person, error)
 }
 
 // lifeChapterRepo is the minimal interface LifeChapterHandler needs.

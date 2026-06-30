@@ -91,8 +91,17 @@ export async function checkAndApplyUpdate(log: LogFn = () => {}): Promise<Update
 }
 
 /**
- * Startup check: download a newer update and apply it on this launch (one
- * reload max). Console-only logging. Fail-silent — never blocks app start.
+ * Startup check: download a newer update in the background and let
+ * expo-updates apply it on the NEXT cold start (under the splash screen).
+ *
+ * We deliberately do NOT call `reloadAsync()` here. Reloading after the UI is
+ * already on screen restarts the JS mid-session and briefly exposes the native
+ * window background — the white flash users see on the launch after an OTA.
+ * With `fallbackToCacheTimeout: 0` + `checkAutomatically: ON_LOAD` (see app.json)
+ * a staged update is swapped in automatically on the next cold start, with no
+ * flash. The trade-off (update lands one launch later) is invisible to users.
+ *
+ * Console-only logging. Fail-silent — never blocks app start.
  * Called from app/_layout.tsx after the auth/fonts gate.
  */
 export async function runStartupUpdateCheck(): Promise<void> {
@@ -110,8 +119,9 @@ export async function runStartupUpdateCheck(): Promise<void> {
 
     const fetched = await Updates.fetchUpdateAsync();
     if (fetched.isNew) {
-      console.log(TAG, 'startup: new update downloaded — reloading to apply');
-      await Updates.reloadAsync();
+      // Downloaded + staged. Do NOT reload now — it applies on the next cold
+      // start under the splash, avoiding the mid-session white flash.
+      console.log(TAG, 'startup: new update downloaded — will apply on next cold start');
     }
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e);

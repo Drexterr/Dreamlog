@@ -18,11 +18,23 @@ import {
   ScrollView,
 } from 'react-native';
 import { captureRef } from 'react-native-view-shot';
+import * as Sharing from 'expo-sharing';
 import InsightCard, { CARD_WIDTH, CARD_HEIGHT } from './InsightCard';
 import { useTheme } from '../context/ThemeContext';
 import type { ThemeColors } from '../theme';
 import { api } from '../api/client';
 import type { MoodArcDay } from '../types';
+
+/** Warm, shareable caption that accompanies the card image. */
+function buildShareMessage(weekLabel: string, streak: number, entryCount: number): string {
+  const entryBit = `${entryCount} ${entryCount === 1 ? 'entry' : 'entries'} this week`;
+  const streakBit = streak > 0 ? `, ${streak}-day streak` : '';
+  return [
+    `My week in reflection — ${weekLabel}.`,
+    `${entryBit}${streakBit}.`,
+    'Voice journaling for emotional clarity · dreamlog.app',
+  ].join(' ');
+}
 
 export interface ShareInsightModalProps {
   visible: boolean;
@@ -61,22 +73,28 @@ export default function ShareInsightModal({
         height: CARD_HEIGHT,
       });
 
-      let shared = false;
-      // On iOS Share.share supports url; on Android we pass the file URI as a message fallback.
+      const message = buildShareMessage(weekLabel, streak, entryCount);
+
       if (Platform.OS === 'ios') {
-        const result = await Share.share({ url: uri });
-        shared = result.action !== Share.dismissedAction;
-      } else {
-        const result = await Share.share({
-          message: `My week in review - ${weekLabel} - via DreamLog`,
+        // iOS shares the image and the caption together.
+        await Share.share({ message, url: uri });
+      } else if (await Sharing.isAvailableAsync()) {
+        // Android: share the actual PNG so WhatsApp / Instagram / etc. receive
+        // the card image (the old path only sent one line of text). A caption
+        // can't be force-attached to a file on Android, so the message rides
+        // along as the share-sheet title.
+        await Sharing.shareAsync(uri, {
+          mimeType: 'image/png',
+          dialogTitle: message,
+          UTI: 'public.png',
         });
-        shared = result.action !== Share.dismissedAction;
+      } else {
+        await Share.share({ message });
       }
 
-      if (shared) {
-        // Fire-and-forget: track the share event on the backend.
-        api.trackInsightShare(weekStart).catch(() => undefined);
-      }
+      // Best-effort: native share sheets don't report completion, so track the
+      // share optimistically once the sheet has been presented and dismissed.
+      api.trackInsightShare(weekStart).catch(() => undefined);
     } catch {
       // User cancelled or share failed - no-op.
     } finally {

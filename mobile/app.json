@@ -14,6 +14,7 @@
     },
     "orientation": "portrait",
     "userInterfaceStyle": "dark",
+    "backgroundColor": "#0f0c1e",
     "scheme": "dreamlog",
     "icon": "./assets/icon.png",
     "splash": {
@@ -67,6 +68,7 @@
       }
     },
     "android": {
+      "backgroundColor": "#0f0c1e",
       "adaptiveIcon": {
         "foregroundImage": "./assets/icon.png",
         "backgroundColor": "#0f0c1e"

@@ -179,6 +179,8 @@ func NewRouter(deps Deps) http.Handler {
 	relationshipHandler := NewRelationshipHandler(deps.RelationshipRepo)
 	auth.GET("/relationships", relationshipHandler.GetMap)
 	auth.GET("/relationships/:id", relationshipHandler.GetPersonDetail)
+	auth.PATCH("/relationships/:id", relationshipHandler.UpdatePerson)
+	auth.POST("/relationships/:id/merge", relationshipHandler.MergePerson)
 
 	// Therapist dashboard (5g)
 	therapistHandler := NewTherapistHandler(deps.TherapistRepo, deps.AnalysisRepo, deps.ClaudeSvc)

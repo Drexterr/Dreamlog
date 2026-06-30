@@ -556,11 +556,11 @@ export default function MoodScreen() {
         weekLabel={weeklyReview?.week_start
           ? formatWeekLabel(weeklyReview.week_start)
           : formatCurrentWeekLabel()}
-        weekStart={weeklyReview?.week_start}
-        moodArc={weeklyReview?.mood_arc ?? moodsToArc(moods)}
+        weekStart={weeklyReview?.week_start ?? currentWeekStartISO()}
+        moodArc={weeklyReview?.mood_arc ?? currentWeekArc(moods)}
         topEmotions={weeklyReview?.top_emotions ?? []}
         streak={streak?.current_streak ?? 0}
-        entryCount={weeklyReview?.entry_count ?? moods.reduce((s, d) => s + d.entry_count, 0)}
+        entryCount={weeklyReview?.entry_count ?? currentWeekEntryCount(moods)}
       />
     </View>
   );
@@ -586,8 +586,44 @@ function formatCurrentWeekLabel(): string {
   return formatWeekLabel(sun.toISOString().split('T')[0]);
 }
 
-function moodsToArc(moods: DailyMood[]): MoodArcDay[] {
-  return moods.map((d) => ({ date: d.day, avg_mood: d.avg_mood }));
+// ── Current week (Sunday → Saturday) helpers ────────────────────────────────────
+// The insight card always represents one calendar week, Sunday through Saturday,
+// to match the week label and the backend weekly_reviews.week_start (Sunday).
+
+function currentWeekSundayUTC(): Date {
+  const now = new Date();
+  const day = now.getUTCDay(); // 0 = Sunday
+  return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() - day));
+}
+
+function currentWeekStartISO(): string {
+  return currentWeekSundayUTC().toISOString().split('T')[0];
+}
+
+// A 7-slot Sun→Sat arc; days without an entry get avg_mood 0 (rendered as a
+// minimal bar). weekStats() in InsightCard ignores 0-mood days for the average.
+function currentWeekArc(moods: DailyMood[]): MoodArcDay[] {
+  const sunday = currentWeekSundayUTC();
+  const byDate = new Map(moods.map((m) => [m.day, m.avg_mood]));
+  const out: MoodArcDay[] = [];
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(sunday);
+    d.setUTCDate(sunday.getUTCDate() + i);
+    const ds = d.toISOString().split('T')[0];
+    out.push({ date: ds, avg_mood: byDate.get(ds) ?? 0 });
+  }
+  return out;
+}
+
+function currentWeekEntryCount(moods: DailyMood[]): number {
+  const sunday = currentWeekSundayUTC();
+  const startISO = sunday.toISOString().split('T')[0];
+  const sat = new Date(sunday);
+  sat.setUTCDate(sunday.getUTCDate() + 6);
+  const endISO = sat.toISOString().split('T')[0];
+  return moods
+    .filter((m) => m.day >= startISO && m.day <= endISO)
+    .reduce((s, m) => s + m.entry_count, 0);
 }
 
 // ── Styles ────────────────────────────────────────────────────────────────────

@@ -121,7 +121,7 @@ func main() {
 	ttsSvc := services.NewTTSService(&cfg.OpenAI, &cfg.AzureTTS, storageClient)
 	crisisDetector := services.NewCrisisDetector(claudeSvc)
 	therapySvc := services.NewTherapyService(
-		therapyRepo, analysisRepo, claudeSvc, transcriptionSvc, storageSvc,
+		therapyRepo, analysisRepo, relationshipRepo, claudeSvc, transcriptionSvc, storageSvc,
 		crisisDetector, ttsSvc, cfg.Anthropic.StubAnalysis,
 	)
 

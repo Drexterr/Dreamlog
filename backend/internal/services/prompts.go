@@ -883,6 +883,7 @@ type TherapyPromptContext struct {
 	TopTopics            []string
 	RecentSummaries      []string // last 5 entry summaries, oldest first
 	PastSessionSummaries []string // last 3 completed session summaries, oldest first
+	TopPeople            []string // most-mentioned people + sentiment lean, e.g. "Mom — mostly warm"
 }
 
 // buildTherapyModeSystemPrompt creates the system prompt for a therapy session.
@@ -907,6 +908,11 @@ func buildTherapyModeSystemPrompt(ctx TherapyPromptContext, persona, timeRemaini
 	topicsStr := "none recorded yet"
 	if len(ctx.TopTopics) > 0 {
 		topicsStr = strings.Join(ctx.TopTopics, ", ")
+	}
+
+	peopleStr := "none recorded yet"
+	if len(ctx.TopPeople) > 0 {
+		peopleStr = strings.Join(ctx.TopPeople, "; ")
 	}
 
 	summariesStr := "This is their first session - no prior journal entries."
@@ -943,6 +949,7 @@ JOURNAL CONTEXT (snapshot from their recent entries):
 Mood (30-day avg): %s
 Recurring emotions: %s
 Recurring topics: %s
+People who come up often: %s
 
 Recent entry summaries:
 %s
@@ -960,7 +967,7 @@ SAFETY:
 - If the person expresses suicidal ideation, self-harm intent, or harm to others - stop the reflective conversation and provide crisis resources immediately
 - This is non-negotiable and overrides all other instructions
 
-SESSION TIMING: %s`, name, personaBlock, moodStr, emotionsStr, topicsStr, summariesStr, pastStr, timeRemainingSec)
+SESSION TIMING: %s`, name, personaBlock, moodStr, emotionsStr, topicsStr, peopleStr, summariesStr, pastStr, timeRemainingSec)
 }
 
 // buildPersonaBlock returns the persona-specific style instructions.
