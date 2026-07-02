@@ -16,6 +16,7 @@ import { GoogleSignin, statusCodes, isErrorWithCode } from '@react-native-google
 import Svg, { Path } from 'react-native-svg';
 import { supabase } from '../lib/supabase';
 import { useTheme } from '../context/ThemeContext';
+import { T } from '../testIDs';
 
 type Mode = 'social' | 'email';
 
@@ -164,7 +165,7 @@ export default function AuthSheet({ visible, prompt, onClose }: AuthSheetProps) 
         style={s.sheetWrap}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
-        <View style={[s.sheet, { backgroundColor: colors.cardSolid, borderColor: colors.border }]}>
+        <View testID={T.auth.sheet} style={[s.sheet, { backgroundColor: colors.cardSolid, borderColor: colors.border }]}>
           {/* Handle */}
           <View style={[s.handle, { backgroundColor: colors.borderFaint }]} />
 
@@ -183,6 +184,8 @@ export default function AuthSheet({ visible, prompt, onClose }: AuthSheetProps) 
 
             {/* Social buttons */}
             <TouchableOpacity
+              testID={T.auth.google}
+              accessibilityLabel="Continue with Google"
               style={[s.socialBtn, { backgroundColor: colors.card, borderColor: colors.border }]}
               onPress={handleGoogle}
               disabled={loading}
@@ -198,6 +201,7 @@ export default function AuthSheet({ visible, prompt, onClose }: AuthSheetProps) 
 
             {Platform.OS === 'ios' && (
               <AppleAuthentication.AppleAuthenticationButton
+                testID={T.auth.apple}
                 buttonType={AppleAuthentication.AppleAuthenticationButtonType.SIGN_IN}
                 buttonStyle={AppleAuthentication.AppleAuthenticationButtonStyle.WHITE}
                 cornerRadius={12}
@@ -208,7 +212,7 @@ export default function AuthSheet({ visible, prompt, onClose }: AuthSheetProps) 
 
             {/* Email toggle */}
             {mode === 'social' ? (
-              <TouchableOpacity onPress={() => setMode('email')} activeOpacity={0.7} style={s.emailToggle}>
+              <TouchableOpacity testID={T.auth.useEmail} accessibilityLabel="Use email instead" onPress={() => setMode('email')} activeOpacity={0.7} style={s.emailToggle}>
                 <Text style={[s.emailToggleText, { color: colors.textMuted, borderBottomColor: colors.borderFaint }]}>
                   Use email instead
                 </Text>
@@ -220,6 +224,8 @@ export default function AuthSheet({ visible, prompt, onClose }: AuthSheetProps) 
                   {(['login', 'register'] as const).map((m) => (
                     <TouchableOpacity
                       key={m}
+                      testID={m === 'login' ? T.auth.tabLogin : T.auth.tabRegister}
+                      accessibilityLabel={m === 'login' ? 'Sign in tab' : 'Create account tab'}
                       style={[s.tab, emailMode === m && { backgroundColor: colors.purple600 }]}
                       onPress={() => { setEmailMode(m); setError(''); }}
                     >
@@ -232,6 +238,8 @@ export default function AuthSheet({ visible, prompt, onClose }: AuthSheetProps) 
 
                 {emailMode === 'register' && (
                   <TextInput
+                    testID={T.auth.nameInput}
+                    accessibilityLabel="Name"
                     style={[s.input, { backgroundColor: colors.card, borderColor: colors.borderFaint, color: colors.textPrimary }]}
                     value={name}
                     onChangeText={(v) => { setName(v); setError(''); }}
@@ -243,6 +251,8 @@ export default function AuthSheet({ visible, prompt, onClose }: AuthSheetProps) 
                 )}
 
                 <TextInput
+                  testID={T.auth.emailInput}
+                  accessibilityLabel="Email"
                   style={[s.input, { backgroundColor: colors.card, borderColor: colors.borderFaint, color: colors.textPrimary }]}
                   value={email}
                   onChangeText={(v) => { setEmail(v); setError(''); }}
@@ -254,6 +264,8 @@ export default function AuthSheet({ visible, prompt, onClose }: AuthSheetProps) 
                 />
 
                 <TextInput
+                  testID={T.auth.passwordInput}
+                  accessibilityLabel="Password"
                   style={[s.input, { backgroundColor: colors.card, borderColor: colors.borderFaint, color: colors.textPrimary }]}
                   value={password}
                   onChangeText={(v) => { setPassword(v); setError(''); }}
@@ -266,9 +278,11 @@ export default function AuthSheet({ visible, prompt, onClose }: AuthSheetProps) 
                   onSubmitEditing={handleEmailSubmit}
                 />
 
-                {!!error && <Text style={s.error}>{error}</Text>}
+                {!!error && <Text testID={T.auth.error} style={s.error}>{error}</Text>}
 
                 <TouchableOpacity
+                  testID={T.auth.submit}
+                  accessibilityLabel={emailMode === 'login' ? 'Submit sign in' : 'Submit create account'}
                   style={[s.submitBtn, { backgroundColor: colors.purple600 }, loading && { opacity: 0.6 }]}
                   onPress={handleEmailSubmit}
                   disabled={loading}
@@ -280,14 +294,14 @@ export default function AuthSheet({ visible, prompt, onClose }: AuthSheetProps) 
                   }
                 </TouchableOpacity>
 
-                <TouchableOpacity onPress={() => { setMode('social'); setError(''); }} activeOpacity={0.7} style={s.backLink}>
+                <TouchableOpacity testID={T.auth.backToSocial} accessibilityLabel="Back to social login" onPress={() => { setMode('social'); setError(''); }} activeOpacity={0.7} style={s.backLink}>
                   <Text style={[s.backLinkText, { color: colors.textMuted }]}>← Back to social login</Text>
                 </TouchableOpacity>
               </View>
             )}
 
             {/* Dismiss */}
-            <TouchableOpacity onPress={handleClose} activeOpacity={0.7} style={s.laterBtn}>
+            <TouchableOpacity testID={T.auth.later} accessibilityLabel="Dismiss sign in" onPress={handleClose} activeOpacity={0.7} style={s.laterBtn}>
               <Text style={[s.laterText, { color: colors.textFaint }]}>Later</Text>
             </TouchableOpacity>
           </ScrollView>

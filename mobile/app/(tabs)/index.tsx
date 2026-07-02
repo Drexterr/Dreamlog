@@ -14,6 +14,7 @@ import { api } from '../../src/api/client';
 import { useTheme } from '../../src/context/ThemeContext';
 import { useAuth } from '../../src/context/AuthContext';
 import { useGuidedTour } from '../../src/context/GuidedTourContext';
+import { T } from '../../src/testIDs';
 import type { DailyMood, StreakInfo } from '../../src/types';
 
 // ── Format date label ─────────────────────────────────────────────────────────
@@ -51,7 +52,14 @@ function RecordButton({ onPress, colors }: { onPress: () => void; colors: any })
   }, [scaleAnim, onPress]);
 
   return (
-    <TouchableOpacity activeOpacity={1} onPressIn={handlePressIn} onPressOut={handlePressOut}>
+    <TouchableOpacity
+      testID={T.home.recordBtn}
+      accessibilityLabel="Record a journal entry"
+      accessibilityRole="button"
+      activeOpacity={1}
+      onPressIn={handlePressIn}
+      onPressOut={handlePressOut}
+    >
       <Animated.View
         style={[
           styles.recBtn,
@@ -216,7 +224,7 @@ export default function HomeScreen() {
   const centerTranslate = centerAnim.interpolate({ inputRange: [0, 1], outputRange: [12, 0] });
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.bg }]}>
+    <View testID={T.home.screen} style={[styles.container, { backgroundColor: colors.bg }]}>
       <StatusBar barStyle="light-content" />
 
       <SafeAreaView style={styles.safe}>
@@ -245,7 +253,7 @@ export default function HomeScreen() {
               { borderTopColor: colors.borderFaint, opacity: lastAnim, transform: [{ translateY: lastTranslate }] },
             ]}
           >
-            <TouchableOpacity onPress={openLastReflection} activeOpacity={0.7}>
+            <TouchableOpacity testID={T.home.lastEntry} accessibilityLabel="Open last reflection" onPress={openLastReflection} activeOpacity={0.7}>
               <View style={styles.lastHeaderRow}>
                 <Text style={[styles.lastMeta, { color: colors.textMuted }]}>
                   {lastEntry.dateLabel}{lastEntry.emotionLabel ? ` · ${lastEntry.emotionLabel}` : ''}

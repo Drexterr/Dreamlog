@@ -13,6 +13,7 @@ import { useRouter } from 'expo-router';
 import { api } from '../../src/api/client';
 import { useTheme } from '../../src/context/ThemeContext';
 import { type TherapyPersona, PERSONA_META } from '../../src/types';
+import { T, personaCardID } from '../../src/testIDs';
 import { getCachedRegion, THERAPY_SESSION_PRICE } from '../../src/services/region';
 
 const PERSONAS: TherapyPersona[] = ['comforting', 'rational', 'cbt', 'mindful'];
@@ -62,8 +63,8 @@ export default function PersonaPickerScreen() {
   };
 
   return (
-    <SafeAreaView style={[styles.safe, { backgroundColor: colors.bg }]}>
-      <TouchableOpacity style={styles.backBtn} onPress={() => router.back()} activeOpacity={0.7}>
+    <SafeAreaView testID={T.persona.screen} style={[styles.safe, { backgroundColor: colors.bg }]}>
+      <TouchableOpacity testID={T.persona.back} accessibilityLabel="Back" style={styles.backBtn} onPress={() => router.back()} activeOpacity={0.7}>
         <Text style={[styles.backBtnText, { color: colors.textMuted }]}>Back</Text>
       </TouchableOpacity>
 
@@ -83,6 +84,8 @@ export default function PersonaPickerScreen() {
             return (
               <TouchableOpacity
                 key={p}
+                testID={personaCardID(p)}
+                accessibilityLabel={meta.label}
                 style={[
                   styles.card,
                   {
@@ -120,6 +123,8 @@ export default function PersonaPickerScreen() {
         </View>
 
         <TouchableOpacity
+          testID={T.persona.start}
+          accessibilityLabel={`Begin with ${PERSONA_META[selected].label}`}
           style={[styles.startBtn, {
             backgroundColor: starting ? colors.border : PERSONA_ACCENT[selected],
           }]}

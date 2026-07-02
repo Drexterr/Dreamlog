@@ -4,12 +4,38 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 
 type Currency = 'INR' | 'EUR' | 'USD';
+type Period = 'monthly' | 'annual';
 
+// Canonical prices live in docs/PRICING.md - keep in sync.
 const PRICES: Record<string, Record<Currency, string>> = {
   free:    { INR: '₹0',   EUR: '€0',    USD: '$0'    },
-  plus:    { INR: '₹249', EUR: '€4.99', USD: '$5.99' },
-  pro:     { INR: '₹499', EUR: '€8.99', USD: '$9.99' },
-  therapy: { INR: '₹499', EUR: '€5.99', USD: '$7.99' },
+  therapy: { INR: '₹499', EUR: '€7.99', USD: '$7.99' },
+};
+
+const PLAN_PRICES: Record<'plus' | 'pro', Record<Period, Record<Currency, string>>> = {
+  plus: {
+    monthly: { INR: '₹249',   EUR: '€5.99',  USD: '$5.99'  },
+    annual:  { INR: '₹1,999', EUR: '€39.99', USD: '$39.99' },
+  },
+  pro: {
+    monthly: { INR: '₹499',   EUR: '€9.99',  USD: '$9.99'  },
+    annual:  { INR: '₹4,499', EUR: '€79.99', USD: '$79.99' },
+  },
+};
+
+// Per-month equivalent of the annual pass + savings vs 12 monthly passes.
+const ANNUAL_MONTHLY_EQUIV: Record<'plus' | 'pro', Record<Currency, string>> = {
+  plus: { INR: '₹167', EUR: '€3.33', USD: '$3.33' },
+  pro:  { INR: '₹375', EUR: '€6.67', USD: '$6.67' },
+};
+
+const ANNUAL_SAVINGS: Record<'plus' | 'pro', Record<Currency, string>> = {
+  plus: { INR: 'Save 33%', EUR: 'Save 44%', USD: 'Save 44%' },
+  pro:  { INR: 'Save 25%', EUR: 'Save 33%', USD: 'Save 33%' },
+};
+
+const MAX_SAVINGS: Record<Currency, string> = {
+  INR: 'Save up to 33%', EUR: 'Save up to 44%', USD: 'Save up to 44%',
 };
 
 function useCurrency(): { currency: Currency; ready: boolean } {
@@ -39,9 +65,20 @@ function Check() {
 
 export default function PricingPage() {
   const { currency, ready } = useCurrency();
+  // Annual is the default: it's the better deal and the savings badge sells it.
+  const [period, setPeriod] = useState<Period>('annual');
   const p = (key: string) => PRICES[key][currency];
-  const per = '/ month';
-  const memberExtra = currency === 'INR' ? '₹299' : currency === 'EUR' ? '€3.99' : '$4.99';
+  const planPrice = (plan: 'plus' | 'pro') => PLAN_PRICES[plan][period][currency];
+  const perLine = (plan: 'plus' | 'pro') =>
+    period === 'annual' ? `/ year · that's ${ANNUAL_MONTHLY_EQUIV[plan][currency]} / mo` : '/ month';
+  const memberExtra = currency === 'INR' ? '₹299' : currency === 'EUR' ? '€4.99' : '$4.99';
+
+  const saveBadge = (plan: 'plus' | 'pro') =>
+    period === 'annual' ? (
+      <span style={{ background: 'rgba(200,149,90,0.15)', border: '1px solid rgba(200,149,90,0.45)', color: '#c8955a', fontSize: '0.66rem', fontWeight: 800, letterSpacing: '0.5px', padding: '3px 9px', borderRadius: 100, whiteSpace: 'nowrap' }}>
+        {ANNUAL_SAVINGS[plan][currency]}
+      </span>
+    ) : null;
 
   return (
     <div style={{ background: '#18150f', color: '#e8ddd0', minHeight: '100vh', fontFamily: "'Nunito', sans-serif" }}>
@@ -66,6 +103,40 @@ export default function PricingPage() {
           <p style={{ fontSize: '1rem', color: 'rgba(232,221,208,0.55)', margin: 0, lineHeight: 1.7 }}>
             Most people start Free and stay there. You never need to upgrade — it&apos;s allowed.
           </p>
+
+          {/* Monthly / Annual toggle */}
+          <div style={{ display: 'inline-flex', marginTop: 32, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.09)', borderRadius: 100, padding: 4, gap: 4 }}>
+            {(['monthly', 'annual'] as const).map(pd => {
+              const selected = period === pd;
+              return (
+                <button
+                  key={pd}
+                  onClick={() => setPeriod(pd)}
+                  style={{
+                    display: 'inline-flex', alignItems: 'center', gap: 8, cursor: 'pointer',
+                    background: selected ? '#c8955a' : 'transparent',
+                    color: selected ? '#18150f' : 'rgba(232,221,208,0.55)',
+                    border: 'none', borderRadius: 100, padding: '9px 20px',
+                    fontSize: '0.84rem', fontWeight: 700, fontFamily: 'inherit',
+                    transition: 'background 0.2s, color 0.2s',
+                  }}
+                >
+                  {pd === 'monthly' ? 'Monthly' : 'Annual'}
+                  {pd === 'annual' && (
+                    <span style={{
+                      background: selected ? 'rgba(24,21,15,0.18)' : 'rgba(200,149,90,0.15)',
+                      color: selected ? '#18150f' : '#c8955a',
+                      fontSize: '0.64rem', fontWeight: 800, letterSpacing: '0.4px',
+                      padding: '2px 8px', borderRadius: 100, whiteSpace: 'nowrap',
+                      opacity: ready ? 1 : 0, transition: 'opacity 0.3s',
+                    }}>
+                      {MAX_SAVINGS[currency]}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
         </div>
 
         {/* Free row */}
@@ -93,8 +164,11 @@ export default function PricingPage() {
           <div style={{ background: 'rgba(200,149,90,0.07)', border: '1px solid rgba(212,165,106,0.35)', borderRadius: 20, padding: '32px 28px', display: 'flex', flexDirection: 'column', position: 'relative' }}>
             <div style={{ position: 'absolute', top: -12, left: '50%', transform: 'translateX(-50%)', background: '#c8955a', color: '#18150f', fontSize: '0.65rem', fontWeight: 800, letterSpacing: '1.5px', textTransform: 'uppercase', padding: '5px 14px', borderRadius: 100, whiteSpace: 'nowrap' }}>Most popular</div>
             <div style={{ marginBottom: 6, fontSize: '0.82rem', fontWeight: 600, color: 'rgba(232,221,208,0.45)' }}>DreamLog+</div>
-            <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '2.4rem', fontWeight: 300, lineHeight: 1, marginBottom: 4, opacity: ready ? 1 : 0, transition: 'opacity 0.3s' }}>{p('plus')}</div>
-            <div style={{ fontSize: '0.78rem', color: 'rgba(232,221,208,0.35)', marginBottom: 16 }}>{per}</div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 4 }}>
+              <span style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '2.4rem', fontWeight: 300, lineHeight: 1, opacity: ready ? 1 : 0, transition: 'opacity 0.3s' }}>{planPrice('plus')}</span>
+              {saveBadge('plus')}
+            </div>
+            <div style={{ fontSize: '0.78rem', color: 'rgba(232,221,208,0.35)', marginBottom: 16 }}>{perLine('plus')}</div>
             <p style={{ fontSize: '0.84rem', color: 'rgba(232,221,208,0.5)', margin: '0 0 20px', lineHeight: 1.6 }}>Unlimited entries. All modes. The complete journaling product.</p>
             <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 24 }}>
               {['Unlimited entries', 'All 5 journaling modes', 'Dream Decoder (Jungian + Vedic)', 'Life Graph & Mood History', 'Weekly + Annual Reviews', 'Life Chapters', 'PDF export', 'Therapist share (5/month)', 'Hindi + Hinglish support'].map(f => (
@@ -112,8 +186,11 @@ export default function PricingPage() {
           {/* Pro */}
           <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 20, padding: '32px 28px', display: 'flex', flexDirection: 'column' }}>
             <div style={{ marginBottom: 6, fontSize: '0.82rem', fontWeight: 600, color: 'rgba(232,221,208,0.45)' }}>DreamLog Pro</div>
-            <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '2.4rem', fontWeight: 300, lineHeight: 1, marginBottom: 4, opacity: ready ? 1 : 0, transition: 'opacity 0.3s' }}>{p('pro')}</div>
-            <div style={{ fontSize: '0.78rem', color: 'rgba(232,221,208,0.35)', marginBottom: 16 }}>{per}</div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 4 }}>
+              <span style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '2.4rem', fontWeight: 300, lineHeight: 1, opacity: ready ? 1 : 0, transition: 'opacity 0.3s' }}>{planPrice('pro')}</span>
+              {saveBadge('pro')}
+            </div>
+            <div style={{ fontSize: '0.78rem', color: 'rgba(232,221,208,0.35)', marginBottom: 16 }}>{perLine('pro')}</div>
             <p style={{ fontSize: '0.84rem', color: 'rgba(232,221,208,0.5)', margin: '0 0 20px', lineHeight: 1.6 }}>Everything in Plus, plus one therapy session every month.</p>
             <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 24 }}>
               {[`Everything in DreamLog+`, '1 Therapy Session / month', `Extra sessions at ${memberExtra} (member price)`, 'Unlimited therapist share', 'Priority processing'].map(f => (
@@ -147,7 +224,7 @@ export default function PricingPage() {
         </div>
 
         <p style={{ textAlign: 'right', fontSize: '0.76rem', color: 'rgba(232,221,208,0.3)', marginBottom: 72 }}>
-          30-day passes · managed in-app · no auto-renew
+          one-time passes (30 or 365 days) · managed in-app · no auto-renew
         </p>
 
         {/* FAQ */}
@@ -155,7 +232,7 @@ export default function PricingPage() {
           <h2 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 'clamp(1.6rem, 3vw, 2.2rem)', fontWeight: 300, margin: '0 0 40px' }}>Common questions</h2>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 60px' }}>
             {[
-              { q: 'Does it auto-renew?', a: 'No. Every plan is a 30-day pass. When it expires you return to Free automatically. Buy again if you want to continue.' },
+              { q: 'Does it auto-renew?', a: 'No. Every plan is a one-time pass — 30 days for monthly, 365 days for annual. When it expires you return to Free automatically. Buy again if you want to continue.' },
               { q: 'Can I switch plans?', a: 'Yes, any time. Buy a new plan in-app and it activates immediately. Unused days on your current pass are not refunded.' },
               { q: 'Is the free plan actually free?', a: 'Yes, genuinely. 10 entries a month, full AI reflection, 7-day mood chart, crisis detection. No card required.' },
               { q: 'What currencies do you accept?', a: 'Prices are shown in INR for India, USD for most countries. Payment is processed by Stripe or in-app purchase depending on your platform.' },

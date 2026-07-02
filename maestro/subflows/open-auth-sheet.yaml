@@ -1,0 +1,17 @@
+# Reusable: from the Home tab as a GUEST, trigger the bottom AuthSheet.
+# Tapping the record button while unauthenticated calls requestAuth() in
+# app/(tabs)/index.tsx, which opens <AuthSheet> (src/components/AuthSheet.tsx).
+#
+# Precondition: app is on the Home tab, user is NOT signed in.
+# Postcondition: AuthSheet is visible.
+#
+# Selectors use the stable testIDs registered in mobile/src/testIDs.ts, so
+# marketing copy changes never break this flow.
+appId: com.dreamlog.app
+---
+- tapOn:
+    id: "home-record-button"            # T.home.recordBtn
+- assertVisible:
+    id: "auth-sheet"                    # T.auth.sheet
+- assertVisible:
+    id: "auth-google"                   # T.auth.google

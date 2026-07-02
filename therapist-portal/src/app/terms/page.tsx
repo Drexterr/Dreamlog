@@ -43,7 +43,7 @@ export default function TermsPage() {
           </Section>
 
           <Section title="Subscriptions and payments">
-            <Item label="Plans">DreamLog has a Free plan and two paid options - DreamLog+ and DreamLog Pro. Paid plans are 30-day passes. They don&apos;t auto-renew. You pay once, get 30 days, and buy again if you want more.</Item>
+            <Item label="Plans">DreamLog has a Free plan and two paid options - DreamLog+ and DreamLog Pro. Paid plans are one-time passes: 30 days (monthly) or 365 days (annual). They don&apos;t auto-renew. You pay once, get your pass, and buy again if you want more.</Item>
             <Item label="Therapy sessions">Sessions can be purchased individually or are included in Pro. Your very first session is always free. The charge goes through when the session begins.</Item>
             <Item label="Refunds">Because access starts the moment you purchase, we can&apos;t refund unused days. If a technical issue stopped you from accessing the app, email us at <a href="mailto:support@dreamlog.app" style={{ color: 'var(--gold)' }}>support@dreamlog.app</a> within 7 days.</Item>
             <Item label="Price changes">If prices change, we&apos;ll give you at least 14 days&apos; notice by email or in-app.</Item>

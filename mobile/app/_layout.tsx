@@ -43,6 +43,7 @@ import {
 import ForceUpdateScreen from '../src/components/ForceUpdateScreen';
 import AuthSheet from '../src/components/AuthSheet';
 import { useTheme } from '../src/context/ThemeContext';
+import { E2E, E2E_TOKEN } from '../src/config/e2e';
 import type { VersionInfo } from '../src/types';
 
 function GreetingOverlay({ name, opacity }: { name: string; opacity: Animated.Value }) {
@@ -122,6 +123,22 @@ export default function RootLayout() {
   useEffect(() => {
     (async () => {
       try {
+        // ── E2E bypass ──────────────────────────────────────────────────────
+        // When built with EXPO_PUBLIC_E2E=1, skip onboarding routing. If a test
+        // token is supplied, boot straight into an authenticated session so
+        // feature flows don't have to script the sign-in each run. Inert unless
+        // the env var is set (never true in production builds). See src/config/e2e.ts.
+        if (E2E) {
+          if (E2E_TOKEN) {
+            await storeToken(E2E_TOKEN);
+            setHasToken(true);
+          }
+          setNeedsOnboarding(false);
+          await markOnboardingDone();
+          setReady(true);
+          return;
+        }
+
         await deepLinkReady;
         const { data: { session } } = await supabase.auth.getSession();
         if (!session) {

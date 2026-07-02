@@ -1,0 +1,24 @@
+# Maestro global configuration for the DreamLog test suite.
+# Docs: https://maestro.mobile.dev/reference/configuration
+#
+# `flows` scopes `maestro test maestro/` to only the top-level scenario flows in
+# flows/. The reusable pieces in subflows/ are pulled in via `runFlow` and must
+# NOT be executed as standalone tests (they assume a precondition state).
+flows:
+  - flows/*.yaml
+
+# App under test. Both platforms share this identifier (see mobile/app.json:
+# ios.bundleIdentifier and android.package are both "com.dreamlog.app").
+appId: com.dreamlog.app
+
+# Executed before EVERY flow. Guarantees each scenario starts from a cold,
+# deterministic launch rather than inheriting navigation state from the previous
+# flow. Individual flows can still clearState for a true first-run experience.
+onFlowStart:
+  - launchApp:
+      clearKeychain: false
+
+# Executed after every flow — a screenshot lands in ~/.maestro/tests/ for the
+# run, giving a visual trail even on green runs.
+onFlowComplete:
+  - takeScreenshot: "flow-complete"

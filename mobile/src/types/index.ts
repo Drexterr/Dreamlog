@@ -76,6 +76,9 @@ export type AgeRange = 'under_18' | '18_24' | '25_34' | '35_44' | '45_plus';
 
 export type Plan = 'free' | 'plus' | 'pro' | 'b2b';
 
+// Billing pass length: monthly = 30-day pass, annual = 365-day pass.
+export type BillingPeriod = 'monthly' | 'annual';
+
 // Therapy TTS voice language. 'auto' follows the language the user speaks each
 // turn. Keep in sync with models.SupportedVoiceLanguages on the backend.
 export type VoiceLanguage =

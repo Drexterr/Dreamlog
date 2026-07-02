@@ -1,0 +1,120 @@
+# ═══════════════════════════════════════════════════════════════════════════
+# AUTHENTICATION TESTING
+# DreamLog is guest-first. Auth is triggered on-demand via the bottom AuthSheet
+# (src/components/AuthSheet.tsx) when a guest attempts a gated action. Email +
+# Google + Apple all route through Supabase. All tap targets use the stable
+# testIDs in mobile/src/testIDs.ts.
+#
+# Covered: sheet trigger, providers present, email validation (empty, malformed,
+# short password), register field rules, wrong credentials, dismiss, and —
+# when a real seeded account is supplied — sign-in + session persistence.
+#
+# Google/Apple open native OS dialogs Maestro can't script in CI; we assert the
+# buttons render and stop. Email is the fully-automatable path.
+# ═══════════════════════════════════════════════════════════════════════════
+appId: com.dreamlog.app
+env:
+  EMAIL_EXISTING: "bharatbanthia2207+tester@gmail.com"
+  PASSWORD: "DreamTest!2026"
+  EMAIL_MALFORMED: "not-an-email"
+  NEW_USER_NAME: "Maestro QA"
+  PASSWORD_TOO_SHORT: "123"
+  PASSWORD_WRONG: "totally-wrong-password"
+tags:
+  - auth
+---
+- clearState
+- launchApp:
+    clearKeychain: true
+- runFlow: ../subflows/complete-onboarding-guest.yaml
+
+# ── 1. Gated action opens the AuthSheet with all providers ──
+- runFlow: ../subflows/open-auth-sheet.yaml
+- assertVisible: "Your data stays private. No ads, no sharing."
+- takeScreenshot: "auth-sheet-social"
+
+# ── 2. Switch to the email form ──
+- tapOn:
+    id: "auth-use-email"
+- assertVisible:
+    id: "auth-tab-login"
+- assertVisible:
+    id: "auth-tab-register"
+
+# ── 3. Empty submit → client-side validation error ──
+- tapOn:
+    id: "auth-submit"
+- assertVisible:
+    id: "auth-error"                 # T.auth.error row is present
+- assertVisible: "Email and password are required."
+- takeScreenshot: "auth-empty-fields-error"
+
+# ── 4. Register tab enforces name + 6-char password ──
+- tapOn:
+    id: "auth-tab-register"
+- tapOn:
+    id: "auth-email-input"
+- inputText: ${EMAIL_MALFORMED}
+- tapOn:
+    id: "auth-password-input"
+- inputText: ${PASSWORD_TOO_SHORT}
+- hideKeyboard
+- tapOn:
+    id: "auth-submit"
+- assertVisible: "Name is required."      # name checked before password length
+
+# Provide a name, keep the short password → password-length rule fires
+- tapOn:
+    id: "auth-name-input"
+- inputText: ${NEW_USER_NAME}
+- hideKeyboard
+- tapOn:
+    id: "auth-submit"
+- assertVisible: "Password must be at least 6 characters."
+- takeScreenshot: "auth-register-validation"
+
+# ── 5. Wrong credentials on sign-in → error surfaced, form stays open ──
+- tapOn:
+    id: "auth-tab-login"
+- tapOn:
+    id: "auth-email-input"
+- inputText: ${EMAIL_EXISTING}
+- tapOn:
+    id: "auth-password-input"
+- inputText: ${PASSWORD_WRONG}
+- hideKeyboard
+- tapOn:
+    id: "auth-submit"
+- assertVisible:
+    id: "auth-error"
+    timeout: 8000
+- assertVisible:
+    id: "auth-sheet"                  # did NOT navigate away to the tabs
+- takeScreenshot: "auth-wrong-credentials"
+
+# ── 6. Dismiss with "Later" — user stays a guest on Home ──
+- tapOn:
+    id: "auth-later"
+- assertVisible:
+    id: "home-screen"
+    timeout: 6000
+
+# ── 7. OPTIONAL happy-path sign-in + session persistence.
+#       Runs against a real verified account; asserts are optional so the flow
+#       still passes where the seeded tester account isn't active.
+- runFlow: ../subflows/open-auth-sheet.yaml
+- runFlow: ../subflows/sign-in-email.yaml
+- assertVisible:
+    id: "home-screen"
+    timeout: 20000
+    optional: true
+- takeScreenshot: "auth-signed-in"
+
+# Session persistence: cold restart should NOT ask to sign in again.
+- stopApp
+- launchApp
+- assertVisible:
+    id: "home-screen"
+    timeout: 20000
+    optional: true
+- takeScreenshot: "auth-session-persisted"

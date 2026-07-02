@@ -26,6 +26,7 @@ import {
   checkAndApplyUpdate,
   type UpdateSnapshot,
 } from '../../src/services/updates';
+import { T } from '../../src/testIDs';
 import type { AgeRange, Plan, User, UserGoal, VoiceLanguage } from '../../src/types';
 
 const GOAL_META: Record<UserGoal, { label: string; emoji: string }> = {
@@ -114,6 +115,7 @@ function SettingRow({
   danger = false,
   onPress,
   colors,
+  testID,
 }: {
   label: string;
   sub?: string;
@@ -121,9 +123,12 @@ function SettingRow({
   danger?: boolean;
   onPress?: () => void;
   colors: ReturnType<typeof useTheme>['colors'];
+  testID?: string;
 }) {
   return (
     <TouchableOpacity
+      testID={testID}
+      accessibilityLabel={label}
       onPress={onPress}
       disabled={!onPress && !right}
       activeOpacity={onPress ? 0.7 : 1}
@@ -386,7 +391,7 @@ export default function SettingsScreen() {
   }
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.bg }]}>
+    <View testID={T.settings.screen} style={[styles.container, { backgroundColor: colors.bg }]}>
       <StatusBar barStyle="light-content" />
       <SafeAreaView style={{ flex: 1 }}>
         <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
@@ -394,6 +399,8 @@ export default function SettingsScreen() {
 
           {/* Profile card */}
           <TouchableOpacity
+            testID={T.settings.profileCard}
+            accessibilityLabel="Profile"
             style={[styles.profileCard, { backgroundColor: colors.card, borderColor: (loadError && isAuthenticated) ? colors.danger : colors.border }]}
             onPress={() => {
               if (!isAuthenticated) { requestAuth(() => loadProfile()); }
@@ -443,6 +450,8 @@ export default function SettingsScreen() {
               <>
                 <View style={[styles.rowDivider, { backgroundColor: colors.borderFaint }]} />
                 <TouchableOpacity
+                  testID={T.settings.upgrade}
+                  accessibilityLabel="Upgrade plan"
                   style={[styles.upgradeRow, { backgroundColor: colors.brandGlow }]}
                   onPress={() => router.push('/upgrade' as never)}
                   activeOpacity={0.8}
@@ -460,6 +469,7 @@ export default function SettingsScreen() {
           <Text style={[styles.sectionLabel, { color: colors.textSecondary }]}>Emotional goal</Text>
           <View style={[styles.section, { backgroundColor: colors.card, borderColor: colors.borderFaint }]}>
             <SettingRow
+              testID={T.settings.goalRow}
               label={goalMeta.label}
               sub="Shapes how your reflections are written"
               colors={colors}
@@ -476,6 +486,8 @@ export default function SettingsScreen() {
               colors={colors}
               right={
                 <Switch
+                  testID={T.settings.nudgeSwitch}
+                  accessibilityLabel="Morning nudge toggle"
                   value={nudgeEnabled}
                   onValueChange={handleNudgeToggle}
                   trackColor={{ false: colors.cardSolid, true: colors.brand }}
@@ -487,6 +499,7 @@ export default function SettingsScreen() {
               <>
                 <View style={[styles.rowDivider, { backgroundColor: colors.borderFaint }]} />
                 <SettingRow
+                  testID={T.settings.nudgeHourRow}
                   label="Nudge hour"
                   sub="What time to send your morning nudge"
                   colors={colors}
@@ -505,6 +518,7 @@ export default function SettingsScreen() {
           <Text style={[styles.sectionLabel, { color: colors.textSecondary }]}>Therapy</Text>
           <View style={[styles.section, { backgroundColor: colors.card, borderColor: colors.borderFaint }]}>
             <SettingRow
+              testID={T.settings.voiceLangRow}
               label="Voice language"
               sub="The language of the AI voice in therapy sessions"
               colors={colors}
@@ -520,15 +534,16 @@ export default function SettingsScreen() {
           {/* Privacy */}
           <Text style={[styles.sectionLabel, { color: colors.textSecondary }]}>Privacy</Text>
           <View style={[styles.section, { backgroundColor: colors.card, borderColor: colors.borderFaint }]}>
-            <SettingRow label="Export my data" colors={colors} onPress={() => router.push('/export')} />
+            <SettingRow testID={T.settings.exportRow} label="Export my data" colors={colors} onPress={() => router.push('/export')} />
             <View style={[styles.rowDivider, { backgroundColor: colors.borderFaint }]} />
-            <SettingRow label="Delete all data" danger colors={colors} onPress={handleDeleteData} />
+            <SettingRow testID={T.settings.deleteRow} label="Delete all data" danger colors={colors} onPress={handleDeleteData} />
           </View>
 
           {/* Support */}
           <Text style={[styles.sectionLabel, { color: colors.textSecondary }]}>Support</Text>
           <View style={[styles.section, { backgroundColor: colors.card, borderColor: colors.borderFaint }]}>
             <SettingRow
+              testID={T.settings.helpRow}
               label="Get help now"
               sub="Crisis resources and helplines"
               colors={colors}
@@ -536,6 +551,7 @@ export default function SettingsScreen() {
             />
             <View style={[styles.rowDivider, { backgroundColor: colors.borderFaint }]} />
             <SettingRow
+              testID={T.settings.aboutRow}
               label="About DreamLog"
               sub="Tap to check for updates"
               colors={colors}
@@ -546,6 +562,8 @@ export default function SettingsScreen() {
 
           {/* Sign out */}
           <TouchableOpacity
+            testID={T.settings.signOut}
+            accessibilityLabel="Sign out"
             onPress={handleSignOut}
             style={[styles.signOutBtn, { borderColor: `${colors.danger}33`, backgroundColor: `${colors.danger}11` }]}
             activeOpacity={0.8}
@@ -938,6 +956,8 @@ export default function SettingsScreen() {
             </TouchableOpacity>
 
             <TouchableOpacity
+              testID={T.settings.profileModalClose}
+              accessibilityLabel="Close profile"
               style={[styles.closeBtn, { borderColor: colors.borderFaint, marginTop: 8 }]}
               onPress={() => setShowProfileModal(false)}
             >

@@ -1,0 +1,115 @@
+# ═══════════════════════════════════════════════════════════════════════════
+# NETWORK / DEVICE / EDGE-CASE TESTING
+# Not-happy-path scenarios: guest gating dead-ends, offline resilience,
+# permission denial, backgrounding & restore, keyboard handling, empty states,
+# rapid navigation. Tap targets use the stable testIDs (mobile/src/testIDs.ts).
+#
+# `setAirplaneMode` is Android-only in Maestro — that block is platform-guarded.
+# ═══════════════════════════════════════════════════════════════════════════
+appId: com.dreamlog.app
+env:
+  ENTRY_MODE_KEY: "rant"
+tags:
+  - edge
+---
+- clearState
+- launchApp:
+    clearKeychain: true
+    permissions:
+      microphone: allow
+- runFlow: ../subflows/complete-onboarding-guest.yaml
+
+# ── EDGE 1 — Guest gating: prompted, and "Later" keeps them a guest (no dead-end)
+- runFlow: ../subflows/open-auth-sheet.yaml
+- tapOn:
+    id: "auth-later"
+- assertVisible:
+    id: "home-screen"
+- assertVisible: "Tap record to start your first entry"   # guest hint
+- takeScreenshot: "edge-guest-dismissed-auth"
+
+# ── EDGE 2 — Offline resilience (Android only). App stays alive, tabs render
+#            their empty/offline states rather than crashing.
+- runFlow:
+    when:
+      platform: Android
+    commands:
+      - setAirplaneMode: enabled
+      - tapOn:
+          id: "tab-mood"
+      - assertVisible:
+          text: "Mood"
+          timeout: 10000
+      - takeScreenshot: "edge-offline-mood"
+      - tapOn:
+          id: "tab-explore"
+      - assertVisible:
+          id: "explore-screen"
+      - setAirplaneMode: disabled
+
+# ── EDGE 3 — Microphone permission DENIED must not crash. Relaunch denied; a
+#            guest tapping record still just gets the auth sheet.
+- launchApp:
+    permissions:
+      microphone: deny
+- assertVisible:
+    id: "home-screen"
+    timeout: 12000
+- tapOn:
+    id: "home-record-button"
+- assertVisible:
+    id: "auth-sheet"
+- tapOn:
+    id: "auth-later"
+- takeScreenshot: "edge-mic-denied-no-crash"
+
+# ── EDGE 4 — Background & restore keeps the app on the Home tab.
+- pressKey: Home
+- launchApp
+- assertVisible:
+    id: "home-screen"
+    timeout: 12000
+- takeScreenshot: "edge-background-restore"
+
+# ── EDGE 5 — Keyboard handling: submit stays reachable after typing + dismiss.
+- tapOn:
+    id: "home-record-button"
+- tapOn:
+    id: "auth-use-email"
+- tapOn:
+    id: "auth-email-input"
+- inputText: "keyboard@dreamlog.dev"
+- assertVisible: "keyboard@dreamlog.dev"
+- hideKeyboard
+- assertVisible:
+    id: "auth-submit"
+- tapOn:
+    id: "auth-later"
+
+# ── EDGE 6 — Empty-state resilience: tools open with zero data behind them.
+- tapOn:
+    id: "tab-explore"
+- tapOn:
+    id: "explore-relationships"
+- back
+- tapOn:
+    id: "explore-journeys"
+- assertVisible:
+    text: "Guided Journeys"
+    timeout: 10000
+- takeScreenshot: "edge-empty-states"
+
+# ── EDGE 7 — Rapid tab switching must not deadlock the navigator.
+- tapOn:
+    id: "tab-home"
+- tapOn:
+    id: "tab-mood"
+- tapOn:
+    id: "tab-settings"
+- tapOn:
+    id: "tab-explore"
+- tapOn:
+    id: "tab-home"
+- assertVisible:
+    id: "home-screen"
+- takeScreenshot: "edge-rapid-nav"

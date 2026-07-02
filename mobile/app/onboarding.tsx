@@ -23,6 +23,7 @@ import {
   markTourPending,
 } from '../src/services/guestStorage';
 import { setRegionFromCountry } from '../src/services/region';
+import { T, onboardingGoalID, onboardingAgeID } from '../src/testIDs';
 import type { AgeRange, UserGoal } from '../src/types';
 
 const { width: SW, height: SH } = Dimensions.get('window');
@@ -365,7 +366,7 @@ export default function OnboardingScreen() {
 
       {/* ── Step 0: Welcome ── */}
       {step === 0 && (
-        <View style={styles.welcomeWrap}>
+        <View testID={T.onboarding.welcome} style={styles.welcomeWrap}>
           <Animated.View
             style={[
               styles.welcomeInner,
@@ -383,6 +384,8 @@ export default function OnboardingScreen() {
               No tracking. No judgment.{'\n'}Just you and the page.
             </Text>
             <TouchableOpacity
+              testID={T.onboarding.begin}
+              accessibilityLabel="Begin onboarding"
               style={[styles.beginBtn, { borderColor: colors.brand }]}
               onPress={() => { introStarted.current = false; setStep('intro'); }}
               activeOpacity={0.8}
@@ -406,6 +409,8 @@ export default function OnboardingScreen() {
         >
           {/* Skip — top right */}
           <TouchableOpacity
+            testID={T.onboarding.introSkip}
+            accessibilityLabel="Skip intro"
             style={styles.introSkip}
             onPress={() => { introAnim.setValue(0); setStep(1); }}
             hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
@@ -444,6 +449,8 @@ export default function OnboardingScreen() {
           {/* Button pinned to bottom */}
           <View style={styles.introBtnWrap}>
             <TouchableOpacity
+              testID={T.onboarding.introNext}
+              accessibilityLabel={introSlide < INTRO_SLIDES.length - 1 ? 'Continue' : 'Get started'}
               style={[styles.introBtn, { backgroundColor: colors.brand }]}
               onPress={advanceIntro}
               activeOpacity={0.8}
@@ -477,7 +484,7 @@ export default function OnboardingScreen() {
             style={[styles.scrollLayer, { opacity: contentOpacity }]}
           >
             <Text style={[styles.wordmark, { color: colors.purple300 }]}>DreamLog</Text>
-            <TouchableOpacity style={styles.backTop} onPress={() => setStep(0)}>
+            <TouchableOpacity testID={T.onboarding.back} accessibilityLabel="Back" style={styles.backTop} onPress={() => setStep(0)}>
               <Text style={[styles.backTopText, { color: colors.textMuted }]}>← Back</Text>
             </TouchableOpacity>
             <Text style={[styles.heading, { color: colors.textPrimary }]}>What brings you here?</Text>
@@ -490,6 +497,8 @@ export default function OnboardingScreen() {
                 return (
                   <TouchableOpacity
                     key={g.key}
+                    testID={onboardingGoalID(g.key)}
+                    accessibilityLabel={g.label}
                     style={[
                       styles.goalCard,
                       { backgroundColor: colors.card, borderColor: isSelected ? colors.brand : colors.border },
@@ -582,6 +591,8 @@ export default function OnboardingScreen() {
               ]}
             >
               <TouchableOpacity
+                testID={T.onboarding.revealContinue}
+                accessibilityLabel="Continue"
                 style={[styles.revealBtn, { borderColor: colors.brand }]}
                 onPress={() => setStep(3)}
                 activeOpacity={0.7}
@@ -602,7 +613,7 @@ export default function OnboardingScreen() {
           {/* ── Step 3: Name ── */}
           {step === 3 && (
             <>
-              <TouchableOpacity style={styles.backTop} onPress={() => setStep(2)}>
+              <TouchableOpacity testID={T.onboarding.back} accessibilityLabel="Back" style={styles.backTop} onPress={() => setStep(2)}>
                 <Text style={[styles.backTopText, { color: colors.textMuted }]}>← Back</Text>
               </TouchableOpacity>
               <Text style={[styles.heading, { color: colors.textPrimary }]}>What should I call you?</Text>
@@ -610,6 +621,8 @@ export default function OnboardingScreen() {
                 Optional — leave blank to use your account name.
               </Text>
               <TextInput
+                testID={T.onboarding.nameInput}
+                accessibilityLabel="Preferred name"
                 style={[styles.input, { backgroundColor: colors.card, borderColor: colors.border, color: colors.textPrimary }]}
                 placeholder="e.g. Alex, or skip this"
                 placeholderTextColor={colors.textMuted}
@@ -621,6 +634,8 @@ export default function OnboardingScreen() {
                 onSubmitEditing={() => setStep(4)}
               />
               <TouchableOpacity
+                testID={T.onboarding.nameContinue}
+                accessibilityLabel="Continue from name"
                 style={[styles.btn, { backgroundColor: colors.brand }]}
                 onPress={() => setStep(4)}
                 activeOpacity={0.8}
@@ -633,7 +648,7 @@ export default function OnboardingScreen() {
           {/* ── Step 4: Age Range ── */}
           {step === 4 && (
             <>
-              <TouchableOpacity style={styles.backTop} onPress={() => setStep(3)}>
+              <TouchableOpacity testID={T.onboarding.back} accessibilityLabel="Back" style={styles.backTop} onPress={() => setStep(3)}>
                 <Text style={[styles.backTopText, { color: colors.textMuted }]}>← Back</Text>
               </TouchableOpacity>
               <Text style={[styles.heading, { color: colors.textPrimary }]}>How old are you?</Text>
@@ -646,6 +661,8 @@ export default function OnboardingScreen() {
                   return (
                     <TouchableOpacity
                       key={a.key}
+                      testID={onboardingAgeID(a.key)}
+                      accessibilityLabel={a.label}
                       style={[
                         styles.ageCard,
                         { backgroundColor: colors.card, borderColor: isSelected ? colors.brand : colors.border },
@@ -662,6 +679,8 @@ export default function OnboardingScreen() {
                 })}
               </View>
               <TouchableOpacity
+                testID={T.onboarding.ageContinue}
+                accessibilityLabel={selectedAgeRange ? 'Continue from age' : 'Skip age'}
                 style={[styles.btn, { backgroundColor: colors.brand }]}
                 onPress={() => setStep(5)}
                 activeOpacity={0.8}
@@ -676,7 +695,7 @@ export default function OnboardingScreen() {
           {/* ── Step 5: Country (inline, no separate layout) ── */}
           {step === 5 && (
             <>
-              <TouchableOpacity style={styles.backTop} onPress={() => setStep(4)}>
+              <TouchableOpacity testID={T.onboarding.back} accessibilityLabel="Back" style={styles.backTop} onPress={() => setStep(4)}>
                 <Text style={[styles.backTopText, { color: colors.textMuted }]}>← Back</Text>
               </TouchableOpacity>
               <Text style={[styles.heading, { color: colors.textPrimary }]}>Where are you based?</Text>
@@ -686,6 +705,8 @@ export default function OnboardingScreen() {
               <View style={styles.countrySearchWrap}>
                 <View style={styles.countryInputRow}>
                   <TextInput
+                    testID={T.onboarding.countryInput}
+                    accessibilityLabel="Search country"
                     style={[
                       styles.countryInput,
                       { backgroundColor: colors.card, borderColor: selectedCountry ? colors.brand : colors.border, color: colors.textPrimary },
@@ -731,6 +752,8 @@ export default function OnboardingScreen() {
                 )}
               </View>
               <TouchableOpacity
+                testID={T.onboarding.countryContinue}
+                accessibilityLabel={selectedCountry ? 'Continue from country' : 'Skip country'}
                 style={[styles.btn, { backgroundColor: colors.brand, marginTop: 24 }]}
                 onPress={handleFinish}
                 activeOpacity={0.8}
@@ -754,6 +777,8 @@ export default function OnboardingScreen() {
           </Text>
           <View style={styles.modeCards}>
             <TouchableOpacity
+              testID={T.onboarding.modeJournal}
+              accessibilityLabel="Begin with Journal"
               style={[styles.modeCard, { backgroundColor: colors.card, borderColor: colors.border }]}
               onPress={() => router.replace('/(tabs)')}
               activeOpacity={0.75}
@@ -765,6 +790,8 @@ export default function OnboardingScreen() {
               </Text>
             </TouchableOpacity>
             <TouchableOpacity
+              testID={T.onboarding.modeTherapy}
+              accessibilityLabel="Begin with Reflection Session"
               style={[styles.modeCard, { backgroundColor: colors.card, borderColor: colors.border }]}
               // eslint-disable-next-line @typescript-eslint/no-explicit-any
               onPress={() => router.push('/therapy/persona-picker' as any)}

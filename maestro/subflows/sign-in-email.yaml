@@ -1,0 +1,32 @@
+# Reusable: sign in with email + password through the AuthSheet.
+#
+# Precondition: an AuthSheet (or the full /auth screen) is visible.
+# Required env: EMAIL_EXISTING, PASSWORD
+# Postcondition: Supabase session established; onAuthStateChange routes to tabs.
+#
+# All selectors are stable testIDs (mobile/src/testIDs.ts). The AuthSheet
+# defaults to the social view, so we switch to email first (guarded — the full
+# /auth screen already shows the fields).
+appId: com.dreamlog.app
+---
+- runFlow:
+    when:
+      visible:
+        id: "auth-use-email"            # T.auth.useEmail (only in the sheet)
+    commands:
+      - tapOn:
+          id: "auth-use-email"
+
+# Ensure the Sign in (login) tab is active.
+- tapOn:
+    id: "auth-tab-login"                # T.auth.tabLogin
+
+- tapOn:
+    id: "auth-email-input"              # T.auth.emailInput
+- inputText: ${EMAIL_EXISTING}
+- tapOn:
+    id: "auth-password-input"           # T.auth.passwordInput
+- inputText: ${PASSWORD}
+- hideKeyboard
+- tapOn:
+    id: "auth-submit"                   # T.auth.submit

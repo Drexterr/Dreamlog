@@ -11,6 +11,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useTheme } from '../../src/context/ThemeContext';
 import { useAuth } from '../../src/context/AuthContext';
+import { T } from '../../src/testIDs';
 
 // ── Feature card ──────────────────────────────────────────────────────────────
 function FeatureCard({
@@ -20,6 +21,7 @@ function FeatureCard({
   cta,
   onPress,
   badge,
+  testID,
 }: {
   icon: string;
   title: string;
@@ -27,10 +29,13 @@ function FeatureCard({
   cta: string;
   onPress: () => void;
   badge?: string;
+  testID?: string;
 }) {
   const { colors } = useTheme();
   return (
     <TouchableOpacity
+      testID={testID}
+      accessibilityLabel={title}
       style={[styles.featureCard, { backgroundColor: colors.card, borderColor: colors.border }]}
       onPress={onPress}
       activeOpacity={0.8}
@@ -60,6 +65,8 @@ function EntriesCard({ onPress }: { onPress: () => void }) {
   const { colors } = useTheme();
   return (
     <TouchableOpacity
+      testID={T.explore.entries}
+      accessibilityLabel="Journal entries"
       style={[styles.entriesCard, { backgroundColor: colors.card, borderColor: colors.border }]}
       onPress={onPress}
       activeOpacity={0.8}
@@ -102,7 +109,7 @@ export default function ExploreScreen() {
   }, [router]);
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.bg }]}>
+    <View testID={T.explore.screen} style={[styles.container, { backgroundColor: colors.bg }]}>
       <StatusBar barStyle="light-content" />
       <SafeAreaView style={styles.safe}>
         <ScrollView
@@ -123,6 +130,7 @@ export default function ExploreScreen() {
           <Text style={[styles.sectionLabel, { color: colors.textMuted, marginTop: 28 }]}>TOOLS</Text>
 
           <FeatureCard
+            testID={T.explore.therapy}
             icon="◎"
             title="Therapy Mode"
             description="A real-time AI conversation grounded in your journal history. Voice or text, up to 60 minutes."
@@ -131,6 +139,7 @@ export default function ExploreScreen() {
           />
 
           <FeatureCard
+            testID={T.explore.dream}
             icon="◐"
             title="Dream Decoder"
             description="Record a dream and receive dual interpretations — Jungian depth psychology and Vedic Svapna Shastra."
@@ -139,6 +148,7 @@ export default function ExploreScreen() {
           />
 
           <FeatureCard
+            testID={T.explore.journeys}
             icon="⊹"
             title="Guided Journeys"
             description="Structured multi-step reflections for stress, grief, decisions, and self-compassion."
@@ -147,6 +157,7 @@ export default function ExploreScreen() {
           />
 
           <FeatureCard
+            testID={T.explore.relationships}
             icon="❖"
             title="Relationship Map"
             description="The people woven through your reflections — who comes up, how often, and the feeling around each one."

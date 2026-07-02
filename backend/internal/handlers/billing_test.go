@@ -494,6 +494,62 @@ func TestBillingHandler_UpgradeVerified_Success_GrantsServerExpiry(t *testing.T)
 	}
 }
 
+func TestBillingHandler_UpgradeVerified_Annual_GrantsYearExpiry(t *testing.T) {
+	stripe := stripeStub(t, map[string]interface{}{
+		"id": "pi_a1", "status": "succeeded", "amount": 449900, "currency": "inr",
+		"metadata": map[string]string{"plan": "pro", "period": "annual"},
+	})
+	defer stripe.Close()
+
+	svc := &fakePlanManager{}
+	r := newVerifiedBillingRouter(t, svc, &fakePaymentRecorder{}, stripe.URL, billingTestUser(models.PlanFree))
+	w := postUpgrade(t, r, map[string]string{"plan": "pro", "payment_intent_id": "pi_a1", "period": "annual"})
+	if w.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d: %s", w.Code, w.Body.String())
+	}
+	if svc.upgradedExpiry == nil {
+		t.Fatal("expected server-set expiry on verified annual upgrade")
+	}
+	// Expiry must be ~365 days out, not the 30-day monthly pass.
+	if got := time.Until(*svc.upgradedExpiry); got < 360*24*time.Hour || got > 366*24*time.Hour {
+		t.Fatalf("annual expiry must be ~365 days out, got %v", got)
+	}
+}
+
+func TestBillingHandler_UpgradeVerified_PeriodMismatch_Returns400(t *testing.T) {
+	// Paid the monthly price, asking for an annual pass.
+	stripe := stripeStub(t, map[string]interface{}{
+		"id": "pi_a2", "status": "succeeded", "amount": 24900, "currency": "inr",
+		"metadata": map[string]string{"plan": "plus", "period": "monthly"},
+	})
+	defer stripe.Close()
+
+	r := newVerifiedBillingRouter(t, &fakePlanManager{}, &fakePaymentRecorder{}, stripe.URL, billingTestUser(models.PlanFree))
+	w := postUpgrade(t, r, map[string]string{"plan": "plus", "payment_intent_id": "pi_a2", "period": "annual"})
+	if w.Code != http.StatusBadRequest {
+		t.Fatalf("expected 400 for period mismatch, got %d: %s", w.Code, w.Body.String())
+	}
+}
+
+func TestBillingHandler_UpgradeVerified_LegacyIntentNoPeriod_TreatedAsMonthly(t *testing.T) {
+	// Intents created before annual passes carry no period metadata.
+	stripe := stripeStub(t, map[string]interface{}{
+		"id": "pi_a3", "status": "succeeded", "amount": 24900, "currency": "inr",
+		"metadata": map[string]string{"plan": "plus"},
+	})
+	defer stripe.Close()
+
+	svc := &fakePlanManager{}
+	r := newVerifiedBillingRouter(t, svc, &fakePaymentRecorder{}, stripe.URL, billingTestUser(models.PlanFree))
+	w := postUpgrade(t, r, map[string]string{"plan": "plus", "payment_intent_id": "pi_a3"})
+	if w.Code != http.StatusOK {
+		t.Fatalf("legacy monthly intent must still verify, got %d: %s", w.Code, w.Body.String())
+	}
+	if got := time.Until(*svc.upgradedExpiry); got > 31*24*time.Hour {
+		t.Fatalf("legacy intent must grant a 30-day pass, got %v", got)
+	}
+}
+
 func TestBillingHandler_UpgradeVerified_ReplayedIntent_Returns409(t *testing.T) {
 	stripe := stripeStub(t, map[string]interface{}{
 		"id": "pi_5", "status": "succeeded", "amount": 24900, "currency": "inr",
@@ -576,6 +632,26 @@ func TestCreatePaymentIntent_DevStub_ReturnsStubSecret(t *testing.T) {
 	}
 }
 
+func TestCreatePaymentIntent_DevStub_AnnualAmount(t *testing.T) {
+	r := newPaymentIntentRouter(t)
+	w := postPaymentIntent(t, r, map[string]string{"plan": "plus", "currency": "inr", "period": "annual"})
+	if w.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d: %s", w.Code, w.Body.String())
+	}
+	var resp map[string]interface{}
+	json.Unmarshal(w.Body.Bytes(), &resp)
+	if resp["amount"] != float64(199900) {
+		t.Errorf("plus INR annual amount: want 199900, got %v", resp["amount"])
+	}
+}
+
+func TestCreatePaymentIntent_InvalidPeriod_Returns400(t *testing.T) {
+	r := newPaymentIntentRouter(t)
+	if w := postPaymentIntent(t, r, map[string]string{"plan": "plus", "currency": "inr", "period": "weekly"}); w.Code != http.StatusBadRequest {
+		t.Fatalf("expected 400 for invalid period, got %d", w.Code)
+	}
+}
+
 func TestCreatePaymentIntent_InvalidCurrency_Returns400(t *testing.T) {
 	r := newPaymentIntentRouter(t)
 	if w := postPaymentIntent(t, r, map[string]string{"plan": "plus", "currency": "gbp"}); w.Code != http.StatusBadRequest {
@@ -594,19 +670,46 @@ func TestPlanAmount_AllCurrencies(t *testing.T) {
 	cases := []struct {
 		plan     models.Plan
 		currency string
+		period   string
 		want     int64
 	}{
-		{models.PlanPlus, "inr", 24900},
-		{models.PlanPro, "inr", 49900},
-		{models.PlanPlus, "usd", 599},
-		{models.PlanPro, "usd", 999},
-		{models.PlanPlus, "eur", 599},
-		{models.PlanPro, "eur", 999},
-		{models.PlanFree, "inr", 0},
+		{models.PlanPlus, "inr", "monthly", 24900},
+		{models.PlanPro, "inr", "monthly", 49900},
+		{models.PlanPlus, "usd", "monthly", 599},
+		{models.PlanPro, "usd", "monthly", 999},
+		{models.PlanPlus, "eur", "monthly", 599},
+		{models.PlanPro, "eur", "monthly", 999},
+		{models.PlanPlus, "inr", "annual", 199900},
+		{models.PlanPro, "inr", "annual", 449900},
+		{models.PlanPlus, "usd", "annual", 3999},
+		{models.PlanPro, "usd", "annual", 7999},
+		{models.PlanPlus, "eur", "annual", 3999},
+		{models.PlanPro, "eur", "annual", 7999},
+		{models.PlanFree, "inr", "monthly", 0},
 	}
 	for _, tc := range cases {
-		if got := planAmount(tc.plan, tc.currency); got != tc.want {
-			t.Errorf("planAmount(%s, %s): want %d, got %d", tc.plan, tc.currency, tc.want, got)
+		if got := planAmount(tc.plan, tc.currency, tc.period); got != tc.want {
+			t.Errorf("planAmount(%s, %s, %s): want %d, got %d", tc.plan, tc.currency, tc.period, tc.want, got)
+		}
+	}
+}
+
+func TestNormalizePeriod(t *testing.T) {
+	cases := []struct {
+		in     string
+		want   string
+		wantOK bool
+	}{
+		{"", "monthly", true},        // legacy requests / intents default to monthly
+		{"monthly", "monthly", true},
+		{"annual", "annual", true},
+		{"yearly", "", false},
+		{"weekly", "", false},
+	}
+	for _, tc := range cases {
+		got, ok := normalizePeriod(tc.in)
+		if got != tc.want || ok != tc.wantOK {
+			t.Errorf("normalizePeriod(%q): want (%q, %v), got (%q, %v)", tc.in, tc.want, tc.wantOK, got, ok)
 		}
 	}
 }

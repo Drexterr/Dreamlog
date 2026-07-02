@@ -98,7 +98,8 @@ Creates a Stripe PaymentIntent for a plan upgrade. The mobile uses the returned 
 
 ```json
 // Request
-{ "plan": "plus | pro", "currency": "inr | usd" }
+{ "plan": "plus | pro", "currency": "inr | usd | eur", "period": "monthly | annual" }
+// period is optional and defaults to "monthly"
 
 // Response 200
 {
@@ -109,32 +110,36 @@ Creates a Stripe PaymentIntent for a plan upgrade. The mobile uses the returned 
 }
 
 // Errors
-400 - invalid plan (must be plus or pro) or invalid currency
+400 - invalid plan (must be plus or pro), invalid currency, or invalid period
 ```
 
-**Amounts** (canonical prices in `docs/PRICING.md`):
+**Amounts** (canonical prices in `docs/PRICING.md`; EUR mirrors USD):
 | Plan | INR | USD |
 |---|---|---|
-| plus | 24900 paise (₹249) | 599 cents ($5.99) |
-| pro  | 49900 paise (₹499) | 999 cents ($9.99) |
+| plus monthly | 24900 paise (₹249) | 599 cents ($5.99) |
+| plus annual  | 199900 paise (₹1,999) | 3999 cents ($39.99) |
+| pro monthly  | 49900 paise (₹499) | 999 cents ($9.99) |
+| pro annual   | 449900 paise (₹4,499) | 7999 cents ($79.99) |
 
 ### POST /billing/upgrade
 Called after Stripe payment succeeds. The backend **verifies the payment with
 Stripe server-side** before granting anything - it never trusts the client's
 claim that payment happened. Plan expiry is set server-side to now + 30 days
-(payments are one-time 30-day passes, not auto-renewing subscriptions).
+(monthly) or now + 365 days (annual) — payments are one-time passes, not
+auto-renewing subscriptions.
 
 ```json
 // Request
-{ "plan": "free | plus | pro", "payment_intent_id": "pi_..." }
+{ "plan": "free | plus | pro", "payment_intent_id": "pi_...", "period": "monthly | annual" }
+// period is optional and defaults to "monthly"
 
 // Response 200
 { "plan": "plus", "plan_expires_at": "RFC3339 | null", "limits": { /* PlanLimits */ } }
 
 // Errors
-400 - invalid or missing plan; missing payment_intent_id; payment was made for
-      a different plan; payment amount below plan price; b2b requested
-      (b2b is provisioned by sales, not self-serve)
+400 - invalid or missing plan; invalid period; missing payment_intent_id;
+      payment was made for a different plan or billing period; payment amount
+      below plan price; b2b requested (b2b is provisioned by sales, not self-serve)
 402 - payment intent exists but has not succeeded
 409 - payment intent already used to grant a plan (replay protection)
 ```
@@ -142,11 +147,13 @@ claim that payment happened. Plan expiry is set server-side to now + 30 days
 Rules:
 - `plan: "free"` (self-downgrade) needs no payment and clears the expiry.
 - For `plus`/`pro` the referenced PaymentIntent must be `succeeded`, carry
-  `metadata.plan` matching the requested plan, and match the plan price.
+  `metadata.plan` and `metadata.period` matching the request (intents created
+  before annual passes have no period metadata and are treated as monthly),
+  and match the plan price for that period.
 - Each `payment_intent_id` grants a plan exactly once (`payments` table,
   unique on intent ID).
 - Dev mode (no `STRIPE_SECRET_KEY`): verification is skipped; paid plans are
-  granted with a server-set 30-day expiry so the local stack needs no
+  granted with a server-set 30- or 365-day expiry so the local stack needs no
   external APIs.
 
 **Plan gating:**

@@ -1,0 +1,51 @@
+# ═══════════════════════════════════════════════════════════════════════════
+# APPLICATION LAUNCH TESTING
+# First-time launch, splash → onboarding routing, warm-restart behaviour.
+# Root routing lives in app/_layout.tsx (guest → /onboarding, returning → /(tabs)).
+# ═══════════════════════════════════════════════════════════════════════════
+appId: com.dreamlog.app
+tags:
+  - launch
+  - smoke
+---
+# ── 1. First-ever launch: cleared state must land on Welcome/onboarding ──
+- clearState
+- launchApp:
+    clearKeychain: true
+- extendedWaitUntil:
+    visible:
+      id: "onboarding-welcome"
+    timeout: 120000                 # generous: first JS bundle + Supabase getSession()
+- takeScreenshot: "launch-first-run-welcome"
+
+# ── 2. Brand + primary CTA rendered (splash handed off cleanly) ──
+# Maestro does a FULL-string regex match, so we assert the exact wordmark and the
+# Begin button's testID rather than a partial of the multi-line heading.
+- assertVisible: "DreamLog"
+- assertVisible:
+    id: "onboarding-begin"
+
+# ── 3. Warm restart mid-onboarding: un-onboarded guest returns to onboarding ──
+- tapOn:
+    id: "onboarding-begin"
+- extendedWaitUntil:
+    visible:
+      text: "Speak, don't type"    # first intro slide
+    timeout: 10000
+- stopApp
+- launchApp
+- extendedWaitUntil:
+    visible:
+      id: "onboarding-welcome"
+    timeout: 120000
+- takeScreenshot: "launch-warm-restart-resumes-onboarding"
+
+# ── 4. Returning guest (onboarding complete) lands on the tabs ──
+- runFlow: ../subflows/complete-onboarding-guest.yaml
+- stopApp
+- launchApp
+- extendedWaitUntil:
+    visible:
+      id: "home-screen"
+    timeout: 120000
+- takeScreenshot: "launch-returning-guest-on-home"

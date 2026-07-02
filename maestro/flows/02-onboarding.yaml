@@ -1,0 +1,133 @@
+# ═══════════════════════════════════════════════════════════════════════════
+# ONBOARDING FLOW TESTING
+# The 7-step guest machine in app/onboarding.tsx: happy path + branches
+# (skip, back nav, age toggle-deselect, the Reflection-Session gate).
+#
+# Selectors: stable testIDs (mobile/src/testIDs.ts). NOTE: Maestro does a
+# FULL-string regex match on text, so screen headings that contain "?" (a regex
+# metachar) or newlines are asserted via testIDs, not text. Exact single-line
+# button labels ("Skip", "Continue", "Journal") are matched as text.
+# ═══════════════════════════════════════════════════════════════════════════
+appId: com.dreamlog.app
+env:
+  ONBOARDING_GOAL_KEY: "stress"
+  ONBOARDING_AGE_KEY: "25_34"
+  ONBOARDING_COUNTRY: "India"
+  PREFERRED_NAME: "Sam"
+tags:
+  - onboarding
+---
+- clearState
+- launchApp:
+    clearKeychain: true
+
+# ── A. Welcome → intro carousel: Skip jumps to goal selection ──
+- extendedWaitUntil:
+    visible:
+      id: "onboarding-welcome"
+    timeout: 120000
+- tapOn:
+    id: "onboarding-begin"
+- extendedWaitUntil:
+    visible:
+      id: "onboarding-intro-skip"
+    timeout: 10000
+- tapOn:
+    id: "onboarding-intro-skip"
+- extendedWaitUntil:
+    visible:
+      id: "onboarding-goal-${ONBOARDING_GOAL_KEY}"
+    timeout: 10000
+- takeScreenshot: "onboarding-goal-list"
+
+# ── B. Back navigation from goal returns to Welcome ──
+- tapOn:
+    id: "onboarding-back"
+- extendedWaitUntil:
+    visible:
+      id: "onboarding-welcome"
+    timeout: 10000
+
+# ── C. Re-enter and pick a goal → animated reveal → name step ──
+- tapOn:
+    id: "onboarding-begin"
+- extendedWaitUntil:
+    visible:
+      id: "onboarding-intro-skip"
+    timeout: 10000
+- tapOn:
+    id: "onboarding-intro-skip"
+- extendedWaitUntil:
+    visible:
+      id: "onboarding-goal-${ONBOARDING_GOAL_KEY}"
+    timeout: 10000
+- tapOn:
+    id: "onboarding-goal-${ONBOARDING_GOAL_KEY}"
+- extendedWaitUntil:
+    visible:
+      id: "onboarding-reveal-continue"
+    timeout: 10000
+- tapOn:
+    id: "onboarding-reveal-continue"
+
+# ── D. Name step: optional field. Enter a preferred name. ──
+- extendedWaitUntil:
+    visible:
+      id: "onboarding-name-input"
+    timeout: 10000
+- tapOn:
+    id: "onboarding-name-input"
+- inputText: ${PREFERRED_NAME}
+- assertVisible: ${PREFERRED_NAME}
+- hideKeyboard
+- tapOn:
+    id: "onboarding-name-continue"
+
+# ── E. Age step: "Skip" until selected → "Continue"; verify toggle-deselect ──
+- extendedWaitUntil:
+    visible:
+      id: "onboarding-age-${ONBOARDING_AGE_KEY}"
+    timeout: 10000
+- assertVisible: "Skip"
+- tapOn:
+    id: "onboarding-age-${ONBOARDING_AGE_KEY}"
+- assertVisible: "Continue"                     # selection flipped the CTA label
+- tapOn:
+    id: "onboarding-age-${ONBOARDING_AGE_KEY}"   # tap again → deselect (toggle)
+- assertVisible: "Skip"                          # CTA reverted → deselect works
+- tapOn:
+    id: "onboarding-age-${ONBOARDING_AGE_KEY}"   # re-select to proceed
+- tapOn:
+    id: "onboarding-age-continue"
+
+# ── F. Country step: search + pick from dropdown ──
+- extendedWaitUntil:
+    visible:
+      id: "onboarding-country-input"
+    timeout: 10000
+- tapOn:
+    id: "onboarding-country-input"
+- inputText: ${ONBOARDING_COUNTRY}
+- tapOn: ${ONBOARDING_COUNTRY}
+- hideKeyboard
+- tapOn:
+    id: "onboarding-country-continue"
+
+# ── G. Journal/Therapy gate: both mode cards render ──
+- extendedWaitUntil:
+    visible:
+      id: "onboarding-mode-journal"
+    timeout: 10000
+- assertVisible:
+    id: "onboarding-mode-therapy"
+- assertVisible: "First session free"
+- takeScreenshot: "onboarding-mode-gate"
+
+# ── H. Choosing Journal completes onboarding → Home tab ──
+- tapOn:
+    id: "onboarding-mode-journal"
+- extendedWaitUntil:
+    visible:
+      id: "home-screen"
+    timeout: 30000
+- takeScreenshot: "onboarding-complete-home"

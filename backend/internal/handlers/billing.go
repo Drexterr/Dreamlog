@@ -29,10 +29,35 @@ type paymentRecorder interface {
 	Record(ctx context.Context, userID uuid.UUID, paymentIntentID string, plan models.Plan, amount int64, currency string) (bool, error)
 }
 
-// paidPlanDuration is how long one verified payment grants a paid plan.
-// Payments are one-time PaymentIntents (a 30-day pass), not recurring
-// subscriptions - the mobile copy must describe them as such.
-const paidPlanDuration = 30 * 24 * time.Hour
+// Payments are one-time PaymentIntents (a 30-day or 365-day pass), not
+// recurring subscriptions - the mobile copy must describe them as such.
+const (
+	periodMonthly = "monthly"
+	periodAnnual  = "annual"
+
+	monthlyPlanDuration = 30 * 24 * time.Hour
+	annualPlanDuration  = 365 * 24 * time.Hour
+)
+
+// normalizePeriod validates the billing period, defaulting to monthly for
+// requests (and legacy PaymentIntents) that don't carry one.
+func normalizePeriod(p string) (string, bool) {
+	switch p {
+	case "", periodMonthly:
+		return periodMonthly, true
+	case periodAnnual:
+		return periodAnnual, true
+	default:
+		return "", false
+	}
+}
+
+func planDuration(period string) time.Duration {
+	if period == periodAnnual {
+		return annualPlanDuration
+	}
+	return monthlyPlanDuration
+}
 
 type BillingHandler struct {
 	svc                  planManager
@@ -97,6 +122,7 @@ func (h *BillingHandler) Upgrade(c *gin.Context) {
 	var req struct {
 		Plan            models.Plan `json:"plan" binding:"required"`
 		PaymentIntentID string      `json:"payment_intent_id"`
+		Period          string      `json:"period"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
 		_ = c.Error(apierr.BadRequest("invalid request body", err.Error()))
@@ -111,6 +137,12 @@ func (h *BillingHandler) Upgrade(c *gin.Context) {
 		return
 	}
 
+	period, ok := normalizePeriod(req.Period)
+	if !ok {
+		_ = c.Error(apierr.BadRequest("period must be monthly or annual"))
+		return
+	}
+
 	var expiresAt *time.Time
 
 	switch {
@@ -118,9 +150,9 @@ func (h *BillingHandler) Upgrade(c *gin.Context) {
 		// Self-downgrade: no payment, no expiry.
 
 	case h.stripeSecretKey == "":
-		// Dev stub: grant paid plans with a server-set 30-day expiry.
+		// Dev stub: grant paid plans with a server-set expiry for the period.
 		if req.Plan != models.PlanB2B {
-			t := time.Now().Add(paidPlanDuration)
+			t := time.Now().Add(planDuration(period))
 			expiresAt = &t
 		}
 
@@ -147,7 +179,14 @@ func (h *BillingHandler) Upgrade(c *gin.Context) {
 			_ = c.Error(apierr.BadRequest("payment was made for a different plan"))
 			return
 		}
-		if intent.Amount < planAmount(req.Plan, intent.Currency) {
+		// Legacy intents (created before annual passes) carry no period
+		// metadata and normalize to monthly.
+		intentPeriod, ok := normalizePeriod(intent.Metadata.Period)
+		if !ok || intentPeriod != period {
+			_ = c.Error(apierr.BadRequest("payment was made for a different billing period"))
+			return
+		}
+		if intent.Amount < planAmount(req.Plan, intent.Currency, period) {
 			_ = c.Error(apierr.BadRequest("payment amount does not match plan price"))
 			return
 		}
@@ -162,7 +201,7 @@ func (h *BillingHandler) Upgrade(c *gin.Context) {
 			return
 		}
 
-		t := time.Now().Add(paidPlanDuration)
+		t := time.Now().Add(planDuration(period))
 		expiresAt = &t
 	}
 
@@ -197,6 +236,7 @@ func (h *BillingHandler) CreatePaymentIntent(c *gin.Context) {
 	var req struct {
 		Plan     models.Plan `json:"plan"     binding:"required"`
 		Currency string      `json:"currency" binding:"required"`
+		Period   string      `json:"period"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
 		_ = c.Error(apierr.BadRequest("invalid request body", err.Error()))
@@ -216,7 +256,13 @@ func (h *BillingHandler) CreatePaymentIntent(c *gin.Context) {
 		return
 	}
 
-	amount := planAmount(req.Plan, req.Currency)
+	period, ok := normalizePeriod(req.Period)
+	if !ok {
+		_ = c.Error(apierr.BadRequest("period must be monthly or annual"))
+		return
+	}
+
+	amount := planAmount(req.Plan, req.Currency, period)
 
 	// Dev mode: Stripe keys not configured - return a test stub.
 	if h.stripeSecretKey == "" {
@@ -235,6 +281,7 @@ func (h *BillingHandler) CreatePaymentIntent(c *gin.Context) {
 		amount,
 		req.Currency,
 		string(req.Plan),
+		period,
 	)
 	if err != nil {
 		_ = c.Error(apierr.Internal("payment service unavailable"))
@@ -250,27 +297,48 @@ func (h *BillingHandler) CreatePaymentIntent(c *gin.Context) {
 }
 
 // planAmount returns the payment amount in the smallest currency unit (paise / euro cents / cents).
-func planAmount(plan models.Plan, currency string) int64 {
+// Annual passes are discounted vs 12x monthly (India ~33%/25%, global ~44%/33%) —
+// canonical prices and margin math live in docs/PRICING.md.
+func planAmount(plan models.Plan, currency, period string) int64 {
+	annual := period == periodAnnual
 	switch currency {
 	case "inr":
 		switch plan {
 		case models.PlanPlus:
+			if annual {
+				return 199900 // ₹1,999
+			}
 			return 24900 // ₹249
 		case models.PlanPro:
+			if annual {
+				return 449900 // ₹4,499
+			}
 			return 49900 // ₹499
 		}
 	case "eur":
 		switch plan {
 		case models.PlanPlus:
+			if annual {
+				return 3999 // €39.99
+			}
 			return 599 // €5.99
 		case models.PlanPro:
+			if annual {
+				return 7999 // €79.99
+			}
 			return 999 // €9.99
 		}
 	default: // usd
 		switch plan {
 		case models.PlanPlus:
+			if annual {
+				return 3999 // $39.99
+			}
 			return 599 // $5.99
 		case models.PlanPro:
+			if annual {
+				return 7999 // $79.99
+			}
 			return 999 // $9.99
 		}
 	}
@@ -278,12 +346,13 @@ func planAmount(plan models.Plan, currency string) int64 {
 }
 
 // createStripePaymentIntent calls the Stripe API directly using net/http (no SDK dependency).
-func createStripePaymentIntent(ctx context.Context, secretKey string, amount int64, currency, planMeta string) (string, error) {
+func createStripePaymentIntent(ctx context.Context, secretKey string, amount int64, currency, planMeta, periodMeta string) (string, error) {
 	body := url.Values{}
 	body.Set("amount", strconv.FormatInt(amount, 10))
 	body.Set("currency", currency)
 	body.Set("automatic_payment_methods[enabled]", "true")
 	body.Set("metadata[plan]", planMeta)
+	body.Set("metadata[period]", periodMeta)
 	body.Set("metadata[product]", "dreamlog_subscription")
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost,
@@ -329,7 +398,8 @@ type stripePaymentIntent struct {
 	Amount   int64  `json:"amount"`
 	Currency string `json:"currency"`
 	Metadata struct {
-		Plan string `json:"plan"`
+		Plan   string `json:"plan"`
+		Period string `json:"period"`
 	} `json:"metadata"`
 }
 

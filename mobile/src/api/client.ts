@@ -4,6 +4,7 @@ import {
   AgeRange,
   AnnualReview,
   AnnualReviewListResponse,
+  BillingPeriod,
   BillingPlanResponse,
   Conversation,
   CreatePaymentIntentResponse,
@@ -275,16 +276,21 @@ export const api = {
   getBillingPlan: (): Promise<BillingPlanResponse> =>
     http.get<BillingPlanResponse>('/billing/plan').then((r) => r.data),
 
-  createPaymentIntent: (plan: 'plus' | 'pro', currency: 'inr' | 'usd' | 'eur'): Promise<CreatePaymentIntentResponse> =>
+  createPaymentIntent: (
+    plan: 'plus' | 'pro',
+    currency: 'inr' | 'usd' | 'eur',
+    period: BillingPeriod = 'monthly',
+  ): Promise<CreatePaymentIntentResponse> =>
     http
-      .post<CreatePaymentIntentResponse>('/billing/create-payment-intent', { plan, currency })
+      .post<CreatePaymentIntentResponse>('/billing/create-payment-intent', { plan, currency, period })
       .then((r) => r.data),
 
   // paymentIntentId is required for paid plans in production - the backend
-  // verifies the payment with Stripe before granting. Expiry is server-set.
-  upgradePlan: (plan: Plan, paymentIntentId?: string): Promise<BillingPlanResponse> =>
+  // verifies the payment with Stripe before granting. Expiry is server-set
+  // (30 days for monthly, 365 for annual).
+  upgradePlan: (plan: Plan, paymentIntentId?: string, period: BillingPeriod = 'monthly'): Promise<BillingPlanResponse> =>
     http
-      .post<BillingPlanResponse>('/billing/upgrade', { plan, payment_intent_id: paymentIntentId })
+      .post<BillingPlanResponse>('/billing/upgrade', { plan, payment_intent_id: paymentIntentId, period })
       .then((r) => r.data),
 };
 

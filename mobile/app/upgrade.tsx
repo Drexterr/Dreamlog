@@ -18,10 +18,15 @@ import {
   resetAndDetectRegion,
   PLAN_PRICE,
   PLAN_PRICE_SHORT,
+  PLAN_PRICE_ANNUAL,
+  PLAN_PRICE_ANNUAL_SHORT,
+  PLAN_PRICE_ANNUAL_MONTHLY_EQUIV,
+  PLAN_ANNUAL_SAVINGS,
+  MAX_ANNUAL_SAVINGS,
   THERAPY_MEMBER_SESSION_PRICE,
 } from '../src/services/region';
 import type { RegionCurrency } from '../src/services/region';
-import type { Plan, BillingPlanResponse } from '../src/types';
+import type { Plan, BillingPeriod, BillingPlanResponse } from '../src/types';
 
 type Currency = RegionCurrency;
 
@@ -31,13 +36,23 @@ interface PlanCard {
   title: string;
   subtitle?: string;
   price: string;
+  priceSub?: string;
+  saveBadge?: string;
   features: string[];
   highlight: boolean;
 }
 
 // Prices and the member-session line render in the user's currency only
 // (location asked at account creation: India → INR, Europe → EUR, else USD).
-function buildPlans(currency: Currency): PlanCard[] {
+function buildPlans(currency: Currency, period: BillingPeriod): PlanCard[] {
+  const annual = period === 'annual';
+  const priceFor = (plan: 'plus' | 'pro') =>
+    annual ? PLAN_PRICE_ANNUAL[plan][currency] : PLAN_PRICE[plan][currency];
+  const priceSubFor = (plan: 'plus' | 'pro') =>
+    annual ? PLAN_PRICE_ANNUAL_MONTHLY_EQUIV[plan][currency] : undefined;
+  const saveBadgeFor = (plan: 'plus' | 'pro') =>
+    annual ? PLAN_ANNUAL_SAVINGS[plan][currency] : undefined;
+
   return [
     {
       plan: 'free',
@@ -57,7 +72,9 @@ function buildPlans(currency: Currency): PlanCard[] {
       emoji: '⭐',
       title: 'DreamLog+',
       subtitle: 'The complete journal',
-      price: PLAN_PRICE.plus[currency],
+      price: priceFor('plus'),
+      priceSub: priceSubFor('plus'),
+      saveBadge: saveBadgeFor('plus'),
       features: [
         'Unlimited entries',
         'Hindi + Hinglish support',
@@ -76,7 +93,9 @@ function buildPlans(currency: Currency): PlanCard[] {
       emoji: '🔮',
       title: 'DreamLog Pro',
       subtitle: 'Journal + therapy',
-      price: PLAN_PRICE.pro[currency],
+      price: priceFor('pro'),
+      priceSub: priceSubFor('pro'),
+      saveBadge: saveBadgeFor('pro'),
       features: [
         'Everything in DreamLog+',
         '1 Therapy session included / month',
@@ -98,6 +117,8 @@ export default function UpgradeScreen() {
   const [billing, setBilling] = useState<BillingPlanResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [purchasing, setPurchasing] = useState<Plan | null>(null);
+  // Annual is the default: it's the better deal and the savings badge sells it.
+  const [period, setPeriod] = useState<BillingPeriod>('annual');
 
   useEffect(() => {
     Promise.all([
@@ -120,14 +141,17 @@ export default function UpgradeScreen() {
 
     try {
       // Step 1: create a Stripe PaymentIntent on the backend
-      const intent = await api.createPaymentIntent(targetPlan, activeCurrency);
+      const intent = await api.createPaymentIntent(targetPlan, activeCurrency, period);
 
       // Step 2: init the Stripe payment sheet
+      const payLabel = period === 'annual'
+        ? PLAN_PRICE_ANNUAL_SHORT[targetPlan][activeCurrency]
+        : PLAN_PRICE_SHORT[targetPlan][activeCurrency];
       const { error: initError } = await initPaymentSheet({
         paymentIntentClientSecret: intent.client_secret,
         merchantDisplayName: 'DreamLog',
         style: 'alwaysDark',
-        primaryButtonLabel: `Pay ${PLAN_PRICE_SHORT[targetPlan][activeCurrency]}`,
+        primaryButtonLabel: `Pay ${payLabel}`,
       });
       if (initError) {
         Alert.alert('Payment error', initError.message);
@@ -146,12 +170,12 @@ export default function UpgradeScreen() {
       // Step 4: payment confirmed - the backend re-verifies the PaymentIntent
       // with Stripe before granting the plan and sets the expiry server-side.
       const paymentIntentId = intent.client_secret.split('_secret')[0];
-      const updated = await api.upgradePlan(targetPlan, paymentIntentId);
+      const updated = await api.upgradePlan(targetPlan, paymentIntentId, period);
       setBilling(updated);
 
       Alert.alert(
         'Welcome to ' + (targetPlan === 'plus' ? 'DreamLog+' : 'DreamLog Pro') + '!',
-        'Your 30-day pass is now active.',
+        period === 'annual' ? 'Your 365-day pass is now active.' : 'Your 30-day pass is now active.',
         [{ text: 'Continue', onPress: () => router.back() }],
       );
     } catch {
@@ -159,7 +183,7 @@ export default function UpgradeScreen() {
     } finally {
       setPurchasing(null);
     }
-  }, [activeCurrency, purchasing, initPaymentSheet, presentPaymentSheet, router]);
+  }, [activeCurrency, period, purchasing, initPaymentSheet, presentPaymentSheet, router]);
 
   if (loading) {
     return (
@@ -186,8 +210,34 @@ export default function UpgradeScreen() {
 
         <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
 
+          {/* Monthly / Annual toggle */}
+          <View style={[styles.periodToggle, { backgroundColor: colors.cardSolid, borderColor: colors.borderFaint }]}>
+            {(['monthly', 'annual'] as const).map((p) => {
+              const selected = period === p;
+              return (
+                <TouchableOpacity
+                  key={p}
+                  style={[styles.periodSegment, selected && { backgroundColor: colors.brand }]}
+                  onPress={() => setPeriod(p)}
+                  activeOpacity={0.8}
+                >
+                  <Text style={[styles.periodSegmentText, { color: selected ? '#fff' : colors.textMuted }]}>
+                    {p === 'monthly' ? 'Monthly' : 'Annual'}
+                  </Text>
+                  {p === 'annual' && (
+                    <View style={[styles.saveChip, { backgroundColor: selected ? 'rgba(255,255,255,0.22)' : colors.brandGlow }]}>
+                      <Text style={[styles.saveChipText, { color: selected ? '#fff' : colors.brand }]}>
+                        {MAX_ANNUAL_SAVINGS[activeCurrency]}
+                      </Text>
+                    </View>
+                  )}
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+
           {/* Plan cards */}
-          {buildPlans(activeCurrency).map((card) => {
+          {buildPlans(activeCurrency, period).map((card) => {
             const isCurrent = currentPlan === card.plan;
             const isUpgradeable = card.plan !== 'free' && !isCurrent && currentPlan !== 'pro' || (card.plan === 'pro' && currentPlan === 'plus');
             const isPurchasing = purchasing === card.plan;
@@ -219,9 +269,21 @@ export default function UpgradeScreen() {
                         </View>
                       )}
                     </View>
-                    <Text style={[styles.cardPrice, { color: colors.purple300 }]}>
-                      {card.price}
-                    </Text>
+                    <View style={styles.priceRow}>
+                      <Text style={[styles.cardPrice, { color: colors.purple300 }]}>
+                        {card.price}
+                      </Text>
+                      {card.saveBadge && (
+                        <View style={[styles.badge, { backgroundColor: colors.brandGlow, borderWidth: 1, borderColor: colors.brand }]}>
+                          <Text style={[styles.badgeText, { color: colors.brand }]}>{card.saveBadge}</Text>
+                        </View>
+                      )}
+                    </View>
+                    {card.priceSub && (
+                      <Text style={[styles.priceSub, { color: colors.textMuted }]}>
+                        that's {card.priceSub}
+                      </Text>
+                    )}
                   </View>
                 </View>
 
@@ -272,8 +334,8 @@ export default function UpgradeScreen() {
               Secured by Stripe · One-time payment · No hidden fees
             </Text>
             <Text style={[styles.footerText, { color: colors.textFaint }]}>
-              Each purchase is a 30-day pass. It does not auto-renew and you
-              will never be charged automatically.
+              Each purchase is a one-time pass ({period === 'annual' ? '365 days' : '30 days'}).
+              It does not auto-renew and you will never be charged automatically.
             </Text>
           </View>
         </ScrollView>
@@ -306,6 +368,38 @@ const styles = StyleSheet.create({
 
   scroll: { padding: 20, paddingBottom: 48 },
 
+  periodToggle: {
+    flexDirection: 'row',
+    borderRadius: 14,
+    borderWidth: 1,
+    padding: 4,
+    marginBottom: 16,
+    gap: 4,
+  },
+  periodSegment: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    paddingVertical: 10,
+    borderRadius: 10,
+  },
+  periodSegmentText: {
+    fontSize: 14,
+    fontFamily: 'Nunito_600SemiBold',
+  },
+  saveChip: {
+    borderRadius: 8,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+  },
+  saveChipText: {
+    fontSize: 10,
+    fontFamily: 'Nunito_600SemiBold',
+    letterSpacing: 0.3,
+  },
+
   card: {
     borderRadius: 20,
     borderWidth: 1,
@@ -333,6 +427,16 @@ const styles = StyleSheet.create({
   cardPrice: {
     fontSize: 15,
     fontFamily: 'Nunito_600SemiBold',
+  },
+  priceRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  priceSub: {
+    fontSize: 12,
+    fontFamily: 'Nunito_400Regular',
+    marginTop: 2,
   },
 
   badge: {

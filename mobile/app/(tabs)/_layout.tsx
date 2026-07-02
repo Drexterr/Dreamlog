@@ -3,6 +3,7 @@ import { useEffect, useRef } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { useTheme } from '../../src/context/ThemeContext';
 import { useGuidedTour } from '../../src/context/GuidedTourContext';
+import { T } from '../../src/testIDs';
 
 // SVG-free tab icons using React Native Views + Text
 function HomeIcon({ focused }: { focused: boolean }) {
@@ -89,6 +90,8 @@ export default function TabsLayout() {
         name="index"
         options={{
           title: 'Home',
+          tabBarButtonTestID: T.tab.home,
+          tabBarAccessibilityLabel: 'Home tab',
           tabBarIcon: ({ focused }) => <HomeIcon focused={focused} />,
         }}
       />
@@ -96,6 +99,8 @@ export default function TabsLayout() {
         name="timeline"
         options={{
           title: 'Explore',
+          tabBarButtonTestID: T.tab.explore,
+          tabBarAccessibilityLabel: 'Explore tab',
           tabBarIcon: ({ focused }) => <ExploreIcon focused={focused} />,
         }}
       />
@@ -103,6 +108,8 @@ export default function TabsLayout() {
         name="mood"
         options={{
           title: 'Mood',
+          tabBarButtonTestID: T.tab.mood,
+          tabBarAccessibilityLabel: 'Mood tab',
           tabBarIcon: ({ focused }) => <MoodIcon focused={focused} />,
         }}
       />
@@ -110,6 +117,8 @@ export default function TabsLayout() {
         name="settings"
         options={{
           title: 'Settings',
+          tabBarButtonTestID: T.tab.settings,
+          tabBarAccessibilityLabel: 'Settings tab',
           tabBarIcon: ({ focused }) => <SettingsIcon focused={focused} />,
         }}
       />

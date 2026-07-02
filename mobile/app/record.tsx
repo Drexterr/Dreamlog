@@ -18,6 +18,7 @@ import { enqueue as queueOffline } from '../src/services/offlineQueue';
 import { uuid } from '../src/utils/uuid';
 import { useTheme } from '../src/context/ThemeContext';
 import { useAuth } from '../src/context/AuthContext';
+import { T, recordModeID } from '../src/testIDs';
 import type { EntryMode } from '../src/types';
 
 const WAVEFORM_BARS = 9;
@@ -122,7 +123,14 @@ function RecordingOrb({
   };
 
   return (
-    <TouchableOpacity activeOpacity={1} onPressIn={handlePressIn} onPressOut={handlePressOut}>
+    <TouchableOpacity
+      testID={T.record.orb}
+      accessibilityLabel={recording ? 'Stop recording' : 'Start recording'}
+      accessibilityRole="button"
+      activeOpacity={1}
+      onPressIn={handlePressIn}
+      onPressOut={handlePressOut}
+    >
       <View style={styles.orbWrap}>
         {recording && <RippleRings colors={colors} />}
         <Animated.View
@@ -199,6 +207,8 @@ function ModeGrid({
             style={{ opacity: anims[i], transform: [{ translateY }], flex: 1, minWidth: '47%' }}
           >
             <TouchableOpacity
+              testID={recordModeID(m.key)}
+              accessibilityLabel={`${m.label} mode`}
               disabled={disabled}
               onPress={() => onSelect(m.key)}
               activeOpacity={0.8}
@@ -311,13 +321,13 @@ export default function RecordScreen() {
     : 'Almost done…';
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.bg }]}>
+    <View testID={T.record.screen} style={[styles.container, { backgroundColor: colors.bg }]}>
       <StatusBar barStyle="light-content" />
       <SafeAreaView style={styles.safe}>
 
         {/* Header */}
         <View style={styles.header}>
-          <TouchableOpacity onPress={handleCancel} style={styles.cancelBtn}>
+          <TouchableOpacity testID={T.record.cancel} accessibilityLabel="Cancel recording" onPress={handleCancel} style={styles.cancelBtn}>
             <Text style={[styles.cancelText, { color: colors.textMuted }]}>
               {phase === 'uploading' ? '' : 'Cancel'}
             </Text>

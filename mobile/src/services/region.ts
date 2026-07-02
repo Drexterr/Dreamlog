@@ -114,3 +114,35 @@ export const PLAN_PRICE: Record<'plus' | 'pro', Record<RegionCurrency, string>> 
   plus: { inr: '₹249 / month', usd: '$5.99 / month', eur: '€5.99 / month' },
   pro:  { inr: '₹499 / month', usd: '$9.99 / month', eur: '€9.99 / month' },
 };
+
+// Annual passes (one-time 365-day pass, mirrors the monthly 30-day pass model).
+// India discount is deliberately shallower than global: INR margins are FX-exposed
+// (see docs/PRICING.md §"Annual passes" for the floor math).
+export const PLAN_PRICE_ANNUAL_SHORT: Record<'plus' | 'pro', Record<RegionCurrency, string>> = {
+  plus: { inr: '₹1,999', usd: '$39.99', eur: '€39.99' },
+  pro:  { inr: '₹4,499', usd: '$79.99', eur: '€79.99' },
+};
+
+export const PLAN_PRICE_ANNUAL: Record<'plus' | 'pro', Record<RegionCurrency, string>> = {
+  plus: { inr: '₹1,999 / year', usd: '$39.99 / year', eur: '€39.99 / year' },
+  pro:  { inr: '₹4,499 / year', usd: '$79.99 / year', eur: '€79.99 / year' },
+};
+
+// Per-month equivalent of the annual pass, shown under the annual price.
+export const PLAN_PRICE_ANNUAL_MONTHLY_EQUIV: Record<'plus' | 'pro', Record<RegionCurrency, string>> = {
+  plus: { inr: '₹167 / mo', usd: '$3.33 / mo', eur: '€3.33 / mo' },
+  pro:  { inr: '₹375 / mo', usd: '$6.67 / mo', eur: '€6.67 / mo' },
+};
+
+// Savings vs 12 monthly passes, rounded down to a whole percent.
+export const PLAN_ANNUAL_SAVINGS: Record<'plus' | 'pro', Record<RegionCurrency, string>> = {
+  plus: { inr: 'Save 33%', usd: 'Save 44%', eur: 'Save 44%' },
+  pro:  { inr: 'Save 25%', usd: 'Save 33%', eur: 'Save 33%' },
+};
+
+// Largest savings per currency - shown on the Annual toggle segment.
+export const MAX_ANNUAL_SAVINGS: Record<RegionCurrency, string> = {
+  inr: 'Save up to 33%',
+  usd: 'Save up to 44%',
+  eur: 'Save up to 44%',
+};

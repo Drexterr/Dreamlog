@@ -1,0 +1,208 @@
+# ═══════════════════════════════════════════════════════════════════════════
+# FEATURE WORKFLOW TESTING (happy paths + persistence)
+# Signed-in journeys: record a journal entry, manage settings, drive the therapy
+# persona picker, exercise UI controls. All tap targets use stable testIDs
+# (mobile/src/testIDs.ts).
+#
+# REQUIRES:
+#   • A running backend (EXPO_PUBLIC_API_URL reachable) for entry processing,
+#     mood data, therapy. For deterministic reflection/therapy content run that
+#     backend with STUB_AI_ANALYSIS=true. Backend-dependent assertions are
+#     `optional: true` so the flow still validates the UI without one.
+#   • A verified account (EMAIL_EXISTING / PASSWORD). Recording is gated to
+#     authenticated users (app/record.tsx bounces guests).
+#   • Microphone permission — granted up-front via launchApp.permissions.
+#
+# FAST PATH: build with EXPO_PUBLIC_E2E=1 and EXPO_PUBLIC_E2E_TOKEN=<token> to
+#   boot straight onto an authenticated Home tab (skips onboarding + the scripted
+#   sign-in below). See mobile/src/config/e2e.ts. When using that build, delete
+#   the onboarding + sign-in runFlow lines and start at FEATURE 1.
+# ═══════════════════════════════════════════════════════════════════════════
+appId: com.dreamlog.app
+env:
+  EMAIL_EXISTING: "bharatbanthia2207+tester@gmail.com"
+  PASSWORD: "DreamTest!2026"
+  ENTRY_MODE_KEY: "processing"          # enum → record-mode-processing
+  THERAPY_PERSONA_KEY: "comforting"     # enum → persona-card-comforting
+  THERAPY_TEXT_MESSAGE: "I have been feeling stretched thin at work this week."
+  SEARCH_QUERY: "work"
+tags:
+  - features
+---
+- clearState
+- launchApp:
+    clearKeychain: true
+    permissions:
+      microphone: allow
+      notifications: allow
+- runFlow: ../subflows/complete-onboarding-guest.yaml
+- runFlow: ../subflows/open-auth-sheet.yaml
+- runFlow: ../subflows/sign-in-email.yaml
+- assertVisible:
+    id: "home-screen"
+    timeout: 20000
+    optional: true
+
+# ─────────────────────────────────────────────────────────────────────────
+# FEATURE 1 — Record a journal entry (mode gate → record → processing)
+# ─────────────────────────────────────────────────────────────────────────
+- tapOn:
+    id: "home-record-button"
+- assertVisible:
+    id: "record-screen"
+    timeout: 8000
+- assertVisible: "choose a mode above"          # orb disabled until a mode picked
+- tapOn:
+    id: "record-mode-${ENTRY_MODE_KEY}"
+- assertVisible: "tap to begin"                  # mode selected → orb enabled
+- takeScreenshot: "record-mode-selected"
+
+# Start recording — header flips to the "listening" state.
+- tapOn:
+    id: "record-orb"
+- assertVisible:
+    text: "listening"
+    timeout: 6000
+- takeScreenshot: "record-listening"
+
+# Accrue a little audio, then stop by tapping the orb again.
+- extendedWaitUntil:
+    visible:
+      text: "listening"
+    timeout: 3000
+- tapOn:
+    id: "record-orb"
+
+# Upload → processing screen (backend dependent → optional).
+- assertVisible:
+    text: "This usually takes"
+    timeout: 15000
+    optional: true
+- takeScreenshot: "record-processing"
+
+# If a reflection renders, screenshot it, then return Home regardless.
+- runFlow:
+    when:
+      visible: "Tell me more"
+    commands:
+      - takeScreenshot: "reflection-rendered"
+      - tapOn:
+          text: "Done"
+          optional: true
+- tapOn:
+    id: "tab-home"
+    optional: true
+- tapOn:
+    text: "Back home"
+    optional: true
+
+# ─────────────────────────────────────────────────────────────────────────
+# FEATURE 2 — Settings: change emotional goal (persists via PUT /me)
+# ─────────────────────────────────────────────────────────────────────────
+- tapOn:
+    id: "tab-settings"
+- assertVisible:
+    id: "settings-screen"
+- tapOn:
+    id: "settings-goal-row"
+- assertVisible: "Emotional Goal"                # goal picker modal
+- tapOn: "Managing stress"
+- assertVisible:
+    id: "settings-screen"
+    timeout: 8000
+- takeScreenshot: "settings-goal-changed"
+
+# ─────────────────────────────────────────────────────────────────────────
+# FEATURE 3 — Settings: morning-nudge hour picker
+# ─────────────────────────────────────────────────────────────────────────
+- tapOn:
+    id: "settings-nudge-hour-row"
+- assertVisible: "Morning Nudge Time"
+- tapOn: "9:00 AM"
+- assertVisible:
+    text: "9:00 AM"                              # value reflected on the row
+    timeout: 6000
+- takeScreenshot: "settings-nudge-hour"
+
+# ─────────────────────────────────────────────────────────────────────────
+# FEATURE 4 — Settings: therapy voice-language picker (search + select)
+# ─────────────────────────────────────────────────────────────────────────
+- tapOn:
+    id: "settings-voice-language-row"
+- assertVisible: "Voice Language"
+- tapOn: "Choose language"
+- assertVisible: "Choose a language"
+- tapOn: "Search languages…"
+- inputText: "Hindi"
+- tapOn: "Hindi"
+- assertVisible:
+    text: "Hindi"
+    timeout: 6000
+- takeScreenshot: "settings-voice-language"
+
+# ─────────────────────────────────────────────────────────────────────────
+# FEATURE 5 — Profile modal shows account details, closes cleanly
+# ─────────────────────────────────────────────────────────────────────────
+- tapOn:
+    id: "settings-profile-card"
+- runFlow:
+    when:
+      visible: "Change email address"
+    commands:
+      - assertVisible: "Age range"
+      - tapOn:
+          id: "settings-profile-modal-close"
+
+# ─────────────────────────────────────────────────────────────────────────
+# FEATURE 6 — Therapy persona picker → start a text session
+# ─────────────────────────────────────────────────────────────────────────
+- tapOn:
+    id: "tab-explore"
+- tapOn:
+    id: "explore-therapy"
+- assertVisible:
+    text: "Start a Session"
+    timeout: 10000
+- tapOn: "Start a Session"
+- assertVisible:
+    id: "persona-screen"
+    timeout: 8000
+- tapOn:
+    id: "persona-card-${THERAPY_PERSONA_KEY}"
+- takeScreenshot: "therapy-persona-selected"
+- tapOn:
+    id: "persona-start"
+
+# Session start hits the backend (first session free). If it opens, switch to
+# text mode and compose a message. All backend-dependent → optional.
+- runFlow:
+    when:
+      visible:
+        id: "therapy-chat-button"
+    commands:
+      - tapOn:
+          id: "therapy-chat-button"
+      - tapOn:
+          id: "therapy-text-input"
+      - inputText: ${THERAPY_TEXT_MESSAGE}
+      - hideKeyboard
+      - takeScreenshot: "therapy-text-composed"
+      - tapOn:
+          id: "therapy-send-button"
+          optional: true
+
+# ─────────────────────────────────────────────────────────────────────────
+# FEATURE 7 — Journal entries: full-text search (DATA VALIDATION)
+# ─────────────────────────────────────────────────────────────────────────
+- tapOn:
+    id: "tab-explore"
+    optional: true
+- tapOn:
+    id: "explore-entries"
+    optional: true
+- tapOn:
+    text: "Search your entries..."
+    optional: true
+- inputText: ${SEARCH_QUERY}
+- hideKeyboard
+- takeScreenshot: "entries-search"

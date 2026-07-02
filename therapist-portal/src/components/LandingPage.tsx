@@ -6,18 +6,38 @@ interface VersionInfo { android_store_url: string; ios_store_url: string; }
 
 /* ── Currency detection ───────────────────────────────────────────────────── */
 type Currency = 'INR' | 'EUR' | 'USD';
+type Period = 'monthly' | 'annual';
 
+// Canonical prices live in docs/PRICING.md - keep in sync.
 const PRICES: Record<string, Record<Currency, string>> = {
   free:    { INR: '₹0',   EUR: '€0',    USD: '$0'    },
-  plus:    { INR: '₹249', EUR: '€4.99', USD: '$5.99' },
-  pro:     { INR: '₹499', EUR: '€8.99', USD: '$9.99' },
-  therapy: { INR: '₹499', EUR: '€5.99', USD: '$7.99' },
+  therapy: { INR: '₹499', EUR: '€7.99', USD: '$7.99' },
 };
 
-const PERIOD: Record<Currency, string> = {
-  INR: '/ month',
-  EUR: '/ month',
-  USD: '/ month',
+const PLAN_PRICES: Record<'plus' | 'pro', Record<Period, Record<Currency, string>>> = {
+  plus: {
+    monthly: { INR: '₹249',   EUR: '€5.99',  USD: '$5.99'  },
+    annual:  { INR: '₹1,999', EUR: '€39.99', USD: '$39.99' },
+  },
+  pro: {
+    monthly: { INR: '₹499',   EUR: '€9.99',  USD: '$9.99'  },
+    annual:  { INR: '₹4,499', EUR: '€79.99', USD: '$79.99' },
+  },
+};
+
+// Per-month equivalent of the annual pass + savings vs 12 monthly passes.
+const ANNUAL_MONTHLY_EQUIV: Record<'plus' | 'pro', Record<Currency, string>> = {
+  plus: { INR: '₹167', EUR: '€3.33', USD: '$3.33' },
+  pro:  { INR: '₹375', EUR: '€6.67', USD: '$6.67' },
+};
+
+const ANNUAL_SAVINGS: Record<'plus' | 'pro', Record<Currency, string>> = {
+  plus: { INR: 'Save 33%', EUR: 'Save 44%', USD: 'Save 44%' },
+  pro:  { INR: 'Save 25%', EUR: 'Save 33%', USD: 'Save 33%' },
+};
+
+const MAX_SAVINGS: Record<Currency, string> = {
+  INR: 'Save up to 33%', EUR: 'Save up to 44%', USD: 'Save up to 44%',
 };
 
 function useCurrency(): { currency: Currency; ready: boolean } {
@@ -373,8 +393,8 @@ function DownloadButtons({ androidUrl, iosUrl }: { androidUrl: string; iosUrl: s
 }
 
 /* ── Pricing card ─────────────────────────────────────────────────────────── */
-function PricingCard({ name, price, period, sub, features, cta, featured, downloadHref, ready }: {
-  name: string; price: string; period: string;
+function PricingCard({ name, price, period, badge, sub, features, cta, featured, downloadHref, ready }: {
+  name: string; price: string; period: string; badge?: string;
   sub: string; features: string[]; cta: string; featured?: boolean; downloadHref: string; ready: boolean;
 }) {
   return (
@@ -384,7 +404,12 @@ function PricingCard({ name, price, period, sub, features, cta, featured, downlo
       )}
       <div style={{ marginBottom: 20 }}>
         <div style={{ fontSize: '0.82rem', fontWeight: 600, color: 'var(--muted)', marginBottom: 8 }}>{name}</div>
-        <div className="serif" style={{ fontSize: '2.2rem', fontWeight: 300, color: 'var(--text)', lineHeight: 1, opacity: ready ? 1 : 0, transition: 'opacity 0.3s', whiteSpace: 'nowrap' }}>{price}</div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <span className="serif" style={{ fontSize: '2.2rem', fontWeight: 300, color: 'var(--text)', lineHeight: 1, opacity: ready ? 1 : 0, transition: 'opacity 0.3s', whiteSpace: 'nowrap' }}>{price}</span>
+          {badge && (
+            <span style={{ background: 'rgba(212,165,106,0.15)', border: '1px solid rgba(212,165,106,0.45)', color: 'var(--gold)', fontSize: '0.64rem', fontWeight: 800, letterSpacing: '0.5px', padding: '3px 9px', borderRadius: 100, whiteSpace: 'nowrap', opacity: ready ? 1 : 0, transition: 'opacity 0.3s' }}>{badge}</span>
+          )}
+        </div>
         <div style={{ fontSize: '0.78rem', color: 'var(--muted-2)', marginTop: 4, minHeight: '1.2em' }}>{period}</div>
       </div>
       <p style={{ fontSize: '0.84rem', color: 'var(--muted)', margin: '0 0 20px', lineHeight: 1.55 }}>{sub}</p>
@@ -563,7 +588,13 @@ export default function LandingPage() {
   useReveal();
   const dlHref = '#download';
   const p = (key: string) => PRICES[key][currency];
-  const per = PERIOD[currency];
+  // Annual is the default: it's the better deal and the savings badge sells it.
+  const [period, setPeriod] = useState<Period>('annual');
+  const planPrice = (plan: 'plus' | 'pro') => PLAN_PRICES[plan][period][currency];
+  const perLine = (plan: 'plus' | 'pro') =>
+    period === 'annual' ? `/ year · that's ${ANNUAL_MONTHLY_EQUIV[plan][currency]} / mo` : '/ month';
+  const saveBadge = (plan: 'plus' | 'pro') =>
+    period === 'annual' ? ANNUAL_SAVINGS[plan][currency] : undefined;
 
   return (
     <div style={{ background: 'var(--bg)', color: 'var(--text)', overflowX: 'hidden' }}>
@@ -885,6 +916,42 @@ export default function LandingPage() {
           <h2 className="serif" style={{ fontSize: 'clamp(2.2rem, 4vw, 3.6rem)', fontWeight: 300, margin: 0, lineHeight: 1.05, letterSpacing: '-0.02em' }}>Honest<br />pricing.</h2>
           <p style={{ fontSize: '0.9rem', color: 'var(--muted)', margin: 0, maxWidth: 260, lineHeight: 1.7, textAlign: 'right' }}>Most people start Free. You never need to upgrade. It&apos;s allowed.</p>
         </div>
+
+        {/* Monthly / Annual toggle */}
+        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 28 }}>
+          <div style={{ display: 'inline-flex', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 100, padding: 4, gap: 4 }}>
+            {(['monthly', 'annual'] as const).map(pd => {
+              const selected = period === pd;
+              return (
+                <button
+                  key={pd}
+                  onClick={() => setPeriod(pd)}
+                  style={{
+                    display: 'inline-flex', alignItems: 'center', gap: 8, cursor: 'pointer',
+                    background: selected ? 'var(--gold)' : 'transparent',
+                    color: selected ? '#18150f' : 'var(--muted)',
+                    border: 'none', borderRadius: 100, padding: '9px 20px',
+                    fontSize: '0.84rem', fontWeight: 700, fontFamily: 'inherit',
+                    transition: 'background 0.2s, color 0.2s',
+                  }}
+                >
+                  {pd === 'monthly' ? 'Monthly' : 'Annual'}
+                  {pd === 'annual' && (
+                    <span style={{
+                      background: selected ? 'rgba(24,21,15,0.18)' : 'rgba(212,165,106,0.15)',
+                      color: selected ? '#18150f' : 'var(--gold)',
+                      fontSize: '0.64rem', fontWeight: 800, letterSpacing: '0.4px',
+                      padding: '2px 8px', borderRadius: 100, whiteSpace: 'nowrap',
+                      opacity: ready ? 1 : 0, transition: 'opacity 0.3s',
+                    }}>
+                      {MAX_SAVINGS[currency]}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        </div>
         {/* Free — horizontal starter row, breaks the 3-tower pattern */}
         <div className="pricing-free-row" style={{ display: 'flex', alignItems: 'center', gap: 20, background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 16, padding: '18px 28px', marginBottom: 12, flexWrap: 'wrap' }}>
           <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, flexShrink: 0 }}>
@@ -904,11 +971,11 @@ export default function LandingPage() {
 
         {/* Plus + Pro — 2 columns, Plus naturally dominates with more features */}
         <div className="pricing-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-          <PricingCard name="DreamLog+" price={p('plus')} period={per} sub="Unlimited entries. All modes. The complete journaling product." features={['Unlimited entries', 'All 5 journaling modes', 'Dream Decoder (Jungian + Vedic)', 'Life Graph & Mood History', 'Weekly + Annual Reviews', 'Life Chapters', 'PDF export', 'Therapist share (5/month)']} cta="Get DreamLog+" downloadHref={dlHref} featured ready={ready} />
-          <PricingCard name="DreamLog Pro" price={p('pro')} period={per} sub="Everything in Plus, plus one therapy session every month." features={['Everything in Plus', '1 Therapy Session / month', `Extra sessions at ${currency === 'INR' ? '₹299' : currency === 'EUR' ? '€3.99' : '$4.99'}`, 'Unlimited therapist share', 'Priority processing']} cta="Get DreamLog Pro" downloadHref={dlHref} ready={ready} />
+          <PricingCard name="DreamLog+" price={planPrice('plus')} period={perLine('plus')} badge={saveBadge('plus')} sub="Unlimited entries. All modes. The complete journaling product." features={['Unlimited entries', 'All 5 journaling modes', 'Dream Decoder (Jungian + Vedic)', 'Life Graph & Mood History', 'Weekly + Annual Reviews', 'Life Chapters', 'PDF export', 'Therapist share (5/month)']} cta="Get DreamLog+" downloadHref={dlHref} featured ready={ready} />
+          <PricingCard name="DreamLog Pro" price={planPrice('pro')} period={perLine('pro')} badge={saveBadge('pro')} sub="Everything in Plus, plus one therapy session every month." features={['Everything in Plus', '1 Therapy Session / month', `Extra sessions at ${currency === 'INR' ? '₹299' : currency === 'EUR' ? '€4.99' : '$4.99'}`, 'Unlimited therapist share', 'Priority processing']} cta="Get DreamLog Pro" downloadHref={dlHref} ready={ready} />
         </div>
         <p style={{ marginTop: 14, fontSize: '0.76rem', color: 'var(--muted-2)', textAlign: 'right' }}>
-          30-day passes · managed in-app · no auto-renew
+          one-time passes (30 or 365 days) · managed in-app · no auto-renew
         </p>
       </section>
 

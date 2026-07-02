@@ -11,17 +11,24 @@ weaker rupee compresses India margins).
 
 ## 1. Final Price Structure
 
-Two subscription tiers split by **product line** (journal vs journal + therapy), plus one
-pay-per-use consumable. No session packs. B2B stays sales-led and off-store.
+Two subscription tiers split by **product line** (journal vs journal + therapy), each sold
+as a monthly or annual pass, plus one pay-per-use consumable. No session packs. B2B stays
+sales-led and off-store.
 
 | SKU | India | Global | Store product type |
 |---|---|---|---|
 | **Free** | ₹0 | $0 | — |
 | **Plus** (journal only) | ₹249/mo | $5.99/mo | Auto-renewing subscription |
+| **Plus — annual** | ₹1,999/yr (~₹167/mo, save 33%) | $39.99/yr (~$3.33/mo, save 44%) | Auto-renewing subscription |
 | **Pro** (journal + therapy) | ₹499/mo | $9.99/mo | Auto-renewing subscription |
+| **Pro — annual** | ₹4,499/yr (~₹375/mo, save 25%) | $79.99/yr (~$6.67/mo, save 33%) | Auto-renewing subscription |
 | **Therapy session — Pro member price** | ₹299 | $4.99 | Consumable IAP |
 | **Therapy session — standalone** | ₹499 | $7.99 | Consumable IAP |
 | **B2B Wellness** | ₹199/employee/mo (min 50) | custom | Invoiced, not in stores |
+
+EUR mirrors USD (€5.99 / €39.99 / €9.99 / €79.99; sessions €7.99 / €4.99).
+Until the IAP migration lands, both periods are sold as **one-time passes** via Stripe:
+monthly = 30-day pass, annual = 365-day pass, expiry always set server-side.
 
 ### What each tier includes
 
@@ -67,6 +74,17 @@ Therapy session (standalone, any plan incl. Free)
   (Guideline 3.1.1) and makes us merchant of record for Indian GST. Not worth it
   pre-traction. Web checkout can be added later as a parallel channel (never linked from
   the iOS app).
+- **Annual passes added 2026-07-02** — upfront cash, locked-in retention, and a
+  permanent *honest* "% off" badge (annual-vs-monthly is the legitimate version of
+  discount anchoring; we do NOT inflate list prices to fake a permanent discount —
+  misleading-pricing rules + trust erosion in a mental-health brand).
+- **India annual discount is deliberately shallower than global** (33%/25% vs 44%/33%):
+  India margins are FX-exposed (costs in USD, revenue in INR). At a 40%-off Plus annual
+  (₹1,799) a heavy user (30 entries/mo) is breakeven-to-negative; at ₹1,999 the floor
+  stays positive. Global margins are FX-immune, so global can afford the deeper discount.
+- **Price-increase playbook**: launch prices are framed as founding-member pricing.
+  Raising prices later = raise for new users only, grandfather existing subscribers.
+  No fake strikethrough pricing, ever.
 
 ---
 
@@ -81,7 +99,9 @@ Net multiplier India = 0.85 / 1.18 ≈ **0.72** · Global ≈ **0.85**
 | SKU | Listed (INR) | Net to us (INR) | Listed (USD) | Net to us (USD) |
 |---|---|---|---|---|
 | Plus | ₹249 | **₹179** | $5.99 | **$5.09** |
+| Plus annual | ₹1,999 | **₹1,439/yr (₹120/mo)** | $39.99 | **$33.99/yr ($2.83/mo)** |
 | Pro | ₹499 | **₹359** | $9.99 | **$8.49** |
+| Pro annual | ₹4,499 | **₹3,239/yr (₹270/mo)** | $79.99 | **$67.99/yr ($5.67/mo)** |
 | Session (member) | ₹299 | **₹215** | $4.99 | **$4.24** |
 | Session (standalone) | ₹499 | **₹359** | $7.99 | **$6.79** |
 
@@ -125,6 +145,24 @@ should dominate).
 | Plus — heavy | $5.09 | ~$1.15 | **77%** |
 | Pro — heavy | $8.49 | ~$2.20 | **74%** |
 | Standalone session | $6.79 | ~$1.05 | **85%** |
+
+### Annual passes (net monthly-equivalent revenue vs serve cost)
+
+| Tier / scenario | Net rev /mo | Cost to serve /mo | Margin |
+|---|---|---|---|
+| Plus annual India — average (10 entries) | ₹120 | ~₹42 | **65%** |
+| Plus annual India — heavy (30 entries) | ₹120 | ~₹110 | **~8%** (floor) |
+| Pro annual India — average | ₹270 | ~₹145 | **46%** |
+| Pro annual India — heavy (30 entries + full 1 hr session) | ₹270 | ~₹213 | **21%** (floor) |
+| Pro annual India — heavy, realistic session (~30 min) | ₹270 | ~₹170 | **~37%** |
+| Plus annual global — heavy | $2.83 | ~$1.15 | **59%** |
+| Pro annual global — heavy | $5.67 | ~$2.20 | **61%** |
+
+The India annual floors are thin **on paper** but assume a p99 user sustaining maximum
+usage for 12 consecutive months — and the cash is banked upfront, so annual cohort
+blended margin lands near the average case (journaling intensity decays after months
+1–3). Watch the `entries per paying user p90` metric (§6b); if the heavy tail grows,
+cut serve cost (cheaper STT, batched analysis) before touching prices.
 
 Key property of this structure: **margins improve with engagement** (extra sessions are
 profitable per-unit) instead of degrading, and no SKU has a negative worst case.
@@ -239,8 +277,19 @@ Code/doc changes to land the new pricing:
       prod for non-included sessions - wire IAP receipt / payment verification)
 - [x] `analytics_events` migration (000028) + `services/analytics.go` + `repositories/analytics.go` wired via `handlers/router.go` ✅ 2026-06-11
 - [x] Extend `payments` table: `store`, `product_id`, `country` — migration 000029 ✅ 2026-06-11
+- [x] Annual passes: backend `period` on `/billing/create-payment-intent` +
+      `/billing/upgrade` (Stripe metadata verification, 365-day server-set expiry),
+      annual amounts + tests ✅ 2026-07-02
+- [x] Mobile upgrade screen: Monthly/Annual segmented toggle (annual default,
+      savings badges, per-month equivalents); annual price constants in
+      `src/services/region.ts` ✅ 2026-07-02
+- [x] Website: Monthly/Annual toggle on `/pricing` + homepage pricing section;
+      EUR aligned to canonical (€5.99/€9.99, session €7.99, member €4.99);
+      terms page pass copy updated ✅ 2026-07-02
+- [ ] IAP migration note: when RevenueCat lands, annual SKUs become real
+      auto-renewing yearly subscriptions (4 subscription SKUs + 2 consumables)
 
 ---
 
-*Last updated: 2026-06-11 · FX assumption ₹96/USD · Owner: pricing decisions in this
-file override the older monetization table in ROADMAP.md.*
+*Last updated: 2026-07-02 (annual passes added) · FX assumption ₹96/USD · Owner: pricing
+decisions in this file override the older monetization table in ROADMAP.md.*

@@ -1,0 +1,54 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Central test-data file. Nothing here is secret — these are throwaway accounts
+# for automation only. Override any value at runtime with:
+#
+#   maestro test -e EMAIL_EXISTING=you@example.com maestro/flows/authentication.yaml
+#
+# In a flow, values are read as env vars: ${EMAIL_EXISTING}, ${PASSWORD}, etc.
+# Pass this whole file with:  maestro test --env-file maestro/data/test-data.yaml
+# ─────────────────────────────────────────────────────────────────────────────
+
+# App identity (mirrors mobile/app.json). Kept here so flows never hardcode it.
+APP_ID: "com.dreamlog.app"
+APP_SCHEME: "dreamlog"          # deep-link scheme from app.json ("scheme": "dreamlog")
+
+# ── Existing, already-verified account (seed this in Supabase before running) ──
+# The launch checklist §2d documents a real tester account; substitute it here.
+EMAIL_EXISTING: "bharatbanthia2207+tester@gmail.com"
+PASSWORD: "DreamTest!2026"
+
+# ── Fresh registration. Append a unique suffix per CI run to avoid 409s, e.g.
+#    -e EMAIL_NEW=qa+$(date +%s)@dreamlog.dev
+EMAIL_NEW: "qa+maestro@dreamlog.dev"
+NEW_USER_NAME: "Maestro QA"
+NEW_USER_PASSWORD: "Maestro!2026"
+
+# ── Deliberately bad inputs for negative-path auth tests ──
+EMAIL_MALFORMED: "not-an-email"
+PASSWORD_TOO_SHORT: "123"        # < 6 chars, rejected client-side on register
+PASSWORD_WRONG: "totally-wrong-password"
+
+# ── Onboarding selections ──
+# Goal/age are selected by ENUM KEY (stable testID), not visible label:
+#   goal keys : anxiety|stress|grief|depression|relationships|career|trauma|curious
+#   age keys  : under_18|18_24|25_34|35_44|45_plus
+# Country is still matched by visible name (the list is data, not a UI enum).
+ONBOARDING_GOAL_KEY: "stress"
+ONBOARDING_AGE_KEY: "25_34"
+ONBOARDING_COUNTRY: "India"
+PREFERRED_NAME: "Sam"
+
+# ── Journal entry authoring (mode selected by enum key → record-mode-<key>) ──
+ENTRY_MODE_KEY: "processing"     # processing | rant | gratitude | decision | dream
+
+# ── Therapy (persona selected by enum key → persona-card-<key>) ──
+THERAPY_PERSONA_KEY: "comforting"  # comforting | rational | cbt | mindful
+THERAPY_TEXT_MESSAGE: "I have been feeling stretched thin at work this week."
+
+# ── E2E fast-path build flags (see mobile/src/config/e2e.ts) ──
+# Set these at BUILD/METRO start time, not here, to skip onboarding + sign-in:
+#   EXPO_PUBLIC_E2E=1
+#   EXPO_PUBLIC_E2E_TOKEN=<supabase access token for a seeded test user>
+
+# ── Search ──
+SEARCH_QUERY: "work"

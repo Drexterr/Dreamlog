@@ -20,6 +20,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { api } from '../../src/api/client';
 import { useTheme } from '../../src/context/ThemeContext';
 import { useRecorder } from '../../src/hooks/useRecorder';
+import { T } from '../../src/testIDs';
 import type { TherapySession, TherapySessionMessage, TherapySessionStatus } from '../../src/types';
 import { PERSONA_META } from '../../src/types';
 
@@ -456,6 +457,8 @@ export default function TherapySessionScreen() {
         {/* Header */}
         <View style={[styles.header, { borderBottomColor: colors.border }]}>
           <TouchableOpacity
+            testID={T.therapy.voiceButton}
+            accessibilityLabel="Switch to voice mode"
             style={styles.backToVoice}
             onPress={() => setInputMode('voice')}
             activeOpacity={0.7}
@@ -472,7 +475,7 @@ export default function TherapySessionScreen() {
               {formatTimeRemaining(timeRemaining)} remaining
             </Text>
           </View>
-          <TouchableOpacity onPress={handleEnd} style={[styles.endBtn, { borderColor: colors.border }]}>
+          <TouchableOpacity testID={T.therapy.endButton} accessibilityLabel="End session" onPress={handleEnd} style={[styles.endBtn, { borderColor: colors.border }]}>
             <Text style={[styles.endBtnText, { color: colors.textMuted }]}>End</Text>
           </TouchableOpacity>
         </View>
@@ -511,6 +514,8 @@ export default function TherapySessionScreen() {
           {/* Text input bar */}
           <View style={[styles.inputBar, { borderTopColor: colors.border, backgroundColor: colors.bg }]}>
             <TextInput
+              testID={T.therapy.textInput}
+              accessibilityLabel="Message input"
               style={[styles.textInput, { color: colors.textPrimary, borderColor: colors.border, backgroundColor: colors.card }]}
               placeholder="Type a message…"
               placeholderTextColor={colors.textMuted}
@@ -524,6 +529,8 @@ export default function TherapySessionScreen() {
               autoFocus
             />
             <TouchableOpacity
+              testID={T.therapy.sendButton}
+              accessibilityLabel="Send message"
               style={[styles.sendBtn, { backgroundColor: draft.trim() && !isBusy ? colors.brand : colors.cardSolid }]}
               onPress={handleSend}
               disabled={!draft.trim() || isBusy}
@@ -655,6 +662,8 @@ export default function TherapySessionScreen() {
           <View style={[styles.bottomBar, { borderTopColor: colors.borderFaint }]}>
             {/* Chat toggle */}
             <TouchableOpacity
+              testID={T.therapy.chatButton}
+              accessibilityLabel="Switch to chat mode"
               style={[styles.chatToggle, { backgroundColor: colors.card, borderColor: colors.border }]}
               onPress={() => setInputMode('text')}
               activeOpacity={0.75}
