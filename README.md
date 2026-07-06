@@ -137,6 +137,9 @@ Retention features built around the Trigger → Action → Variable Reward → I
   entry's own morning-nudge line - the user authors their next trigger.
 - **One-tap record** - tapping any nudge notification deep-links straight to
   the record screen.
+- **Home-screen shortcut** - long-press the app icon → "Record a moment"
+  (`expo-quick-actions`); on Android the action can be pinned to the home
+  screen as a standalone one-tap record icon. Requires a native build.
 
 ---
 

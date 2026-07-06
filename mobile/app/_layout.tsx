@@ -32,6 +32,7 @@ import GuidedTour from '../src/components/GuidedTour';
 import { detectAndCacheRegion, setRegionFromCountry } from '../src/services/region';
 import { flush as flushOfflineQueue } from '../src/services/offlineQueue';
 import { registerForPushNotifications } from '../src/services/push';
+import { setupQuickActions } from '../src/services/quickActions';
 import { checkForceUpdate } from '../src/services/version';
 import { runStartupUpdateCheck } from '../src/services/updates';
 import {
@@ -240,6 +241,13 @@ export default function RootLayout() {
     if (!ready || !hasToken) return;
     registerForPushNotifications();
   }, [ready, hasToken]);
+
+  // Home-screen quick action ("Record a moment") - registered for everyone,
+  // guests included; the record flow itself handles auth gating.
+  useEffect(() => {
+    if (!ready) return;
+    setupQuickActions();
+  }, [ready]);
 
   // Flush offline queue on reconnect
   useEffect(() => {

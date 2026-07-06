@@ -186,6 +186,7 @@ export default function SettingsScreen() {
   const [planExpiresAt, setPlanExpiresAt] = useState<string | null>(null);
   const [nudgeEnabled, setNudgeEnabled] = useState(true);
   const [nudgeHour, setNudgeHour] = useState(8);
+  const [nudgeAutoTime, setNudgeAutoTime] = useState(true);
   const [voiceLanguage, setVoiceLanguage] = useState<VoiceLanguage>('auto');
   const [savingVoiceLang, setSavingVoiceLang] = useState(false);
   const [showVoiceLangPicker, setShowVoiceLangPicker] = useState(false);
@@ -209,6 +210,7 @@ export default function SettingsScreen() {
         setUser(u);
         setNudgeEnabled(u.nudge_enabled ?? true);
         setNudgeHour(u.fcm_nudge_hour ?? 8);
+        setNudgeAutoTime(u.nudge_auto_time ?? true);
         setVoiceLanguage(u.voice_language ?? 'auto');
       })
       .catch(() => setLoadError(true));
@@ -259,17 +261,30 @@ export default function SettingsScreen() {
 
   const handleSelectHour = async (h: number) => {
     setShowHourPicker(false);
-    if (h === nudgeHour) return;
+    if (h === nudgeHour && !nudgeAutoTime) return;
     setSavingHour(true);
     const prev = nudgeHour;
+    const prevAuto = nudgeAutoTime;
     setNudgeHour(h);
+    setNudgeAutoTime(false); // an explicit hour choice turns smart timing off (server does the same)
     try {
       await api.updateMe({ fcm_nudge_hour: h });
     } catch {
       setNudgeHour(prev);
+      setNudgeAutoTime(prevAuto);
       Alert.alert('Could not save', 'Please try again.');
     } finally {
       setSavingHour(false);
+    }
+  };
+
+  const handleAutoTimeToggle = async (value: boolean) => {
+    setNudgeAutoTime(value);
+    try {
+      await api.updateMe({ nudge_auto_time: value });
+    } catch {
+      setNudgeAutoTime(!value);
+      Alert.alert('Could not save', 'Please try again.');
     }
   };
 
@@ -499,14 +514,29 @@ export default function SettingsScreen() {
               <>
                 <View style={[styles.rowDivider, { backgroundColor: colors.borderFaint }]} />
                 <SettingRow
+                  label="Smart timing"
+                  sub="Nudge at the hour you usually record"
+                  colors={colors}
+                  right={
+                    <Switch
+                      accessibilityLabel="Smart nudge timing toggle"
+                      value={nudgeAutoTime}
+                      onValueChange={handleAutoTimeToggle}
+                      trackColor={{ false: colors.cardSolid, true: colors.brand }}
+                      thumbColor={nudgeAutoTime ? colors.purple300 : colors.textMuted}
+                    />
+                  }
+                />
+                <View style={[styles.rowDivider, { backgroundColor: colors.borderFaint }]} />
+                <SettingRow
                   testID={T.settings.nudgeHourRow}
                   label="Nudge hour"
-                  sub="What time to send your morning nudge"
+                  sub={nudgeAutoTime ? 'Learned automatically - pick an hour to take over' : 'What time to send your morning nudge'}
                   colors={colors}
                   onPress={() => setShowHourPicker(true)}
                   right={
                     <Text style={[styles.valueText, { color: savingHour ? colors.textMuted : colors.purple300 }]}>
-                      {formatHour(nudgeHour)}
+                      {nudgeAutoTime ? 'Auto' : formatHour(nudgeHour)}
                     </Text>
                   }
                 />
