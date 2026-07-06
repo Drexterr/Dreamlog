@@ -35,6 +35,9 @@ export interface EntryAnalysis {
   reflection: string;
   morning_nudge: string;
   is_crisis: boolean;
+  // Occasional cross-entry pattern insight ("this is the 3rd time X has come
+  // up this month"). Absent when no recurring pattern crossed the threshold.
+  connection_insight?: string;
   // Dream Decoder — only present when the entry was recorded in 'dream' mode.
   dream_symbols?: string[];
   dream_type?: DreamType;
@@ -48,6 +51,22 @@ export interface PresignResponse {
   upload_url: string;
   audio_key: string;
   expires_in: number;
+}
+
+// GET /entries/flashback - a past entry resurfaced as a time capsule.
+export interface Flashback {
+  entry_id: string;
+  label: 'one_year_ago' | 'one_month_ago';
+  date: string;               // RFC3339
+  summary: string;
+  mood_score: number;
+  topics: string[];
+}
+
+// POST /entries/:id/checkin - self-set "check in on this tomorrow" nudge.
+export interface CheckinResponse {
+  entry_id: string;
+  scheduled_at: string;       // RFC3339
 }
 
 export interface ListEntriesResponse {
@@ -97,6 +116,7 @@ export interface User {
   timezone: string;
   fcm_nudge_hour: number;
   nudge_enabled: boolean;
+  nudge_auto_time: boolean;    // true = nudge at the learned typical recording hour
   goal?: UserGoal;
   age_range?: AgeRange;
   country?: string;            // ISO 3166-1 alpha-2 (e.g. "IN", "US", "DE")
@@ -504,6 +524,26 @@ export interface PersonMention {
 
 export interface RelationshipsResponse {
   people: Person[];
+}
+
+// ── Therapist Link Requests (client-facing consent) ───────────────────────────
+
+// A pending request from a therapist asking to link to (and read summaries of)
+// this user's journal. The user approves or declines it.
+export interface TherapistLinkRequest {
+  therapist_id: string;
+  therapist_name: string;
+  credentials: string;
+  requested_at: string; // RFC3339
+}
+
+export interface TherapistLinkRequestsResponse {
+  requests: TherapistLinkRequest[];
+}
+
+export interface TherapistLinkActionResponse {
+  therapist_id: string;
+  status: string; // 'active' after approve, 'revoked' after decline
 }
 
 export interface PersonDetail {

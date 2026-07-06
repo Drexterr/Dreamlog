@@ -534,6 +534,13 @@ export default function SettingsScreen() {
           {/* Privacy */}
           <Text style={[styles.sectionLabel, { color: colors.textSecondary }]}>Privacy</Text>
           <View style={[styles.section, { backgroundColor: colors.card, borderColor: colors.borderFaint }]}>
+            <SettingRow
+              label="Therapist requests"
+              sub="Approve or decline therapists asking to view your summaries"
+              colors={colors}
+              onPress={() => router.push('/therapist-requests' as never)}
+            />
+            <View style={[styles.rowDivider, { backgroundColor: colors.borderFaint }]} />
             <SettingRow testID={T.settings.exportRow} label="Export my data" colors={colors} onPress={() => router.push('/export')} />
             <View style={[styles.rowDivider, { backgroundColor: colors.borderFaint }]} />
             <SettingRow testID={T.settings.deleteRow} label="Delete all data" danger colors={colors} onPress={handleDeleteData} />

@@ -21,9 +21,18 @@ type ClientTherapistLink struct {
 	ID           uuid.UUID  `json:"id"`
 	TherapistID  uuid.UUID  `json:"therapist_id"`
 	ClientID     uuid.UUID  `json:"client_id"`
-	Status       string     `json:"status"` // active | revoked
+	Status       string     `json:"status"` // pending | active | revoked
 	LinkedAt     time.Time  `json:"linked_at"`
 	RevokedAt    *time.Time `json:"revoked_at,omitempty"`
+}
+
+// TherapistLinkRequest is a pending link awaiting the client's consent,
+// returned by GET /therapists/requests so the client can accept or decline.
+type TherapistLinkRequest struct {
+	TherapistID   uuid.UUID `json:"therapist_id"`
+	TherapistName string    `json:"therapist_name"`
+	Credentials   string    `json:"credentials,omitempty"`
+	RequestedAt   time.Time `json:"requested_at"`
 }
 
 // ClientSummary is returned by GET /therapists/clients - one row per linked client.

@@ -29,9 +29,11 @@ type fakeShareRepo struct {
 	getByTokenErr  error
 	listResp       []*models.ShareLink
 	listErr        error
-	revokeErr      error
-	viewResp       *models.ShareLinkView
-	viewErr        error
+	revokeErr        error
+	viewResp         *models.ShareLinkView
+	viewErr          error
+	recordFailedResp *time.Time
+	recordFailedErr  error
 }
 
 func (f *fakeShareRepo) Create(_ context.Context, in models.CreateShareLinkInput) (*models.ShareLink, error) {
@@ -60,6 +62,14 @@ func (f *fakeShareRepo) ListByUser(_ context.Context, _ uuid.UUID) ([]*models.Sh
 
 func (f *fakeShareRepo) Revoke(_ context.Context, _, _ uuid.UUID) error {
 	return f.revokeErr
+}
+
+func (f *fakeShareRepo) RecordFailedPasscode(_ context.Context, _ uuid.UUID, _ int, _ time.Duration) (*time.Time, error) {
+	return f.recordFailedResp, f.recordFailedErr
+}
+
+func (f *fakeShareRepo) ResetPasscodeAttempts(_ context.Context, _ uuid.UUID) error {
+	return nil
 }
 
 func (f *fakeShareRepo) ShareView(_ context.Context, _ uuid.UUID) (*models.ShareLinkView, error) {
@@ -478,5 +488,73 @@ func TestShareHandler_List_MissingAuth_Returns401(t *testing.T) {
 
 	if w.Code != http.StatusUnauthorized {
 		t.Errorf("missing auth: want 401, got %d", w.Code)
+	}
+}
+
+// ── Passcode lockout tests ────────────────────────────────────────────────────
+
+func TestShareHandler_View_LockedLink_Returns429(t *testing.T) {
+	future := time.Now().Add(10 * time.Minute)
+	repo := &fakeShareRepo{
+		getByTokenResp: &models.ShareLink{
+			ID:           uuid.New(),
+			UserID:       uuid.New(),
+			Token:        "lockedtoken",
+			PasscodeHash: bcryptHash(t, "1234"),
+			ExpiresAt:    time.Now().Add(24 * time.Hour),
+			LockedUntil:  &future,
+		},
+	}
+	r := newShareTestRouter(t, repo, shareTestUser())
+	w := httptest.NewRecorder()
+	// Even the CORRECT passcode is rejected while locked.
+	req, _ := http.NewRequest(http.MethodGet, "/view/lockedtoken?p=1234", nil)
+	r.ServeHTTP(w, req)
+
+	if w.Code != http.StatusTooManyRequests {
+		t.Errorf("locked link: want 429, got %d: %s", w.Code, w.Body.String())
+	}
+}
+
+func TestShareHandler_View_WrongPasscode_TriggersLock_Returns429(t *testing.T) {
+	lockedUntil := time.Now().Add(15 * time.Minute)
+	repo := &fakeShareRepo{
+		getByTokenResp: &models.ShareLink{
+			ID:           uuid.New(),
+			UserID:       uuid.New(),
+			Token:        "willlock",
+			PasscodeHash: bcryptHash(t, "1234"),
+			ExpiresAt:    time.Now().Add(24 * time.Hour),
+		},
+		recordFailedResp: &lockedUntil, // repo reports the link is now locked
+	}
+	r := newShareTestRouter(t, repo, shareTestUser())
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest(http.MethodGet, "/view/willlock?p=9999", nil)
+	r.ServeHTTP(w, req)
+
+	if w.Code != http.StatusTooManyRequests {
+		t.Errorf("wrong passcode hitting lock threshold: want 429, got %d", w.Code)
+	}
+}
+
+func TestShareHandler_View_WrongPasscode_NotYetLocked_Returns401(t *testing.T) {
+	repo := &fakeShareRepo{
+		getByTokenResp: &models.ShareLink{
+			ID:           uuid.New(),
+			UserID:       uuid.New(),
+			Token:        "notlocked",
+			PasscodeHash: bcryptHash(t, "1234"),
+			ExpiresAt:    time.Now().Add(24 * time.Hour),
+		},
+		recordFailedResp: nil, // below threshold - no lock yet
+	}
+	r := newShareTestRouter(t, repo, shareTestUser())
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest(http.MethodGet, "/view/notlocked?p=0000", nil)
+	r.ServeHTTP(w, req)
+
+	if w.Code != http.StatusUnauthorized {
+		t.Errorf("wrong passcode below lock threshold: want 401, got %d", w.Code)
 	}
 }

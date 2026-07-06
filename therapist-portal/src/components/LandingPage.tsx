@@ -1,6 +1,11 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import dynamic from 'next/dynamic';
+
+// three.js scene ships as its own lazy chunk — never blocks first paint,
+// renders nothing during SSR/export.
+const HeroScene = dynamic(() => import('./HeroScene'), { ssr: false });
 
 interface VersionInfo { android_store_url: string; ios_store_url: string; }
 
@@ -623,7 +628,10 @@ export default function LandingPage() {
       </nav>
 
       {/* ── Hero ──────────────────────────────────────────────────────── */}
-      <section id="main-content" className="landing-section" style={{ paddingTop: 160, paddingBottom: 100, position: 'relative', overflow: 'hidden', minHeight: '100dvh', display: 'flex', alignItems: 'center' }}>
+      {/* Full-bleed wrapper so the 3D field spans the viewport, not just the 1320px column */}
+      <div style={{ position: 'relative', overflow: 'hidden' }}>
+        {/* 3D dream-current particle field (three.js, decorative only) */}
+        <HeroScene />
         {/* Ambient glow — top-left bleed */}
         <div aria-hidden="true" style={{
           position: 'absolute', top: '-10%', left: '-5%',
@@ -631,6 +639,7 @@ export default function LandingPage() {
           background: 'radial-gradient(ellipse 60% 70% at 30% 40%, rgba(200,149,90,0.06) 0%, transparent 65%)',
           pointerEvents: 'none',
         }} />
+      <section id="main-content" className="landing-section" style={{ paddingTop: 160, paddingBottom: 100, position: 'relative', zIndex: 1, minHeight: '100dvh', display: 'flex', alignItems: 'center' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 60, position: 'relative', width: '100%' }}>
           {/* Left: copy — takes 55% */}
           <div style={{ flex: '0 0 55%', maxWidth: 640 }}>
@@ -651,6 +660,7 @@ export default function LandingPage() {
           </div>
         </div>
       </section>
+      </div>
 
 
       <InsightTicker />

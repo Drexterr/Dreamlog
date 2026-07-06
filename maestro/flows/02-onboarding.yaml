@@ -110,8 +110,16 @@ tags:
 - inputText: ${ONBOARDING_COUNTRY}
 - tapOn: ${ONBOARDING_COUNTRY}
 - hideKeyboard
+# Focused country field eats the first tap (blur); tap again if still on the step.
 - tapOn:
     id: "onboarding-country-continue"
+- runFlow:
+    when:
+      visible:
+        id: "onboarding-country-continue"
+    commands:
+      - tapOn:
+          id: "onboarding-country-continue"
 
 # ── G. Journal/Therapy gate: both mode cards render ──
 - extendedWaitUntil:
@@ -130,4 +138,8 @@ tags:
     visible:
       id: "home-screen"
     timeout: 30000
+# Dismiss the first-run guided tour overlay (covers home + tabs if present).
+- tapOn:
+    text: "Skip tour"
+    optional: true
 - takeScreenshot: "onboarding-complete-home"

@@ -17,6 +17,9 @@ type therapistRepo interface {
 	Register(ctx context.Context, userID uuid.UUID, name, email, credentials string) (*models.Therapist, error)
 	LinkClient(ctx context.Context, therapistID, clientID uuid.UUID) error
 	UnlinkClient(ctx context.Context, therapistID, clientID uuid.UUID) error
+	ApproveLink(ctx context.Context, clientID, therapistID uuid.UUID) (bool, error)
+	DeclineLink(ctx context.Context, clientID, therapistID uuid.UUID) (bool, error)
+	ListPendingRequests(ctx context.Context, clientID uuid.UUID) ([]*models.TherapistLinkRequest, error)
 	ListClients(ctx context.Context, therapistID uuid.UUID) ([]*models.ClientSummary, error)
 	GetClientLink(ctx context.Context, therapistID, clientID uuid.UUID) (*models.ClientTherapistLink, error)
 	ClientRecentEntries(ctx context.Context, clientID uuid.UUID) ([]*models.ExportEntrySummary, error)
@@ -94,7 +97,71 @@ func (h *TherapistHandler) LinkClient(c *gin.Context) {
 		_ = c.Error(apierr.Internal("failed to link client"))
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"therapist_id": therapist.ID, "client_id": clientID, "status": "active"})
+	// The link is pending until the client approves it. No client data is
+	// accessible to the therapist until then (see ApproveLink / consent gate).
+	c.JSON(http.StatusOK, gin.H{"therapist_id": therapist.ID, "client_id": clientID, "status": "pending"})
+}
+
+// GET /therapists/requests
+// Called by the CLIENT: lists therapist link requests awaiting their consent.
+func (h *TherapistHandler) ListLinkRequests(c *gin.Context) {
+	clientID := middleware.UserIDFromCtx(c.Request.Context())
+
+	requests, err := h.repo.ListPendingRequests(c.Request.Context(), clientID)
+	if err != nil {
+		_ = c.Error(apierr.Internal("failed to load requests"))
+		return
+	}
+	if requests == nil {
+		requests = []*models.TherapistLinkRequest{}
+	}
+	c.JSON(http.StatusOK, gin.H{"requests": requests})
+}
+
+// POST /therapists/requests/:therapistID/approve
+// Called by the CLIENT to consent to a pending link, granting the therapist access.
+func (h *TherapistHandler) ApproveLinkRequest(c *gin.Context) {
+	clientID := middleware.UserIDFromCtx(c.Request.Context())
+
+	therapistID, err := uuid.Parse(c.Param("therapistID"))
+	if err != nil {
+		_ = c.Error(apierr.BadRequest("invalid therapist id"))
+		return
+	}
+
+	approved, err := h.repo.ApproveLink(c.Request.Context(), clientID, therapistID)
+	if err != nil {
+		_ = c.Error(apierr.Internal("failed to approve request"))
+		return
+	}
+	if !approved {
+		_ = c.Error(apierr.NotFound("no pending request from this therapist"))
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"therapist_id": therapistID, "status": "active"})
+}
+
+// POST /therapists/requests/:therapistID/decline
+// Called by the CLIENT to reject a pending link or revoke an active one.
+func (h *TherapistHandler) DeclineLinkRequest(c *gin.Context) {
+	clientID := middleware.UserIDFromCtx(c.Request.Context())
+
+	therapistID, err := uuid.Parse(c.Param("therapistID"))
+	if err != nil {
+		_ = c.Error(apierr.BadRequest("invalid therapist id"))
+		return
+	}
+
+	declined, err := h.repo.DeclineLink(c.Request.Context(), clientID, therapistID)
+	if err != nil {
+		_ = c.Error(apierr.Internal("failed to decline request"))
+		return
+	}
+	if !declined {
+		_ = c.Error(apierr.NotFound("no request or link from this therapist"))
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"therapist_id": therapistID, "status": "revoked"})
 }
 
 // DELETE /therapists/clients/:clientID

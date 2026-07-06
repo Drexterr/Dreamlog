@@ -24,6 +24,10 @@ type EntryAnalysis struct {
 	Reflection    string          `json:"reflection"`
 	MorningNudge  string          `json:"morning_nudge"`
 	IsCrisis      bool            `json:"is_crisis"`
+	// ConnectionInsight is an occasional cross-entry pattern observation
+	// ("this is the 3rd time X has come up this month"). Empty when no
+	// recurring pattern crossed the threshold - intentionally intermittent.
+	ConnectionInsight string `json:"connection_insight,omitempty"`
 	// Dream Decoder fields - non-nil only when entry.mode = 'dream'.
 	DreamSymbols      []string `json:"dream_symbols,omitempty"`
 	DreamType         string   `json:"dream_type,omitempty"`
@@ -73,4 +77,17 @@ type PatternRadarResponse struct {
 	Emotions         []EmotionPattern `json:"emotions"`          // top 8 emotions, sorted by score desc
 	TotalEntries     int              `json:"total_entries"`
 	MoodDistribution MoodDistribution `json:"mood_distribution"`
+}
+
+// ── Flashback (time capsule) ─────────────────────────────────────────────────
+
+// Flashback is returned by GET /entries/flashback - a past entry resurfaced
+// from roughly one year (or one month) ago.
+type Flashback struct {
+	EntryID   uuid.UUID `json:"entry_id"`
+	Label     string    `json:"label"` // "one_year_ago" | "one_month_ago"
+	Date      time.Time `json:"date"`
+	Summary   string    `json:"summary"`
+	MoodScore int       `json:"mood_score"`
+	Topics    []string  `json:"topics"`
 }

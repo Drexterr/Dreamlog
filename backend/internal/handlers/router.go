@@ -67,10 +67,17 @@ func NewRouter(deps Deps) http.Handler {
 	versionHandler := NewVersionHandler(deps.MinimumAppVersion, deps.AndroidStoreURL, deps.IOSStoreURL)
 	r.GET("/version", versionHandler.Get)
 
+	// Rate limiters for abuse-sensitive public endpoints. Tight bucket on
+	// credential endpoints (login/register) to blunt credential stuffing;
+	// a looser bucket on the public share-view passcode path (the per-link
+	// DB lockout is the cross-instance backstop there).
+	authLimiter := middleware.NewRateLimiter(0.2, 5)   // ~1 req / 5s, burst 5
+	shareLimiter := middleware.NewRateLimiter(0.5, 10) // ~1 req / 2s, burst 10
+
 	// Auth (public - no JWT required)
 	authHandler := NewAuthHandler(deps.AuthSvc)
-	r.POST("/auth/register", authHandler.Register)
-	r.POST("/auth/login", authHandler.Login)
+	r.POST("/auth/register", authLimiter.Middleware(), authHandler.Register)
+	r.POST("/auth/login", authLimiter.Middleware(), authHandler.Login)
 
 	auth := r.Group("/", middleware.AuthMiddleware(deps.JWTSecret, deps.SupabaseJWKSURL, deps.UserSvc, deps.Log))
 
@@ -112,6 +119,12 @@ func NewRouter(deps Deps) http.Handler {
 	auth.POST("/entries/:id/conversation", convHandler.GetOrCreate)
 	auth.POST("/conversations/:id/messages", convHandler.SendMessage)
 
+	// Habit loop: flashback time capsule + self-set check-in nudges
+	hookHandler := NewHookHandler(deps.EntryRepo, deps.AnalysisRepo, deps.AnalysisRepo,
+		services.NewNudgeService(deps.NudgeRepo, deps.UserRepo))
+	auth.GET("/entries/flashback", hookHandler.GetFlashback)
+	auth.POST("/entries/:id/checkin", hookHandler.CreateCheckin)
+
 	// Mood + streak + freeze
 	moodHandler := NewMoodHandler(deps.AnalysisRepo, deps.NudgeRepo, deps.UserRepo)
 	auth.GET("/mood/weekly", moodHandler.WeeklyMood)
@@ -139,7 +152,7 @@ func NewRouter(deps Deps) http.Handler {
 	auth.GET("/share", shareHandler.List)
 	auth.DELETE("/share/:id", shareHandler.Revoke)
 	// Public - no auth middleware; passcode in query param
-	r.GET("/share/:token", shareHandler.View)
+	r.GET("/share/:token", shareLimiter.Middleware(), shareHandler.View)
 
 	// PDF export (5d) - Pro+ only (gated in handler)
 	exportHandler := NewExportHandler(deps.AnalysisRepo, deps.UserRepo)
@@ -189,6 +202,11 @@ func NewRouter(deps Deps) http.Handler {
 	auth.DELETE("/therapists/clients/:clientID", therapistHandler.UnlinkClient)
 	auth.GET("/therapists/clients", therapistHandler.ListClients)
 	auth.GET("/therapists/clients/:clientID/brief", therapistHandler.ClientBrief)
+	// Client-facing consent endpoints: a therapist link stays 'pending' and
+	// exposes no data until the client approves it here.
+	auth.GET("/therapists/requests", therapistHandler.ListLinkRequests)
+	auth.POST("/therapists/requests/:therapistID/approve", therapistHandler.ApproveLinkRequest)
+	auth.POST("/therapists/requests/:therapistID/decline", therapistHandler.DeclineLinkRequest)
 
 	// Therapy Mode (Phase 6)
 	therapyHandler := NewTherapyHandler(deps.TherapySvc, deps.StorageSvc, deps.UserRepo)

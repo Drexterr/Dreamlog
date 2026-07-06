@@ -59,18 +59,80 @@ func (r *TherapistRepository) Register(ctx context.Context, userID uuid.UUID, na
 	return t, nil
 }
 
-// LinkClient creates an active link between therapist and client (idempotent).
+// LinkClient records a therapist's request to link a client. The link starts as
+// 'pending' and grants NO data access until the client approves it (ApproveLink).
+// An already-active link stays active (idempotent re-link); a revoked or pending
+// link is (re)set to pending so it must be re-approved.
 func (r *TherapistRepository) LinkClient(ctx context.Context, therapistID, clientID uuid.UUID) error {
 	_, err := r.db.Exec(ctx, `
-		INSERT INTO client_therapist_links (therapist_id, client_id)
-		VALUES ($1, $2)
-		ON CONFLICT (therapist_id, client_id) DO UPDATE SET status = 'active', revoked_at = NULL`,
+		INSERT INTO client_therapist_links (therapist_id, client_id, status)
+		VALUES ($1, $2, 'pending')
+		ON CONFLICT (therapist_id, client_id) DO UPDATE
+		    SET status = CASE WHEN client_therapist_links.status = 'active' THEN 'active' ELSE 'pending' END,
+		        revoked_at = NULL`,
 		therapistID, clientID,
 	)
 	if err != nil {
 		return fmt.Errorf("therapist.LinkClient: %w", err)
 	}
 	return nil
+}
+
+// ApproveLink is called by the CLIENT to consent to a pending therapist link,
+// activating it. Returns true if a pending request existed and was activated.
+func (r *TherapistRepository) ApproveLink(ctx context.Context, clientID, therapistID uuid.UUID) (bool, error) {
+	tag, err := r.db.Exec(ctx, `
+		UPDATE client_therapist_links
+		SET status = 'active', linked_at = NOW(), revoked_at = NULL
+		WHERE therapist_id = $1 AND client_id = $2 AND status = 'pending'`,
+		therapistID, clientID,
+	)
+	if err != nil {
+		return false, fmt.Errorf("therapist.ApproveLink: %w", err)
+	}
+	return tag.RowsAffected() > 0, nil
+}
+
+// DeclineLink is called by the CLIENT to reject (or later revoke) a link,
+// removing any data access. Returns true if a matching link was found.
+func (r *TherapistRepository) DeclineLink(ctx context.Context, clientID, therapistID uuid.UUID) (bool, error) {
+	tag, err := r.db.Exec(ctx, `
+		UPDATE client_therapist_links
+		SET status = 'revoked', revoked_at = NOW()
+		WHERE therapist_id = $1 AND client_id = $2 AND status IN ('pending', 'active')`,
+		therapistID, clientID,
+	)
+	if err != nil {
+		return false, fmt.Errorf("therapist.DeclineLink: %w", err)
+	}
+	return tag.RowsAffected() > 0, nil
+}
+
+// ListPendingRequests returns therapist link requests awaiting the client's
+// approval, so the mobile app can present an accept/decline prompt.
+func (r *TherapistRepository) ListPendingRequests(ctx context.Context, clientID uuid.UUID) ([]*models.TherapistLinkRequest, error) {
+	const q = `
+		SELECT t.id, t.name, COALESCE(t.credentials, ''), ctl.linked_at
+		FROM client_therapist_links ctl
+		JOIN therapists t ON t.id = ctl.therapist_id
+		WHERE ctl.client_id = $1 AND ctl.status = 'pending'
+		ORDER BY ctl.linked_at DESC`
+
+	rows, err := r.db.Query(ctx, q, clientID)
+	if err != nil {
+		return nil, fmt.Errorf("therapist.ListPendingRequests: %w", err)
+	}
+	defer rows.Close()
+
+	var out []*models.TherapistLinkRequest
+	for rows.Next() {
+		req := &models.TherapistLinkRequest{}
+		if err := rows.Scan(&req.TherapistID, &req.TherapistName, &req.Credentials, &req.RequestedAt); err != nil {
+			return nil, fmt.Errorf("therapist.ListPendingRequests scan: %w", err)
+		}
+		out = append(out, req)
+	}
+	return out, rows.Err()
 }
 
 // UnlinkClient soft-revokes the link.

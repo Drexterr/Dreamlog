@@ -2,11 +2,13 @@ package repositories
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
 	"github.com/dreamlog/backend/internal/models"
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -28,11 +30,11 @@ func (r *NudgeRepository) CreateWithType(ctx context.Context, userID uuid.UUID, 
 	const q = `
 		INSERT INTO nudges (user_id, entry_id, message, scheduled_at, timezone, nudge_type)
 		VALUES ($1, $2, $3, $4, $5, $6)
-		RETURNING id, user_id, entry_id, message, scheduled_at, timezone, status, sent_at, created_at`
+		RETURNING id, user_id, entry_id, message, scheduled_at, timezone, status, nudge_type, sent_at, created_at`
 
 	n := &models.Nudge{}
 	err := r.db.QueryRow(ctx, q, userID, entryID, message, scheduledAt, timezone, nudgeType).Scan(
-		&n.ID, &n.UserID, &n.EntryID, &n.Message, &n.ScheduledAt, &n.Timezone, &n.Status, &n.SentAt, &n.CreatedAt,
+		&n.ID, &n.UserID, &n.EntryID, &n.Message, &n.ScheduledAt, &n.Timezone, &n.Status, &n.NudgeType, &n.SentAt, &n.CreatedAt,
 	)
 	if err != nil {
 		return nil, fmt.Errorf("nudges.CreateWithType: %w", err)
@@ -44,7 +46,7 @@ func (r *NudgeRepository) CreateWithType(ctx context.Context, userID uuid.UUID, 
 // Used by the cron scheduler.
 func (r *NudgeRepository) PendingDue(ctx context.Context) ([]*models.Nudge, error) {
 	const q = `
-		SELECT id, user_id, entry_id, message, scheduled_at, timezone, status, sent_at, created_at
+		SELECT id, user_id, entry_id, message, scheduled_at, timezone, status, nudge_type, sent_at, created_at
 		FROM nudges
 		WHERE status = 'pending' AND scheduled_at <= NOW()
 		ORDER BY scheduled_at ASC
@@ -61,7 +63,7 @@ func (r *NudgeRepository) PendingDue(ctx context.Context) ([]*models.Nudge, erro
 		n := &models.Nudge{}
 		if err := rows.Scan(
 			&n.ID, &n.UserID, &n.EntryID, &n.Message,
-			&n.ScheduledAt, &n.Timezone, &n.Status, &n.SentAt, &n.CreatedAt,
+			&n.ScheduledAt, &n.Timezone, &n.Status, &n.NudgeType, &n.SentAt, &n.CreatedAt,
 		); err != nil {
 			return nil, fmt.Errorf("nudges.PendingDue scan: %w", err)
 		}
@@ -154,6 +156,113 @@ func (r *NudgeRepository) LapsedUsersAtNudgeHour(ctx context.Context, lapseHours
 		var u LapsedUser
 		if err := rows.Scan(&u.UserID, &u.Timezone); err != nil {
 			return nil, fmt.Errorf("nudges.LapsedUsersAtNudgeHour scan: %w", err)
+		}
+		users = append(users, u)
+	}
+	return users, rows.Err()
+}
+
+// TypicalEntryHour returns the modal local hour (0-23) at which the user has
+// recorded their recent completed entries, along with ok=true when the signal
+// is strong enough to trust (the modal hour holds at least 3 of the last 20
+// entries). Used for adaptive nudge timing: nudge when the user naturally
+// journals, not at a fixed clock time.
+func (r *NudgeRepository) TypicalEntryHour(ctx context.Context, userID uuid.UUID, timezone string) (int, bool, error) {
+	const q = `
+		SELECT EXTRACT(HOUR FROM created_at AT TIME ZONE $2)::int AS hr, COUNT(*) AS c
+		FROM (
+			SELECT created_at FROM entries
+			WHERE user_id = $1 AND status = 'completed'
+			ORDER BY created_at DESC
+			LIMIT 20
+		) recent
+		GROUP BY hr
+		HAVING COUNT(*) >= 3
+		ORDER BY c DESC, hr ASC
+		LIMIT 1`
+
+	var hour, count int
+	err := r.db.QueryRow(ctx, q, userID, timezone).Scan(&hour, &count)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return 0, false, nil
+		}
+		return 0, false, fmt.Errorf("nudges.TypicalEntryHour: %w", err)
+	}
+	return hour, true, nil
+}
+
+// HasPendingCheckinForEntry reports whether a pending check-in nudge already
+// exists for the given entry (used to keep POST /entries/:id/checkin idempotent).
+func (r *NudgeRepository) HasPendingCheckinForEntry(ctx context.Context, entryID uuid.UUID) (bool, error) {
+	const q = `
+		SELECT EXISTS(
+			SELECT 1 FROM nudges
+			WHERE entry_id = $1 AND nudge_type = 'checkin' AND status = 'pending'
+		)`
+	var exists bool
+	if err := r.db.QueryRow(ctx, q, entryID).Scan(&exists); err != nil {
+		return false, fmt.Errorf("nudges.HasPendingCheckinForEntry: %w", err)
+	}
+	return exists, nil
+}
+
+// StreakRiskUser is a candidate for the evening streak-at-risk nudge.
+type StreakRiskUser struct {
+	UserID   uuid.UUID
+	Timezone string
+}
+
+// StreakRiskUsersAtLocalHour returns users whose local hour is localHour and who:
+//   - have nudge_enabled = true and at least one FCM device token
+//   - completed an entry yesterday (local date) - the streak is alive
+//   - have NOT completed an entry today (local date) - the streak is at risk
+//   - have NOT received a streak_risk nudge in the last 20 hours (dedup)
+//
+// The caller is expected to verify the actual streak length before sending.
+func (r *NudgeRepository) StreakRiskUsersAtLocalHour(ctx context.Context, localHour int) ([]StreakRiskUser, error) {
+	const q = `
+		SELECT DISTINCT u.id, COALESCE(NULLIF(u.timezone, ''), 'UTC')
+		FROM users u
+		JOIN user_devices ud ON ud.user_id = u.id
+		WHERE u.nudge_enabled = true
+		  AND u.deleted_at IS NULL
+		  AND EXTRACT(HOUR FROM NOW() AT TIME ZONE COALESCE(NULLIF(u.timezone, ''), 'UTC'))::int = $1
+		  -- entry yesterday (local) - the streak is alive
+		  AND EXISTS (
+		      SELECT 1 FROM entries e
+		      WHERE e.user_id = u.id
+		        AND e.status = 'completed'
+		        AND DATE(e.created_at AT TIME ZONE COALESCE(NULLIF(u.timezone, ''), 'UTC'))
+		            = DATE(NOW() AT TIME ZONE COALESCE(NULLIF(u.timezone, ''), 'UTC')) - 1
+		  )
+		  -- no entry today (local) - streak at risk
+		  AND NOT EXISTS (
+		      SELECT 1 FROM entries e
+		      WHERE e.user_id = u.id
+		        AND e.status = 'completed'
+		        AND DATE(e.created_at AT TIME ZONE COALESCE(NULLIF(u.timezone, ''), 'UTC'))
+		            = DATE(NOW() AT TIME ZONE COALESCE(NULLIF(u.timezone, ''), 'UTC'))
+		  )
+		  -- no streak_risk nudge in last 20 hours (dedup)
+		  AND NOT EXISTS (
+		      SELECT 1 FROM nudges n
+		      WHERE n.user_id = u.id
+		        AND n.nudge_type = 'streak_risk'
+		        AND n.created_at > NOW() - INTERVAL '20 hours'
+		  )`
+
+	rows, err := r.db.Query(ctx, q, localHour)
+	if err != nil {
+		return nil, fmt.Errorf("nudges.StreakRiskUsersAtLocalHour: %w", err)
+	}
+	defer rows.Close()
+
+	var users []StreakRiskUser
+	for rows.Next() {
+		var u StreakRiskUser
+		if err := rows.Scan(&u.UserID, &u.Timezone); err != nil {
+			return nil, fmt.Errorf("nudges.StreakRiskUsersAtLocalHour scan: %w", err)
 		}
 		users = append(users, u)
 	}

@@ -14,7 +14,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { api } from '../../src/api/client';
+import { api, isApiError } from '../../src/api/client';
 import { useTheme } from '../../src/context/ThemeContext';
 import type { Entry, EntryAnalysis } from '../../src/types';
 
@@ -139,6 +139,8 @@ export default function ReflectionScreen() {
   const [analysis, setAnalysis] = useState<EntryAnalysis | null>(null);
   const [loading, setLoading] = useState(true);
   const [reloadKey, setReloadKey] = useState(0);
+  const [entryTotal, setEntryTotal] = useState<number | null>(null);
+  const [checkinState, setCheckinState] = useState<'idle' | 'saving' | 'scheduled'>('idle');
 
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(20)).current;
@@ -165,7 +167,38 @@ export default function ReflectionScreen() {
       });
   }, [id, reloadKey]);
 
+  // Stored-value indicator ("grounded in your N entries") - fail-silent.
+  useEffect(() => {
+    api
+      .listEntries(1, 1)
+      .then((r) => setEntryTotal(r.total))
+      .catch(() => setEntryTotal(null));
+  }, []);
+
   const handleDone = () => router.replace('/(tabs)');
+
+  const handleCheckinTomorrow = async () => {
+    if (!id || checkinState !== 'idle') return;
+    setCheckinState('saving');
+    try {
+      await api.scheduleCheckin(id);
+      setCheckinState('scheduled');
+    } catch (err) {
+      if (isApiError(err) && err.response?.status === 409) {
+        const detail = (err.response.data as unknown as { error?: string })?.error ?? '';
+        if (detail.includes('disabled')) {
+          setCheckinState('idle');
+          Alert.alert('Notifications are off', 'Enable nudges in Settings to get check-in reminders.');
+        } else {
+          // Already scheduled - show as done rather than an error.
+          setCheckinState('scheduled');
+        }
+      } else {
+        setCheckinState('idle');
+        Alert.alert('Could not schedule', 'Something went wrong - please try again.');
+      }
+    }
+  };
 
   const handleTellMeMore = () => {
     if (!id || !analysis) return;
@@ -309,6 +342,11 @@ export default function ReflectionScreen() {
                     })}
                   </Text>
                 )}
+                {entryTotal !== null && entryTotal >= 3 && (
+                  <Text style={[styles.groundedLabel, { color: colors.textMuted }]}>
+                    Grounded in your {entryTotal} entries
+                  </Text>
+                )}
               </Animated.View>
 
               {/* Topic badges */}
@@ -357,6 +395,21 @@ export default function ReflectionScreen() {
                   </Animated.View>
                 )}
               </View>
+
+              {/* Connection insight — occasional cross-entry pattern */}
+              {analysis.connection_insight ? (
+                <Animated.View
+                  style={[
+                    styles.insightCard,
+                    { backgroundColor: colors.card, borderColor: colors.border, opacity: fadeAnim },
+                  ]}
+                >
+                  <Text style={[styles.insightLabel, { color: colors.brand }]}>A PATTERN I NOTICED</Text>
+                  <Text style={[styles.insightText, { color: colors.textPrimary }]}>
+                    {analysis.connection_insight}
+                  </Text>
+                </Animated.View>
+              ) : null}
 
               {/* Dream Decoder — dual-lens reading (dream-mode entries only) */}
               {(analysis.psychological_lens || analysis.vedic_lens || (analysis.dream_symbols?.length ?? 0) > 0) && (
@@ -409,6 +462,32 @@ export default function ReflectionScreen() {
                   activeOpacity={0.8}
                 >
                   <Text style={[styles.tellMoreText, { color: colors.brand }]}>Tell me more</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[
+                    styles.checkinBtn,
+                    {
+                      backgroundColor: colors.card,
+                      borderColor: checkinState === 'scheduled' ? colors.brand : colors.border,
+                    },
+                  ]}
+                  onPress={handleCheckinTomorrow}
+                  disabled={checkinState !== 'idle'}
+                  activeOpacity={0.8}
+                >
+                  <Text
+                    style={[
+                      styles.checkinText,
+                      { color: checkinState === 'scheduled' ? colors.brand : colors.textSecondary },
+                    ]}
+                  >
+                    {checkinState === 'scheduled'
+                      ? '✓ I’ll check in with you tomorrow'
+                      : checkinState === 'saving'
+                        ? 'Scheduling…'
+                        : 'Check in on this tomorrow'}
+                  </Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity
@@ -547,6 +626,7 @@ const styles = StyleSheet.create({
     letterSpacing: 1.5,
   },
   dateLabel: { fontSize: 13, fontFamily: 'Nunito_400Regular', letterSpacing: 0.3 },
+  groundedLabel: { fontSize: 11, fontFamily: 'Nunito_400Regular', letterSpacing: 0.3, marginTop: 4, opacity: 0.8 },
 
   topicRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 28 },
   topicBadge: { borderRadius: 12, borderWidth: 1, paddingHorizontal: 12, paddingVertical: 4 },
@@ -590,6 +670,15 @@ const styles = StyleSheet.create({
     lineHeight: 23,
   },
 
+  // ── Connection insight ────────────────────────────────────────────────────
+  insightCard: { borderRadius: 16, borderWidth: 1, padding: 16, gap: 8, marginBottom: 24 },
+  insightLabel: { fontSize: 10, fontFamily: 'Nunito_600SemiBold', letterSpacing: 1.5 },
+  insightText: {
+    fontSize: 15,
+    fontFamily: 'CormorantGaramond_400Regular',
+    lineHeight: 24,
+  },
+
   quoteCard: { borderLeftWidth: 2, paddingLeft: 16, marginBottom: 36 },
   quoteText: {
     fontSize: 14,
@@ -606,6 +695,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   tellMoreText: { fontSize: 15, fontFamily: 'Nunito_600SemiBold', letterSpacing: 0.5 },
+
+  checkinBtn: {
+    borderRadius: 16,
+    borderWidth: 1,
+    paddingVertical: 14,
+    alignItems: 'center',
+  },
+  checkinText: { fontSize: 14, fontFamily: 'Nunito_600SemiBold', letterSpacing: 0.3 },
 
   shareTherapistBtn: {
     borderRadius: 16,

@@ -27,6 +27,12 @@ type fakeTherapistRepo struct {
 	registerErr      error
 	linkClientErr    error
 	unlinkClientErr  error
+	approveLinkResp     bool
+	approveLinkErr      error
+	declineLinkResp     bool
+	declineLinkErr      error
+	pendingRequestsResp []*models.TherapistLinkRequest
+	pendingRequestsErr  error
 	listClientsResp  []*models.ClientSummary
 	listClientsErr   error
 	getClientLinkResp *models.ClientTherapistLink
@@ -68,6 +74,18 @@ func (f *fakeTherapistRepo) LinkClient(_ context.Context, _, _ uuid.UUID) error 
 
 func (f *fakeTherapistRepo) UnlinkClient(_ context.Context, _, _ uuid.UUID) error {
 	return f.unlinkClientErr
+}
+
+func (f *fakeTherapistRepo) ApproveLink(_ context.Context, _, _ uuid.UUID) (bool, error) {
+	return f.approveLinkResp, f.approveLinkErr
+}
+
+func (f *fakeTherapistRepo) DeclineLink(_ context.Context, _, _ uuid.UUID) (bool, error) {
+	return f.declineLinkResp, f.declineLinkErr
+}
+
+func (f *fakeTherapistRepo) ListPendingRequests(_ context.Context, _ uuid.UUID) ([]*models.TherapistLinkRequest, error) {
+	return f.pendingRequestsResp, f.pendingRequestsErr
 }
 
 func (f *fakeTherapistRepo) ListClients(_ context.Context, _ uuid.UUID) ([]*models.ClientSummary, error) {
@@ -151,6 +169,9 @@ func newTherapistTestRouter(
 	r.DELETE("/therapists/clients/:clientID", h.UnlinkClient)
 	r.GET("/therapists/clients", h.ListClients)
 	r.GET("/therapists/clients/:clientID/brief", h.ClientBrief)
+	r.GET("/therapists/requests", h.ListLinkRequests)
+	r.POST("/therapists/requests/:therapistID/approve", h.ApproveLinkRequest)
+	r.POST("/therapists/requests/:therapistID/decline", h.DeclineLinkRequest)
 	return r
 }
 
@@ -278,8 +299,9 @@ func TestTherapistHandler_LinkClient_ValidInput_Returns200(t *testing.T) {
 	if err := json.NewDecoder(w.Body).Decode(&body2); err != nil {
 		t.Fatalf("decode: %v", err)
 	}
-	if body2["status"] != "active" {
-		t.Errorf("status: want active, got %v", body2["status"])
+	// A therapist-initiated link now starts pending until the client approves it.
+	if body2["status"] != "pending" {
+		t.Errorf("status: want pending, got %v", body2["status"])
 	}
 }
 
@@ -561,3 +583,91 @@ func TestTherapistHandler_ClientBrief_GenerateBriefError_Returns500(t *testing.T
 }
 
 var errBriefFailed = errors.New("AI unavailable")
+
+// ── Consent gate tests (client approves/declines therapist links) ─────────────
+
+func TestTherapistHandler_ListLinkRequests_ReturnsPending(t *testing.T) {
+	repo := &fakeTherapistRepo{
+		pendingRequestsResp: []*models.TherapistLinkRequest{
+			{TherapistID: uuid.New(), TherapistName: "Dr. Roy", Credentials: "PhD", RequestedAt: time.Now()},
+		},
+	}
+	r := newTherapistTestRouter(t, repo, &fakeTherapistAnalysisRepo{}, &fakeBriefGenerator{}, therapistTestUser())
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest(http.MethodGet, "/therapists/requests", nil)
+	req.Header.Set("Authorization", "Bearer "+therapistTestJWT(t))
+	r.ServeHTTP(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Fatalf("list requests: want 200, got %d: %s", w.Code, w.Body.String())
+	}
+	var body map[string][]map[string]any
+	if err := json.NewDecoder(w.Body).Decode(&body); err != nil {
+		t.Fatalf("decode: %v", err)
+	}
+	if len(body["requests"]) != 1 || body["requests"][0]["therapist_name"] != "Dr. Roy" {
+		t.Errorf("unexpected requests payload: %v", body)
+	}
+}
+
+func TestTherapistHandler_ApproveLinkRequest_Activates(t *testing.T) {
+	repo := &fakeTherapistRepo{approveLinkResp: true}
+	r := newTherapistTestRouter(t, repo, &fakeTherapistAnalysisRepo{}, &fakeBriefGenerator{}, therapistTestUser())
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest(http.MethodPost, "/therapists/requests/"+uuid.New().String()+"/approve", nil)
+	req.Header.Set("Authorization", "Bearer "+therapistTestJWT(t))
+	r.ServeHTTP(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Fatalf("approve: want 200, got %d: %s", w.Code, w.Body.String())
+	}
+	var body map[string]any
+	_ = json.NewDecoder(w.Body).Decode(&body)
+	if body["status"] != "active" {
+		t.Errorf("status: want active, got %v", body["status"])
+	}
+}
+
+func TestTherapistHandler_ApproveLinkRequest_NoPending_Returns404(t *testing.T) {
+	repo := &fakeTherapistRepo{approveLinkResp: false} // nothing pending
+	r := newTherapistTestRouter(t, repo, &fakeTherapistAnalysisRepo{}, &fakeBriefGenerator{}, therapistTestUser())
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest(http.MethodPost, "/therapists/requests/"+uuid.New().String()+"/approve", nil)
+	req.Header.Set("Authorization", "Bearer "+therapistTestJWT(t))
+	r.ServeHTTP(w, req)
+
+	if w.Code != http.StatusNotFound {
+		t.Errorf("approve nonexistent: want 404, got %d", w.Code)
+	}
+}
+
+func TestTherapistHandler_ApproveLinkRequest_BadID_Returns400(t *testing.T) {
+	repo := &fakeTherapistRepo{}
+	r := newTherapistTestRouter(t, repo, &fakeTherapistAnalysisRepo{}, &fakeBriefGenerator{}, therapistTestUser())
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest(http.MethodPost, "/therapists/requests/not-a-uuid/approve", nil)
+	req.Header.Set("Authorization", "Bearer "+therapistTestJWT(t))
+	r.ServeHTTP(w, req)
+
+	if w.Code != http.StatusBadRequest {
+		t.Errorf("approve bad id: want 400, got %d", w.Code)
+	}
+}
+
+func TestTherapistHandler_DeclineLinkRequest_Revokes(t *testing.T) {
+	repo := &fakeTherapistRepo{declineLinkResp: true}
+	r := newTherapistTestRouter(t, repo, &fakeTherapistAnalysisRepo{}, &fakeBriefGenerator{}, therapistTestUser())
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest(http.MethodPost, "/therapists/requests/"+uuid.New().String()+"/decline", nil)
+	req.Header.Set("Authorization", "Bearer "+therapistTestJWT(t))
+	r.ServeHTTP(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Fatalf("decline: want 200, got %d: %s", w.Code, w.Body.String())
+	}
+	var body map[string]any
+	_ = json.NewDecoder(w.Body).Decode(&body)
+	if body["status"] != "revoked" {
+		t.Errorf("status: want revoked, got %v", body["status"])
+	}
+}

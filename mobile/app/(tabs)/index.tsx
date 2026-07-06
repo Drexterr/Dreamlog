@@ -15,7 +15,7 @@ import { useTheme } from '../../src/context/ThemeContext';
 import { useAuth } from '../../src/context/AuthContext';
 import { useGuidedTour } from '../../src/context/GuidedTourContext';
 import { T } from '../../src/testIDs';
-import type { DailyMood, StreakInfo } from '../../src/types';
+import type { DailyMood, Flashback, StreakInfo } from '../../src/types';
 
 // ── Format date label ─────────────────────────────────────────────────────────
 function formatEntryDate(iso: string): string {
@@ -149,6 +149,7 @@ export default function HomeScreen() {
   const [userName, setUserName] = useState('');
   const [streak, setStreak] = useState<StreakInfo | null>(null);
   const [weekMoods, setWeekMoods] = useState<DailyMood[]>([]);
+  const [flashback, setFlashback] = useState<Flashback | null>(null);
   const [lastEntry, setLastEntry] = useState<{
     id: string;
     dateLabel: string;
@@ -178,6 +179,8 @@ export default function HomeScreen() {
     api.me().then((u) => setUserName(u.preferred_name || u.name || '')).catch(() => {});
     api.streak().then(setStreak).catch(() => {});
     api.weeklyMood().then((r) => setWeekMoods(r.days ?? [])).catch(() => {});
+    // Time capsule - 404 simply means there is nothing to resurface yet.
+    api.getFlashback().then(setFlashback).catch(() => setFlashback(null));
 
     api.getTimeline(1, 1).then((res) => {
       const item = res.entries?.[0];
@@ -273,6 +276,33 @@ export default function HomeScreen() {
                   "{lastEntry.quote}"
                 </Text>
               ) : null}
+            </TouchableOpacity>
+          </Animated.View>
+        )}
+
+        {/* ── Flashback time capsule ── */}
+        {flashback && isAuthenticated && (
+          <Animated.View
+            style={[
+              styles.lastWrap,
+              { borderTopColor: colors.borderFaint, opacity: lastAnim, transform: [{ translateY: lastTranslate }] },
+            ]}
+          >
+            <TouchableOpacity
+              accessibilityLabel="Open flashback entry"
+              onPress={() => router.push(`/reflection/${flashback.entry_id}` as any)}
+              activeOpacity={0.7}
+            >
+              <View style={styles.lastHeaderRow}>
+                <Text style={[styles.lastMeta, { color: colors.textMuted }]}>
+                  {flashback.label === 'one_year_ago' ? 'One year ago' : 'One month ago'}
+                  {' · from your past'}
+                </Text>
+                <Text style={[styles.lastChevron, { color: colors.textMuted }]}>›</Text>
+              </View>
+              <Text style={[styles.lastQuote, { color: colors.textSecondary }]} numberOfLines={2}>
+                {flashback.summary}
+              </Text>
             </TouchableOpacity>
           </Animated.View>
         )}

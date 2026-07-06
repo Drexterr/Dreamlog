@@ -38,13 +38,13 @@ func (r *ShareRepository) Create(ctx context.Context, in models.CreateShareLinkI
 // GetByToken fetches an active (not revoked, not expired) share link.
 func (r *ShareRepository) GetByToken(ctx context.Context, token string) (*models.ShareLink, error) {
 	const q = `
-		SELECT id, user_id, token, passcode_hash, expires_at, revoked, created_at
+		SELECT id, user_id, token, passcode_hash, expires_at, revoked, failed_attempts, locked_until, created_at
 		FROM share_links
 		WHERE token = $1 AND revoked = FALSE AND expires_at > NOW()`
 
 	var sl models.ShareLink
 	err := r.db.QueryRow(ctx, q, token).
-		Scan(&sl.ID, &sl.UserID, &sl.Token, &sl.PasscodeHash, &sl.ExpiresAt, &sl.Revoked, &sl.CreatedAt)
+		Scan(&sl.ID, &sl.UserID, &sl.Token, &sl.PasscodeHash, &sl.ExpiresAt, &sl.Revoked, &sl.FailedAttempts, &sl.LockedUntil, &sl.CreatedAt)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return nil, nil
 	}
@@ -52,6 +52,46 @@ func (r *ShareRepository) GetByToken(ctx context.Context, token string) (*models
 		return nil, err
 	}
 	return &sl, nil
+}
+
+// RecordFailedPasscode increments the failed-attempt counter for a link and,
+// once maxAttempts is reached, sets locked_until to now + lockDuration. It
+// returns the resulting locked_until (nil when not yet locked) so the caller
+// can surface the lockout. The attempt counter resets to 0 when a lock is set,
+// so each lock window requires a fresh maxAttempts failures.
+func (r *ShareRepository) RecordFailedPasscode(ctx context.Context, id uuid.UUID, maxAttempts int, lockDuration time.Duration) (*time.Time, error) {
+	// In Postgres every SET expression reads the OLD row, so "failed_attempts + 1"
+	// consistently refers to the pre-update value in both branches. On reaching
+	// the threshold we lock and reset the counter to 0 (fresh window per lock).
+	// make_interval(secs => $3) builds the lock window from a plain seconds value
+	// (Go's Duration.String(), e.g. "15m0s", is NOT valid Postgres interval input).
+	const q = `
+		UPDATE share_links
+		SET failed_attempts = CASE
+		        WHEN failed_attempts + 1 >= $2 THEN 0
+		        ELSE failed_attempts + 1
+		    END,
+		    locked_until = CASE
+		        WHEN failed_attempts + 1 >= $2 THEN NOW() + make_interval(secs => $3)
+		        ELSE locked_until
+		    END
+		WHERE id = $1
+		RETURNING locked_until`
+
+	var lockedUntil *time.Time
+	err := r.db.QueryRow(ctx, q, id, maxAttempts, lockDuration.Seconds()).Scan(&lockedUntil)
+	if err != nil {
+		return nil, err
+	}
+	return lockedUntil, nil
+}
+
+// ResetPasscodeAttempts clears the failed-attempt counter and any lock after a
+// successful passcode validation.
+func (r *ShareRepository) ResetPasscodeAttempts(ctx context.Context, id uuid.UUID) error {
+	_, err := r.db.Exec(ctx,
+		`UPDATE share_links SET failed_attempts = 0, locked_until = NULL WHERE id = $1`, id)
+	return err
 }
 
 // ListByUser returns all active share links for a user (newest first).

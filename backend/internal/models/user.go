@@ -96,6 +96,7 @@ type User struct {
 	Timezone            string     `json:"timezone"`
 	FCMNudgeHour        int        `json:"fcm_nudge_hour"` // 0-23
 	NudgeEnabled        bool       `json:"nudge_enabled"`
+	NudgeAutoTime       bool       `json:"nudge_auto_time"` // true = nudge at the user's learned typical recording hour
 	Goal                *string    `json:"goal,omitempty"`
 	AgeRange            *string    `json:"age_range,omitempty"`
 	Country             *string    `json:"country,omitempty"`
@@ -129,6 +130,7 @@ type UpdateUserInput struct {
 	Timezone      *string `json:"timezone" binding:"omitempty"`
 	FCMNudgeHour  *int    `json:"fcm_nudge_hour" binding:"omitempty,min=0,max=23"`
 	NudgeEnabled  *bool   `json:"nudge_enabled"`
+	NudgeAutoTime *bool   `json:"nudge_auto_time"`
 	Goal          *string `json:"goal" binding:"omitempty,oneof=stress anxiety grief depression trauma relationships career curious"`
 	AgeRange      *string `json:"age_range" binding:"omitempty,oneof=under_18 18_24 25_34 35_44 45_plus"`
 	Country       *string `json:"country" binding:"omitempty,min=2,max=2"`

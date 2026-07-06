@@ -14,6 +14,14 @@ const (
 	NudgeStatusFailed  NudgeStatus = "failed"
 )
 
+// Nudge type values stored in nudges.nudge_type.
+const (
+	NudgeTypeMorning      = "morning"      // post-entry morning reflection nudge
+	NudgeTypeReengagement = "reengagement" // gentle push after a lapse
+	NudgeTypeStreakRisk   = "streak_risk"  // evening push when an active streak has no entry today
+	NudgeTypeCheckin      = "checkin"      // user-requested "check in on this tomorrow"
+)
+
 type Nudge struct {
 	ID          uuid.UUID   `json:"id"`
 	UserID      uuid.UUID   `json:"user_id"`
@@ -22,6 +30,7 @@ type Nudge struct {
 	ScheduledAt time.Time   `json:"scheduled_at"`
 	Timezone    string      `json:"timezone"`
 	Status      NudgeStatus `json:"status"`
+	NudgeType   string      `json:"nudge_type,omitempty"`
 	SentAt      *time.Time  `json:"sent_at,omitempty"`
 	CreatedAt   time.Time   `json:"created_at"`
 }

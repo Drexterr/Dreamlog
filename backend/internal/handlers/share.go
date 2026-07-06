@@ -24,7 +24,17 @@ type shareLinkRepo interface {
 	ListByUser(ctx context.Context, userID uuid.UUID) ([]*models.ShareLink, error)
 	Revoke(ctx context.Context, id, userID uuid.UUID) error
 	ShareView(ctx context.Context, userID uuid.UUID) (*models.ShareLinkView, error)
+	RecordFailedPasscode(ctx context.Context, id uuid.UUID, maxAttempts int, lockDuration time.Duration) (*time.Time, error)
+	ResetPasscodeAttempts(ctx context.Context, id uuid.UUID) error
 }
+
+// Passcode lockout policy: after this many consecutive wrong passcodes a link
+// is temporarily locked, defeating brute-force of the 4-digit space even across
+// API replicas (the per-IP rate limiter only bounds a single instance).
+const (
+	sharePasscodeMaxAttempts = 5
+	sharePasscodeLockWindow  = 15 * time.Minute
+)
 
 type ShareHandler struct {
 	repo         shareLinkRepo
@@ -158,10 +168,26 @@ func (h *ShareHandler) View(c *gin.Context) {
 		return
 	}
 
+	// Reject while the link is under a passcode lockout.
+	if sl.LockedUntil != nil && time.Now().Before(*sl.LockedUntil) {
+		c.Header("Retry-After", "900")
+		_ = c.Error(apierr.New(http.StatusTooManyRequests, "too many incorrect passcode attempts; try again later"))
+		return
+	}
+
 	if err := bcrypt.CompareHashAndPassword([]byte(sl.PasscodeHash), []byte(passcode)); err != nil {
+		lockedUntil, recErr := h.repo.RecordFailedPasscode(c.Request.Context(), sl.ID, sharePasscodeMaxAttempts, sharePasscodeLockWindow)
+		if recErr == nil && lockedUntil != nil && time.Now().Before(*lockedUntil) {
+			c.Header("Retry-After", "900")
+			_ = c.Error(apierr.New(http.StatusTooManyRequests, "too many incorrect passcode attempts; try again later"))
+			return
+		}
 		_ = c.Error(apierr.Unauthorized("incorrect passcode"))
 		return
 	}
+
+	// Correct passcode - clear any accumulated failed attempts.
+	_ = h.repo.ResetPasscodeAttempts(c.Request.Context(), sl.ID)
 
 	view, err := h.repo.ShareView(c.Request.Context(), sl.UserID)
 	if err != nil {

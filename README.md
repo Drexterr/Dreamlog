@@ -19,7 +19,8 @@ dream/
 │   │   ├── models/       Domain types
 │   │   ├── repositories/ DB queries (pgx/v5)
 │   │   ├── services/     Business logic
-│   │   └── workers/      Async jobs (transcription, nudge scheduler)
+│   │   └── workers/      Async jobs (transcription pipeline + nudge / re-engagement /
+│   │                     streak-risk / weekly-review / year-in-review schedulers)
 │   ├── migrations/   golang-migrate SQL files
 │   └── pkg/
 │       ├── queue/    Redis job queue (BRPOP/LPUSH)
@@ -72,8 +73,9 @@ Mobile                     Backend                    Workers
   │                           │                          │ Crisis screen (keyword + Claude)
   │                           │                          │ Context builder (last 5 entries)
   │                           │                          │ Claude AnalyzeEntry
+  │                           │                          │ Connection insight (recurring-topic check)
   │                           │                          │ Store analysis
-  │                           │                          │ Schedule morning nudge
+  │                           │                          │ Schedule morning nudge (adaptive hour)
   │                           │                          │ Delete audio
   ├─ GET /entries/:id ───────►│ polls status             │
   ├─ GET /entries/:id/analysis►│ returns reflection       │
@@ -112,6 +114,29 @@ Mobile                     API (synchronous - no worker)
 ```
 
 **1-hour time limit** enforced server-side via `expires_at`. Crisis detection is mandatory and uses the same two-stage fail-safe as journal entries.
+
+### Habit loop (Hook Model)
+
+Retention features built around the Trigger → Action → Variable Reward → Investment loop:
+
+- **Adaptive nudge timing** - the morning nudge is delivered at the user's
+  *learned typical recording hour* (modal local hour of their last 20 entries)
+  instead of a fixed clock time. Manually setting `fcm_nudge_hour` via
+  `PUT /me` turns the learning off (`users.nudge_auto_time`).
+- **Streak-at-risk push** - users with an active streak (≥3 days) and no entry
+  today get a caring 21:00-local reminder stating the streak length.
+- **Re-engagement push** - warm, non-guilt nudge after 26h+ of silence.
+- **Connection insights** - the worker deterministically detects recurring
+  topics (3rd+ occurrence in 30 days) and stores a one-line pattern insight
+  (`entry_analysis.connection_insight`) shown with the reflection - an
+  intentionally intermittent, variable reward.
+- **Flashback time capsule** - `GET /entries/flashback` resurfaces an entry
+  from ~1 year (or ~1 month) ago on the home screen.
+- **Self-set check-in** - "Check in on this tomorrow" button on the reflection
+  screen (`POST /entries/:id/checkin`) schedules the next day's nudge from the
+  entry's own morning-nudge line - the user authors their next trigger.
+- **One-tap record** - tapping any nudge notification deep-links straight to
+  the record screen.
 
 ---
 
@@ -251,8 +276,10 @@ All endpoints (except `/health`) require `Authorization: Bearer <jwt>`.
 
 | Method | Path | Description |
 |---|---|---|
-| `GET` | `/entries/:id/analysis` | Get AI analysis for a completed entry |
+| `GET` | `/entries/:id/analysis` | Get AI analysis for a completed entry (incl. `connection_insight`) |
 | `GET` | `/timeline` | Entries with their analyses (paginated) |
+| `GET` | `/entries/flashback` | Time capsule: entry from ~1 year / ~1 month ago (404 if none) |
+| `POST` | `/entries/:id/checkin` | Schedule a "check in on this tomorrow" nudge for the entry |
 
 ### Conversations
 
@@ -384,15 +411,17 @@ To enable real AI analysis: set `ANTHROPIC_API_KEY=<key>` and `STUB_AI_ANALYSIS=
 ## Database schema (summary)
 
 ```
-users                    - supabase_id, email, name, timezone, fcm_nudge_hour
+users                    - supabase_id, email, name, timezone, fcm_nudge_hour, nudge_auto_time
 entries                  - user_id, audio_key, duration_sec, status, transcript, search_vector
-entry_analysis           - entry_id, mood_score, emotional_tone (JSONB), topics[], reflection, is_crisis
+entry_analysis           - entry_id, mood_score, emotional_tone (JSONB), topics[], reflection,
+                           is_crisis, connection_insight
 conversations            - entry_id, user_id, turn_count, is_closed
 conversation_messages    - conversation_id, role, content
 therapy_sessions         - user_id, status, started_at, expires_at, context_snapshot (JSONB), post_session_summary
 therapy_session_messages - session_id, role, content, input_mode
 user_devices             - user_id, fcm_token, platform
-nudges                   - user_id, entry_id, message, status, scheduled_for
+nudges                   - user_id, entry_id, message, status, scheduled_at,
+                           nudge_type (morning | reengagement | streak_risk | checkin)
 ```
 
 Migrations are in `backend/migrations/` and run automatically on API startup.

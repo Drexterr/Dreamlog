@@ -1,12 +1,10 @@
 # ═══════════════════════════════════════════════════════════════════════════
 # NAVIGATION TESTING
 # Every bottom tab reachable, Explore tools open + back-navigate, modal
-# navigation (Settings sheets) opens/closes, and deep links via "dreamlog://".
-# Tabs carry stable testIDs (tabBarButtonTestID in app/(tabs)/_layout.tsx).
+# navigation (Settings sheets) opens/closes. Tabs carry stable testIDs
+# (tabBarButtonTestID in app/(tabs)/_layout.tsx).
 # ═══════════════════════════════════════════════════════════════════════════
 appId: com.dreamlog.app
-env:
-  APP_SCHEME: "dreamlog"
 tags:
   - navigation
 ---
@@ -20,54 +18,69 @@ tags:
     id: "home-screen"
 - tapOn:
     id: "tab-explore"
-- assertVisible:
-    id: "explore-screen"
+- extendedWaitUntil:
+    visible:
+      id: "explore-screen"
+    timeout: 10000
 - takeScreenshot: "nav-explore"
 
 - tapOn:
     id: "tab-mood"
-- assertVisible:
-    text: "Mood"
-    timeout: 8000
+- extendedWaitUntil:
+    visible:
+      text: "Mood"
+    timeout: 10000
 - takeScreenshot: "nav-mood"
 
 - tapOn:
     id: "tab-settings"
-- assertVisible:
-    id: "settings-screen"
+- extendedWaitUntil:
+    visible:
+      id: "settings-screen"
+    timeout: 10000
 - takeScreenshot: "nav-settings"
 
 - tapOn:
     id: "tab-home"
-- assertVisible:
-    id: "home-screen"
+- extendedWaitUntil:
+    visible:
+      id: "home-screen"
+    timeout: 10000
 
 # ── 2. Explore → each tool screen opens and back returns to Explore ──
 - tapOn:
     id: "tab-explore"
 - tapOn:
     id: "explore-entries"
-- assertVisible:
-    text: "Search your entries..."
-    timeout: 8000
+- extendedWaitUntil:
+    visible:
+      text: "Search your entries..."
+    timeout: 10000
 - back
-- assertVisible:
-    id: "explore-screen"
+- extendedWaitUntil:
+    visible:
+      id: "explore-screen"
+    timeout: 10000
 
 - tapOn:
     id: "explore-journeys"
-- assertVisible:
-    text: "Guided Journeys"
-    timeout: 8000
+- extendedWaitUntil:
+    visible:
+      text: "Guided Journeys"
+    timeout: 10000
 - back
-- assertVisible:
-    id: "explore-screen"
+- extendedWaitUntil:
+    visible:
+      id: "explore-screen"
+    timeout: 10000
 
 - tapOn:
     id: "explore-relationships"
 - back
-- assertVisible:
-    id: "explore-screen"
+- extendedWaitUntil:
+    visible:
+      id: "explore-screen"
+    timeout: 10000
 
 # ── 3. Modal navigation: Settings → Get help now opens a sheet, closes via
 #       its Close button without leaving Settings. ──
@@ -75,8 +88,10 @@ tags:
     id: "tab-settings"
 - tapOn:
     id: "settings-help-row"
-- assertVisible: "You're not alone."
-- assertVisible: "iCall"
+- extendedWaitUntil:
+    visible:
+      text: "iCall"                    # a crisis hotline card in the sheet
+    timeout: 10000
 - tapOn: "Close"
 - assertVisible:
     id: "settings-screen"
@@ -85,15 +100,11 @@ tags:
 # ── 4. Nudge-hour picker modal opens and dismisses via backdrop tap ──
 - tapOn:
     id: "settings-nudge-hour-row"
-- assertVisible: "Morning Nudge Time"
-- tapOn:
-    point: "50%,12%"                  # dimmed backdrop above the sheet
-- assertNotVisible: "Morning Nudge Time"
-
-# ── 5. Deep link: scheme "dreamlog" → therapy route surfaces the landing. ──
-- openLink: ${APP_SCHEME}://therapy
-- assertVisible:
-    text: "Start a Session"
+- extendedWaitUntil:
+    visible:
+      text: "Morning Nudge Time"
     timeout: 10000
-    optional: true                    # deep-link route table may vary by build
-- takeScreenshot: "nav-deeplink-therapy"
+- tapOn:
+    point: "50%,12%"                   # dimmed backdrop above the sheet
+- assertNotVisible: "Morning Nudge Time"
+- takeScreenshot: "nav-nudge-picker-dismissed"

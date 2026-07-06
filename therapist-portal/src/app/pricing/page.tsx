@@ -1,9 +1,10 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
+import { useCurrency } from '../../lib/currency';
+import type { Currency } from '../../lib/currency';
 
-type Currency = 'INR' | 'EUR' | 'USD';
 type Period = 'monthly' | 'annual';
 
 // Canonical prices live in docs/PRICING.md - keep in sync.
@@ -37,27 +38,6 @@ const ANNUAL_SAVINGS: Record<'plus' | 'pro', Record<Currency, string>> = {
 const MAX_SAVINGS: Record<Currency, string> = {
   INR: 'Save up to 33%', EUR: 'Save up to 44%', USD: 'Save up to 44%',
 };
-
-function useCurrency(): { currency: Currency; ready: boolean } {
-  const [currency, setCurrency] = useState<Currency>('USD');
-  const [ready, setReady] = useState(false);
-  useEffect(() => {
-    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
-    if (tz === 'Asia/Calcutta' || tz === 'Asia/Kolkata') {
-      setCurrency('INR'); setReady(true); return;
-    }
-    fetch('https://ipapi.co/json/')
-      .then(r => r.ok ? r.json() : null)
-      .then(d => {
-        if (d?.country_code === 'IN') setCurrency('INR');
-        else if (d?.country_code === 'FR') setCurrency('EUR');
-        else setCurrency('USD');
-      })
-      .catch(() => {})
-      .finally(() => setReady(true));
-  }, []);
-  return { currency, ready };
-}
 
 function Check() {
   return <span style={{ color: '#c8955a', flexShrink: 0, marginTop: 2 }}>✓</span>;

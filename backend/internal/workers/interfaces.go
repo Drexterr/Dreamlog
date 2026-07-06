@@ -134,3 +134,22 @@ type personExtractor interface {
 type personMentionStore interface {
 	UpsertPersonMentions(ctx context.Context, userID, entryID uuid.UUID, people []models.ExtractedPerson) error
 }
+
+// connectionInsightBuilder is the subset of ConnectionInsightService used by TranscriptionWorker.
+type connectionInsightBuilder interface {
+	BuildConnectionInsight(ctx context.Context, userID, entryID uuid.UUID, topics []string) (string, error)
+}
+
+// streakRiskRepo is the subset of NudgeRepository used by StreakRiskScheduler.
+type streakRiskRepo interface {
+	StreakRiskUsersAtLocalHour(ctx context.Context, localHour int) ([]repositories.StreakRiskUser, error)
+	CreateWithType(ctx context.Context, userID uuid.UUID, entryID *uuid.UUID, message string, scheduledAt time.Time, timezone, nudgeType string) (*models.Nudge, error)
+	GetDeviceTokens(ctx context.Context, userID uuid.UUID) ([]string, error)
+	MarkSent(ctx context.Context, id uuid.UUID) error
+	MarkFailed(ctx context.Context, id uuid.UUID, errMsg string) error
+}
+
+// streakLookup is the subset of AnalysisRepository used by StreakRiskScheduler.
+type streakLookup interface {
+	StreakInfo(ctx context.Context, userID uuid.UUID) (*models.StreakInfo, error)
+}

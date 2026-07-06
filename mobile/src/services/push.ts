@@ -1,5 +1,21 @@
 import { Platform } from 'react-native';
+import { router } from 'expo-router';
 import { api } from '../api/client';
+
+// Nudge types whose tap should land the user straight on the record screen -
+// the shortest possible path from impulse to speaking.
+const RECORD_NUDGE_TYPES = new Set(['morning_nudge', 'reengagement', 'streak_risk', 'checkin']);
+
+function handleNotificationOpen(data?: Record<string, unknown>): void {
+  const type = typeof data?.type === 'string' ? (data.type as string) : '';
+  if (!RECORD_NUDGE_TYPES.has(type)) return;
+  try {
+    router.push('/record');
+  } catch {
+    // Router not mounted yet (cold start) - the auth guard will land the user
+    // on home; losing the deep link is acceptable, crashing is not.
+  }
+}
 
 /**
  * Registers this device for push notifications and stores its FCM token
@@ -17,6 +33,19 @@ export async function registerForPushNotifications(): Promise<boolean> {
     const { getApp } = await import('@react-native-firebase/app');
     const messagingModule = await import('@react-native-firebase/messaging');
     const messaging = messagingModule.getMessaging(getApp());
+
+    // Deep link: tapping a nudge opens the record screen directly.
+    messagingModule.onNotificationOpenedApp(messaging, (msg) =>
+      handleNotificationOpen(msg?.data as Record<string, unknown> | undefined),
+    );
+    messagingModule
+      .getInitialNotification(messaging)
+      .then((msg) => {
+        if (!msg) return;
+        // Cold start: give the router a moment to mount before navigating.
+        setTimeout(() => handleNotificationOpen(msg.data as Record<string, unknown> | undefined), 600);
+      })
+      .catch(() => undefined);
 
     // iOS prompts the user; Android 13+ prompts for POST_NOTIFICATIONS,
     // older Android resolves as authorized without a prompt.

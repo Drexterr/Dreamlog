@@ -37,6 +37,12 @@ Response `200`:
 
 ## Auth (Local Path)
 
+> **Rate limiting:** `POST /auth/login`, `POST /auth/register`, and the public
+> `GET /share/:token` are rate-limited per client IP (HTTP `429` with a
+> `Retry-After` header when exceeded). Additionally, a share link locks itself
+> for 15 minutes after 5 consecutive incorrect passcodes (`429`), independent of
+> source IP.
+
 ### POST /auth/register
 ```json
 // Request
@@ -183,6 +189,8 @@ Response `200`:
   "preferred_name": "string | null",  // shown in AI reflections instead of name if set
   "timezone": "string",               // IANA timezone e.g. "Asia/Kolkata"
   "fcm_nudge_hour": 8,                // 0-23, local hour for morning nudge
+  "nudge_auto_time": true,            // true = nudges sent at the user's learned typical recording hour
+                                      // (falls back to fcm_nudge_hour until enough entries exist)
   "goal": "stress | anxiety | grief | depression | trauma | relationships | career | curious | null",
   "age_range": "under_18 | 18_24 | 25_34 | 35_44 | 45_plus | null",
   "voice_language": "auto | <language>",  // therapy TTS voice; auto = follow detected speech language.
@@ -200,6 +208,7 @@ Response `200`:
   "preferred_name": "string",
   "timezone": "string",
   "fcm_nudge_hour": 8,
+  "nudge_auto_time": true,
   "goal": "stress | anxiety | grief | depression | trauma | relationships | career | curious",
   "age_range": "under_18 | 18_24 | 25_34 | 35_44 | 45_plus",
   "voice_language": "auto | <language>"   // any key in models.SupportedVoiceLanguages; 400 on any other value
@@ -207,6 +216,10 @@ Response `200`:
 
 // Response 200 - same shape as GET /me
 ```
+
+Setting `fcm_nudge_hour` without also sending `nudge_auto_time` flips
+`nudge_auto_time` to `false` server-side - an explicit hour choice wins over
+learned timing until the user re-enables auto.
 
 ---
 
@@ -308,6 +321,9 @@ Response `200`:
   "reflection": "string",                    // 3-5 sentences + open question
   "morning_nudge": "string",                 // 1 sentence
   "is_crisis": false,
+  "connection_insight": "string",            // optional; cross-entry pattern ("this is the 3rd time X
+                                             // has come up in the last month"); omitted when no
+                                             // recurring topic crossed the threshold
   "dream_symbols": ["snake", "river"],       // only present when entry.mode = "dream"; 3-6 symbols
   "dream_type": "vivid",                     // only present when mode = "dream"; nightmare|lucid|recurring|vivid|surreal|mundane
   "psychological_lens": "string",            // only present when mode = "dream"; Jungian / depth-psychology reading
@@ -317,6 +333,40 @@ Response `200`:
 ```
 
 Errors: `404` if entry not found; `409` if entry not yet completed.
+
+### GET /entries/flashback
+Time capsule: resurfaces a past entry from roughly one year ago (±7 days), or
+failing that roughly one month ago (±3 days). Crisis entries are never
+resurfaced.
+
+Response `200`:
+```json
+{
+  "entry_id": "uuid",
+  "label": "one_year_ago | one_month_ago",
+  "date": "RFC3339",
+  "summary": "string",          // the AI summary of that entry
+  "mood_score": 58,
+  "topics": ["relocation"]
+}
+```
+
+Errors: `404` when neither window has a completed, non-crisis entry.
+
+### POST /entries/:id/checkin
+Self-set trigger: schedules a "check in on this tomorrow" push nudge for the
+entry, delivered tomorrow at the user's nudge hour. The message reuses the
+entry's `morning_nudge` (falls back to a topic-based line). One pending
+check-in per entry.
+
+Response `201`:
+```json
+{ "entry_id": "uuid", "scheduled_at": "RFC3339" }
+```
+
+Errors: `400` invalid UUID · `404` entry not found or belongs to different
+user · `409` entry not completed, check-in already scheduled, or nudges
+disabled.
 
 ---
 
@@ -942,20 +992,68 @@ Errors: `400` missing entry_id or invalid session UUID · `409` session already 
 ```
 
 ### POST /therapists/clients/link
-Links a client by their DreamLog user ID (shared out-of-band).
+Requests a link to a client by their DreamLog user ID (shared out-of-band). The
+link is created in `pending` state and **grants no access to the client's data**
+until the client approves it (see the client-facing consent endpoints below).
+This prevents a self-registered "therapist" from reading a client's journal
+summaries merely by knowing their UUID.
 
 ```json
 // Request
 { "client_id": "uuid" }
 
 // Response 200
-{ "therapist_id": "uuid", "client_id": "uuid", "status": "active" }
+{ "therapist_id": "uuid", "client_id": "uuid", "status": "pending" }
 ```
 
 Errors: `403` caller is not a registered therapist · `400` invalid UUID.
 
 ### DELETE /therapists/clients/:clientID
 Soft-revokes the link. Response `204`.
+
+---
+
+## Therapist Link Consent (client-facing)
+
+These endpoints are called by the **client** (any authenticated user) to control
+which therapists may access their journal data.
+
+### GET /therapists/requests
+Lists pending therapist link requests awaiting the client's approval.
+
+Response `200`:
+```json
+{
+  "requests": [
+    {
+      "therapist_id": "uuid",
+      "therapist_name": "string",
+      "credentials": "string",
+      "requested_at": "RFC3339"
+    }
+  ]
+}
+```
+
+### POST /therapists/requests/:therapistID/approve
+Client consents to a pending link, activating the therapist's access.
+
+Response `200`:
+```json
+{ "therapist_id": "uuid", "status": "active" }
+```
+
+Errors: `400` invalid therapist UUID · `404` no pending request from this therapist.
+
+### POST /therapists/requests/:therapistID/decline
+Client rejects a pending link (or revokes an active one). Access is removed.
+
+Response `200`:
+```json
+{ "therapist_id": "uuid", "status": "revoked" }
+```
+
+Errors: `400` invalid therapist UUID · `404` no request or link from this therapist.
 
 ### GET /therapists/clients
 ```json

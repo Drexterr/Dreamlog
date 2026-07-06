@@ -54,10 +54,17 @@ func (s *UserService) UpdateProfile(ctx context.Context, userID uuid.UUID, input
 		Timezone:      input.Timezone,
 		FCMNudgeHour:  input.FCMNudgeHour,
 		NudgeEnabled:  input.NudgeEnabled,
+		NudgeAutoTime: input.NudgeAutoTime,
 		Goal:          input.Goal,
 		AgeRange:      input.AgeRange,
 		Country:       input.Country,
 		VoiceLanguage: input.VoiceLanguage,
+	}
+	// Explicitly picking a nudge hour is a manual choice - it wins over the
+	// learned typical-hour scheduling unless auto is re-enabled in the same call.
+	if input.FCMNudgeHour != nil && input.NudgeAutoTime == nil {
+		manual := false
+		p.NudgeAutoTime = &manual
 	}
 	user, err := s.repo.UpdateProfile(ctx, userID, p)
 	if err != nil {

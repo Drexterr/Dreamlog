@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/dreamlog/backend/internal/models"
 	"go.uber.org/zap"
 )
 
@@ -69,10 +70,12 @@ func (s *NudgeScheduler) tick(ctx context.Context) {
 			continue
 		}
 
+		title, dataType := nudgePresentation(n.NudgeType)
+
 		var lastErr error
 		for _, token := range tokens {
-			if err := s.fcm.SendToToken(ctx, token, "Your morning reflection", n.Message, map[string]string{
-				"type":    "morning_nudge",
+			if err := s.fcm.SendToToken(ctx, token, title, n.Message, map[string]string{
+				"type":     dataType,
 				"nudge_id": n.ID.String(),
 			}); err != nil {
 				lastErr = err
@@ -89,6 +92,21 @@ func (s *NudgeScheduler) tick(ctx context.Context) {
 		} else {
 			_ = s.nudgeRepo.MarkSent(ctx, n.ID)
 		}
+	}
+}
+
+// nudgePresentation maps a nudge_type to a push title and FCM data "type".
+// Unknown/empty types fall back to the morning nudge presentation.
+func nudgePresentation(nudgeType string) (title, dataType string) {
+	switch nudgeType {
+	case models.NudgeTypeCheckin:
+		return "You asked me to check in", "checkin"
+	case models.NudgeTypeStreakRisk:
+		return "Your streak is waiting", "streak_risk"
+	case models.NudgeTypeReengagement:
+		return "DreamLog", "reengagement"
+	default:
+		return "Your morning reflection", "morning_nudge"
 	}
 }
 

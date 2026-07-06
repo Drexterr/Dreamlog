@@ -101,6 +101,7 @@ func main() {
 		Storage:         storageClient,
 		PersonExtractor: claudeSvc,
 		PersonRepo:      relationshipRepo,
+		InsightBuilder:  services.NewConnectionInsightService(analysisRepo),
 		Log:             log,
 		MaxRetries:      cfg.Worker.MaxRetries,
 		Concurrency:     cfg.Worker.Concurrency,
@@ -108,6 +109,7 @@ func main() {
 
 	nudgeScheduler := workers.NewNudgeScheduler(nudgeRepo, fcmSvc, log)
 	reengagementScheduler := workers.NewReengagementScheduler(nudgeRepo, fcmSvc, log)
+	streakRiskScheduler := workers.NewStreakRiskScheduler(nudgeRepo, analysisRepo, fcmSvc, log)
 
 	weeklyReviewScheduler := workers.NewWeeklyReviewScheduler(workers.WeeklyReviewSchedulerDeps{
 		ReviewRepo:    weeklyReviewRepo,
@@ -144,6 +146,7 @@ func main() {
 	// Run schedulers in background goroutines.
 	go nudgeScheduler.Run(ctx)
 	go reengagementScheduler.Run(ctx)
+	go streakRiskScheduler.Run(ctx)
 	go weeklyReviewScheduler.Run(ctx)
 	go yearInReviewScheduler.Run(ctx)
 

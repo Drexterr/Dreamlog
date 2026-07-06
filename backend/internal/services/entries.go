@@ -3,6 +3,7 @@ package services
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/dreamlog/backend/internal/models"
 	"github.com/dreamlog/backend/internal/repositories"
@@ -43,6 +44,14 @@ func (s *EntryService) Create(ctx context.Context, userID uuid.UUID, input *mode
 	// Validate max duration.
 	if input.DurationSec > models.MaxRecordingSeconds {
 		return nil, fmt.Errorf("entryService.Create: recording exceeds 30-minute limit")
+	}
+
+	// Enforce audio_key ownership: the key must live under this user's prefix
+	// (audio/{userID}/...), the same path our own presign generates. Without
+	// this check a client could point an entry at another user's audio key and
+	// have its transcript stored under their account.
+	if !strings.HasPrefix(input.AudioKey, fmt.Sprintf("audio/%s/", userID)) {
+		return nil, fmt.Errorf("entryService.Create: audio_key does not belong to user")
 	}
 
 	// Verify the client actually uploaded before we create a DB row.

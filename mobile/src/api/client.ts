@@ -6,12 +6,14 @@ import {
   AnnualReviewListResponse,
   BillingPeriod,
   BillingPlanResponse,
+  CheckinResponse,
   Conversation,
   CreatePaymentIntentResponse,
   CreateShareLinkResult,
   Entry,
   EntryAnalysis,
   EntryMode,
+  Flashback,
   InsightCardData,
   InsightShareResult,
   JourneyListResponse,
@@ -28,6 +30,8 @@ import {
   UpdatePersonInput,
   ShareLinksResponse,
   StreakInfo,
+  TherapistLinkActionResponse,
+  TherapistLinkRequestsResponse,
   TimelineResponse,
   User,
   UserGoal,
@@ -91,6 +95,7 @@ export const api = {
     timezone?: string;
     fcm_nudge_hour?: number;
     nudge_enabled?: boolean;
+    nudge_auto_time?: boolean;
     goal?: UserGoal;
     age_range?: AgeRange;
     country?: string;
@@ -124,6 +129,15 @@ export const api = {
   // ── Analysis ──────────────────────────────────────────────────────────────
   getAnalysis: (entryId: string): Promise<EntryAnalysis> =>
     http.get<EntryAnalysis>(`/entries/${entryId}/analysis`).then((r) => r.data),
+
+  // ── Flashback (time capsule) ──────────────────────────────────────────────
+  // 404 means "nothing to resurface" - callers should treat that as null.
+  getFlashback: (): Promise<Flashback> =>
+    http.get<Flashback>('/entries/flashback').then((r) => r.data),
+
+  // ── Self-set check-in nudge ───────────────────────────────────────────────
+  scheduleCheckin: (entryId: string): Promise<CheckinResponse> =>
+    http.post<CheckinResponse>(`/entries/${entryId}/checkin`).then((r) => r.data),
 
   // ── Timeline ──────────────────────────────────────────────────────────────
   getTimeline: (page = 1, pageSize = 20): Promise<TimelineResponse> =>
@@ -234,6 +248,20 @@ export const api = {
 
   mergePerson: (targetID: string, sourceID: string): Promise<Person> =>
     http.post<Person>(`/relationships/${targetID}/merge`, { source_id: sourceID }).then((r) => r.data),
+
+  // ── Therapist Link Requests (client-facing consent) ──────────────────────
+  listLinkRequests: (): Promise<TherapistLinkRequestsResponse> =>
+    http.get<TherapistLinkRequestsResponse>('/therapists/requests').then((r) => r.data),
+
+  approveLink: (therapistID: string): Promise<TherapistLinkActionResponse> =>
+    http
+      .post<TherapistLinkActionResponse>(`/therapists/requests/${therapistID}/approve`)
+      .then((r) => r.data),
+
+  declineLink: (therapistID: string): Promise<TherapistLinkActionResponse> =>
+    http
+      .post<TherapistLinkActionResponse>(`/therapists/requests/${therapistID}/decline`)
+      .then((r) => r.data),
 
   // ── PDF Export (5d) ───────────────────────────────────────────────────────
   // Returns the full URL + auth header needed by expo-file-system.downloadAsync.

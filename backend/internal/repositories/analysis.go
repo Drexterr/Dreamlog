@@ -31,8 +31,8 @@ func (r *AnalysisRepository) Upsert(ctx context.Context, entryID uuid.UUID, a *m
 
 	const q = `
 		INSERT INTO entry_analysis
-		    (entry_id, mood_score, emotional_tone, topics, key_quotes, summary, reflection, morning_nudge, is_crisis, dream_symbols, dream_type, psychological_lens, vedic_lens)
-		VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)
+		    (entry_id, mood_score, emotional_tone, topics, key_quotes, summary, reflection, morning_nudge, is_crisis, dream_symbols, dream_type, psychological_lens, vedic_lens, connection_insight)
+		VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)
 		ON CONFLICT (entry_id) DO UPDATE
 		    SET mood_score         = EXCLUDED.mood_score,
 		        emotional_tone     = EXCLUDED.emotional_tone,
@@ -46,10 +46,11 @@ func (r *AnalysisRepository) Upsert(ctx context.Context, entryID uuid.UUID, a *m
 		        dream_type         = EXCLUDED.dream_type,
 		        psychological_lens = EXCLUDED.psychological_lens,
 		        vedic_lens         = EXCLUDED.vedic_lens,
+		        connection_insight = EXCLUDED.connection_insight,
 		        updated_at         = NOW()
 		RETURNING id, entry_id, mood_score, emotional_tone, topics, key_quotes,
 		          summary, reflection, morning_nudge, is_crisis, dream_symbols, dream_type,
-		          psychological_lens, vedic_lens, created_at, updated_at`
+		          psychological_lens, vedic_lens, connection_insight, created_at, updated_at`
 
 	dreamSymbols := a.DreamSymbols
 	var dreamType *string
@@ -63,6 +64,10 @@ func (r *AnalysisRepository) Upsert(ctx context.Context, entryID uuid.UUID, a *m
 	var vedicLens *string
 	if a.VedicLens != "" {
 		vedicLens = &a.VedicLens
+	}
+	var connInsight *string
+	if a.ConnectionInsight != "" {
+		connInsight = &a.ConnectionInsight
 	}
 
 	row := r.db.QueryRow(ctx, q,
@@ -79,6 +84,7 @@ func (r *AnalysisRepository) Upsert(ctx context.Context, entryID uuid.UUID, a *m
 		dreamType,
 		psychLens,
 		vedicLens,
+		connInsight,
 	)
 	return scanAnalysis(row)
 }
@@ -88,7 +94,7 @@ func (r *AnalysisRepository) GetByEntryID(ctx context.Context, entryID uuid.UUID
 	const q = `
 		SELECT id, entry_id, mood_score, emotional_tone, topics, key_quotes,
 		       summary, reflection, morning_nudge, is_crisis, dream_symbols, dream_type,
-		       psychological_lens, vedic_lens, created_at, updated_at
+		       psychological_lens, vedic_lens, connection_insight, created_at, updated_at
 		FROM entry_analysis
 		WHERE entry_id = $1`
 
@@ -928,13 +934,13 @@ func (r *AnalysisRepository) TopTopics(ctx context.Context, userID uuid.UUID, li
 func scanAnalysis(row pgx.Row) (*models.EntryAnalysis, error) {
 	a := &models.EntryAnalysis{}
 	var toneRaw []byte
-	var dreamType, psychLens, vedicLens *string
+	var dreamType, psychLens, vedicLens, connInsight *string
 
 	err := row.Scan(
 		&a.ID, &a.EntryID, &a.MoodScore, &toneRaw,
 		&a.Topics, &a.KeyQuotes, &a.Summary, &a.Reflection,
 		&a.MorningNudge, &a.IsCrisis, &a.DreamSymbols, &dreamType,
-		&psychLens, &vedicLens, &a.CreatedAt, &a.UpdatedAt,
+		&psychLens, &vedicLens, &connInsight, &a.CreatedAt, &a.UpdatedAt,
 	)
 	if err != nil {
 		return nil, fmt.Errorf("scanAnalysis: %w", err)
@@ -952,5 +958,86 @@ func scanAnalysis(row pgx.Row) (*models.EntryAnalysis, error) {
 	if vedicLens != nil {
 		a.VedicLens = *vedicLens
 	}
+	if connInsight != nil {
+		a.ConnectionInsight = *connInsight
+	}
 	return a, nil
+}
+
+// CountTopicOccurrences returns, for each of the given lowercase topics, the
+// number of distinct prior entries (excluding excludeEntryID, excluding crisis
+// entries) since the given time whose analysis contains that topic.
+// Matching is case-insensitive.
+func (r *AnalysisRepository) CountTopicOccurrences(ctx context.Context, userID, excludeEntryID uuid.UUID, topics []string, since time.Time) (map[string]int, error) {
+	const q = `
+		SELECT LOWER(t.topic), COUNT(DISTINCT ea.entry_id)
+		FROM entry_analysis ea
+		JOIN entries e ON e.id = ea.entry_id
+		CROSS JOIN LATERAL unnest(ea.topics) AS t(topic)
+		WHERE e.user_id = $1
+		  AND ea.entry_id <> $2
+		  AND e.status = 'completed'
+		  AND e.created_at >= $3
+		  AND ea.is_crisis = false
+		  AND LOWER(t.topic) = ANY($4)
+		GROUP BY LOWER(t.topic)`
+
+	rows, err := r.db.Query(ctx, q, userID, excludeEntryID, since, topics)
+	if err != nil {
+		return nil, fmt.Errorf("analysis.CountTopicOccurrences: %w", err)
+	}
+	defer rows.Close()
+
+	counts := make(map[string]int, len(topics))
+	for rows.Next() {
+		var topic string
+		var count int
+		if err := rows.Scan(&topic, &count); err != nil {
+			return nil, fmt.Errorf("analysis.CountTopicOccurrences scan: %w", err)
+		}
+		counts[topic] = count
+	}
+	return counts, rows.Err()
+}
+
+// Flashback returns a past entry to resurface as a time capsule: one recorded
+// roughly a year ago (±7 days), or failing that roughly a month ago (±3 days).
+// Returns nil when neither window has a completed, non-crisis entry.
+func (r *AnalysisRepository) Flashback(ctx context.Context, userID uuid.UUID) (*models.Flashback, error) {
+	now := time.Now().UTC()
+
+	windows := []struct {
+		label  string
+		target time.Time
+		radius time.Duration
+	}{
+		{"one_year_ago", now.AddDate(-1, 0, 0), 7 * 24 * time.Hour},
+		{"one_month_ago", now.AddDate(0, -1, 0), 3 * 24 * time.Hour},
+	}
+
+	const q = `
+		SELECT e.id, e.created_at, ea.summary, ea.mood_score, ea.topics
+		FROM entries e
+		JOIN entry_analysis ea ON ea.entry_id = e.id
+		WHERE e.user_id = $1
+		  AND e.status = 'completed'
+		  AND ea.is_crisis = false
+		  AND e.created_at BETWEEN $2 AND $3
+		ORDER BY ABS(EXTRACT(EPOCH FROM (e.created_at - $4::timestamptz)))
+		LIMIT 1`
+
+	for _, w := range windows {
+		f := &models.Flashback{Label: w.label}
+		err := r.db.QueryRow(ctx, q, userID, w.target.Add(-w.radius), w.target.Add(w.radius), w.target).Scan(
+			&f.EntryID, &f.Date, &f.Summary, &f.MoodScore, &f.Topics,
+		)
+		if errors.Is(err, pgx.ErrNoRows) {
+			continue
+		}
+		if err != nil {
+			return nil, fmt.Errorf("analysis.Flashback: %w", err)
+		}
+		return f, nil
+	}
+	return nil, nil
 }

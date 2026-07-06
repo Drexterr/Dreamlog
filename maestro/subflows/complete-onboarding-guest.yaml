@@ -70,8 +70,11 @@ env:
 - tapOn:
     id: "onboarding-age-continue"
 
-# Step 5 — Country: search + select. hideKeyboard before Continue (the soft
-# keyboard overlays the button, so a tap would otherwise hit the keyboard).
+# Step 5 — Country: search + select.
+# The country search field stays focused after picking from the dropdown, and a
+# focused TextInput swallows the FIRST tap outside it (to blur) instead of firing
+# the button. So: hideKeyboard, then tap the neutral wordmark to blur, THEN tap
+# Continue. (The name step has no such wrapper so it doesn't need this.)
 - extendedWaitUntil:
     visible:
       id: "onboarding-country-input"
@@ -81,8 +84,17 @@ env:
 - inputText: ${ONBOARDING_COUNTRY}
 - tapOn: ${ONBOARDING_COUNTRY}
 - hideKeyboard
+# The focused country field swallows the first tap outside it (to blur). So tap
+# Continue once (may only blur), then tap again if we're still on the step.
 - tapOn:
     id: "onboarding-country-continue"
+- runFlow:
+    when:
+      visible:
+        id: "onboarding-country-continue"
+    commands:
+      - tapOn:
+          id: "onboarding-country-continue"
 
 # Step 6 — Journal vs Reflection Session gate → Journal → tabs.
 # country "Continue" runs an async handleFinish() before setStep(6) renders.
@@ -98,3 +110,10 @@ env:
     visible:
       id: "home-screen"
     timeout: 30000
+
+# Dismiss the first-run guided tour overlay if it appears — it covers the home
+# screen and tab bar, blocking every subsequent interaction. Optional: it only
+# shows once per fresh onboarding.
+- tapOn:
+    text: "Skip tour"
+    optional: true

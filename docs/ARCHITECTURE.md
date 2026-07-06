@@ -117,6 +117,7 @@ users
   timezone TEXT DEFAULT 'UTC'
   fcm_nudge_hour INT DEFAULT 8  -- local hour to send morning nudge (0-23)
   nudge_enabled BOOLEAN DEFAULT true
+  nudge_auto_time BOOLEAN DEFAULT true -- true = nudge at the learned typical recording hour (migration 000033)
   goal TEXT                     -- stress|anxiety|grief|depression|relationships|career|trauma|curious
   age_range TEXT                -- under_18|18_24|25_34|35_44|45_plus; nullable (migration 000021)
   voice_language TEXT DEFAULT 'auto' -- therapy TTS voice: auto|english|hindi (migration 000027)
@@ -152,6 +153,8 @@ entry_analysis                  -- 1:1 with entries
   reflection TEXT               -- warm 3-5 sentences + one open question
   morning_nudge TEXT            -- 1 sentence, specific to this entry
   is_crisis BOOLEAN DEFAULT false
+  connection_insight TEXT       -- occasional cross-entry pattern ("3rd time X came up this month");
+                                -- computed deterministically in the worker, NULL when no pattern (migration 000033)
   dream_symbols TEXT[]          -- NULL for non-dream entries; 3-6 symbols extracted from the dream (migration 000016)
   dream_type TEXT               -- NULL for non-dream entries; nightmare|lucid|recurring|vivid|surreal|mundane (migration 000016)
   psychological_lens TEXT       -- NULL for non-dream entries; Jungian/depth-psychology reading (migration 000023)
@@ -180,14 +183,15 @@ user_devices                    -- FCM tokens per device
   platform TEXT                 -- 'ios' | 'android' | 'unknown'
   created_at, updated_at TIMESTAMPTZ
 
-nudges                          -- morning push notifications
+nudges                          -- push notifications (morning, re-engagement, streak risk, check-in)
   id UUID PK
   user_id UUID FK → users
-  entry_id UUID FK → entries    -- the entry that generated this nudge
+  entry_id UUID FK → entries    -- the entry that generated this nudge (NULL for reengagement/streak_risk)
   message TEXT
-  scheduled_at TIMESTAMPTZ      -- user's local 8 AM
+  scheduled_at TIMESTAMPTZ      -- user's nudge hour (learned or configured)
   timezone TEXT
   status nudge_status           -- ENUM: pending | sent | failed
+  nudge_type TEXT DEFAULT 'morning' -- morning | reengagement | streak_risk | checkin (migrations 000030, 000033)
   sent_at TIMESTAMPTZ
   error_msg TEXT
   created_at TIMESTAMPTZ
@@ -426,8 +430,28 @@ Runs as a goroutine inside the worker process (`workers/nudge_scheduler.go`):
 - Updates row to `status='sent'` or `status='failed'`
 
 Morning nudge creation: triggered at end of successful entry processing
-- `scheduled_at` = next occurrence of `users.fcm_nudge_hour` in `users.timezone`
+- `scheduled_at` = next occurrence of the user's nudge hour in `users.timezone`
+- **Adaptive timing** (migration 000033): when `users.nudge_auto_time = true`
+  (default), the nudge hour is the user's *learned typical recording hour* -
+  the modal local hour of the last 20 completed entries, trusted only when
+  ≥3 of them fall in that hour (`NudgeRepository.TypicalEntryHour`). Otherwise
+  falls back to `fcm_nudge_hour`. Explicitly setting `fcm_nudge_hour` via
+  PUT /me flips auto off - a manual choice wins.
 - One nudge per entry - no duplicates
+
+Other nudge types (each with its own dedup window):
+- **Re-engagement** (`workers/reengagement_scheduler.go`): warm, non-guilt push
+  for users with no completed entry in 26h+, sent at their nudge hour.
+- **Streak-at-risk** (`workers/streak_risk_scheduler.go`): 21:00-local push when
+  an active streak (≥3 days: entry yesterday, none today) is about to break.
+  Message states the streak length; copy is caring, never guilt-driven.
+- **Check-in** (`POST /entries/:id/checkin` → `NudgeService.ScheduleCheckinNudge`):
+  user-requested "check in on this tomorrow" self-set trigger, delivered
+  tomorrow at the nudge hour; message reuses the entry's `morning_nudge`.
+  One pending check-in per entry.
+
+Mobile deep link: tapping any nudge notification lands directly on the record
+screen (`src/services/push.ts` maps FCM data `type` → `/record`).
 
 Device token registration (mobile side of the push pipeline, added 2026-06-11):
 - `mobile/src/services/push.ts` runs on auth (wired in `app/_layout.tsx`): requests notification

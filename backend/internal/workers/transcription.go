@@ -29,6 +29,7 @@ type TranscriptionWorker struct {
 	storage         audioStorage
 	personExtractor personExtractor
 	personRepo      personMentionStore
+	insightBuilder  connectionInsightBuilder
 	log             *zap.Logger
 	maxRetries      int
 	concurrency     int
@@ -47,6 +48,7 @@ type TranscriptionWorkerDeps struct {
 	Storage         audioStorage
 	PersonExtractor personExtractor
 	PersonRepo      personMentionStore
+	InsightBuilder  connectionInsightBuilder // optional; nil = no connection insights
 	Log             *zap.Logger
 	MaxRetries      int
 	Concurrency     int
@@ -65,6 +67,7 @@ func NewTranscriptionWorker(deps TranscriptionWorkerDeps) *TranscriptionWorker {
 		storage:         deps.Storage,
 		personExtractor: deps.PersonExtractor,
 		personRepo:      deps.PersonRepo,
+		insightBuilder:  deps.InsightBuilder,
 		log:             deps.Log,
 		maxRetries:      deps.MaxRetries,
 		concurrency:     deps.Concurrency,
@@ -229,6 +232,18 @@ func (w *TranscriptionWorker) handle(ctx context.Context, job *models.Transcript
 		return fmt.Errorf("claude analysis: %w", err)
 	}
 
+	// ── 5b. Connection insight (cross-entry pattern) - non-fatal ────────────
+	// Deterministic; only fires when a topic recurs, so the reward stays variable.
+	connectionInsight := ""
+	if w.insightBuilder != nil && len(claudeOut.Topics) > 0 {
+		insight, err := w.insightBuilder.BuildConnectionInsight(ctx, job.UserID, job.EntryID, claudeOut.Topics)
+		if err != nil {
+			log.Warn("worker: connection insight failed (non-fatal)", zap.Error(err))
+		} else {
+			connectionInsight = insight
+		}
+	}
+
 	// ── 6. Persist analysis ─────────────────────────────────────────────────
 	analysis := &models.EntryAnalysis{
 		EntryID:       job.EntryID,
@@ -240,6 +255,7 @@ func (w *TranscriptionWorker) handle(ctx context.Context, job *models.Transcript
 		Reflection:    claudeOut.Reflection,
 		MorningNudge:  claudeOut.MorningNudge,
 		IsCrisis:          false,
+		ConnectionInsight: connectionInsight,
 		DreamSymbols:      claudeOut.DreamSymbols,
 		DreamType:         claudeOut.DreamType,
 		PsychologicalLens: claudeOut.PsychologicalLens,

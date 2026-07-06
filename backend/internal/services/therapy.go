@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"math"
+	"strings"
 	"time"
 
 	"github.com/dreamlog/backend/internal/models"
@@ -136,6 +137,13 @@ func (s *TherapyService) SendMessage(ctx context.Context, sessionID, userID uuid
 	if req.InputMode == "voice" {
 		if req.AudioKey == "" {
 			return nil, errTherapyMissingAudio
+		}
+		// Only accept keys under the therapy/ prefix that our own presign
+		// generates. Prevents a client from pointing a turn at another user's
+		// audio object (e.g. an audio/{victim}/... journal key) to have it
+		// transcribed and echoed back inside their own session.
+		if !strings.HasPrefix(req.AudioKey, "therapy/") {
+			return nil, errTherapyInvalidAudioKey
 		}
 		transcribed, language, transcribeErr := s.transcribeAudio(ctx, req.AudioKey)
 		// Delete audio from storage regardless of transcription outcome (ADR-005).
@@ -518,6 +526,7 @@ var (
 	ErrTherapyExpired        = fmt.Errorf("therapy session has expired")
 	ErrTherapyAlreadyEnded   = fmt.Errorf("therapy session already ended")
 	errTherapyMissingAudio   = fmt.Errorf("audio_key is required for voice input")
+	errTherapyInvalidAudioKey = fmt.Errorf("audio_key is not a valid therapy upload key")
 	errTherapyEmptyContent   = fmt.Errorf("message content is empty")
 	errTherapyPaymentRequired = fmt.Errorf("therapy session requires payment")
 )

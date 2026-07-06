@@ -21,7 +21,7 @@ func NewUserRepository(db *pgxpool.Pool) *UserRepository {
 	return &UserRepository{db: db}
 }
 
-const userColumns = `id, supabase_id, email, name, timezone, fcm_nudge_hour, nudge_enabled, goal, preferred_name, streak_freeze_count, plan, plan_expires_at, age_range, country, voice_language, is_deleted, deleted_at, first_joined_at, reregistered_at, reregistration_count, created_at, updated_at`
+const userColumns = `id, supabase_id, email, name, timezone, fcm_nudge_hour, nudge_enabled, nudge_auto_time, goal, preferred_name, streak_freeze_count, plan, plan_expires_at, age_range, country, voice_language, is_deleted, deleted_at, first_joined_at, reregistered_at, reregistration_count, created_at, updated_at`
 
 // rowScanner is satisfied by both pgx.Row and pgx.Rows - avoids a direct pgx type in the signature.
 type rowScanner interface {
@@ -32,7 +32,7 @@ func scanUser(row rowScanner) (*models.User, error) {
 	u := &models.User{}
 	err := row.Scan(
 		&u.ID, &u.SupabaseID, &u.Email, &u.Name,
-		&u.Timezone, &u.FCMNudgeHour, &u.NudgeEnabled,
+		&u.Timezone, &u.FCMNudgeHour, &u.NudgeEnabled, &u.NudgeAutoTime,
 		&u.Goal, &u.PreferredName,
 		&u.StreakFreezeCount,
 		&u.Plan, &u.PlanExpiresAt,
@@ -53,6 +53,7 @@ type ProfileUpdate struct {
 	Timezone      *string
 	FCMNudgeHour  *int
 	NudgeEnabled  *bool
+	NudgeAutoTime *bool
 	Goal          *string
 	AgeRange      *string
 	Country       *string
@@ -88,6 +89,11 @@ func (r *UserRepository) UpdateProfile(ctx context.Context, id uuid.UUID, p Prof
 	if p.NudgeEnabled != nil {
 		setClauses = append(setClauses, fmt.Sprintf("nudge_enabled = $%d", idx))
 		args = append(args, *p.NudgeEnabled)
+		idx++
+	}
+	if p.NudgeAutoTime != nil {
+		setClauses = append(setClauses, fmt.Sprintf("nudge_auto_time = $%d", idx))
+		args = append(args, *p.NudgeAutoTime)
 		idx++
 	}
 	if p.Goal != nil {

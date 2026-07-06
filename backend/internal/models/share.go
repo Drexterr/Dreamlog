@@ -8,13 +8,15 @@ import (
 
 // ShareLink is a 72-hour passcode-protected read-only link for a therapist.
 type ShareLink struct {
-	ID           uuid.UUID
-	UserID       uuid.UUID
-	Token        string
-	PasscodeHash string
-	ExpiresAt    time.Time
-	Revoked      bool
-	CreatedAt    time.Time
+	ID             uuid.UUID
+	UserID         uuid.UUID
+	Token          string
+	PasscodeHash   string
+	ExpiresAt      time.Time
+	Revoked        bool
+	FailedAttempts int
+	LockedUntil    *time.Time
+	CreatedAt      time.Time
 }
 
 // ShareLinkView is the public payload returned when a therapist opens a valid link.

@@ -5,12 +5,38 @@ import (
 	"fmt"
 	"io"
 	"net/url"
+	"path"
+	"regexp"
 	"time"
 
 	appconfig "github.com/dreamlog/backend/internal/config"
 	pkgstorage "github.com/dreamlog/backend/pkg/storage"
 	"github.com/google/uuid"
 )
+
+// safeFilenameChars keeps object keys predictable: only these characters
+// survive sanitisation. Everything else (path separators, "..", control
+// chars) is stripped so client-supplied filenames can't shape the storage key.
+var safeFilenameChars = regexp.MustCompile(`[^A-Za-z0-9._-]`)
+
+// sanitizeFilename reduces an arbitrary client filename to a safe basename.
+// Returns a random fallback when nothing usable remains.
+func sanitizeFilename(name string) string {
+	// Drop any directory component the client tried to sneak in.
+	base := path.Base(name)
+	base = safeFilenameChars.ReplaceAllString(base, "_")
+	// Collapse leading dots so "..", ".", "...aac" can't produce odd keys.
+	for len(base) > 0 && base[0] == '.' {
+		base = base[1:]
+	}
+	if base == "" {
+		return uuid.New().String() + ".aac"
+	}
+	if len(base) > 128 {
+		base = base[len(base)-128:]
+	}
+	return base
+}
 
 type StorageService struct {
 	client  *pkgstorage.Client
@@ -82,7 +108,7 @@ func (s *StorageService) PresignExpirySec() int {
 // PresignPut generates a PUT URL for an arbitrary key (used for therapy voice uploads).
 // Returns (uploadURL, audioKey, error). The key is the filename passed in, prefixed with "therapy/".
 func (s *StorageService) PresignPut(ctx context.Context, filename, contentType string, expiry time.Duration) (uploadURL, audioKey string, err error) {
-	audioKey = fmt.Sprintf("therapy/%s/%s", uuid.New(), filename)
+	audioKey = fmt.Sprintf("therapy/%s/%s", uuid.New(), sanitizeFilename(filename))
 
 	if s.cfg.ProxyBaseURL != "" {
 		return s.cfg.ProxyBaseURL + "/upload?key=" + url.QueryEscape(audioKey), audioKey, nil

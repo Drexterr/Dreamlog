@@ -16,7 +16,13 @@ http.interceptors.request.use((config) => {
 });
 
 export function saveToken(token: string) {
-  Cookies.set(TOKEN_KEY, token, { expires: 7, sameSite: 'strict' });
+  Cookies.set(TOKEN_KEY, token, {
+    expires: 7,
+    sameSite: 'strict',
+    // Only transmit the token over HTTPS in production. Kept off on localhost
+    // (http) so dev login still works.
+    secure: typeof window !== 'undefined' && window.location.protocol === 'https:',
+  });
 }
 export function clearToken() {
   Cookies.remove(TOKEN_KEY);
