@@ -326,6 +326,37 @@ analytics_events                -- append-only product event stream (migration 0
   properties JSONB DEFAULT '{}'
   created_at TIMESTAMPTZ
 
+
+therapist_keys                  -- envelope encryption: per-therapist wrapped data keys (migration 000034)
+  therapist_id UUID PK FK → therapists
+  wrapped_dek BYTEA             -- 32-byte DEK encrypted by MASTER_ENCRYPTION_KEY; DB never holds a usable key
+  created_at TIMESTAMPTZ
+
+external_clients                -- therapist's own offline clients, NOT app users (migration 000034)
+  id UUID PK
+  therapist_id UUID FK → therapists
+  name_enc BYTEA                -- AES-256-GCM ciphertext (per-therapist DEK)
+  role TEXT DEFAULT 'client'
+  archived BOOLEAN DEFAULT false
+  created_at, updated_at TIMESTAMPTZ
+
+client_sessions                 -- one row per consultation; therapist session notes (migration 000034)
+  id UUID PK
+  therapist_id UUID FK → therapists
+  external_client_id UUID FK NULL  -- exactly one of these two set (CHECK)
+  linked_user_id UUID FK NULL      -- consented app-user client
+  session_date DATE
+  status client_session_status  -- ENUM: pending | processing | completed | failed
+  image_key TEXT                -- note photo key; object DELETED after OCR (ADR-019)
+  raw_text_enc BYTEA            -- encrypted OCR output
+  bullets_enc BYTEA             -- encrypted JSON array of editable bullets
+  summary_enc BYTEA             -- encrypted AI summary
+  error_msg TEXT, retry_count INT
+  created_at, updated_at TIMESTAMPTZ
+
+-- users also gained: tos_accepted_at TIMESTAMPTZ, tos_version TEXT (migration 000034)
+-- therapists also gained: client_consent_accepted_at TIMESTAMPTZ, client_consent_version TEXT
+
 -- Views
 v_daily_mood: per-user daily avg mood_score (excludes crisis entries)
 ```
@@ -396,6 +427,26 @@ All prompts live in `internal/services/prompts.go`. Never scatter prompt strings
 - Injects both into `buildUserPrompt` - this is what makes reflections feel personalized
 
 ---
+
+## Therapist Note OCR Pipeline
+
+Runs as a goroutine inside the worker process (`workers/note_ocr.go`), consuming a
+separate Redis queue (`dreamlog:notes:queue`):
+
+```
+POST /therapists/sessions { image_key } → INSERT client_sessions (pending) → LPUSH job
+Worker: download photo → Claude vision OCR (raw_text + bullets)
+      → encrypt with therapist DEK → store ciphertext, status=completed
+      → DELETE photo from storage (ADR-019)
+```
+
+Key properties:
+- **No crisis screening** (ADR-018) - these are clinical records about a client.
+- **Envelope encryption** (ADR-017): plaintext exists only in worker/API memory;
+  `MASTER_ENCRYPTION_KEY` must be set on both API and worker.
+- Same retry/DLQ discipline as the entry pipeline; unreadable photos fail permanently
+  with a therapist-visible error and the photo is still deleted.
+- Full feature doc: docs/THERAPIST_PORTAL.md.
 
 ## Worker Concurrency
 

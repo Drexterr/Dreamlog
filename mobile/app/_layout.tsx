@@ -30,6 +30,7 @@ import { AuthContext } from '../src/context/AuthContext';
 import { GuidedTourProvider } from '../src/context/GuidedTourContext';
 import GuidedTour from '../src/components/GuidedTour';
 import { detectAndCacheRegion, setRegionFromCountry } from '../src/services/region';
+import { resolvePostAuthRoute } from '../src/services/postAuthRoute';
 import { flush as flushOfflineQueue } from '../src/services/offlineQueue';
 import { registerForPushNotifications } from '../src/services/push';
 import { setupQuickActions } from '../src/services/quickActions';
@@ -288,14 +289,10 @@ export default function RootLayout() {
             setShowAuthSheet(false);
             cb();
           } else {
-            // Deep link / normal sign-in: navigate to tabs
-            const user = await api.me().catch(() => null);
-            if (user && !user.goal) {
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              router.replace('/onboarding' as any);
-            } else {
-              router.replace('/(tabs)');
-            }
+            // Deep link / normal sign-in: terms gate → therapist routing → onboarding/tabs
+            const dest = await resolvePostAuthRoute();
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            router.replace(dest as any);
           }
         } catch {
           // ignore

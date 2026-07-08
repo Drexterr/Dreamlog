@@ -14,24 +14,26 @@ import (
 var _ analyticsTracker = (*services.AnalyticsService)(nil)
 
 type Deps struct {
-	UserSvc          *services.UserService
-	AuthSvc          *services.AuthService
-	EntrySvc         *services.EntryService
-	StorageSvc       *services.StorageService
-	ConvSvc          *services.ConversationService
-	SubscriptionSvc  *services.SubscriptionService
-	TherapySvc       *services.TherapyService
-	EntryRepo        *repositories.EntryRepository
-	AnalysisRepo     *repositories.AnalysisRepository
-	NudgeRepo        *repositories.NudgeRepository
-	UserRepo         *repositories.UserRepository
-	WeeklyReviewRepo *repositories.WeeklyReviewRepository
-	ShareRepo        *repositories.ShareRepository
-	CompanyRepo      *repositories.CompanyRepository
-	TherapistRepo    *repositories.TherapistRepository
-	InsightShareRepo *repositories.InsightShareRepository
-	JourneyRepo      *repositories.JourneyRepository
-	AnnualReviewRepo  *repositories.AnnualReviewRepository
+	UserSvc              *services.UserService
+	AuthSvc              *services.AuthService
+	EntrySvc             *services.EntryService
+	StorageSvc           *services.StorageService
+	ConvSvc              *services.ConversationService
+	SubscriptionSvc      *services.SubscriptionService
+	TherapySvc           *services.TherapyService
+	TherapistNotesSvc    *services.TherapistNotesService
+	TherapistNotesRepo   *repositories.TherapistNotesRepository
+	EntryRepo            *repositories.EntryRepository
+	AnalysisRepo         *repositories.AnalysisRepository
+	NudgeRepo            *repositories.NudgeRepository
+	UserRepo             *repositories.UserRepository
+	WeeklyReviewRepo     *repositories.WeeklyReviewRepository
+	ShareRepo            *repositories.ShareRepository
+	CompanyRepo          *repositories.CompanyRepository
+	TherapistRepo        *repositories.TherapistRepository
+	InsightShareRepo     *repositories.InsightShareRepository
+	JourneyRepo          *repositories.JourneyRepository
+	AnnualReviewRepo     *repositories.AnnualReviewRepository
 	LifeChapterRepo      *repositories.LifeChapterRepository
 	RelationshipRepo     *repositories.RelationshipRepository
 	PaymentRepo          *repositories.PaymentRepository
@@ -207,6 +209,28 @@ func NewRouter(deps Deps) http.Handler {
 	auth.GET("/therapists/requests", therapistHandler.ListLinkRequests)
 	auth.POST("/therapists/requests/:therapistID/approve", therapistHandler.ApproveLinkRequest)
 	auth.POST("/therapists/requests/:therapistID/decline", therapistHandler.DeclineLinkRequest)
+
+	// Therapist workspace: in-app dashboard, external clients, session notes
+	// (photo OCR → bullets), AI summaries. Encrypted at rest per-therapist.
+	notesHandler := NewTherapistNotesHandler(deps.TherapistNotesSvc, deps.TherapistRepo, deps.TherapistNotesRepo)
+	auth.GET("/therapists/me", notesHandler.GetMe)
+	auth.POST("/therapists/consent", notesHandler.AcceptClientConsent)
+	auth.GET("/therapists/overview", notesHandler.Overview)
+	auth.POST("/therapists/external-clients", notesHandler.CreateExternalClient)
+	auth.GET("/therapists/external-clients", notesHandler.ListExternalClients)
+	auth.GET("/therapists/external-clients/:id", notesHandler.GetExternalClient)
+	auth.PATCH("/therapists/external-clients/:id", notesHandler.UpdateExternalClient)
+	auth.DELETE("/therapists/external-clients/:id", notesHandler.DeleteExternalClient)
+	auth.POST("/therapists/sessions/presign", notesHandler.PresignNote)
+	auth.POST("/therapists/sessions", notesHandler.CreateSession)
+	auth.GET("/therapists/sessions", notesHandler.ListSessions)
+	auth.GET("/therapists/sessions/:id", notesHandler.GetSession)
+	auth.PATCH("/therapists/sessions/:id", notesHandler.UpdateSessionBullets)
+	auth.POST("/therapists/sessions/:id/summarize", notesHandler.SummarizeSession)
+	auth.DELETE("/therapists/sessions/:id", notesHandler.DeleteSession)
+	// ToS / privacy acceptance (all users)
+	auth.POST("/me/accept-terms", notesHandler.AcceptUserTerms)
+	auth.GET("/me/terms", notesHandler.GetUserTerms)
 
 	// Therapy Mode (Phase 6)
 	therapyHandler := NewTherapyHandler(deps.TherapySvc, deps.StorageSvc, deps.UserRepo)

@@ -31,6 +31,17 @@ const NAV = [
     ),
   },
   {
+    key: 'notes',
+    label: 'Session notes',
+    href: '/dashboard/notes',
+    icon: (
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+        <rect x="2.5" y="1.5" width="11" height="13" rx="1.5" stroke="currentColor" strokeWidth="1.4"/>
+        <path d="M5.5 5h5M5.5 8h5M5.5 11h3" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
+      </svg>
+    ),
+  },
+  {
     key: 'insights',
     label: 'Insights',
     href: null,
@@ -66,6 +77,7 @@ export default function PortalSidebar({ therapistName, therapistCredentials }: P
 
   const isActive = (key: string) => {
     if (key === 'clients' && pathname.startsWith('/dashboard/clients/')) return true;
+    if (key === 'notes' && pathname.startsWith('/dashboard/notes')) return true;
     if (key === 'dashboard' && pathname === '/dashboard') return true;
     return false;
   };

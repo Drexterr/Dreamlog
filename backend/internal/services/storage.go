@@ -121,6 +121,20 @@ func (s *StorageService) PresignPut(ctx context.Context, filename, contentType s
 	return uploadURL, audioKey, nil
 }
 
+// PresignPutKey presigns a PUT for an exact, server-generated object key
+// (no sanitisation - the caller owns the key format). Used for therapist
+// note photos where the key encodes the owning therapist's ID.
+func (s *StorageService) PresignPutKey(ctx context.Context, key string) (string, error) {
+	if s.cfg.ProxyBaseURL != "" {
+		return s.cfg.ProxyBaseURL + "/upload?key=" + url.QueryEscape(key), nil
+	}
+	uploadURL, err := s.client.PresignUpload(ctx, key)
+	if err != nil {
+		return "", fmt.Errorf("storage: presign put key: %w", err)
+	}
+	return uploadURL, nil
+}
+
 // GetObject downloads an object from storage. Caller must close the returned ReadCloser.
 // Used by the therapy service to fetch audio for Whisper transcription.
 func (s *StorageService) GetObject(ctx context.Context, key string) (io.ReadCloser, error) {

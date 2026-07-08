@@ -11,8 +11,9 @@ import (
 	"github.com/dreamlog/backend/internal/repositories"
 	"github.com/dreamlog/backend/internal/services"
 	"github.com/dreamlog/backend/internal/workers"
-	pkgstorage "github.com/dreamlog/backend/pkg/storage"
+	pkgcrypto "github.com/dreamlog/backend/pkg/crypto"
 	"github.com/dreamlog/backend/pkg/queue"
+	pkgstorage "github.com/dreamlog/backend/pkg/storage"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/joho/godotenv"
 	"github.com/redis/go-redis/v9"
@@ -89,14 +90,14 @@ func main() {
 
 	// ── Worker ────────────────────────────────────────────────────────────────
 	worker := workers.NewTranscriptionWorker(workers.TranscriptionWorkerDeps{
-		Queue:          jobQueue,
-		EntryRepo:      entryRepo,
-		AnalysisRepo:   analysisRepo,
-		NudgeRepo:      nudgeRepo,
-		Transcriber:    transcriber,
-		CrisisDetector: crisisDetector,
-		ContextBuilder: contextBuilder,
-		Claude:         claudeSvc,
+		Queue:           jobQueue,
+		EntryRepo:       entryRepo,
+		AnalysisRepo:    analysisRepo,
+		NudgeRepo:       nudgeRepo,
+		Transcriber:     transcriber,
+		CrisisDetector:  crisisDetector,
+		ContextBuilder:  contextBuilder,
+		Claude:          claudeSvc,
 		NudgeSvc:        nudgeSvc,
 		Storage:         storageClient,
 		PersonExtractor: claudeSvc,
@@ -105,6 +106,26 @@ func main() {
 		Log:             log,
 		MaxRetries:      cfg.Worker.MaxRetries,
 		Concurrency:     cfg.Worker.Concurrency,
+	})
+
+	// ── Note OCR worker (therapist session notes) ────────────────────────────
+	masterKey, derivedKey, err := pkgcrypto.ResolveMasterKey(cfg.Security.MasterEncryptionKey, cfg.Supabase.JWTSecret)
+	if err != nil {
+		log.Fatal("master encryption key invalid", zap.Error(err))
+	}
+	if derivedKey {
+		log.Warn("MASTER_ENCRYPTION_KEY not set - deriving notes encryption key from JWT secret; set an explicit key in production")
+	}
+	therapistNotesRepo := repositories.NewTherapistNotesRepository(db)
+	notesQueue := queue.New(rdb, cfg.Worker.NotesQueueKey, cfg.Worker.NotesDLQKey, cfg.Worker.PollTimeout)
+	noteOCRWorker := workers.NewNoteOCRWorker(workers.NoteOCRWorkerDeps{
+		Queue:      notesQueue,
+		Repo:       therapistNotesRepo,
+		Storage:    storageClient,
+		OCR:        claudeSvc,
+		Cipher:     services.NewNotesCipher(masterKey, therapistNotesRepo),
+		Log:        log,
+		MaxRetries: cfg.Worker.MaxRetries,
 	})
 
 	nudgeScheduler := workers.NewNudgeScheduler(nudgeRepo, fcmSvc, log)
@@ -149,6 +170,7 @@ func main() {
 	go streakRiskScheduler.Run(ctx)
 	go weeklyReviewScheduler.Run(ctx)
 	go yearInReviewScheduler.Run(ctx)
+	go noteOCRWorker.Run(ctx)
 
 	log.Info("starting transcription worker")
 	worker.Run(ctx)

@@ -1102,6 +1102,183 @@ Errors: `403` not a registered therapist · `404` client not linked.
 
 ---
 
+## Therapist Workspace (external clients + session notes)
+
+In-app + portal workspace for therapists to manage their own (non-app) clients and
+digitize handwritten session notes. Sensitive fields (names, notes, summaries) are
+encrypted at rest per-therapist (see docs/THERAPIST_PORTAL.md). All routes require a
+therapist profile; creating clients/notes additionally requires the client-data consent.
+
+### GET /therapists/me
+Returns the caller's therapist profile; the mobile login pill uses this to route.
+
+```json
+// Response 200
+{ "therapist": { /* Therapist */ }, "client_consent_accepted": true }
+
+// Errors
+404 - the authenticated user has no therapist profile
+```
+
+### POST /therapists/consent
+Records acceptance of the client-data responsibility terms. Required before creating
+external clients or uploading notes.
+
+```json
+// Request (optional)
+{ "version": "1.0" }
+
+// Response 200
+{ "client_consent_accepted": true, "version": "1.0" }
+```
+
+### GET /therapists/overview
+```json
+// Response 200
+{
+  "external_clients": 12,
+  "linked_clients": 3,
+  "sessions_this_week": 9,
+  "sessions_this_month": 31,
+  "total_sessions": 214,
+  "last_session_at": "RFC3339 | null"
+}
+```
+
+### POST /therapists/external-clients
+```json
+// Request
+{ "name": "Asha K", "role": "client" }   // role optional, defaults to "client"
+
+// Response 201 - ExternalClient
+{
+  "id": "uuid", "therapist_id": "uuid", "name": "Asha K", "role": "client",
+  "archived": false, "session_count": 0, "last_session_at": null,
+  "created_at": "RFC3339", "updated_at": "RFC3339"
+}
+
+// Errors
+400 - missing/empty name · 403 - consent not accepted
+```
+
+### GET /therapists/external-clients?include_archived=true
+Response `200`: `{ "clients": [ /* ExternalClient */ ] }` — newest activity first.
+
+### GET /therapists/external-clients/:id
+Response `200` - ExternalClient. Errors: `400` invalid UUID · `404` not found or another therapist's.
+
+### PATCH /therapists/external-clients/:id
+```json
+// Request (any subset, at least one)
+{ "name": "string", "role": "string", "archived": true }
+
+// Response 200 - updated ExternalClient
+```
+
+### DELETE /therapists/external-clients/:id
+Deletes the client **and all their sessions** (cascade). Response `204`.
+
+### POST /therapists/sessions/presign
+```json
+// Request
+{ "filename": "notes.jpg", "content_type": "image/jpeg" }  // jpeg | png | webp only
+
+// Response 200
+{ "upload_url": "string", "image_key": "notes/{therapistID}/{uuid}.jpg" }
+
+// Errors
+400 - unsupported content_type · 403 - consent not accepted
+```
+
+### POST /therapists/sessions
+Create a session for exactly one client (external or linked) with exactly one notes
+source: `image_key` (photo → async OCR) or `bullets` (typed → stored immediately).
+
+```json
+// Request - photo path
+{ "external_client_id": "uuid", "image_key": "notes/…", "session_date": "2026-07-07" }
+
+// Request - typed path
+{ "linked_client_id": "uuid", "bullets": ["discussed sleep", "set boundary"] }
+
+// Response 201 - ClientSession
+{
+  "id": "uuid", "therapist_id": "uuid",
+  "external_client_id": "uuid | absent", "linked_user_id": "uuid | absent",
+  "session_date": "2026-07-07",
+  "status": "pending | processing | completed | failed",
+  "raw_text": "string (OCR reference, once completed)",
+  "bullets": ["string"],
+  "summary": "string (only after summarize)",
+  "error_msg": "string (only when failed)",
+  "created_at": "RFC3339", "updated_at": "RFC3339"
+}
+
+// Errors
+400 - zero/both client refs; zero/both note sources; bad date; image_key not owned by caller
+403 - consent not accepted
+404 - external client not found, or linked client has no active (approved) link
+```
+
+Photo sessions start `pending`; the client polls `GET /therapists/sessions/:id` until
+`completed` (bullets populated, photo deleted) or `failed` (`error_msg` set).
+
+### GET /therapists/sessions?external_client_id=&linked_client_id=
+Response `200`: `{ "sessions": [ /* ClientSession */ ] }` — newest first, max 50.
+With neither param: the therapist's most recent sessions across all clients.
+
+### GET /therapists/sessions/:id
+Response `200` - ClientSession. Errors: `400` · `404`.
+
+### PATCH /therapists/sessions/:id
+Replaces the editable bullet list.
+
+```json
+// Request
+{ "bullets": ["edited point", "new point"] }
+
+// Response 200 - updated ClientSession
+// Errors: 400 empty bullets · 404
+```
+
+### POST /therapists/sessions/:id/summarize
+Generates (and stores, encrypted) a 3-5 sentence AI summary of the session bullets.
+The client's identity is never sent to the AI. Idempotent - regenerates on repeat call.
+
+Response `200` - ClientSession with `summary` set.
+Errors: `404` · `409` session not completed / has no notes.
+
+### DELETE /therapists/sessions/:id
+Deletes the session; any not-yet-processed note photo is also removed from storage.
+Response `204`.
+
+---
+
+## Terms of Service Acceptance
+
+### POST /me/accept-terms
+Records the authenticated user's ToS/privacy acceptance (any account type).
+
+```json
+// Request (optional)
+{ "version": "1.0" }
+
+// Response 200
+{ "tos_accepted": true, "version": "1.0" }
+```
+
+### GET /me/terms
+```json
+// Response 200
+{
+  "tos_accepted_at": "RFC3339 | null",
+  "tos_version": "string | null",
+  "current_version": "1.0"    // re-prompt when != tos_version
+}
+```
+
+---
+
 ## Devices (Push Notifications)
 
 ### POST /devices

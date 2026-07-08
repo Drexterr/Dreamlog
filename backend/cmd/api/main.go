@@ -16,8 +16,9 @@ import (
 	"github.com/dreamlog/backend/internal/handlers"
 	"github.com/dreamlog/backend/internal/repositories"
 	"github.com/dreamlog/backend/internal/services"
-	pkgstorage "github.com/dreamlog/backend/pkg/storage"
+	pkgcrypto "github.com/dreamlog/backend/pkg/crypto"
 	"github.com/dreamlog/backend/pkg/queue"
+	pkgstorage "github.com/dreamlog/backend/pkg/storage"
 	"github.com/golang-migrate/migrate/v4"
 	_ "github.com/golang-migrate/migrate/v4/database/postgres"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
@@ -120,6 +121,22 @@ func main() {
 	analyticsSvc := services.NewAnalyticsService(analyticsRepo)
 	ttsSvc := services.NewTTSService(&cfg.OpenAI, &cfg.AzureTTS, storageClient)
 	crisisDetector := services.NewCrisisDetector(claudeSvc)
+
+	// Therapist notes: per-therapist envelope encryption + OCR job queue.
+	masterKey, derivedKey, err := pkgcrypto.ResolveMasterKey(cfg.Security.MasterEncryptionKey, cfg.Supabase.JWTSecret)
+	if err != nil {
+		log.Fatal("master encryption key invalid", zap.Error(err))
+	}
+	if derivedKey {
+		log.Warn("MASTER_ENCRYPTION_KEY not set - deriving notes encryption key from JWT secret; set an explicit key in production")
+	}
+	therapistNotesRepo := repositories.NewTherapistNotesRepository(db)
+	notesQueue := queue.New(rdb, cfg.Worker.NotesQueueKey, cfg.Worker.NotesDLQKey, cfg.Worker.PollTimeout)
+	notesCipher := services.NewNotesCipher(masterKey, therapistNotesRepo)
+	therapistNotesSvc := services.NewTherapistNotesService(
+		therapistNotesRepo, therapistRepo, notesQueue, storageSvc, claudeSvc, notesCipher,
+	)
+
 	therapySvc := services.NewTherapyService(
 		therapyRepo, analysisRepo, relationshipRepo, claudeSvc, transcriptionSvc, storageSvc,
 		crisisDetector, ttsSvc, cfg.Anthropic.StubAnalysis,
@@ -127,30 +144,32 @@ func main() {
 
 	// ── HTTP Server ───────────────────────────────────────────────────────────
 	router := handlers.NewRouter(handlers.Deps{
-		UserSvc:          userSvc,
-		AuthSvc:          authSvc,
-		EntrySvc:         entrySvc,
-		StorageSvc:       storageSvc,
-		ConvSvc:          convSvc,
-		SubscriptionSvc:  subscriptionSvc,
-		TherapySvc:       therapySvc,
-		EntryRepo:        entryRepo,
-		AnalysisRepo:     analysisRepo,
-		NudgeRepo:        nudgeRepo,
-		UserRepo:         userRepo,
-		WeeklyReviewRepo: weeklyReviewRepo,
-		ShareRepo:        shareRepo,
-		CompanyRepo:      companyRepo,
-		TherapistRepo:    therapistRepo,
-		InsightShareRepo: insightShareRepo,
-		JourneyRepo:      journeyRepo,
-		AnnualReviewRepo: annualReviewRepo,
-		LifeChapterRepo:  lifeChapterRepo,
-		RelationshipRepo: relationshipRepo,
-		PaymentRepo:      paymentRepo,
-		AnalyticsRepo:    analyticsRepo,
-		AnalyticsSvc:     analyticsSvc,
-		ClaudeSvc:        claudeSvc,
+		UserSvc:              userSvc,
+		AuthSvc:              authSvc,
+		EntrySvc:             entrySvc,
+		StorageSvc:           storageSvc,
+		ConvSvc:              convSvc,
+		SubscriptionSvc:      subscriptionSvc,
+		TherapySvc:           therapySvc,
+		TherapistNotesSvc:    therapistNotesSvc,
+		TherapistNotesRepo:   therapistNotesRepo,
+		EntryRepo:            entryRepo,
+		AnalysisRepo:         analysisRepo,
+		NudgeRepo:            nudgeRepo,
+		UserRepo:             userRepo,
+		WeeklyReviewRepo:     weeklyReviewRepo,
+		ShareRepo:            shareRepo,
+		CompanyRepo:          companyRepo,
+		TherapistRepo:        therapistRepo,
+		InsightShareRepo:     insightShareRepo,
+		JourneyRepo:          journeyRepo,
+		AnnualReviewRepo:     annualReviewRepo,
+		LifeChapterRepo:      lifeChapterRepo,
+		RelationshipRepo:     relationshipRepo,
+		PaymentRepo:          paymentRepo,
+		AnalyticsRepo:        analyticsRepo,
+		AnalyticsSvc:         analyticsSvc,
+		ClaudeSvc:            claudeSvc,
 		JWTSecret:            cfg.Supabase.JWTSecret,
 		SupabaseJWKSURL:      supabaseJWKSURL(cfg.Supabase.URL),
 		AppBaseURL:           cfg.App.BaseURL,

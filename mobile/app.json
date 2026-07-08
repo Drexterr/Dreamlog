@@ -46,6 +46,13 @@
       "@react-native-firebase/messaging",
       "expo-apple-authentication",
       [
+        "expo-image-picker",
+        {
+          "photosPermission": "Allow DreamLog to access your photos so therapists can upload photos of session notes.",
+          "cameraPermission": "Allow DreamLog to use the camera so therapists can photograph session notes."
+        }
+      ],
+      [
         "expo-build-properties",
         {
           "ios": {

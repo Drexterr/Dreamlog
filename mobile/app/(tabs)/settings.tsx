@@ -202,9 +202,14 @@ export default function SettingsScreen() {
   const [showGoalModal, setShowGoalModal] = useState(false);
   const [savingHour, setSavingHour] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [isTherapist, setIsTherapist] = useState(false);
 
   const loadProfile = () => {
     setLoadError(false);
+    // Show the therapist-workspace shortcut only for therapist accounts.
+    api.therapistMe()
+      .then(() => setIsTherapist(true))
+      .catch(() => setIsTherapist(false));
     api.me()
       .then((u) => {
         setUser(u);
@@ -560,6 +565,21 @@ export default function SettingsScreen() {
               }
             />
           </View>
+
+          {/* Therapist workspace (therapist accounts only) */}
+          {isTherapist && (
+            <>
+              <Text style={[styles.sectionLabel, { color: colors.textSecondary }]}>Practice</Text>
+              <View style={[styles.section, { backgroundColor: colors.card, borderColor: colors.borderFaint }]}>
+                <SettingRow
+                  label="Therapist workspace"
+                  sub="Clients, session notes, and AI summaries"
+                  colors={colors}
+                  onPress={() => router.push('/therapist' as never)}
+                />
+              </View>
+            </>
+          )}
 
           {/* Privacy */}
           <Text style={[styles.sectionLabel, { color: colors.textSecondary }]}>Privacy</Text>

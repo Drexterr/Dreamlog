@@ -98,3 +98,97 @@ export const api = {
   getClientBrief: (clientId: string) =>
     http.get<ClientBrief>(`/therapists/clients/${clientId}/brief`).then(r => r.data),
 };
+
+// ── Therapist Workspace: external clients + session notes ────────────────────
+
+export interface ExternalClient {
+  id: string;
+  therapist_id: string;
+  name: string;
+  role: string;
+  archived: boolean;
+  session_count: number;
+  last_session_at?: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export type ClientSessionStatus = 'pending' | 'processing' | 'completed' | 'failed';
+
+export interface ClientSession {
+  id: string;
+  therapist_id: string;
+  external_client_id?: string;
+  linked_user_id?: string;
+  session_date: string;
+  status: ClientSessionStatus;
+  raw_text?: string;
+  bullets: string[];
+  summary?: string;
+  error_msg?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface TherapistOverview {
+  external_clients: number;
+  linked_clients: number;
+  sessions_this_week: number;
+  sessions_this_month: number;
+  total_sessions: number;
+  last_session_at?: string | null;
+}
+
+export const notesApi = {
+  me: () =>
+    http.get<{ therapist: Therapist; client_consent_accepted: boolean }>('/therapists/me').then(r => r.data),
+
+  acceptConsent: () =>
+    http.post<{ client_consent_accepted: boolean }>('/therapists/consent').then(r => r.data),
+
+  overview: () =>
+    http.get<TherapistOverview>('/therapists/overview').then(r => r.data),
+
+  listExternalClients: () =>
+    http.get<{ clients: ExternalClient[] }>('/therapists/external-clients').then(r => r.data.clients),
+
+  createExternalClient: (name: string, role?: string) =>
+    http.post<ExternalClient>('/therapists/external-clients', { name, role }).then(r => r.data),
+
+  updateExternalClient: (id: string, patch: { name?: string; role?: string; archived?: boolean }) =>
+    http.patch<ExternalClient>(`/therapists/external-clients/${id}`, patch).then(r => r.data),
+
+  deleteExternalClient: (id: string) =>
+    http.delete(`/therapists/external-clients/${id}`).then(() => undefined),
+
+  presignNote: (filename: string, contentType: string) =>
+    http
+      .post<{ upload_url: string; image_key: string }>('/therapists/sessions/presign', {
+        filename,
+        content_type: contentType,
+      })
+      .then(r => r.data),
+
+  createSession: (input: {
+    external_client_id?: string;
+    linked_client_id?: string;
+    session_date?: string;
+    image_key?: string;
+    bullets?: string[];
+  }) => http.post<ClientSession>('/therapists/sessions', input).then(r => r.data),
+
+  listSessions: (params?: { external_client_id?: string; linked_client_id?: string }) =>
+    http.get<{ sessions: ClientSession[] }>('/therapists/sessions', { params }).then(r => r.data.sessions),
+
+  getSession: (id: string) =>
+    http.get<ClientSession>(`/therapists/sessions/${id}`).then(r => r.data),
+
+  updateBullets: (id: string, bullets: string[]) =>
+    http.patch<ClientSession>(`/therapists/sessions/${id}`, { bullets }).then(r => r.data),
+
+  summarize: (id: string) =>
+    http.post<ClientSession>(`/therapists/sessions/${id}/summarize`).then(r => r.data),
+
+  deleteSession: (id: string) =>
+    http.delete(`/therapists/sessions/${id}`).then(() => undefined),
+};

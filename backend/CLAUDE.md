@@ -132,4 +132,5 @@ AZURE_TTS_VOICE_OVERRIDE  Optional: force one voice for all personas (e.g. en-IN
 STORAGE_ENDPOINT    MinIO (dev) or R2 endpoint
 FCM_CREDENTIALS_JSON  Firebase service-account JSON content (blank in dev = push skipped silently)
 FCM_PROJECT_ID        Firebase project ID (needed on API and worker - nudges send from the worker)
+MASTER_ENCRYPTION_KEY Envelope-encryption master key for therapist notes (32 bytes hex/base64; blank in dev = derived from JWT secret; set explicitly in prod; needed on API and worker)
 ```

@@ -550,3 +550,104 @@ export interface PersonDetail {
   person: Person;
   mentions: PersonMention[];
 }
+
+// ── Therapist Workspace (in-app dashboard + session notes) ───────────────────
+
+export interface Therapist {
+  id: string;
+  user_id: string;
+  name: string;
+  email: string;
+  credentials?: string;
+  plan: string;
+  created_at: string;
+  updated_at: string;
+}
+
+// GET /therapists/me
+export interface TherapistMeResponse {
+  therapist: Therapist;
+  client_consent_accepted: boolean;
+}
+
+export type ExternalClientRole = 'client' | 'couple' | 'minor' | string;
+
+export interface ExternalClient {
+  id: string;
+  therapist_id: string;
+  name: string;
+  role: ExternalClientRole;
+  archived: boolean;
+  session_count: number;
+  last_session_at?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ExternalClientsResponse {
+  clients: ExternalClient[];
+}
+
+export type ClientSessionStatus = 'pending' | 'processing' | 'completed' | 'failed';
+
+export interface ClientSession {
+  id: string;
+  therapist_id: string;
+  external_client_id?: string;
+  linked_user_id?: string;
+  session_date: string; // YYYY-MM-DD
+  status: ClientSessionStatus;
+  raw_text?: string;
+  bullets: string[];
+  summary?: string;
+  error_msg?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ClientSessionsResponse {
+  sessions: ClientSession[];
+}
+
+export interface NotePresignResponse {
+  upload_url: string;
+  image_key: string;
+}
+
+export interface TherapistOverview {
+  external_clients: number;
+  linked_clients: number;
+  sessions_this_week: number;
+  sessions_this_month: number;
+  total_sessions: number;
+  last_session_at?: string;
+}
+
+export interface CreateClientSessionInput {
+  external_client_id?: string;
+  linked_client_id?: string;
+  session_date?: string; // YYYY-MM-DD
+  image_key?: string;    // photo-of-notes OCR path
+  bullets?: string[];    // typed-notes path
+}
+
+// GET /me/terms
+export interface TermsState {
+  tos_accepted_at?: string | null;
+  tos_version?: string | null;
+  current_version: string;
+}
+
+// GET /therapists/clients - linked DreamLog users (consented app clients)
+export interface ClientSummary {
+  client_id: string;
+  name: string;
+  linked_at: string;
+  last_entry_at?: string | null;
+  avg_mood_30d?: number | null;
+  entry_count: number;
+}
+
+export interface TherapistClientsResponse {
+  clients: ClientSummary[];
+}

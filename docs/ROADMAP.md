@@ -14,6 +14,7 @@
 | 8 | Enhanced Therapy Mode | ✅ Complete |
 | - | UX Polish | ✅ Complete |
 | - | Store Launch Prep | 🚧 In Progress (see docs/LAUNCH_CHECKLIST.md) |
+| 9 | Therapist Workspace | ✅ Complete |
 
 ---
 
@@ -433,3 +434,35 @@ Therapy Session - ₹499 / $7.99 standalone (pay-per-use, any plan)
 B2B Wellness - ₹199/employee/month (min 50 employees)
   All Pro features | HR dashboard | Monthly wellness report
 ```
+
+---
+
+## Phase 9 - Therapist Workspace ✅
+Migration: `000034_therapist_notes.up.sql` · Full doc: `docs/THERAPIST_PORTAL.md`
+
+Makes DreamLog a therapist's daily practice tool - in the app and the web portal - for
+their own offline clients, not just linked app users.
+
+Built:
+- **Login pill** on the mobile auth screen ("For me" / "I'm a therapist"); therapists land
+  on the workspace, get a "My journal →" button (full user product included), and normal
+  users never see therapist surfaces (`GET /therapists/me` 404-gates routing)
+- **External clients**: therapist-owned client records (name encrypted at rest), CRUD +
+  archive, cascade-delete of all notes
+- **Photo-of-notes OCR**: presign → PUT to R2 → `NoteOCRWorker` runs Claude vision →
+  editable bullet list; photo deleted immediately after extraction (ADR-019); typed-notes
+  path for no-photo sessions; per-session status polling like the entry pipeline
+- **AI session summary**: on-demand 3-5 sentence professional recap; client identity never
+  sent to the AI; stored encrypted
+- **Envelope encryption** (ADR-017): per-therapist AES-256-GCM data keys wrapped by
+  `MASTER_ENCRYPTION_KEY`; DB holds only ciphertext; explicitly NOT end-to-end
+- **No crisis screening on notes** (ADR-018)
+- **Consent layer**: user ToS checkbox at signup + `/accept-terms` gate for OAuth and
+  version bumps (`users.tos_accepted_at/tos_version`); therapist client-data consent
+  enforced server-side before any client/note creation
+- **Dashboard metrics**: clients, sessions this week/month/total, per-client history
+- **Web portal parity**: `/dashboard/notes` in `therapist-portal/` (upload, edit, summarize)
+- Mobile: `app/therapist/{index,register,clients,add-session}.tsx`,
+  `app/therapist/client/[id].tsx`, `app/therapist/session/[id].tsx`, `app/accept-terms.tsx`
+- Tests: crypto round-trip/tamper, ownership isolation, consent gating, OCR worker
+  (photo deleted on success not failure, DLQ, orphan cleanup), no-plaintext-at-rest

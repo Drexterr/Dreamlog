@@ -10,6 +10,7 @@ import {
   ScrollView,
   ActivityIndicator,
   Modal,
+  Linking,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
@@ -18,8 +19,12 @@ import * as AppleAuthentication from 'expo-apple-authentication';
 import { supabase } from '../src/lib/supabase';
 import { api } from '../src/api/client';
 import { useTheme } from '../src/context/ThemeContext';
+import { setAppRole, resolvePostAuthRoute, type AppRole } from '../src/services/postAuthRoute';
 
 type Mode = 'login' | 'register';
+
+const TERMS_URL = 'https://dreamlog.app/terms';
+const PRIVACY_URL = 'https://dreamlog.app/privacy';
 
 // TODO: replace with react-native-svg version on next native build
 function GoogleLogo() {
@@ -71,6 +76,8 @@ const googleLogoStyles = StyleSheet.create({
 
 export default function AuthScreen() {
   const [mode, setMode] = useState<Mode>('login');
+  const [role, setRole] = useState<AppRole>('user');
+  const [agreed, setAgreed] = useState(false);
   const [email, setEmail] = useState('');
   const [name, setName] = useState('');
   const [password, setPassword] = useState('');
@@ -86,6 +93,20 @@ export default function AuthScreen() {
     setName('');
     setPassword('');
     setError('');
+    setAgreed(false);
+  };
+
+  const pickRole = (next: AppRole) => {
+    setRole(next);
+    setAppRole(next).catch(() => {});
+  };
+
+  // Route to the right destination after any successful sign-in:
+  // terms gate → therapist dashboard/registration → onboarding/tabs.
+  const routeAfterAuth = async () => {
+    const dest = await resolvePostAuthRoute();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    router.replace(dest as any);
   };
 
   const handleGoogleSignIn = async () => {
@@ -105,8 +126,7 @@ export default function AuthScreen() {
       });
       if (signInError) throw signInError;
 
-      const user = await api.me();
-      router.replace(user.goal ? '/(tabs)' : '/onboarding' as any);
+      await routeAfterAuth();
     } catch (err: any) {
       if (isErrorWithCode(err) && err.code === statusCodes.SIGN_IN_CANCELLED) return;
       setError(err?.message ?? 'Google sign-in failed. Please try again.');
@@ -134,8 +154,7 @@ export default function AuthScreen() {
       });
       if (signInError) throw signInError;
 
-      const user = await api.me();
-      router.replace(user.goal ? '/(tabs)' : '/onboarding' as any);
+      await routeAfterAuth();
     } catch (err: any) {
       if (err?.code === 'ERR_REQUEST_CANCELED') return;
       setError(err?.message ?? 'Apple sign-in failed. Please try again.');
@@ -161,6 +180,10 @@ export default function AuthScreen() {
       setError('Password must be at least 6 characters.');
       return;
     }
+    if (mode === 'register' && !agreed) {
+      setError('Please accept the Terms of Service and Privacy Policy to continue.');
+      return;
+    }
 
     setError('');
     setLoading(true);
@@ -183,7 +206,9 @@ export default function AuthScreen() {
           return;
         }
 
-        router.replace('/onboarding' as any);
+        // The checkbox was ticked - record acceptance server-side.
+        api.acceptTerms().catch(() => {});
+        await routeAfterAuth();
       } else {
         const { error: signInError } = await supabase.auth.signInWithPassword({
           email: emailTrimmed,
@@ -192,8 +217,7 @@ export default function AuthScreen() {
 
         if (signInError) throw signInError;
 
-        const user = await api.me();
-        router.replace(user.goal ? '/(tabs)' : '/onboarding' as any);
+        await routeAfterAuth();
       }
     } catch (err: any) {
       setError(err?.message ?? (mode === 'login' ? 'Invalid email or password.' : 'Registration failed.'));
@@ -212,6 +236,31 @@ export default function AuthScreen() {
           <View style={[styles.orb, { backgroundColor: colors.purple600, shadowColor: colors.purple500 }]} />
           <Text style={[styles.title, { color: colors.textPrimary }]}>DreamLog</Text>
           <Text style={[styles.subtitle, { color: colors.textSecondary }]}>Your AI listener that remembers</Text>
+
+          {/* Role pill: user vs therapist */}
+          <View style={[styles.rolePill, { backgroundColor: colors.card, borderColor: colors.border }]}>
+            <TouchableOpacity
+              style={[styles.roleOption, role === 'user' && { backgroundColor: colors.purple600 }]}
+              onPress={() => pickRole('user')}
+            >
+              <Text style={[styles.roleText, { color: colors.textMuted }, role === 'user' && styles.roleTextActive]}>
+                For me
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.roleOption, role === 'therapist' && { backgroundColor: colors.purple600 }]}
+              onPress={() => pickRole('therapist')}
+            >
+              <Text style={[styles.roleText, { color: colors.textMuted }, role === 'therapist' && styles.roleTextActive]}>
+                I'm a therapist
+              </Text>
+            </TouchableOpacity>
+          </View>
+          {role === 'therapist' && (
+            <Text style={[styles.roleHint, { color: colors.textMuted }]}>
+              Manage your clients' session notes, get AI summaries, and use the journal yourself.
+            </Text>
+          )}
 
           {/* Tab switcher */}
           <View style={[styles.tabs, { backgroundColor: colors.card, borderColor: colors.border }]}>
@@ -303,12 +352,44 @@ export default function AuthScreen() {
               onSubmitEditing={handleSubmit}
             />
 
+            {mode === 'register' && (
+              <TouchableOpacity
+                style={styles.consentRow}
+                onPress={() => { setAgreed(a => !a); setError(''); }}
+                activeOpacity={0.7}
+              >
+                <View
+                  style={[
+                    styles.checkbox,
+                    { borderColor: colors.border },
+                    agreed && { backgroundColor: colors.purple600, borderColor: colors.purple600 },
+                  ]}
+                >
+                  {agreed && <Text style={styles.checkboxTick}>✓</Text>}
+                </View>
+                <Text style={[styles.consentText, { color: colors.textSecondary }]}>
+                  I have read and agree to the{' '}
+                  <Text style={[styles.consentLink, { color: colors.purple500 ?? '#a78bfa' }]} onPress={() => Linking.openURL(TERMS_URL)}>
+                    Terms of Service
+                  </Text>{' '}
+                  and{' '}
+                  <Text style={[styles.consentLink, { color: colors.purple500 ?? '#a78bfa' }]} onPress={() => Linking.openURL(PRIVACY_URL)}>
+                    Privacy Policy
+                  </Text>
+                </Text>
+              </TouchableOpacity>
+            )}
+
             {!!error && (
               <Text style={styles.errorText}>{error}</Text>
             )}
 
             <TouchableOpacity
-              style={[styles.button, { backgroundColor: colors.purple600, shadowColor: colors.purple500 }, loading && styles.buttonLoading]}
+              style={[
+                styles.button,
+                { backgroundColor: colors.purple600, shadowColor: colors.purple500 },
+                (loading || (mode === 'register' && !agreed)) && styles.buttonLoading,
+              ]}
               onPress={handleSubmit}
               disabled={loading}
               activeOpacity={0.8}
@@ -394,6 +475,67 @@ const styles = StyleSheet.create({
     fontFamily: 'Nunito_400Regular',
     letterSpacing: 0.5,
     marginBottom: 32,
+  },
+
+  rolePill: {
+    flexDirection: 'row',
+    borderRadius: 999,
+    borderWidth: 1,
+    padding: 3,
+    marginBottom: 14,
+  },
+  roleOption: {
+    paddingVertical: 8,
+    paddingHorizontal: 18,
+    borderRadius: 999,
+    alignItems: 'center',
+  },
+  roleText: {
+    fontSize: 13,
+    fontFamily: 'Nunito_600SemiBold',
+  },
+  roleTextActive: {
+    color: '#fff',
+  },
+  roleHint: {
+    fontSize: 12,
+    fontFamily: 'Nunito_400Regular',
+    textAlign: 'center',
+    marginBottom: 12,
+    marginTop: -4,
+    paddingHorizontal: 12,
+    lineHeight: 17,
+  },
+  consentRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 10,
+    marginTop: 2,
+  },
+  checkbox: {
+    width: 22,
+    height: 22,
+    borderRadius: 6,
+    borderWidth: 1.5,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 1,
+  },
+  checkboxTick: {
+    color: '#fff',
+    fontSize: 13,
+    fontWeight: '700',
+    lineHeight: 16,
+  },
+  consentText: {
+    flex: 1,
+    fontSize: 12.5,
+    fontFamily: 'Nunito_400Regular',
+    lineHeight: 18,
+  },
+  consentLink: {
+    fontFamily: 'Nunito_700Bold',
+    textDecorationLine: 'underline',
   },
 
   tabs: {

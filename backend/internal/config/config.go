@@ -23,6 +23,17 @@ type Config struct {
 	App       AppConfig
 	Worker    WorkerConfig
 	Stripe    StripeConfig
+	Security  SecurityConfig
+}
+
+// SecurityConfig holds application-layer encryption settings.
+type SecurityConfig struct {
+	// MasterEncryptionKey encrypts per-therapist data keys (envelope
+	// encryption for therapist session notes). 32 bytes as 64 hex chars or
+	// base64. When unset, a key is derived from SUPABASE_JWT_SECRET so dev
+	// works with no extra setup - set it explicitly in production so key
+	// rotation is decoupled from the JWT secret.
+	MasterEncryptionKey string
 }
 
 type ServerConfig struct {
@@ -80,10 +91,10 @@ type AzureTTSConfig struct {
 }
 
 type AnthropicConfig struct {
-	APIKey      string
-	BaseURL     string // override for testing
-	Model       string
-	StubAnalysis bool  // when true, skip API calls and return a fake response (dev only)
+	APIKey       string
+	BaseURL      string // override for testing
+	Model        string
+	StubAnalysis bool // when true, skip API calls and return a fake response (dev only)
 }
 
 type FCMConfig struct {
@@ -108,6 +119,8 @@ type WorkerConfig struct {
 	MaxRetries    int
 	QueueKey      string
 	DLQKey        string
+	NotesQueueKey string // therapist note-photo OCR jobs (separate list from entry jobs)
+	NotesDLQKey   string
 	PollTimeout   time.Duration
 }
 
@@ -178,11 +191,16 @@ func Load() (*Config, error) {
 			PublishableKey: getEnv("STRIPE_PUBLISHABLE_KEY", ""),
 		},
 		Worker: WorkerConfig{
-			Concurrency: parseInt("WORKER_CONCURRENCY", 4),
-			MaxRetries:  parseInt("WORKER_MAX_RETRIES", 3),
-			QueueKey:    getEnv("WORKER_QUEUE_KEY", "dreamlog:transcription:queue"),
-			DLQKey:      getEnv("WORKER_DLQ_KEY", "dreamlog:transcription:dlq"),
-			PollTimeout: parseDuration("WORKER_POLL_TIMEOUT", 5*time.Second),
+			Concurrency:   parseInt("WORKER_CONCURRENCY", 4),
+			MaxRetries:    parseInt("WORKER_MAX_RETRIES", 3),
+			QueueKey:      getEnv("WORKER_QUEUE_KEY", "dreamlog:transcription:queue"),
+			DLQKey:        getEnv("WORKER_DLQ_KEY", "dreamlog:transcription:dlq"),
+			NotesQueueKey: getEnv("WORKER_NOTES_QUEUE_KEY", "dreamlog:notes:queue"),
+			NotesDLQKey:   getEnv("WORKER_NOTES_DLQ_KEY", "dreamlog:notes:dlq"),
+			PollTimeout:   parseDuration("WORKER_POLL_TIMEOUT", 5*time.Second),
+		},
+		Security: SecurityConfig{
+			MasterEncryptionKey: getEnv("MASTER_ENCRYPTION_KEY", ""),
 		},
 	}
 	return cfg, nil

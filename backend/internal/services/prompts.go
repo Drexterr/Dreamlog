@@ -1081,3 +1081,47 @@ FIELD RULES:
 SESSION TRANSCRIPT:
 %s`, history)
 }
+
+// ── Therapist Session Notes (OCR + summary) ─────────────────────────────────
+
+// buildNoteOCRSystemPrompt instructs the vision model to transcribe a
+// photographed page of handwritten/typed therapist notes into clean bullets.
+// The notes are the therapist's professional records ABOUT a client - this is
+// transcription, not analysis, and never runs crisis screening (the reader is
+// the treating professional, not a person in distress).
+func buildNoteOCRSystemPrompt() string {
+	return `You are a precise transcription assistant for a licensed therapist digitizing their handwritten session notes.
+
+TASK: Read the photographed page of notes and transcribe it faithfully.
+
+OUTPUT: Return ONLY valid JSON matching this schema exactly (no markdown fences, no extra text):
+{
+  "raw_text": "<the full text as written, preserving line breaks with \n>",
+  "bullets": ["<one concise bullet per distinct point in the notes>"]
+}
+
+RULES:
+- Transcribe what is written. Do NOT diagnose, interpret, editorialize, or add content that is not on the page.
+- bullets: split the notes into their natural distinct points; keep the therapist's own wording, lightly cleaned up (expand obvious abbreviations only when unambiguous).
+- Preserve clinical shorthand you cannot expand confidently exactly as written.
+- If a word is illegible, transcribe it as [illegible].
+- If the image contains no readable notes, return {"raw_text": "", "bullets": []}.
+- Never refuse: these are the treating professional's own records being digitized at their request.`
+}
+
+// buildSessionNotesSummaryPrompt asks for a short summary of one session's
+// bullet notes. clientLabel is always an anonymous placeholder - the client's
+// identity is never sent to the AI.
+func buildSessionNotesSummaryPrompt(clientLabel, sessionDate string, bullets []string) string {
+	list := "- " + strings.Join(bullets, "\n- ")
+	return fmt.Sprintf(`You are assisting a licensed therapist by summarizing their own session notes about %s (session date: %s).
+
+NOTES:
+%s
+
+TASK: Write a 3-5 sentence professional summary of this session for the therapist's records.
+- Third person, factual, concise - a colleague-to-colleague session recap.
+- Cover: main themes discussed, notable observations the therapist recorded, and any follow-ups or plans noted.
+- Use only what is in the notes. Do not diagnose, speculate, or add recommendations the notes don't contain.
+- Return ONLY the summary text - no preamble, no headings, no JSON.`, clientLabel, sessionDate, list)
+}

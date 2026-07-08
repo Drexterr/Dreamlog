@@ -300,6 +300,80 @@ export const api = {
   endTherapySession: (id: string): Promise<import('../types').EndSessionResponse> =>
     http.post<import('../types').EndSessionResponse>(`/therapy/sessions/${id}/end`).then((r) => r.data),
 
+  // ── Therapist Workspace (in-app dashboard + session notes) ───────────────
+  therapistMe: (): Promise<import('../types').TherapistMeResponse> =>
+    http.get<import('../types').TherapistMeResponse>('/therapists/me').then((r) => r.data),
+
+  registerTherapist: (name: string, email: string, credentials: string): Promise<import('../types').Therapist> =>
+    http.post<import('../types').Therapist>('/therapists/register', { name, email, credentials }).then((r) => r.data),
+
+  acceptTherapistConsent: (): Promise<{ client_consent_accepted: boolean; version: string }> =>
+    http.post<{ client_consent_accepted: boolean; version: string }>('/therapists/consent').then((r) => r.data),
+
+  listClients: (): Promise<import('../types').TherapistClientsResponse> =>
+    http.get<import('../types').TherapistClientsResponse>('/therapists/clients').then((r) => r.data),
+
+  therapistOverview: (): Promise<import('../types').TherapistOverview> =>
+    http.get<import('../types').TherapistOverview>('/therapists/overview').then((r) => r.data),
+
+  listExternalClients: (includeArchived = false): Promise<import('../types').ExternalClientsResponse> =>
+    http
+      .get<import('../types').ExternalClientsResponse>('/therapists/external-clients', {
+        params: includeArchived ? { include_archived: 'true' } : undefined,
+      })
+      .then((r) => r.data),
+
+  createExternalClient: (name: string, role?: string): Promise<import('../types').ExternalClient> =>
+    http.post<import('../types').ExternalClient>('/therapists/external-clients', { name, role }).then((r) => r.data),
+
+  getExternalClient: (id: string): Promise<import('../types').ExternalClient> =>
+    http.get<import('../types').ExternalClient>(`/therapists/external-clients/${id}`).then((r) => r.data),
+
+  updateExternalClient: (
+    id: string,
+    patch: { name?: string; role?: string; archived?: boolean },
+  ): Promise<import('../types').ExternalClient> =>
+    http.patch<import('../types').ExternalClient>(`/therapists/external-clients/${id}`, patch).then((r) => r.data),
+
+  deleteExternalClient: (id: string): Promise<void> =>
+    http.delete(`/therapists/external-clients/${id}`).then(() => undefined),
+
+  presignNotePhoto: (filename: string, contentType: string): Promise<import('../types').NotePresignResponse> =>
+    http
+      .post<import('../types').NotePresignResponse>('/therapists/sessions/presign', {
+        filename,
+        content_type: contentType,
+      })
+      .then((r) => r.data),
+
+  createClientSession: (input: import('../types').CreateClientSessionInput): Promise<import('../types').ClientSession> =>
+    http.post<import('../types').ClientSession>('/therapists/sessions', input).then((r) => r.data),
+
+  listClientSessions: (params?: {
+    external_client_id?: string;
+    linked_client_id?: string;
+  }): Promise<import('../types').ClientSessionsResponse> =>
+    http.get<import('../types').ClientSessionsResponse>('/therapists/sessions', { params }).then((r) => r.data),
+
+  getClientSession: (id: string): Promise<import('../types').ClientSession> =>
+    http.get<import('../types').ClientSession>(`/therapists/sessions/${id}`).then((r) => r.data),
+
+  updateClientSessionBullets: (id: string, bullets: string[]): Promise<import('../types').ClientSession> =>
+    http.patch<import('../types').ClientSession>(`/therapists/sessions/${id}`, { bullets }).then((r) => r.data),
+
+  summarizeClientSession: (id: string): Promise<import('../types').ClientSession> =>
+    http.post<import('../types').ClientSession>(`/therapists/sessions/${id}/summarize`).then((r) => r.data),
+
+  deleteClientSession: (id: string): Promise<void> =>
+    http.delete(`/therapists/sessions/${id}`).then(() => undefined),
+
+  // ── Terms of Service acceptance ───────────────────────────────────────────
+  getTerms: (): Promise<import('../types').TermsState> =>
+    http.get<import('../types').TermsState>('/me/terms').then((r) => r.data),
+
+  acceptTerms: (version?: string): Promise<{ tos_accepted: boolean; version: string }> =>
+    http.post<{ tos_accepted: boolean; version: string }>('/me/accept-terms', version ? { version } : {}).then((r) => r.data),
+
   // ── Billing (Phase 7a) ────────────────────────────────────────────────────
   getBillingPlan: (): Promise<BillingPlanResponse> =>
     http.get<BillingPlanResponse>('/billing/plan').then((r) => r.data),

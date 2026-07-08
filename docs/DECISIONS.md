@@ -163,3 +163,35 @@ These explain WHY things are built the way they are. Read before proposing chang
 **Why:** Consistency with the existing context snapshot design (ADR-011 rationale: context is snapshotted once, not re-fetched mid-session). This keeps per-turn cost predictable, enables Claude's prompt caching across turns, and prevents a live journal entry added mid-session from changing the session's grounding context.
 
 **Do not:** Query the database for past session summaries on every Claude call. If the user finishes a new session while another is open, the newly-finished summary is not visible until the next session starts - this is intentional.
+
+---
+
+## ADR-017: Therapist Notes Are Encrypted at Rest, Not End-to-End
+
+**Decision:** All sensitive therapist-workspace data (external client names, session note raw text, bullets, AI summaries) is encrypted at the application layer with AES-256-GCM using envelope encryption: a per-therapist data key (DEK), wrapped by a server-held master key (`MASTER_ENCRYPTION_KEY`), stored in `therapist_keys`. The database only ever holds ciphertext and wrapped keys.
+
+**Why:** Therapist notes are third-party health information — the highest-sensitivity data in the system. Encryption at rest with keys held outside the database means a stolen DB dump, leaked backup, or compromised DB credentials yields nothing readable.
+
+**Why not true end-to-end encryption:** E2E (keys only on the therapist's devices) is mutually exclusive with the product's AI features — the server must read plaintext to run vision OCR on note photos and to generate session summaries. E2E would also mean forgotten-passphrase = permanent data loss and painful multi-device key sync. Rejected for v1 with eyes open.
+
+**Do not:** Describe this as "end-to-end encryption" in any user-facing copy or marketing — a false E2E claim is a legal liability. Do not log decrypted note content anywhere. Do not write plaintext note fields to the database "temporarily".
+
+---
+
+## ADR-018: No Crisis Screening on Therapist Session Notes
+
+**Decision:** The note OCR pipeline (`workers/note_ocr.go`) does NOT run crisis detection, unlike every other text pipeline in the system.
+
+**Why:** ADR-002's fail-safe exists to protect a person journaling their own emotional state. Therapist notes are a professional's clinical records *about* a client, read by the treating professional. Showing the therapist hotline cards for their own clinical notes is wrong, and flagging their records as crises serves no one. The client's own crisis pathway is unaffected (their journal entries still go through ADR-002).
+
+**Do not:** "Fix" the note pipeline by adding crisis screening for consistency. ADR-002 applies to first-person journaling surfaces (entries, therapy sessions), not to professional records about a third party.
+
+---
+
+## ADR-019: Note Photos Deleted Immediately After OCR
+
+**Decision:** The uploaded photo of handwritten notes is deleted from storage as soon as OCR succeeds (or permanently fails as unreadable). Only the encrypted extracted text remains.
+
+**Why:** Same rationale as ADR-005 (audio deleted after transcription): the photo is the most privacy-sensitive artifact — it may contain a client's full name, margin notes, letterhead, anything. The extracted bullets are sufficient for all downstream features and are encrypted (ADR-017).
+
+**Do not:** Add photo re-viewing/playback features. Do not keep photos "for a retention window". On OCR retry-able failures the photo is kept only until the retry limit is exhausted.
