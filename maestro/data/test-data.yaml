@@ -45,6 +45,18 @@ ENTRY_MODE_KEY: "processing"     # processing | rant | gratitude | decision | dr
 THERAPY_PERSONA_KEY: "comforting"  # comforting | rational | cbt | mindful
 THERAPY_TEXT_MESSAGE: "I have been feeling stretched thin at work this week."
 
+# ── Therapist Workspace / Portal (flow 08) ──
+# Seed this Supabase account before running; it does NOT need to be
+# pre-registered as a therapist — flow 08 registers the workspace on first
+# run and skips the register step on reruns (GET /therapists/me succeeds).
+EMAIL_THERAPIST: "bharatbanthia2207+maestro-therapist@gmail.com"
+PASSWORD_THERAPIST: "DreamTest!2026"
+THERAPIST_NAME: "Dr. Maestro Test"
+THERAPIST_CREDENTIALS: "M.Phil Clinical Psychology"
+CLIENT_NAME: "Asha K (QA)"
+SESSION_BULLET_TYPED: "Discussed sleep routine and set a boundary with family"
+SESSION_BULLET_ADDED: "Follow up on breathing exercise next session"
+
 # ── E2E fast-path build flags (see mobile/src/config/e2e.ts) ──
 # Set these at BUILD/METRO start time, not here, to skip onboarding + sign-in:
 #   EXPO_PUBLIC_E2E=1

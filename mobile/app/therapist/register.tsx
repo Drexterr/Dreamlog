@@ -14,6 +14,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { api } from '../../src/api/client';
 import { useTheme } from '../../src/context/ThemeContext';
+import { T } from '../../src/testIDs';
 
 // Therapist registration: creates the therapist profile and records the
 // client-data responsibility consent (required before any client can be added).
@@ -75,6 +76,7 @@ export default function TherapistRegisterScreen() {
 
           <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
             <TextInput
+              testID={T.therapistPortal.registerNameInput}
               style={[styles.input, { backgroundColor: colors.cardSolid, borderColor: colors.borderFaint, color: colors.textPrimary }]}
               value={name}
               onChangeText={v => { setName(v); setError(''); }}
@@ -83,6 +85,7 @@ export default function TherapistRegisterScreen() {
               autoCapitalize="words"
             />
             <TextInput
+              testID={T.therapistPortal.registerEmailInput}
               style={[styles.input, { backgroundColor: colors.cardSolid, borderColor: colors.borderFaint, color: colors.textPrimary }]}
               value={email}
               onChangeText={v => { setEmail(v); setError(''); }}
@@ -92,6 +95,7 @@ export default function TherapistRegisterScreen() {
               autoCapitalize="none"
             />
             <TextInput
+              testID={T.therapistPortal.registerCredentialsInput}
               style={[styles.input, { backgroundColor: colors.cardSolid, borderColor: colors.borderFaint, color: colors.textPrimary }]}
               value={credentials}
               onChangeText={setCredentials}
@@ -109,7 +113,7 @@ export default function TherapistRegisterScreen() {
               recommended).{'\n'}
               • Notes are encrypted at rest; note photos are deleted right after text extraction.
             </Text>
-            <TouchableOpacity style={styles.consentRow} onPress={() => { setConsented(c => !c); setError(''); }} activeOpacity={0.7}>
+            <TouchableOpacity testID={T.therapistPortal.registerConsentCheckbox} style={styles.consentRow} onPress={() => { setConsented(c => !c); setError(''); }} activeOpacity={0.7}>
               <View
                 style={[
                   styles.checkbox,
@@ -128,6 +132,7 @@ export default function TherapistRegisterScreen() {
           {!!error && <Text style={styles.errorText}>{error}</Text>}
 
           <TouchableOpacity
+            testID={T.therapistPortal.registerSubmit}
             style={[
               styles.button,
               { backgroundColor: colors.purple600, shadowColor: colors.purple500 },
@@ -140,7 +145,7 @@ export default function TherapistRegisterScreen() {
             {loading ? <ActivityIndicator color="#fff" size="small" /> : <Text style={styles.buttonText}>Create workspace</Text>}
           </TouchableOpacity>
 
-          <TouchableOpacity onPress={() => router.replace('/(tabs)')} style={styles.skipBtn}>
+          <TouchableOpacity testID={T.therapistPortal.registerGoToJournal} onPress={() => router.replace('/(tabs)')} style={styles.skipBtn}>
             <Text style={[styles.skipText, { color: colors.textMuted }]}>Not a therapist? Go to my journal</Text>
           </TouchableOpacity>
         </ScrollView>

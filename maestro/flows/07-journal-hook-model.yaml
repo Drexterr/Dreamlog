@@ -1,0 +1,137 @@
+# ═══════════════════════════════════════════════════════════════════════════
+# JOURNAL — HOOK MODEL HABIT-LOOP FEATURES
+# Covers the retention features shipped in commit 686fdfb ("Hook Model habit
+# loop"): smart/adaptive nudge timing, the flashback time-capsule card, and
+# the self-set "check in on this tomorrow" trigger. Streak-risk push and
+# connection-insight copy are server-scheduled/AI-generated and not directly
+# drivable from the UI, so they are out of scope here (see docs/ARCHITECTURE.md
+# "Nudge Scheduler"). Share-link lockout/rate-limiting has no mobile UI at all
+# (recipient-side passcode entry is web-only) — also out of scope.
+#
+# REQUIRES:
+#   • A running backend for check-in scheduling (POST /entries/:id/checkin)
+#     and the flashback lookup (GET /entries/flashback). Both assertions are
+#     `optional: true` so the flow still validates the UI without a backend
+#     or without a year/month-old entry to resurface.
+#   • A verified account (EMAIL_EXISTING / PASSWORD) with at least one
+#     completed entry for the check-in feature — flow 05-core-features
+#     records one; run that first, or point this at a pre-seeded account.
+# ═══════════════════════════════════════════════════════════════════════════
+appId: com.dreamlog.app
+env:
+  EMAIL_EXISTING: "bharatbanthia2207+tester@gmail.com"
+  PASSWORD: "DreamTest!2026"
+tags:
+  - journal
+  - hook-model
+---
+- clearState
+- launchApp:
+    clearKeychain: true
+    permissions:
+      notifications: allow
+- runFlow: ../subflows/complete-onboarding-guest.yaml
+- runFlow: ../subflows/open-auth-sheet.yaml
+- runFlow: ../subflows/sign-in-email.yaml
+# Sign-in was triggered by tapping the record button as a guest, so a
+# successful sign-in resumes that original intent and lands on the record
+# mode-picker screen, not Home — cancel back to Home explicitly.
+- extendedWaitUntil:
+    visible:
+      id: "record-screen"
+    timeout: 20000
+- tapOn:
+    id: "record-cancel"
+- extendedWaitUntil:
+    visible:
+      id: "home-screen"
+    timeout: 10000
+
+# ─────────────────────────────────────────────────────────────────────────
+# HOOK 1 — Flashback / time-capsule card on Home (data-dependent: only
+# renders when a completed, non-crisis entry exists ~1 year or ~1 month
+# back — see GET /entries/flashback in docs/API_CONTRACT.md)
+# ─────────────────────────────────────────────────────────────────────────
+- runFlow:
+    when:
+      visible:
+        id: "home-flashback-card"
+    commands:
+      - takeScreenshot: "hook-flashback-visible"
+      - tapOn:
+          id: "home-flashback-card"
+      - assertVisible:
+          id: "reflection-checkin-button"
+      - tapOn:
+          id: "tab-home"
+
+# ─────────────────────────────────────────────────────────────────────────
+# HOOK 2 — Settings: smart nudge timing toggle (adaptive vs manual hour)
+# Turning smart timing OFF flips the nudge-hour row's value from "Auto" to
+# a fixed clock time; turning it back ON restores "Auto".
+# ─────────────────────────────────────────────────────────────────────────
+- tapOn:
+    id: "tab-settings"
+- assertVisible:
+    id: "settings-screen"
+
+# Ensure morning nudges are enabled — the smart-timing row only renders then.
+- runFlow:
+    when:
+      notVisible:
+        id: "settings-nudge-auto-time-switch"
+    commands:
+      - tapOn:
+          id: "settings-nudge-switch"
+
+- assertVisible:
+    id: "settings-nudge-auto-time-switch"
+- assertVisible:
+    text: "Auto"                              # nudge-hour row reflects smart timing on
+- takeScreenshot: "hook-smart-timing-on"
+
+- tapOn:
+    id: "settings-nudge-auto-time-switch"
+- extendedWaitUntil:
+    visible:
+      id: "settings-nudge-hour-row"
+    timeout: 8000
+- takeScreenshot: "hook-smart-timing-off"
+
+# Restore state so reruns are idempotent.
+- tapOn:
+    id: "settings-nudge-auto-time-switch"
+- extendedWaitUntil:
+    visible: "Auto"
+    timeout: 8000
+
+# ─────────────────────────────────────────────────────────────────────────
+# HOOK 3 — Self-set check-in from a reflection ("check in on this tomorrow")
+# Requires an existing completed entry — opens the most recent one via the
+# timeline rather than recording a fresh one (that's covered in
+# 05-core-features FEATURE 1).
+# ─────────────────────────────────────────────────────────────────────────
+- tapOn:
+    id: "tab-explore"
+- tapOn:
+    id: "explore-entries"
+- runFlow:
+    when:
+      visible:
+        id: "explore-screen"
+    commands:
+      # Tap the first entry row in the list (backend-dependent — needs at
+      # least one completed entry; the whole block is optional).
+      - tapOn:
+          point: "50%,25%"
+          optional: true
+      - runFlow:
+          when:
+            visible:
+              id: "reflection-checkin-button"
+          commands:
+            - tapOn:
+                id: "reflection-checkin-button"
+            - assertVisible:
+                text: "I’ll check in with you tomorrow"
+            - takeScreenshot: "hook-checkin-scheduled"

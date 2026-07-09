@@ -15,6 +15,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { api } from '../../../src/api/client';
 import { useTheme } from '../../../src/context/ThemeContext';
+import { T } from '../../../src/testIDs';
 import type { ClientSession } from '../../../src/types';
 
 const POLL_INTERVAL_MS = 3000;
@@ -150,7 +151,7 @@ export default function SessionDetailScreen() {
   const isExtracting = session.status === 'pending' || session.status === 'processing';
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.bg }]}>
+    <SafeAreaView testID={T.therapistPortal.sessionDetailScreen} style={[styles.container, { backgroundColor: colors.bg }]}>
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
         <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
           <View style={styles.headerRow}>
@@ -158,7 +159,7 @@ export default function SessionDetailScreen() {
               <Text style={[styles.title, { color: colors.textPrimary }]}>Session notes</Text>
               <Text style={[styles.meta, { color: colors.textMuted }]}>{session.session_date}</Text>
             </View>
-            <TouchableOpacity onPress={handleDelete}>
+            <TouchableOpacity testID={T.therapistPortal.sessionDelete} onPress={handleDelete}>
               <Text style={styles.deleteText}>Delete</Text>
             </TouchableOpacity>
           </View>
@@ -192,6 +193,7 @@ export default function SessionDetailScreen() {
                 </View>
               ) : (
                 <TouchableOpacity
+                  testID={T.therapistPortal.sessionSummarizeButton}
                   style={[styles.summarizeBtn, { borderColor: colors.purple600 }]}
                   onPress={handleSummarize}
                   disabled={summarizing}
@@ -222,7 +224,7 @@ export default function SessionDetailScreen() {
                   </TouchableOpacity>
                 </View>
               ))}
-              <TouchableOpacity onPress={addBullet} style={styles.addBulletBtn}>
+              <TouchableOpacity testID={T.therapistPortal.sessionAddBullet} onPress={addBullet} style={styles.addBulletBtn}>
                 <Text style={[styles.addBulletText, { color: colors.textMuted }]}>＋ Add a note</Text>
               </TouchableOpacity>
 
@@ -244,6 +246,7 @@ export default function SessionDetailScreen() {
 
               {dirty && (
                 <TouchableOpacity
+                  testID={T.therapistPortal.sessionSaveChanges}
                   style={[styles.saveBtn, { backgroundColor: colors.purple600, shadowColor: colors.purple500 }, saving && { opacity: 0.6 }]}
                   onPress={handleSave}
                   disabled={saving}

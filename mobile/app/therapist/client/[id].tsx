@@ -11,6 +11,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, useLocalSearchParams, useFocusEffect } from 'expo-router';
 import { api } from '../../../src/api/client';
 import { useTheme } from '../../../src/context/ThemeContext';
+import { T } from '../../../src/testIDs';
 import type { ExternalClient, ClientSession } from '../../../src/types';
 
 const STATUS_LABEL: Record<string, string> = {
@@ -71,7 +72,7 @@ export default function ClientDetailScreen() {
   if (!client) return <SafeAreaView style={[styles.container, { backgroundColor: colors.bg }]} />;
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.bg }]}>
+    <SafeAreaView testID={T.therapistPortal.clientDetailScreen} style={[styles.container, { backgroundColor: colors.bg }]}>
       <ScrollView contentContainerStyle={styles.scroll}>
         <View style={styles.headerRow}>
           <View style={[styles.avatar, { backgroundColor: colors.purple600 + '33' }]}>
@@ -89,6 +90,7 @@ export default function ClientDetailScreen() {
         </View>
 
         <TouchableOpacity
+          testID={T.therapistPortal.clientDetailAddSession}
           style={[styles.primaryBtn, { backgroundColor: colors.purple600, shadowColor: colors.purple500 }]}
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           onPress={() => router.push({ pathname: '/therapist/add-session', params: { clientId: client.id } } as any)}
@@ -133,7 +135,7 @@ export default function ClientDetailScreen() {
           ))
         )}
 
-        <TouchableOpacity style={styles.deleteBtn} onPress={handleDelete}>
+        <TouchableOpacity testID={T.therapistPortal.clientDetailDelete} style={styles.deleteBtn} onPress={handleDelete}>
           <Text style={styles.deleteBtnText}>Delete client and all notes</Text>
         </TouchableOpacity>
       </ScrollView>

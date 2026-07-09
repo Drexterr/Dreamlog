@@ -16,6 +16,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { api, isApiError } from '../../src/api/client';
 import { useTheme } from '../../src/context/ThemeContext';
+import { T } from '../../src/testIDs';
 import type { Entry, EntryAnalysis } from '../../src/types';
 
 // ── Crisis hotlines shown in the care card ────────────────────────────────────
@@ -472,6 +473,7 @@ export default function ReflectionScreen() {
                       borderColor: checkinState === 'scheduled' ? colors.brand : colors.border,
                     },
                   ]}
+                  testID={T.reflection.checkinButton}
                   onPress={handleCheckinTomorrow}
                   disabled={checkinState !== 'idle'}
                   activeOpacity={0.8}

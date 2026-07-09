@@ -11,14 +11,40 @@ maestro/
 ├── subflows/                        # reusable building blocks (runFlow only)
 │   ├── complete-onboarding-guest.yaml
 │   ├── open-auth-sheet.yaml
-│   └── sign-in-email.yaml
+│   ├── sign-in-email.yaml
+│   └── sign-in-as-therapist.yaml    # guest → therapist dashboard (registers on first run)
 └── flows/                           # top-level scenarios (run by `maestro test`)
     ├── 01-app-launch.yaml
     ├── 02-onboarding.yaml
     ├── 03-authentication.yaml
     ├── 04-navigation.yaml
     ├── 05-core-features.yaml
-    └── 06-edge-cases.yaml
+    ├── 06-edge-cases.yaml
+    ├── 07-journal-hook-model.yaml    # journal-user suite: retention/habit-loop features
+    └── 08-therapist-portal.yaml      # therapist-portal suite: workspace, clients, notes
+```
+
+## Two suites
+
+The flows split into two user identities that share one app binary:
+
+- **Journal (normal user)** — flows `01`–`07`. Onboarding, auth, navigation,
+  core recording/timeline/therapy features, edge cases, and the Hook Model
+  retention features (smart nudge timing, flashback, self-set check-ins).
+  Drives `EMAIL_EXISTING` / `PASSWORD`.
+- **Therapist Portal** — flow `08`. The workspace layered on top of the same
+  account system (`app/therapist/*.tsx`, see docs/ARCHITECTURE.md "Therapist
+  Workspace"): role pill → registration + client-data consent → dashboard →
+  client management → note-taking → AI summary. Drives its own seeded
+  `EMAIL_THERAPIST` account (kept separate from the journal account so the
+  two suites never fight over role state — `dreamlog_role` is persisted
+  per-device via AsyncStorage, not per-account).
+
+Run one suite in isolation with `--include-tags`:
+
+```bash
+maestro test --include-tags journal maestro/
+maestro test --include-tags therapist maestro/
 ```
 
 ## Stable selectors (testIDs)
@@ -61,6 +87,14 @@ that build's `EXPO_PUBLIC_API_URL` at a backend running `STUB_AI_ANALYSIS=true`.
 5. **A seeded, verified account** for the sign-in and feature flows — see
    `data/test-data.yaml` (`EMAIL_EXISTING` / `PASSWORD`). The launch checklist
    §2d documents the canonical tester account.
+6. **A second seeded account for flow 08** (`EMAIL_THERAPIST` / `PASSWORD_THERAPIST`
+   in `data/test-data.yaml`) — kept separate from `EMAIL_EXISTING` so the
+   journal and therapist suites don't collide over the persisted
+   `dreamlog_role` device flag. It does not need to be pre-registered as a
+   therapist; flow 08 registers the workspace on first run. Flow 08 also
+   requires `MASTER_ENCRYPTION_KEY` to be set on the backend (API + worker)
+   — client names and note text are encrypted at rest (ADR-017); without it
+   every therapist-workspace endpoint errors.
 
 ## Running
 
@@ -102,19 +136,25 @@ the launch + onboarding + navigation flows (deterministic, no backend); treat
 
 ## Tags
 
-| Tag         | Flows                          | Needs backend | Needs account |
-|-------------|--------------------------------|:-------------:|:-------------:|
-| `smoke`     | 01                             | no            | no            |
-| `launch`    | 01                             | no            | no            |
-| `onboarding`| 02                             | no            | no            |
-| `auth`      | 03                             | partial¹      | optional²     |
-| `navigation`| 04                             | no            | no            |
-| `features`  | 05                             | **yes**       | **yes**       |
-| `edge`      | 06                             | no            | no            |
+| Tag          | Flows | Needs backend | Needs account |
+|--------------|-------|:-------------:|:-------------:|
+| `smoke`      | 01    | no            | no            |
+| `launch`     | 01    | no            | no            |
+| `onboarding` | 02    | no            | no            |
+| `auth`       | 03    | partial¹      | optional²     |
+| `navigation` | 04    | no            | no            |
+| `features`   | 05    | **yes**       | **yes**       |
+| `edge`       | 06    | no            | no            |
+| `journal`, `hook-model` | 07 | partial³ | **yes** (`EMAIL_EXISTING`) |
+| `therapist`  | 08    | **yes**       | **yes** (`EMAIL_THERAPIST`) |
 
 ¹ Wrong-credentials assertion hits Supabase; happy-path sign-in is `optional`.
 ² Sign-in + persistence blocks in 03/05 are guarded and skip cleanly without a
   live account.
+³ Flashback and check-in assertions are `optional: true` (flashback needs a
+  ~1yr/1mo-old entry; check-in needs at least one completed entry — record
+  one via flow 05 first for full coverage). The smart-nudge-timing toggle
+  itself is a pure Settings UI round trip and always runs.
 
 A per-scenario explanation, coverage gaps, and app-testability recommendations
 were delivered with this suite (see the PR / handover notes).

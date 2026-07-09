@@ -524,6 +524,7 @@ export default function SettingsScreen() {
                   colors={colors}
                   right={
                     <Switch
+                      testID={T.settings.nudgeAutoTimeSwitch}
                       accessibilityLabel="Smart nudge timing toggle"
                       value={nudgeAutoTime}
                       onValueChange={handleAutoTimeToggle}

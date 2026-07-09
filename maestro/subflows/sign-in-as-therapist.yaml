@@ -1,0 +1,143 @@
+# Reusable: get from a signed-out guest (post onboarding) to the therapist
+# dashboard, registering the workspace on first run.
+#
+# Real navigation path (there is no direct guest → /auth route — see
+# app/auth.tsx / src/services/postAuthRoute.ts):
+#   1. Guest taps record → <AuthSheet> → sign in with email/password.
+#      AuthSheet has no role concept, so this first sign-in always resolves
+#      as a normal user. Since the sheet was triggered by tapping record,
+#      a successful sign-in resumes that original intent and lands on the
+#      record mode-picker screen, not Home — cancel back to Home explicitly.
+#   2. Settings → Sign out → app/_layout.tsx routes a signed-out,
+#      onboarded user to the full /auth screen (app/auth.tsx), which DOES
+#      carry the "For me" / "I'm a therapist" role pill.
+#   3. Pick "I'm a therapist", sign in again (same account) → pickRole()
+#      persists the role, then resolvePostAuthRoute() calls
+#      GET /therapists/me: 404 → /therapist/register, success → /therapist.
+#
+# Precondition: on the Home tab as a guest, post onboarding.
+# Required env: EMAIL_THERAPIST, PASSWORD_THERAPIST, THERAPIST_NAME,
+#               THERAPIST_CREDENTIALS
+# Postcondition: on the therapist dashboard (therapist-dashboard-screen).
+appId: com.dreamlog.app
+---
+# Step 1 — first sign-in via the sheet (role defaults to 'user').
+- tapOn:
+    id: "home-record-button"                 # T.home.recordBtn
+- assertVisible:
+    id: "auth-sheet"                         # T.auth.sheet
+- runFlow:
+    when:
+      visible:
+        id: "auth-use-email"                 # T.auth.useEmail
+    commands:
+      # id-based tapOn on this element has been unreliable — a
+      # coordinate-based tap issues a real touch event and is more
+      # reliable (see sign-in-email.yaml for the full writeup).
+      - waitForAnimationToEnd:
+          timeout: 5000
+      - repeat:
+          times: 5
+          commands:
+            - runFlow:
+                when:
+                  notVisible:
+                    id: "auth-tab-login"
+                commands:
+                  - tapOn:
+                      point: "50%,87%"
+                  - extendedWaitUntil:
+                      visible:
+                        id: "auth-tab-login"
+                      timeout: 4000
+                      optional: true
+- extendedWaitUntil:
+    visible:
+      id: "auth-tab-login"                     # T.auth.tabLogin
+    timeout: 10000
+- tapOn:
+    id: "auth-tab-login"
+- tapOn:
+    id: "auth-email-input"                   # T.auth.emailInput
+- inputText: ${EMAIL_THERAPIST}
+- hideKeyboard
+- tapOn:
+    id: "auth-password-input"                # T.auth.passwordInput
+- inputText: ${PASSWORD_THERAPIST}
+- hideKeyboard
+- tapOn:
+    id: "auth-submit"                        # T.auth.submit
+
+# Sign-in resumes the record intent (see header note) — cancel back to Home.
+- extendedWaitUntil:
+    visible:
+      id: "record-screen"
+    timeout: 20000
+- tapOn:
+    id: "record-cancel"
+- extendedWaitUntil:
+    visible:
+      id: "home-screen"
+    timeout: 10000
+
+# Step 2 — sign out to reach the full /auth screen with the role pill.
+- tapOn:
+    id: "tab-settings"                       # T.tab.settings
+- assertVisible:
+    id: "settings-screen"
+- tapOn:
+    id: "settings-sign-out"                  # T.settings.signOut
+- extendedWaitUntil:
+    visible:
+      id: "auth-role-therapist"              # T.authRole.therapist
+    timeout: 15000
+
+# Step 3 — pick therapist role, sign in again. The full /auth screen (unlike
+# the sheet) shows the email/password fields directly — no toggle needed.
+- tapOn:
+    id: "auth-role-therapist"
+- assertVisible: "Manage your clients' session notes"
+- tapOn:
+    id: "auth-tab-login"
+- tapOn:
+    id: "auth-email-input"
+- inputText: ${EMAIL_THERAPIST}
+- hideKeyboard
+- tapOn:
+    id: "auth-password-input"
+- inputText: ${PASSWORD_THERAPIST}
+- hideKeyboard
+- tapOn:
+    id: "auth-submit"
+
+# Step 4 — land on registration (first run) or straight on the dashboard.
+- extendedWaitUntil:
+    visible:
+      text: "Therapist profile"
+    timeout: 15000
+    optional: true
+- runFlow:
+    when:
+      visible: "Therapist profile"
+    commands:
+      - tapOn:
+          id: "therapist-register-name-input"
+      - inputText: ${THERAPIST_NAME}
+      - hideKeyboard
+      - tapOn:
+          id: "therapist-register-email-input"
+      - inputText: ${EMAIL_THERAPIST}
+      - hideKeyboard
+      - tapOn:
+          id: "therapist-register-credentials-input"
+      - inputText: ${THERAPIST_CREDENTIALS}
+      - hideKeyboard
+      - tapOn:
+          id: "therapist-register-consent-checkbox"
+      - tapOn:
+          id: "therapist-register-submit"
+
+- extendedWaitUntil:
+    visible:
+      id: "therapist-dashboard-screen"
+    timeout: 20000

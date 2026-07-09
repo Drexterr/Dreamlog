@@ -289,6 +289,7 @@ export default function HomeScreen() {
             ]}
           >
             <TouchableOpacity
+              testID={T.flashback.card}
               accessibilityLabel="Open flashback entry"
               onPress={() => router.push(`/reflection/${flashback.entry_id}` as any)}
               activeOpacity={0.7}

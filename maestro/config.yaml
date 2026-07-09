@@ -14,9 +14,25 @@ appId: com.dreamlog.app
 # Executed before EVERY flow. Guarantees each scenario starts from a cold,
 # deterministic launch rather than inheriting navigation state from the previous
 # flow. Individual flows can still clearState for a true first-run experience.
+#
+# The second step dismisses React Native's dev-only "Open debugger to view
+# warnings" LogBox toast (__DEV__ builds only — never appears in a release
+# build). It is not just visual clutter: while visible it intercepts/absorbs
+# touch events across the screen, including taps on elements positioned well
+# above it (e.g. AuthSheet's "Use email instead"), causing those taps to
+# silently no-op. Confirmed via manual adb reproduction on a debug build.
+# Dismissing it via its close "X" (no accessibility id exposed by RN internals,
+# hence the coordinate tap) before any interaction avoids the whole class of
+# flaky no-op taps on debug builds.
 onFlowStart:
   - launchApp:
       clearKeychain: false
+  - runFlow:
+      when:
+        visible: "Open debugger to view warnings"
+      commands:
+        - tapOn:
+            point: "92%,92%"
 
 # Executed after every flow — a screenshot lands in ~/.maestro/tests/ for the
 # run, giving a visual trail even on green runs.

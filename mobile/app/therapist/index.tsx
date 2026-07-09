@@ -11,6 +11,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { api } from '../../src/api/client';
 import { useTheme } from '../../src/context/ThemeContext';
+import { T } from '../../src/testIDs';
 import type { TherapistOverview, ClientSession, ExternalClient, TherapistMeResponse } from '../../src/types';
 
 const STATUS_LABEL: Record<string, string> = {
@@ -69,7 +70,7 @@ export default function TherapistDashboard() {
   };
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.bg }]}>
+    <SafeAreaView testID={T.therapistPortal.dashboardScreen} style={[styles.container, { backgroundColor: colors.bg }]}>
       <ScrollView
         contentContainerStyle={styles.scroll}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.textMuted} />}
@@ -82,6 +83,7 @@ export default function TherapistDashboard() {
             </Text>
           </View>
           <TouchableOpacity
+            testID={T.therapistPortal.dashboardGoToJournal}
             style={[styles.journalBtn, { borderColor: colors.border, backgroundColor: colors.card }]}
             onPress={() => router.replace('/(tabs)')}
           >
@@ -111,6 +113,7 @@ export default function TherapistDashboard() {
 
         {/* Primary actions */}
         <TouchableOpacity
+          testID={T.therapistPortal.dashboardNewSession}
           style={[styles.primaryBtn, { backgroundColor: colors.purple600, shadowColor: colors.purple500 }]}
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           onPress={() => router.push('/therapist/add-session' as any)}
@@ -121,6 +124,7 @@ export default function TherapistDashboard() {
 
         <View style={styles.actionRow}>
           <TouchableOpacity
+            testID={T.therapistPortal.dashboardMyClients}
             style={[styles.actionCard, { backgroundColor: colors.card, borderColor: colors.border }]}
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             onPress={() => router.push('/therapist/clients' as any)}

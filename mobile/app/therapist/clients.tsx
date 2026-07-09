@@ -14,6 +14,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { api } from '../../src/api/client';
 import { useTheme } from '../../src/context/ThemeContext';
+import { T } from '../../src/testIDs';
 import type { ExternalClient, ClientSummary } from '../../src/types';
 
 // Client list: the therapist's own (external) clients plus DreamLog users who
@@ -82,11 +83,12 @@ export default function TherapistClientsScreen() {
   };
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.bg }]}>
+    <SafeAreaView testID={T.therapistPortal.clientsScreen} style={[styles.container, { backgroundColor: colors.bg }]}>
       <ScrollView contentContainerStyle={styles.scroll}>
         <View style={styles.headerRow}>
           <Text style={[styles.title, { color: colors.textPrimary }]}>Clients</Text>
           <TouchableOpacity
+            testID={T.therapistPortal.clientsAddButton}
             style={[styles.addBtn, { backgroundColor: colors.purple600 }]}
             onPress={() => setShowAdd(true)}
           >
@@ -177,6 +179,7 @@ export default function TherapistClientsScreen() {
           <View style={[styles.modalCard, { backgroundColor: colors.cardSolid, borderColor: colors.border }]}>
             <Text style={[styles.modalTitle, { color: colors.textPrimary }]}>Add a client</Text>
             <TextInput
+              testID={T.therapistPortal.clientsAddNameInput}
               style={[styles.input, { backgroundColor: colors.card, borderColor: colors.borderFaint, color: colors.textPrimary }]}
               value={newName}
               onChangeText={v => { setNewName(v); setError(''); }}
@@ -190,6 +193,7 @@ export default function TherapistClientsScreen() {
                 <Text style={[styles.modalCancelText, { color: colors.textMuted }]}>Cancel</Text>
               </TouchableOpacity>
               <TouchableOpacity
+                testID={T.therapistPortal.clientsAddSubmit}
                 style={[styles.modalSave, { backgroundColor: colors.purple600 }]}
                 onPress={handleAdd}
                 disabled={saving}

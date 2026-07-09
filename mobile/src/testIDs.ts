@@ -93,6 +93,7 @@ export const T = {
     upgrade:       'settings-upgrade',
     goalRow:       'settings-goal-row',
     nudgeSwitch:   'settings-nudge-switch',
+    nudgeAutoTimeSwitch: 'settings-nudge-auto-time-switch',
     nudgeHourRow:  'settings-nudge-hour-row',
     voiceLangRow:  'settings-voice-language-row',
     exportRow:     'settings-export-row',
@@ -101,6 +102,63 @@ export const T = {
     aboutRow:      'settings-about-row',
     signOut:       'settings-sign-out',
     profileModalClose: 'settings-profile-modal-close',
+  },
+
+  // ── Home tab additions (app/(tabs)/index.tsx) ──
+  flashback: {
+    card: 'home-flashback-card',
+  },
+
+  // ── Reflection screen (app/reflection/[id].tsx) ──
+  reflection: {
+    checkinButton: 'reflection-checkin-button',
+  },
+
+  // ── Auth role pill (app/auth.tsx) ──
+  authRole: {
+    me:        'auth-role-me',
+    therapist: 'auth-role-therapist',
+  },
+
+  // ── Therapist workspace (app/therapist/*.tsx) ──
+  therapistPortal: {
+    // register.tsx
+    registerNameInput:        'therapist-register-name-input',
+    registerEmailInput:       'therapist-register-email-input',
+    registerCredentialsInput: 'therapist-register-credentials-input',
+    registerConsentCheckbox:  'therapist-register-consent-checkbox',
+    registerSubmit:           'therapist-register-submit',
+    registerGoToJournal:      'therapist-register-go-to-journal',
+
+    // index.tsx (dashboard)
+    dashboardScreen:      'therapist-dashboard-screen',
+    dashboardGoToJournal: 'therapist-dashboard-go-to-journal',
+    dashboardNewSession:  'therapist-dashboard-new-session',
+    dashboardMyClients:   'therapist-dashboard-my-clients',
+
+    // clients.tsx
+    clientsScreen:      'therapist-clients-screen',
+    clientsAddButton:   'therapist-clients-add-button',
+    clientsAddNameInput:'therapist-clients-add-name-input',
+    clientsAddSubmit:   'therapist-clients-add-submit',
+
+    // client/[id].tsx
+    clientDetailScreen:      'therapist-client-detail-screen',
+    clientDetailAddSession:  'therapist-client-detail-add-session',
+    clientDetailDelete:      'therapist-client-detail-delete',
+
+    // add-session.tsx
+    addSessionPhotoTab:    'therapist-add-session-photo-tab',
+    addSessionTypeTab:     'therapist-add-session-type-tab',
+    addSessionBulletsInput:'therapist-add-session-bullets-input',
+    addSessionSubmit:      'therapist-add-session-submit',
+
+    // session/[id].tsx
+    sessionDetailScreen:    'therapist-session-detail-screen',
+    sessionSummarizeButton: 'therapist-session-summarize-button',
+    sessionAddBullet:       'therapist-session-add-bullet',
+    sessionSaveChanges:     'therapist-session-save-changes',
+    sessionDelete:          'therapist-session-delete',
   },
 
   // ── Therapy persona picker (app/therapy/persona-picker.tsx) ──

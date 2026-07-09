@@ -9,21 +9,64 @@
 # /auth screen already shows the fields).
 appId: com.dreamlog.app
 ---
+# Dismiss React Native's dev-only "Open debugger to view warnings" LogBox
+# toast if it has reappeared (a fresh __DEV__ warning re-triggers it even
+# after the onFlowStart dismissal) — see config.yaml for why this matters:
+# while visible it silently swallows taps on elements above it.
+- runFlow:
+    when:
+      visible: "Open debugger to view warnings"
+    commands:
+      - tapOn:
+          point: "92%,92%"
+
 - runFlow:
     when:
       visible:
         id: "auth-use-email"            # T.auth.useEmail (only in the sheet)
     commands:
-      - tapOn:
-          id: "auth-use-email"
+      # id-based tapOn on this element has been unreliable on debug builds
+      # even with retries (Maestro's id-targeted tap may resolve to an
+      # accessibility-service click rather than a raw touch event, which
+      # react-native-gesture-handler's responder system doesn't always
+      # honor). A coordinate-based tap (point:) issues a real touch event
+      # and has been confirmed to work via manual adb reproduction at this
+      # exact position (bounds [400,2067][680,2143] on a 1080x2424 screen).
+      - waitForAnimationToEnd:
+          timeout: 5000
+      - repeat:
+          times: 5
+          commands:
+            - runFlow:
+                when:
+                  notVisible:
+                    id: "auth-tab-login"
+                commands:
+                  - tapOn:
+                      point: "50%,87%"
+                  - extendedWaitUntil:
+                      visible:
+                        id: "auth-tab-login"
+                      timeout: 4000
+                      optional: true
 
-# Ensure the Sign in (login) tab is active.
+# Ensure the Sign in (login) tab is active. extendedWaitUntil rather than a
+# plain tapOn: debug JS bundles render the social→email transition slower
+# than release builds, so an immediate tapOn can miss it.
+- extendedWaitUntil:
+    visible:
+      id: "auth-tab-login"
+    timeout: 10000
 - tapOn:
     id: "auth-tab-login"                # T.auth.tabLogin
 
 - tapOn:
     id: "auth-email-input"              # T.auth.emailInput
 - inputText: ${EMAIL_EXISTING}
+# Dismiss the keyboard before locating the password field — after typing a
+# long email the keyboard can cover it, taking it out of the visible/
+# accessible area entirely.
+- hideKeyboard
 - tapOn:
     id: "auth-password-input"           # T.auth.passwordInput
 - inputText: ${PASSWORD}

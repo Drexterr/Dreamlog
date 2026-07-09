@@ -1,0 +1,11 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<testsuites>
+  <testsuite name="Test Suite" device="Pixel_9" tests="1" failures="1" time="230.0">
+    <testcase id="08-therapist-portal" name="08-therapist-portal" classname="08-therapist-portal" file="maestro\flows\08-therapist-portal.yaml" time="230.0" status="ERROR">
+      <properties>
+        <property name="tags" value="therapist"/>
+      </properties>
+      <failure>Assertion is false: id: record-screen is visible</failure>
+    </testcase>
+  </testsuite>
+</testsuites>

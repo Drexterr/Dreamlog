@@ -14,6 +14,7 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
 import { api } from '../../src/api/client';
 import { useTheme } from '../../src/context/ThemeContext';
+import { T } from '../../src/testIDs';
 import type { ExternalClient } from '../../src/types';
 
 type NoteMode = 'photo' | 'type';
@@ -153,6 +154,7 @@ export default function AddSessionScreen() {
         <Text style={[styles.label, { color: colors.textMuted }]}>NOTES</Text>
         <View style={[styles.modeTabs, { backgroundColor: colors.card, borderColor: colors.border }]}>
           <TouchableOpacity
+            testID={T.therapistPortal.addSessionPhotoTab}
             style={[styles.modeTab, noteMode === 'photo' && { backgroundColor: colors.purple600 }]}
             onPress={() => setNoteMode('photo')}
           >
@@ -161,6 +163,7 @@ export default function AddSessionScreen() {
             </Text>
           </TouchableOpacity>
           <TouchableOpacity
+            testID={T.therapistPortal.addSessionTypeTab}
             style={[styles.modeTab, noteMode === 'type' && { backgroundColor: colors.purple600 }]}
             onPress={() => setNoteMode('type')}
           >
@@ -205,6 +208,7 @@ export default function AddSessionScreen() {
         ) : (
           <View>
             <TextInput
+              testID={T.therapistPortal.addSessionBulletsInput}
               style={[styles.notesInput, { backgroundColor: colors.card, borderColor: colors.border, color: colors.textPrimary }]}
               value={typedNotes}
               onChangeText={v => { setTypedNotes(v); setError(''); }}
@@ -220,6 +224,7 @@ export default function AddSessionScreen() {
         {!!error && <Text style={styles.errorText}>{error}</Text>}
 
         <TouchableOpacity
+          testID={T.therapistPortal.addSessionSubmit}
           style={[styles.button, { backgroundColor: colors.purple600, shadowColor: colors.purple500 }, submitting && styles.buttonDisabled]}
           onPress={handleSubmit}
           disabled={submitting}

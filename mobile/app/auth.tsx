@@ -20,6 +20,7 @@ import { supabase } from '../src/lib/supabase';
 import { api } from '../src/api/client';
 import { useTheme } from '../src/context/ThemeContext';
 import { setAppRole, resolvePostAuthRoute, type AppRole } from '../src/services/postAuthRoute';
+import { T } from '../src/testIDs';
 
 type Mode = 'login' | 'register';
 
@@ -240,6 +241,7 @@ export default function AuthScreen() {
           {/* Role pill: user vs therapist */}
           <View style={[styles.rolePill, { backgroundColor: colors.card, borderColor: colors.border }]}>
             <TouchableOpacity
+              testID={T.authRole.me}
               style={[styles.roleOption, role === 'user' && { backgroundColor: colors.purple600 }]}
               onPress={() => pickRole('user')}
             >
@@ -248,6 +250,7 @@ export default function AuthScreen() {
               </Text>
             </TouchableOpacity>
             <TouchableOpacity
+              testID={T.authRole.therapist}
               style={[styles.roleOption, role === 'therapist' && { backgroundColor: colors.purple600 }]}
               onPress={() => pickRole('therapist')}
             >
@@ -265,12 +268,14 @@ export default function AuthScreen() {
           {/* Tab switcher */}
           <View style={[styles.tabs, { backgroundColor: colors.card, borderColor: colors.border }]}>
             <TouchableOpacity
+              testID={T.auth.tabLogin}
               style={[styles.tab, mode === 'login' && { backgroundColor: colors.purple600 }]}
               onPress={() => reset('login')}
             >
               <Text style={[styles.tabText, { color: colors.textMuted }, mode === 'login' && styles.tabTextActive]}>Sign in</Text>
             </TouchableOpacity>
             <TouchableOpacity
+              testID={T.auth.tabRegister}
               style={[styles.tab, mode === 'register' && { backgroundColor: colors.purple600 }]}
               onPress={() => reset('register')}
             >
@@ -328,6 +333,7 @@ export default function AuthScreen() {
             )}
 
             <TextInput
+              testID={T.auth.emailInput}
               style={[styles.input, { backgroundColor: colors.cardSolid, borderColor: error ? '#ef4444' : colors.borderFaint, color: colors.textPrimary }]}
               value={email}
               onChangeText={v => { setEmail(v); setError(''); }}
@@ -340,6 +346,7 @@ export default function AuthScreen() {
             />
 
             <TextInput
+              testID={T.auth.passwordInput}
               style={[styles.input, { backgroundColor: colors.cardSolid, borderColor: error ? '#ef4444' : colors.borderFaint, color: colors.textPrimary }]}
               value={password}
               onChangeText={v => { setPassword(v); setError(''); }}
@@ -385,6 +392,7 @@ export default function AuthScreen() {
             )}
 
             <TouchableOpacity
+              testID={T.auth.submit}
               style={[
                 styles.button,
                 { backgroundColor: colors.purple600, shadowColor: colors.purple500 },

@@ -1,0 +1,173 @@
+# ═══════════════════════════════════════════════════════════════════════════
+# THERAPIST WORKSPACE / PORTAL (mobile side) — Phase 9, docs/ROADMAP.md
+# Covers: role pill → registration + client-data consent → dashboard →
+# add an external client → digitize a session (typed-notes path, deterministic
+# — no camera/OCR dependency) → edit bullets → AI summarize → client detail →
+# cleanup (delete session, delete client).
+#
+# Distinct from the journal-user suite (flows 01-07): this is a therapist
+# identity layered on top of the same DreamLog account system (see
+# docs/ARCHITECTURE.md "Therapist Workspace"). A therapist keeps their own
+# journal too ("My journal →"), but this flow stays entirely in the
+# workspace surfaces under app/therapist/*.tsx.
+#
+# REQUIRES:
+#   • A running backend reachable at EXPO_PUBLIC_API_URL — every step here
+#     hits the backend (POST /therapists/register, /therapists/consent,
+#     /therapists/external-clients, /therapists/sessions, /summarize). For
+#     deterministic AI summaries run the backend with STUB_AI_ANALYSIS=true.
+#   • A seeded Supabase account for EMAIL_THERAPIST — it does not need to be
+#     pre-registered as a therapist; the subflow registers the workspace on
+#     first run and is idempotent on reruns (GET /therapists/me succeeds and
+#     the register step is skipped).
+#   • MASTER_ENCRYPTION_KEY set on the backend (API + worker) — client names
+#     and note text are encrypted at rest (ADR-017); without it these
+#     endpoints error and this whole flow fails closed.
+# ═══════════════════════════════════════════════════════════════════════════
+appId: com.dreamlog.app
+env:
+  EMAIL_THERAPIST: "bharatbanthia2207+maestro-therapist@gmail.com"
+  PASSWORD_THERAPIST: "DreamTest!2026"
+  THERAPIST_NAME: "Dr. Maestro Test"
+  THERAPIST_CREDENTIALS: "M.Phil Clinical Psychology"
+  CLIENT_NAME: "Asha K (QA)"
+  SESSION_BULLET_TYPED: "Discussed sleep routine and set a boundary with family"
+  SESSION_BULLET_ADDED: "Follow up on breathing exercise next session"
+tags:
+  - therapist
+---
+- clearState
+- launchApp:
+    clearKeychain: true
+    permissions:
+      notifications: allow
+- runFlow: ../subflows/complete-onboarding-guest.yaml
+- runFlow: ../subflows/sign-in-as-therapist.yaml
+- takeScreenshot: "therapist-dashboard"
+
+# ─────────────────────────────────────────────────────────────────────────
+# PORTAL 1 — Dashboard renders metrics + primary actions
+# ─────────────────────────────────────────────────────────────────────────
+- assertVisible:
+    id: "therapist-dashboard-screen"
+- assertVisible: "THERAPIST WORKSPACE"
+- assertVisible:
+    id: "therapist-dashboard-new-session"
+- assertVisible:
+    id: "therapist-dashboard-my-clients"
+
+# ─────────────────────────────────────────────────────────────────────────
+# PORTAL 2 — Add a new external client
+# ─────────────────────────────────────────────────────────────────────────
+- tapOn:
+    id: "therapist-dashboard-my-clients"
+- assertVisible:
+    id: "therapist-clients-screen"
+- tapOn:
+    id: "therapist-clients-add-button"
+- assertVisible: "Add a client"
+- tapOn:
+    id: "therapist-clients-add-name-input"
+- inputText: ${CLIENT_NAME}
+- hideKeyboard
+- tapOn:
+    id: "therapist-clients-add-submit"
+- extendedWaitUntil:
+    visible: ${CLIENT_NAME}
+    timeout: 10000
+- takeScreenshot: "therapist-client-added"
+
+# ─────────────────────────────────────────────────────────────────────────
+# PORTAL 3 — Digitize a session via the typed-notes path (deterministic;
+# the photo/OCR path needs a real camera and async worker processing, so it
+# is out of scope for this UI-automation pass)
+# ─────────────────────────────────────────────────────────────────────────
+- tapOn: ${CLIENT_NAME}
+- assertVisible:
+    id: "therapist-client-detail-screen"
+- tapOn:
+    id: "therapist-client-detail-add-session"
+- assertVisible: "New session notes"
+- tapOn:
+    id: "therapist-add-session-type-tab"
+- tapOn:
+    id: "therapist-add-session-bullets-input"
+- inputText: ${SESSION_BULLET_TYPED}
+- hideKeyboard
+- tapOn:
+    id: "therapist-add-session-submit"
+
+# Typed notes are stored immediately (no OCR wait) → session detail screen.
+- extendedWaitUntil:
+    visible:
+      id: "therapist-session-detail-screen"
+    timeout: 15000
+- assertVisible: ${SESSION_BULLET_TYPED}
+- takeScreenshot: "therapist-session-typed-notes"
+
+# ─────────────────────────────────────────────────────────────────────────
+# PORTAL 4 — Edit bullets: add a note, save changes
+# ─────────────────────────────────────────────────────────────────────────
+- tapOn:
+    id: "therapist-session-add-bullet"
+- tapOn:
+    text: "Note…"
+- inputText: ${SESSION_BULLET_ADDED}
+- hideKeyboard
+- tapOn:
+    id: "therapist-session-save-changes"
+- extendedWaitUntil:
+    visible: ${SESSION_BULLET_ADDED}
+    timeout: 10000
+- takeScreenshot: "therapist-session-bullet-added"
+
+# ─────────────────────────────────────────────────────────────────────────
+# PORTAL 5 — AI summary (client identity never sent to the AI — ADR / see
+# docs/ARCHITECTURE.md "Therapist Note OCR Pipeline"). Backend-dependent →
+# guarded so the flow still validates the UI without STUB_AI_ANALYSIS.
+# ─────────────────────────────────────────────────────────────────────────
+- tapOn:
+    id: "therapist-session-summarize-button"
+- extendedWaitUntil:
+    visible: "AI SESSION SUMMARY"
+    timeout: 20000
+    optional: true
+- takeScreenshot: "therapist-session-summarized"
+
+# ─────────────────────────────────────────────────────────────────────────
+# PORTAL 6 — Cleanup: delete the session, then the client (keeps the seeded
+# EMAIL_THERAPIST account tidy across repeated CI runs)
+# ─────────────────────────────────────────────────────────────────────────
+- tapOn:
+    id: "therapist-session-delete"
+- tapOn:
+    text: "Delete"
+- extendedWaitUntil:
+    visible:
+      id: "therapist-client-detail-screen"
+    timeout: 10000
+- tapOn:
+    id: "therapist-client-detail-delete"
+- tapOn:
+    text: "Delete everything"
+- extendedWaitUntil:
+    visible:
+      id: "therapist-clients-screen"
+    timeout: 10000
+- takeScreenshot: "therapist-cleanup-done"
+
+# ─────────────────────────────────────────────────────────────────────────
+# PORTAL 7 — "My journal →" hands off into the normal user product
+# ─────────────────────────────────────────────────────────────────────────
+- back
+- extendedWaitUntil:
+    visible:
+      id: "therapist-dashboard-screen"
+    timeout: 10000
+- tapOn:
+    id: "therapist-dashboard-go-to-journal"
+- extendedWaitUntil:
+    visible:
+      id: "home-screen"
+    timeout: 15000
+- takeScreenshot: "therapist-back-to-journal"
