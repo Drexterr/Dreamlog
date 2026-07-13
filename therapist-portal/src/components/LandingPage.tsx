@@ -231,20 +231,14 @@ function FeatureIcon({ children }: { children: React.ReactNode }) {
 /* ── App mockup ───────────────────────────────────────────────────────────── */
 function AppMockup() {
   const bars = [0.3, 0.65, 0.5, 1, 0.7, 0.9, 0.45, 0.85, 0.55, 0.35, 0.75, 0.6, 0.95, 0.5, 0.4, 0.7];
-  const emotions = [
-    { label: 'Reflective', color: '#c8955a', pct: 72 },
-    { label: 'Hopeful',    color: '#5b8db8', pct: 55 },
-    { label: 'Tired',      color: '#8b7aab', pct: 34 },
-  ];
   return (
     <div style={{ position: 'relative', width: 340, flexShrink: 0 }}>
 
-      {/* Phone frame */}
+      {/* Phone frame — still; the waveform inside is the only thing that moves */}
       <div style={{
         background: '#1a1710', border: '1.5px solid rgba(255,255,255,0.1)',
         borderRadius: 44, padding: '14px 18px 28px',
         boxShadow: '0 48px 96px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.04)',
-        animation: 'floatPhone 7s ease-in-out infinite',
       }}>
         {/* Pill notch */}
         <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 14 }}>
@@ -308,38 +302,13 @@ function AppMockup() {
         </div>
       </div>
 
-      {/* Mood float card — top right */}
-      <div style={{
-        position: 'absolute', top: 40, right: -180,
-        background: '#26221a', border: '1px solid rgba(200,149,90,0.15)',
-        borderRadius: 18, padding: '16px 20px', width: 200,
-        boxShadow: '0 24px 48px rgba(0,0,0,0.6)',
-        animation: 'floatCardA 8s ease-in-out 1s infinite',
-      }}>
-        <div style={{ fontSize: 9, letterSpacing: 2, color: 'rgba(232,221,208,0.3)', textTransform: 'uppercase', marginBottom: 8 }}>
-          MOOD · THIS WEEK
-        </div>
-        <div className="serif" style={{ fontSize: 52, fontWeight: 300, color: '#e8ddd0', lineHeight: 1, marginBottom: 2 }}>6.4</div>
-        <div style={{ fontSize: 11, color: '#5a9367', marginBottom: 14, fontWeight: 500 }}>+0.8 vs last week</div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
-          {emotions.map(e => (
-            <div key={e.label} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <div style={{ flex: 1, height: 3, background: 'rgba(255,255,255,0.06)', borderRadius: 2, overflow: 'hidden' }}>
-                <div style={{ height: '100%', width: `${e.pct}%`, background: e.color, borderRadius: 2 }} />
-              </div>
-              <span style={{ fontSize: 10, color: 'rgba(232,221,208,0.5)', width: 58, flexShrink: 0 }}>{e.label}</span>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Pattern float card — bottom left */}
+      {/* Pattern card — bottom left, still. One card, not two: the headline
+          and the phone are the hero's only focal points. */}
       <div style={{
         position: 'absolute', bottom: 60, left: -130,
         background: '#26221a', border: '1px solid rgba(200,149,90,0.12)',
         borderRadius: 16, padding: '14px 18px', width: 210,
         boxShadow: '0 16px 40px rgba(0,0,0,0.6)',
-        animation: 'floatCardB 9s ease-in-out 2s infinite',
       }}>
         <div style={{ fontSize: 9, letterSpacing: 2, color: 'rgba(232,221,208,0.3)', textTransform: 'uppercase', marginBottom: 8 }}>
           A PATTERN
@@ -441,49 +410,6 @@ function FAQ({ q, a }: { q: string; a: string }) {
         <span style={{ color: 'var(--muted)', fontSize: '1.2rem', flexShrink: 0, transform: open ? 'rotate(45deg)' : 'none', transition: 'transform 0.2s ease', display: 'inline-block' }}>+</span>
       </div>
       {open && <p style={{ margin: '12px 0 0', fontSize: '0.88rem', color: 'var(--muted)', lineHeight: 1.7 }}>{a}</p>}
-    </div>
-  );
-}
-
-/* ── Insight ticker ───────────────────────────────────────────────────────── */
-function InsightTicker() {
-  const items = [
-    'You mentioned "tired" in 9 of your last 14 entries',
-    'Your entries are 40% longer on weekends',
-    "You've brought up your sister three weeks in a row",
-    'Tone is noticeably lighter when you record before noon',
-    'Recurring theme this month: feeling behind',
-    'You asked a question at the end of 6 out of 7 entries',
-    'The word "fine" appeared 31 times — usually at the start',
-    'Most hopeful entry: last Tuesday, 8:47am',
-  ];
-  const all = [...items, ...items];
-  return (
-    <div style={{
-      borderTop: '1px solid var(--border)',
-      borderBottom: '1px solid var(--border)',
-      overflow: 'hidden',
-      padding: '15px 0',
-      cursor: 'default',
-      maskImage: 'linear-gradient(90deg, transparent 0%, black 8%, black 92%, transparent 100%)',
-      WebkitMaskImage: 'linear-gradient(90deg, transparent 0%, black 8%, black 92%, transparent 100%)',
-    }}>
-      <div className="ticker-track" style={{ display: 'inline-flex', whiteSpace: 'nowrap' }}>
-        {all.map((item, i) => (
-          <span key={i} style={{
-            fontSize: '0.76rem',
-            color: 'var(--muted)',
-            padding: '0 40px',
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '40px',
-            flexShrink: 0,
-          }}>
-            <span style={{ color: 'var(--gold)', opacity: 0.35, fontSize: '0.42rem' }}>◆</span>
-            {item}
-          </span>
-        ))}
-      </div>
     </div>
   );
 }
@@ -653,6 +579,9 @@ export default function LandingPage() {
               <a href={dlHref} className="btn-primary" style={{ padding: '14px 28px', fontSize: '0.92rem' }}>Start journaling free</a>
               <a href="/login" className="btn-ghost" style={{ padding: '14px 28px', fontSize: '0.92rem' }}>Therapist portal</a>
             </div>
+            <p style={{ fontSize: '0.78rem', color: 'var(--muted-2)', margin: '18px 0 0', animation: 'heroIn 0.8s cubic-bezier(0.16,1,0.3,1) both', animationDelay: '0.42s' }}>
+              Private by default. Audio is deleted after transcription.
+            </p>
           </div>
           {/* Right: phone mockup with floating cards */}
           <div className="hero-mock" style={{ flex: 1, display: 'flex', justifyContent: 'center', animation: 'heroIn 1s cubic-bezier(0.16,1,0.3,1) both', animationDelay: '0.3s' }}>
@@ -662,29 +591,9 @@ export default function LandingPage() {
       </section>
       </div>
 
-
-      <InsightTicker />
-
-      {/* ── Hero testimonial — single standout quote ───────────────────── */}
-      <div className="reveal" style={{ maxWidth: 1320, margin: '0 auto', padding: '72px 60px' }}>
-        <div style={{
-          background: 'var(--bg-card)', border: '1px solid var(--border-mid)',
-          borderRadius: 20, padding: '52px 56px',
-          display: 'grid', gridTemplateColumns: '3px 1fr', gap: 40, alignItems: 'center',
-        }}>
-          <div style={{ background: 'var(--gold)', borderRadius: 2, alignSelf: 'stretch', opacity: 0.6 }} />
-          <div>
-            <p className="serif" style={{ fontSize: 'clamp(1.4rem, 2.6vw, 2rem)', fontWeight: 300, fontStyle: 'italic', lineHeight: 1.6, color: 'var(--text)', margin: '0 0 20px' }}>
-              &ldquo;Something I couldn&apos;t say to anyone, I could finally say to myself.&rdquo;
-            </p>
-            <span style={{ fontSize: '0.8rem', color: 'var(--muted-2)', letterSpacing: '0.03em' }}>— A user, 31 · on the third week of journaling</span>
-          </div>
-        </div>
-      </div>
-
       {/* ── How it works ──────────────────────────────────────────────── */}
       <section className="landing-section reveal" id="how">
-        <h2 className="serif" style={{ fontSize: 'clamp(1.8rem, 3.5vw, 2.6rem)', fontWeight: 300, margin: '0 0 72px', maxWidth: 420 }}>
+        <h2 style={{ fontSize: 'clamp(1.4rem, 2.4vw, 1.9rem)', fontWeight: 600, letterSpacing: '-0.02em', lineHeight: 1.25, margin: '0 0 72px', maxWidth: 420 }}>
           Three steps.<br />Then it connects the dots.
         </h2>
         <div className="how-grid stagger" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 0, position: 'relative' }}>
@@ -712,7 +621,7 @@ export default function LandingPage() {
       <section className="landing-section reveal" style={{ paddingTop: 0 }}>
         <div className="journal-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 64, alignItems: 'center' }}>
           <div>
-            <h2 className="serif" style={{ fontSize: 'clamp(1.8rem, 3vw, 2.5rem)', fontWeight: 300, margin: '0 0 20px', lineHeight: 1.2 }}>
+            <h2 style={{ fontSize: 'clamp(1.4rem, 2.4vw, 1.9rem)', fontWeight: 600, letterSpacing: '-0.02em', margin: '0 0 20px', lineHeight: 1.25 }}>
               It feels like a journal,<br />not a dashboard.
             </h2>
             <p style={{ fontSize: '0.95rem', color: 'var(--muted)', lineHeight: 1.8, margin: 0 }}>
@@ -764,13 +673,13 @@ export default function LandingPage() {
           {/* Left: copy */}
           <div style={{ padding: '56px 52px', display: 'flex', flexDirection: 'column', justifyContent: 'center', borderRight: '1px solid var(--border)' }}>
             <h2 className="serif" style={{ fontSize: 'clamp(2rem, 3.8vw, 3.4rem)', fontWeight: 300, margin: '0 0 20px', lineHeight: 1.05, letterSpacing: '-0.025em' }}>
-              A conversation<br />that already knows<br /><em style={{ color: 'var(--gold)' }}>your story.</em>
+              A conversation<br />that already knows<br /><em style={{ color: 'var(--gold)', fontStyle: 'normal' }}>your story.</em>
             </h2>
             <p style={{ fontSize: '0.95rem', color: 'var(--muted)', lineHeight: 1.8, margin: '0 0 28px', maxWidth: 380 }}>
               Not a chatbot. A companion that has read everything you&apos;ve said to it, and comes prepared. Up to an hour. Voice or text. Four distinct tones.
             </p>
             <p style={{ fontSize: '0.78rem', color: 'var(--muted-2)', margin: 0, lineHeight: 1.8 }}>
-              {p('therapy')} per session · included monthly with Pro<br /><em>not a replacement for therapy</em>
+              {p('therapy')} per session · included monthly with Pro<br /><em style={{ fontStyle: 'normal' }}>not a replacement for therapy</em>
             </p>
           </div>
           {/* Right: orb fills the whole panel */}
@@ -800,7 +709,7 @@ export default function LandingPage() {
 
       {/* ── Dream Decoder ─────────────────────────────────────────────── */}
       <section className="landing-section reveal" id="dream" style={{ paddingTop: 0 }}>
-        <h2 className="serif" style={{ fontSize: 'clamp(1.8rem, 3vw, 2.5rem)', fontWeight: 300, margin: '0 0 12px' }}>
+        <h2 style={{ fontSize: 'clamp(1.4rem, 2.4vw, 1.9rem)', fontWeight: 600, letterSpacing: '-0.02em', lineHeight: 1.25, margin: '0 0 12px' }}>
           Two lenses for the dreams<br />you can&apos;t shake.
         </h2>
         <p style={{ fontSize: '0.95rem', color: 'var(--muted)', margin: '0 0 40px', lineHeight: 1.75, maxWidth: 520 }}>
@@ -815,8 +724,8 @@ export default function LandingPage() {
           {/* Jungian */}
           <div className="dream-panel" style={{ padding: '48px 44px', position: 'relative', overflow: 'hidden' }}>
             <div aria-hidden="true" style={{ position: 'absolute', right: -24, top: -16, fontSize: '9rem', color: 'rgba(200,149,90,0.05)', fontFamily: 'Georgia, serif', userSelect: 'none', lineHeight: 1, pointerEvents: 'none' }}>Ψ</div>
-            <div style={{ fontSize: '0.58rem', letterSpacing: '2.5px', color: 'var(--muted-2)', textTransform: 'uppercase', marginBottom: 20 }}>Psychological</div>
-            <h3 className="serif" style={{ fontSize: '1.7rem', fontWeight: 300, color: 'var(--text)', margin: '0 0 16px', fontStyle: 'italic', lineHeight: 1.2 }}>Jungian lens</h3>
+            <div style={{ fontSize: '0.76rem', color: 'var(--muted-2)', marginBottom: 20 }}>Psychological</div>
+            <h3 className="serif" style={{ fontSize: '1.7rem', fontWeight: 400, color: 'var(--text)', margin: '0 0 16px', lineHeight: 1.2 }}>Jungian lens</h3>
             <p style={{ fontSize: '0.88rem', color: 'var(--muted)', margin: '0 0 28px', lineHeight: 1.8 }}>
               Read your dream as an inner conversation. The shadows, the figures, the unresolved themes — surfaced gently, without prescription.
             </p>
@@ -829,8 +738,8 @@ export default function LandingPage() {
           {/* Vedic */}
           <div className="dream-panel" style={{ padding: '48px 44px', position: 'relative', overflow: 'hidden', background: 'rgba(200,149,90,0.02)' }}>
             <div aria-hidden="true" style={{ position: 'absolute', right: -20, top: -10, fontSize: '9rem', color: 'rgba(200,149,90,0.05)', fontFamily: 'Georgia, serif', userSelect: 'none', lineHeight: 1, pointerEvents: 'none' }}>ॐ</div>
-            <div style={{ fontSize: '0.58rem', letterSpacing: '2.5px', color: 'var(--muted-2)', textTransform: 'uppercase', marginBottom: 20 }}>Indian symbolic</div>
-            <h3 className="serif" style={{ fontSize: '1.7rem', fontWeight: 300, color: 'var(--text)', margin: '0 0 16px', fontStyle: 'italic', lineHeight: 1.2 }}>Vedic lens</h3>
+            <div style={{ fontSize: '0.76rem', color: 'var(--muted-2)', marginBottom: 20 }}>Indian symbolic</div>
+            <h3 className="serif" style={{ fontSize: '1.7rem', fontWeight: 400, color: 'var(--text)', margin: '0 0 16px', lineHeight: 1.2 }}>Vedic lens</h3>
             <p style={{ fontSize: '0.88rem', color: 'var(--muted)', margin: '0 0 28px', lineHeight: 1.8 }}>
               Interpret your dream through traditional Indian symbolism: rivers, doors, animals, time of night. Cultural, careful, contextual.
             </p>
@@ -845,7 +754,7 @@ export default function LandingPage() {
 
       {/* ── Features ──────────────────────────────────────────────────── */}
       <section className="landing-section reveal" id="features">
-        <h2 className="serif" style={{ fontSize: 'clamp(1.8rem, 3vw, 2.5rem)', fontWeight: 300, margin: '0 0 48px' }}>
+        <h2 style={{ fontSize: 'clamp(1.4rem, 2.4vw, 1.9rem)', fontWeight: 600, letterSpacing: '-0.02em', lineHeight: 1.25, margin: '0 0 48px' }}>
           Built for the thoughts<br />you can&apos;t type.
         </h2>
 
@@ -920,10 +829,35 @@ export default function LandingPage() {
         </div>
       </div>
 
+      {/* ── For therapists — above pricing: a real differentiator, kept quiet ── */}
+      <section className="landing-section-sm reveal" id="therapists">
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 48, flexWrap: 'wrap' }}>
+          <div style={{ flex: 1, minWidth: 280, maxWidth: 640 }}>
+            <h2 style={{ fontSize: 'clamp(1.4rem, 2.4vw, 1.9rem)', fontWeight: 600, letterSpacing: '-0.02em', lineHeight: 1.25, margin: '0 0 14px' }}>
+              For the therapists<br />who send their clients here.
+            </h2>
+            <p style={{ fontSize: '0.9rem', color: 'var(--muted)', lineHeight: 1.75, margin: '0 0 24px' }}>
+              An AI pre-session brief drawn from what your client chooses to share — mood trends and summaries, never recordings.
+            </p>
+            <p className="serif" style={{ fontSize: 'clamp(1.15rem, 2vw, 1.5rem)', fontWeight: 300, fontStyle: 'italic', lineHeight: 1.6, color: 'var(--text)', margin: 0, paddingLeft: 20, borderLeft: '2px solid rgba(200,149,90,0.5)' }}>
+              Clients choose what to share. Links expire. Raw recordings stay private.
+            </p>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 12, flexShrink: 0, paddingTop: 4 }}>
+            <a href="/login" className="btn-ghost" style={{ padding: '13px 26px', borderRadius: 12, whiteSpace: 'nowrap' }}>
+              Open Therapist Portal →
+            </a>
+            <span style={{ fontSize: '0.76rem', color: 'var(--muted-2)', textAlign: 'right' }}>Free to register as a therapist</span>
+          </div>
+        </div>
+      </section>
+
+      <hr className="section-divider" />
+
       {/* ── Pricing ───────────────────────────────────────────────────── */}
       <section className="landing-section reveal" id="pricing">
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', gap: 24, marginBottom: 44, flexWrap: 'wrap' }}>
-          <h2 className="serif" style={{ fontSize: 'clamp(2.2rem, 4vw, 3.6rem)', fontWeight: 300, margin: 0, lineHeight: 1.05, letterSpacing: '-0.02em' }}>Honest<br />pricing.</h2>
+          <h2 style={{ fontSize: 'clamp(1.6rem, 2.8vw, 2.3rem)', fontWeight: 600, margin: 0, lineHeight: 1.15, letterSpacing: '-0.02em' }}>Honest<br />pricing.</h2>
           <p style={{ fontSize: '0.9rem', color: 'var(--muted)', margin: 0, maxWidth: 260, lineHeight: 1.7, textAlign: 'right' }}>Most people start Free. You never need to upgrade. It&apos;s allowed.</p>
         </div>
 
@@ -989,72 +923,9 @@ export default function LandingPage() {
         </p>
       </section>
 
-      {/* ── Corporate Wellness ────────────────────────────────────────── */}
-      <section style={{ background: 'var(--bg-card-2)', borderTop: '1px solid var(--border)', borderBottom: '1px solid var(--border)' }}>
-        <div className="b2b-inner" style={{ maxWidth: 1320, margin: '0 auto', padding: '80px 60px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 60, alignItems: 'start' }}>
-          <div>
-            <h2 className="serif" style={{ fontSize: 'clamp(1.6rem, 3vw, 2.4rem)', fontWeight: 300, margin: '0 0 16px', lineHeight: 1.15, color: 'var(--text)' }}>
-              DreamLog for teams<br />who actually care.
-            </h2>
-            <p style={{ fontSize: '0.9rem', color: 'var(--muted)', lineHeight: 1.8, margin: '0 0 28px', maxWidth: 420 }}>
-              Aggregate, anonymized emotional wellbeing insights across your team. Individual data never leaves the user&apos;s device without explicit consent.
-            </p>
-            <a href="mailto:support@dreamlog.app" className="btn-ghost" style={{ padding: '12px 26px', borderRadius: 100, whiteSpace: 'nowrap', fontSize: '0.86rem', display: 'inline-flex' }}>
-              Talk to us →
-            </a>
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 0, paddingTop: 4 }}>
-            {[
-              { num: '100%', label: 'Anonymous to admins', body: 'No individual entry, transcript, or recording is ever visible to HR or management.' },
-              { num: 'Weekly', label: 'Aggregate mood report', body: 'Team-level emotional patterns surfaced without identifying anyone.' },
-              { num: 'Yours', label: 'Data stays with employees', body: 'Individual data never leaves the user without their explicit opt-in.' },
-            ].map((item, i) => (
-              <div key={item.label} style={{ padding: '20px 0', borderTop: i === 0 ? 'none' : '1px solid var(--border)', display: 'flex', gap: 20, alignItems: 'flex-start' }}>
-                <div className="serif" style={{ fontSize: '1.5rem', fontWeight: 300, color: 'var(--gold)', lineHeight: 1, flexShrink: 0, minWidth: 64 }}>{item.num}</div>
-                <div>
-                  <div style={{ fontSize: '0.84rem', fontWeight: 600, color: 'var(--text)', marginBottom: 4 }}>{item.label}</div>
-                  <div style={{ fontSize: '0.8rem', color: 'var(--muted)', lineHeight: 1.65 }}>{item.body}</div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── For clinicians ────────────────────────────────────────────── */}
-      <section className="landing-section-sm reveal">
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 48, flexWrap: 'wrap' }}>
-          <div style={{ flex: 1, minWidth: 280 }}>
-            <h2 className="serif" style={{ fontSize: 'clamp(1.5rem, 2.5vw, 2rem)', fontWeight: 300, margin: '0 0 14px' }}>
-              For the therapists<br />who send their clients here.
-            </h2>
-            <p style={{ fontSize: '0.9rem', color: 'var(--muted)', lineHeight: 1.75, margin: '0 0 24px' }}>
-              Your clients own the data. You only see what they choose to share, and only while the link is live.
-            </p>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 11 }}>
-              {[
-                'AI-generated pre-session brief drawn from the last 5 entries',
-                'Mood trends and top emotions, no raw transcripts or recordings',
-                'Passcode-protected share links that auto-expire in 72 hours',
-                'Client-controlled: they generate the link, not you',
-              ].map(item => (
-                <div key={item} style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
-                  <span style={{ color: 'var(--gold)', flexShrink: 0, fontSize: '0.7rem', marginTop: 3, opacity: 0.7 }}>✦</span>
-                  <span style={{ fontSize: '0.86rem', color: 'var(--muted)', lineHeight: 1.55 }}>{item}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 12, flexShrink: 0, paddingTop: 4 }}>
-            <a href="/login" className="btn-ghost" style={{ padding: '13px 26px', borderRadius: 12, whiteSpace: 'nowrap' }}>
-              Open Therapist Portal →
-            </a>
-            <span style={{ fontSize: '0.76rem', color: 'var(--muted-2)', textAlign: 'right' }}>Free to register as a therapist</span>
-          </div>
-        </div>
-      </section>
-
       {/* ── FAQ ───────────────────────────────────────────────────────── */}
+      {/* Corporate Wellness lives on its own page (/teams) — it serves a
+          different buyer and interrupted the consumer journey here. */}
       <section className="landing-section-sm reveal">
         <div className="faq-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 60px' }}>
           <div className="faq-col stagger">
@@ -1160,7 +1031,6 @@ export default function LandingPage() {
           .dream-grid            { grid-template-columns: 1fr !important; }
           .features-hero-grid    { grid-template-columns: repeat(2, 1fr) !important; }
           .pricing-grid          { grid-template-columns: 1fr !important; }
-          .b2b-inner             { padding: 56px 40px !important; gap: 40px !important; }
         }
 
         /* ── Mobile (640px) ── */
@@ -1217,10 +1087,7 @@ export default function LandingPage() {
           .pricing-free-row { flex-direction: column !important; align-items: flex-start !important; gap: 16px !important; }
           .pricing-free-row > a { align-self: stretch; text-align: center; }
 
-          /* B2B: 2-col → 1-col */
-          .b2b-inner { grid-template-columns: 1fr !important; padding: 48px 20px !important; gap: 32px !important; }
-
-          /* For clinicians row: wrap */
+          /* For therapists row: wrap */
           .landing-section-sm > div[style*="space-between"] { flex-direction: column !important; align-items: flex-start !important; gap: 20px !important; }
 
           /* FAQ: 2-col → 1-col */

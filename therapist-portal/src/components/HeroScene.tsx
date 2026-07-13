@@ -152,16 +152,10 @@ function makeWordSprite(text: string, warm: boolean): THREE.Sprite {
   return sprite;
 }
 
-// the emotional arc: 0 = chaos, 1 = clarity
-// 22s cycle: chaos (5s) → gather (5s) → clarity (9s) → release (3s)
-function moodEnvelope(t: number): number {
-  const smooth = (x: number) => x * x * (3 - 2 * x);
-  const p = t % 22;
-  if (p < 5) return 0;
-  if (p < 10) return smooth((p - 5) / 5);
-  if (p < 19) return 1;
-  return 1 - smooth((p - 19) / 3);
-}
+// The field holds its formed "clarity" state permanently — no chaos↔clarity
+// cycle. The scene should read as a calm constellation with slow drift, not a
+// performance competing with the headline.
+const MOOD = 1;
 
 export default function HeroScene() {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -391,18 +385,9 @@ export default function HeroScene() {
 
     type WordEntry = { sprite: THREE.Sprite; angle: number; height: number; radius: number; speed: number; warm: boolean };
     const words: WordEntry[] = [];
-    heavyWords.forEach((w, i) => {
-      const sprite = makeWordSprite(w, false);
-      wordGroup.add(sprite);
-      disposables.push(sprite.material.map!, sprite.material);
-      words.push({
-        sprite, warm: false,
-        angle: (i / heavyWords.length) * Math.PI * 2 + 0.7,
-        height: [4.5, -3.5, 0.5][i] ?? 0,
-        radius: RADIUS * 1.9,
-        speed: 0.04 + i * 0.012,
-      });
-    });
+    // heavy/cold words belonged to the chaos phase — with the field held in
+    // clarity they would never be visible, so they are not created at all
+    void heavyWords;
     lightWords.forEach((w, i) => {
       const sprite = makeWordSprite(w, true);
       wordGroup.add(sprite);
@@ -428,7 +413,7 @@ export default function HeroScene() {
       dustPos[i * 3 + 2] = -24 + Math.random() * 28;
       dustPhase[i] = Math.random() * Math.PI * 2;
       dustScale[i] = 0.4 + Math.random() * 0.9;
-      dustSpeed[i] = 0.4 + Math.random() * 1.2;
+      dustSpeed[i] = 0.15 + Math.random() * 0.45; // slow ambient drift, not a fly-through
       dustMix[i] = Math.random();
     }
     const dustGeom = new THREE.BufferGeometry();
@@ -480,9 +465,9 @@ export default function HeroScene() {
     const renderFrame = () => {
       const dt = clock.getDelta();
       elapsed += dt;
-      spin += dt * 0.12; // constant base rotation — always visibly turning
+      spin += dt * 0.025; // barely-perceptible drift, not a visible rotation
 
-      const mood = moodEnvelope(elapsed);
+      const mood = MOOD;
 
       orbMat.uniforms.uTime.value = elapsed;
       ringMat.uniforms.uTime.value = elapsed;
@@ -497,20 +482,20 @@ export default function HeroScene() {
       lineMat.opacity = 0.16 * mood;
       glowMat.opacity = mood * (isSmall ? 0.55 : 1);
 
-      // orb follows the cursor with inertia + scroll adds tilt
-      const targetY = spin + mouse.x * 0.9;
-      const targetX = 0.18 + mouse.y * 0.45 + scrollTilt * 0.6;
-      orbGroup.rotation.y += (targetY - orbGroup.rotation.y) * 0.06;
-      orbGroup.rotation.x += (targetX - orbGroup.rotation.x) * 0.06;
-      // counter-rotate the ring so it visibly sweeps around the orb
-      ringGroup.rotation.y -= dt * 0.3;
-      // nucleus breathes
-      glowSprite.scale.setScalar(RADIUS * (1.55 + Math.sin(elapsed * 0.7) * 0.12));
+      // orb follows the cursor with gentle inertia + scroll adds a slight tilt
+      const targetY = spin + mouse.x * 0.3;
+      const targetX = 0.18 + mouse.y * 0.15 + scrollTilt * 0.3;
+      orbGroup.rotation.y += (targetY - orbGroup.rotation.y) * 0.04;
+      orbGroup.rotation.x += (targetX - orbGroup.rotation.x) * 0.04;
+      // ring drifts slowly around the orb
+      ringGroup.rotation.y -= dt * 0.06;
+      // nucleus breathes, softly
+      glowSprite.scale.setScalar(RADIUS * (1.55 + Math.sin(elapsed * 0.35) * 0.04));
 
-      // emotion words: heavy ones live in the chaos, light ones in clarity
+      // emotion words: with the field held in clarity only the light ones show
       for (const w of words) {
         w.angle += dt * w.speed;
-        const bob = Math.sin(elapsed * 0.5 + w.height) * 0.5;
+        const bob = Math.sin(elapsed * 0.3 + w.height) * 0.25;
         w.sprite.position.set(
           Math.cos(w.angle) * w.radius,
           w.height + bob,
@@ -525,9 +510,9 @@ export default function HeroScene() {
           presence * (0.3 + 0.08 * Math.sin(elapsed * 0.8 + w.angle * 3));
       }
 
-      // camera parallax opposite the cursor deepens the perspective
-      camera.position.x += (mouse.x * 2.2 - camera.position.x) * 0.04;
-      camera.position.y += (-mouse.y * 1.4 - camera.position.y) * 0.04;
+      // camera parallax opposite the cursor deepens the perspective — subtle
+      camera.position.x += (mouse.x * 0.8 - camera.position.x) * 0.03;
+      camera.position.y += (-mouse.y * 0.5 - camera.position.y) * 0.03;
       camera.lookAt(isSmall ? 0 : 3.5, 0, 0);
 
       renderer.render(scene, camera);
@@ -589,7 +574,7 @@ export default function HeroScene() {
         position: 'absolute',
         inset: 0,
         pointerEvents: 'none',
-        // fade the field out before the ticker below the hero
+        // fade the field out toward the content below the hero
         maskImage: 'linear-gradient(180deg, transparent 0%, black 12%, black 80%, transparent 100%)',
         WebkitMaskImage: 'linear-gradient(180deg, transparent 0%, black 12%, black 80%, transparent 100%)',
       }}

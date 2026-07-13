@@ -60,7 +60,7 @@ export default function PrivacyPage() {
             <Item label="Supabase" href="https://supabase.com/privacy">Manages your account login, including social sign-in.</Item>
             <Item label="Firebase (Google)">Delivers your push notifications if you&apos;ve opted in.</Item>
             <Item label="Azure Speech Services" href="https://privacy.microsoft.com">If you use Therapy Mode with AI voice, your assistant&apos;s responses are processed here.</Item>
-            <Item label="Stripe" href="https://stripe.com/privacy">Handles all payments. We never see your card details - Stripe takes care of that entirely.</Item>
+            <Item label="Apple App Store / Google Play">Handle all payments as in-app purchases. We never see your card details - the stores take care of that entirely.</Item>
           </Section>
 
           <Section title="A Note on Mental Health Data">

@@ -70,12 +70,10 @@ a { color: inherit; text-decoration: none; }
   border: 1px solid var(--border);
   border-radius: 16px;
   padding: 20px;
-  transition: transform 0.24s ease, border-color 0.24s ease, box-shadow 0.24s ease;
+  transition: border-color 0.24s ease;
 }
 .card:hover {
-  transform: translateY(-3px);
   border-color: rgba(200, 149, 90, 0.22);
-  box-shadow: 0 16px 40px rgba(10, 7, 2, 0.6), 0 0 48px rgba(200, 149, 90, 0.05);
 }
 .card-hover {
   cursor: pointer;
@@ -282,39 +280,16 @@ input::placeholder { color: var(--muted-2); }
   to   { opacity: 1; transform: translateY(0); }
 }
 
-/* Breathing orb idle pulse */
+/* Breathing orb idle pulse — the one ambient animation the page keeps */
 @keyframes breathIdle {
   0%, 100% { transform: scale(1);    opacity: 0.5; }
   50%       { transform: scale(1.22); opacity: 0.9; }
 }
 
-/* Float: phone + cards */
-@keyframes floatPhone {
-  0%, 100% { transform: translateY(0px); }
-  50%       { transform: translateY(-10px); }
-}
-@keyframes floatCardA {
-  0%, 100% { transform: translateY(0px) rotate(0deg); }
-  40%       { transform: translateY(-7px) rotate(0.4deg); }
-  70%       { transform: translateY(-3px) rotate(-0.3deg); }
-}
-@keyframes floatCardB {
-  0%, 100% { transform: translateY(0px) rotate(0deg); }
-  35%       { transform: translateY(-5px) rotate(-0.5deg); }
-  65%       { transform: translateY(-9px) rotate(0.3deg); }
-}
-
-/* Hero text entrance */
+/* Hero text entrance — the one entrance animation the page keeps */
 @keyframes heroIn {
   from { opacity: 0; transform: translateY(22px); }
   to   { opacity: 1; transform: translateY(0); }
-}
-
-/* Ambient glow orb */
-@keyframes glowDrift {
-  0%, 100% { transform: translate(0, 0) scale(1); opacity: 0.14; }
-  33%       { transform: translate(20px, -15px) scale(1.06); opacity: 0.22; }
-  66%       { transform: translate(-10px, 10px) scale(0.96); opacity: 0.16; }
 }
 
 /* Nav link underline slide */
@@ -335,86 +310,24 @@ input::placeholder { color: var(--muted-2); }
 .nav-link:hover { color: var(--text) !important; }
 .nav-link:hover::after { transform: scaleX(1); }
 
-/* Step number bubble */
-.step-num {
-  transition: transform 0.22s ease, border-color 0.22s ease, box-shadow 0.22s ease;
-}
-.step-num:hover {
-  transform: scale(1.1);
-  border-color: var(--gold) !important;
-  box-shadow: 0 0 0 4px rgba(200,149,90,0.08);
-}
-
-/* ── Feature hero cards ──────────────────────────────────────────────────── */
+/* ── Feature hero cards — sit still; border responds, nothing moves ──────── */
 .feat-hero {
-  transition: transform 0.28s ease, border-color 0.28s ease, box-shadow 0.28s ease;
+  transition: border-color 0.28s ease;
 }
 .feat-hero:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 24px 56px rgba(0,0,0,0.5);
-}
-.feat-hero:hover .feat-icon {
-  transform: translateY(-3px) scale(1.12);
-  opacity: 1 !important;
-}
-.feat-icon {
-  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.3s ease;
+  border-color: var(--border-strong) !important;
 }
 
-/* ── Feature list rows ───────────────────────────────────────────────────── */
-.feat-row {
-  position: relative;
-  transition: background 0.2s ease;
-}
-.feat-row::before {
-  content: '';
-  position: absolute;
-  left: 0; top: 0; bottom: 0;
-  width: 2px;
-  background: var(--gold);
-  transform: scaleY(0);
-  transform-origin: top;
-  transition: transform 0.22s ease;
-}
-.feat-row:hover { background: rgba(200,149,90,0.04) !important; }
-.feat-row:hover::before { transform: scaleY(1); }
-.feat-row:hover .feat-row-icon { opacity: 0.9 !important; color: var(--gold); }
-.feat-row-icon { transition: opacity 0.2s ease, color 0.2s ease; }
+/* ── Feature list rows — plain rows, no accent line, no lift ─────────────── */
 
-/* ── Testimonial hover ───────────────────────────────────────────────────── */
-.testimonial-large {
-  transition: box-shadow 0.3s ease, border-color 0.3s ease;
-}
-.testimonial-large:hover {
-  border-color: rgba(200,149,90,0.28) !important;
-  box-shadow: 0 0 60px rgba(200,149,90,0.07), 0 24px 48px rgba(0,0,0,0.3);
-}
-.testimonial-small {
-  transition: transform 0.24s ease, border-color 0.24s ease, box-shadow 0.24s ease;
-}
-.testimonial-small:hover {
-  transform: translateX(4px);
-  border-color: rgba(200,149,90,0.18) !important;
-  box-shadow: 0 12px 32px rgba(0,0,0,0.3);
-}
-
-/* ── Pricing card pulse (featured) ──────────────────────────────────────── */
-@keyframes borderGlow {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(212,165,106,0), 0 20px 48px rgba(10,7,2,0.45); }
-  50%       { box-shadow: 0 0 0 3px rgba(212,165,106,0.2), 0 32px 72px rgba(10,7,2,0.6), 0 0 80px rgba(212,165,106,0.06); }
-}
-.pricing-featured {
-  animation: borderGlow 4s ease-in-out infinite;
-  transition: transform 0.28s ease;
-}
-.pricing-featured:hover { transform: translateY(-6px); }
+/* ── Pricing cards — static; the featured card earns emphasis from its
+      border and background alone ─────────────────────────────────────────── */
+.pricing-featured,
 .pricing-card {
-  transition: transform 0.24s ease, border-color 0.24s ease, box-shadow 0.24s ease;
+  transition: border-color 0.24s ease;
 }
 .pricing-card:hover {
-  transform: translateY(-3px);
   border-color: rgba(200,149,90,0.2) !important;
-  box-shadow: 0 16px 40px rgba(0,0,0,0.35);
 }
 
 /* ── Dream split panel ───────────────────────────────────────────────────── */
@@ -425,86 +338,27 @@ input::placeholder { color: var(--muted-2); }
   background: rgba(200,149,90,0.04) !important;
 }
 
-/* ── Dream decoder card (legacy, keep for compat) ────────────────────────── */
-.dream-card {
-  transition: transform 0.28s ease, border-color 0.28s ease, box-shadow 0.28s ease;
-}
-.dream-card:hover {
-  transform: translateY(-4px);
-  border-color: rgba(200,149,90,0.2) !important;
-  box-shadow: 0 20px 48px rgba(0,0,0,0.45);
-}
-.dream-symbol {
-  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.3s ease;
-  display: inline-block;
-}
-
-/* ── Gold text shimmer ───────────────────────────────────────────────────── */
-@keyframes goldShimmer {
-  0%   { background-position: -200% center; }
-  100% { background-position:  200% center; }
-}
-.gold-shimmer {
-  background: linear-gradient(90deg, var(--gold) 0%, #f0d090 40%, var(--gold) 60%, #b07030 100%);
-  background-size: 200% auto;
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  animation: goldShimmer 4s linear infinite;
-}
-
-/* ── Clip-path reveal for section headings ───────────────────────────────── */
-@keyframes clipReveal {
-  from { clip-path: inset(0 100% 0 0); opacity: 0.4; }
-  to   { clip-path: inset(0 0% 0 0);   opacity: 1; }
-}
-.heading-reveal {
-  opacity: 0;
-}
-.heading-reveal.visible {
-  animation: clipReveal 0.9s cubic-bezier(0.16,1,0.3,1) both;
-}
-
 /* ── Waveform bar animation (phone mockup) ───────────────────────────────── */
 @keyframes wave {
   0%, 100% { transform: scaleY(0.4); }
   50%       { transform: scaleY(1); }
 }
 
-/* ── Ticker scroll ───────────────────────────────────────────────────────── */
-@keyframes ticker {
-  from { transform: translateX(0); }
-  to   { transform: translateX(-50%); }
-}
-
-/* ── Stagger: tighter timing for more drama ──────────────────────────────── */
+/* ── Scroll reveal — opacity only, no translate/blur/stagger. The page
+      should feel like it is already there, not arriving. ──────────────────── */
 .stagger > * {
   opacity: 0;
-  transform: translateY(20px);
-  transition: opacity 0.6s cubic-bezier(0.16,1,0.3,1), transform 0.6s cubic-bezier(0.16,1,0.3,1);
+  transition: opacity 0.45s ease;
 }
-.stagger.visible > * { opacity: 1; transform: translateY(0); }
-.stagger.visible > *:nth-child(1)  { transition-delay: 0.05s; }
-.stagger.visible > *:nth-child(2)  { transition-delay: 0.14s; }
-.stagger.visible > *:nth-child(3)  { transition-delay: 0.23s; }
-.stagger.visible > *:nth-child(4)  { transition-delay: 0.32s; }
-.stagger.visible > *:nth-child(5)  { transition-delay: 0.41s; }
-.stagger.visible > *:nth-child(6)  { transition-delay: 0.50s; }
+.stagger.visible > * { opacity: 1; }
 
-/* ── Reveal with slide variants ──────────────────────────────────────────── */
-.reveal-left {
-  opacity: 0;
-  transform: translateX(-24px);
-  transition: opacity 0.6s ease, transform 0.6s ease;
-}
-.reveal-left.visible { opacity: 1; transform: translateX(0); }
-
+.reveal-left,
 .reveal-right {
   opacity: 0;
-  transform: translateX(24px);
-  transition: opacity 0.6s ease, transform 0.6s ease;
+  transition: opacity 0.45s ease;
 }
-.reveal-right.visible { opacity: 1; transform: translateX(0); }
+.reveal-left.visible,
+.reveal-right.visible { opacity: 1; }
 
 
 .spin {
@@ -631,35 +485,13 @@ input::placeholder { color: var(--muted-2); }
   border-top: 1px solid var(--border);
 }
 
-/* Scroll reveal */
+/* Scroll reveal — opacity only */
 .reveal {
   opacity: 0;
-  transform: translateY(22px);
-  filter: blur(3px);
-  transition: opacity 0.65s ease, transform 0.65s cubic-bezier(0.16, 1, 0.3, 1), filter 0.65s ease;
+  transition: opacity 0.45s ease;
 }
 .reveal.visible {
   opacity: 1;
-  transform: translateY(0);
-  filter: blur(0);
-}
-
-/* Waveform bars */
-@keyframes wave {
-  0%, 100% { transform: scaleY(0.4); }
-  50%       { transform: scaleY(1); }
-}
-
-/* Insight ticker */
-.ticker-track {
-  animation: tickerScroll 55s linear infinite;
-}
-.ticker-track:hover {
-  animation-play-state: paused;
-}
-@keyframes tickerScroll {
-  from { transform: translateX(0); }
-  to   { transform: translateX(-50%); }
 }
 
 /* ── Responsive ──────────────────────────────────────── */
@@ -708,6 +540,23 @@ input::placeholder { color: var(--muted-2); }
   font-size: 0.875rem;
   color: var(--muted);
   line-height: 1.75;
+}
+
+/* ── Reduced motion ──────────────────────────────────────
+   The page must be fully readable with zero motion: kill every animation and
+   transition, and force all scroll-reveal states visible. */
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  .reveal, .reveal-left, .reveal-right, .stagger > * {
+    opacity: 1 !important;
+    transform: none !important;
+    filter: none !important;
+  }
 }
 
 /* ── Print ───────────────────────────────────────────── */

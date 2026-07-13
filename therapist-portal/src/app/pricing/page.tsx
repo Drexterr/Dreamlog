@@ -215,7 +215,7 @@ export default function PricingPage() {
               { q: 'Does it auto-renew?', a: 'No. Every plan is a one-time pass — 30 days for monthly, 365 days for annual. When it expires you return to Free automatically. Buy again if you want to continue.' },
               { q: 'Can I switch plans?', a: 'Yes, any time. Buy a new plan in-app and it activates immediately. Unused days on your current pass are not refunded.' },
               { q: 'Is the free plan actually free?', a: 'Yes, genuinely. 10 entries a month, full AI reflection, 7-day mood chart, crisis detection. No card required.' },
-              { q: 'What currencies do you accept?', a: 'Prices are shown in INR for India, USD for most countries. Payment is processed by Stripe or in-app purchase depending on your platform.' },
+              { q: 'What currencies do you accept?', a: 'Prices are shown in INR for India, USD for most countries. All purchases are in-app purchases handled by the App Store or Google Play.' },
               { q: 'Is Therapy Mode safe?', a: 'Crisis detection runs on every message. If distress is flagged, you get hotline resources immediately and the session ends safely.' },
               { q: 'Can a therapist access my data?', a: 'Only if you share it. You generate a passcode-protected link. It expires in 72 hours. Your therapist sees mood trends and AI summaries — never raw recordings.' },
             ].map(item => (
