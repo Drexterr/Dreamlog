@@ -59,7 +59,7 @@ function buildSessionOptions(currency: RegionCurrency): SessionOption[] {
     {
       id: 'pro',
       badge: 'BEST VALUE',
-      title: 'DreamLog Pro',
+      title: 'Ode Pro',
       subtitle: '1 session included every month',
       price: `${PLAN_PRICE_SHORT.pro[currency]} / mo`,
       perSession: `Extra sessions at ${memberPrice} member price`,
@@ -67,7 +67,7 @@ function buildSessionOptions(currency: RegionCurrency): SessionOption[] {
       features: [
         '1 therapy session included per month',
         `Extra sessions at member price (${memberPrice})`,
-        'Everything in DreamLog+ - unlimited entries, all modes',
+        'Everything in Ode+ - unlimited entries, all modes',
         'PDF export & Apple Health sync',
         'Full mood history & analytics',
       ],
@@ -351,7 +351,7 @@ export default function TherapyPricingScreen() {
 
           {/* Footer disclaimer */}
           <Text style={[styles.disclaimer, { color: colors.textMuted }]}>
-            DreamLog Therapy Sessions are AI-assisted and are not a substitute for professional mental health care. If you are in crisis, please contact a crisis helpline immediately.
+            Ode Therapy Sessions are AI-assisted and are not a substitute for professional mental health care. If you are in crisis, please contact a crisis helpline immediately.
           </Text>
 
         </ScrollView>

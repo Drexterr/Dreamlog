@@ -42,8 +42,8 @@ const GOAL_META: Record<UserGoal, { label: string; emoji: string }> = {
 
 const PLAN_LABELS: Record<Plan, string> = {
   free: 'Free',
-  plus: 'DreamLog+',
-  pro:  'DreamLog Pro',
+  plus: 'Ode+',
+  pro:  'Ode Pro',
   b2b:  'B2B Wellness',
 };
 
@@ -477,7 +477,7 @@ export default function SettingsScreen() {
                   activeOpacity={0.8}
                 >
                   <Text style={[styles.upgradeText, { color: colors.purple300 }]}>
-                    {currentPlan === 'free' ? '✦  Upgrade to DreamLog+' : '✦  Upgrade to DreamLog Pro'}
+                    {currentPlan === 'free' ? '✦  Upgrade to Ode+' : '✦  Upgrade to Ode Pro'}
                   </Text>
                   <Text style={[styles.chevron, { color: colors.purple300 }]}>›</Text>
                 </TouchableOpacity>
@@ -610,7 +610,7 @@ export default function SettingsScreen() {
             <View style={[styles.rowDivider, { backgroundColor: colors.borderFaint }]} />
             <SettingRow
               testID={T.settings.aboutRow}
-              label="About DreamLog"
+              label="About Ode"
               sub="Tap to check for updates"
               colors={colors}
               onPress={openUpdateModal}

@@ -98,7 +98,7 @@ func (s *ReengagementScheduler) tick(ctx context.Context) {
 
 		var lastErr error
 		for _, token := range tokens {
-			if err := s.fcm.SendToToken(ctx, token, "DreamLog", msg, map[string]string{
+			if err := s.fcm.SendToToken(ctx, token, "Ode", msg, map[string]string{
 				"type":     "reengagement",
 				"nudge_id": nudge.ID.String(),
 			}); err != nil {

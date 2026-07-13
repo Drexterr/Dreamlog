@@ -7,7 +7,7 @@ export default function TermsPage() {
       <nav style={{ borderBottom: '1px solid var(--border)', padding: '0 60px', height: 64, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <a href="/" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none' }}>
           <div style={{ width: 28, height: 28, borderRadius: 7, background: 'var(--gold)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: "'Cormorant Garamond', serif", fontStyle: 'italic', fontWeight: 700, fontSize: '1rem', color: '#18150f' }}>D</div>
-          <span style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '1.1rem', fontWeight: 600 }}>DreamLog</span>
+          <span style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '1.1rem', fontWeight: 600 }}>Ode</span>
         </a>
         <a href="/" style={{ fontSize: '0.84rem', color: 'var(--muted)', textDecoration: 'none' }}>← Back to home</a>
       </nav>
@@ -19,31 +19,31 @@ export default function TermsPage() {
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 48 }}>
 
-          <Section title="By using DreamLog, you're agreeing to this">
+          <Section title="By using Ode, you're agreeing to this">
             <P>When you create an account or open the app, you&apos;re accepting these Terms. That goes for everyone - personal users, therapists, and businesses. If you don&apos;t agree, please don&apos;t use the app.</P>
           </Section>
 
-          <Section title="What DreamLog is and what it isn't">
-            <P>DreamLog is a voice journaling app with AI-powered emotional reflection. It is not a therapist. It is not a doctor. It cannot diagnose you with anything, and nothing it says should be treated as medical advice or clinical guidance.</P>
+          <Section title="What Ode is and what it isn't">
+            <P>Ode is a voice journaling app with AI-powered emotional reflection. It is not a therapist. It is not a doctor. It cannot diagnose you with anything, and nothing it says should be treated as medical advice or clinical guidance.</P>
             <P>Therapy Mode is an AI-assisted conversation that draws on your journal history - it&apos;s named carefully to make clear it&apos;s not actual clinical therapy. Nothing in the app replaces a real mental health professional.</P>
             <P>If you&apos;re in crisis, please reach out to a professional. You can find crisis resources anytime inside the app under Settings → Get help now.</P>
           </Section>
 
           <Section title="Your account">
-            <Item label="Age">You need to be at least 13 to use DreamLog. If you&apos;re under 18, you&apos;re confirming you have a parent or guardian&apos;s permission.</Item>
+            <Item label="Age">You need to be at least 13 to use Ode. If you&apos;re under 18, you&apos;re confirming you have a parent or guardian&apos;s permission.</Item>
             <Item label="Accuracy">Please give us accurate information when signing up, and keep your login details safe - that&apos;s your responsibility.</Item>
             <Item label="One account per person">You can&apos;t create multiple accounts to get around plan limits.</Item>
             <Item label="Closing accounts">We can suspend or close accounts that break these Terms - we&apos;ll try to give notice when we can. You can delete your own account anytime in Settings.</Item>
           </Section>
 
           <Section title="Your content is yours">
-            <P>Everything you record or write in DreamLog belongs to you. We ask only for a limited licence to process it - meaning we can transcribe it, run AI analysis on it, store it, and deliver it to your devices. That&apos;s it.</P>
+            <P>Everything you record or write in Ode belongs to you. We ask only for a limited licence to process it - meaning we can transcribe it, run AI analysis on it, store it, and deliver it to your devices. That&apos;s it.</P>
             <P>We don&apos;t claim ownership of your journal entries. We don&apos;t use your content to train AI. We don&apos;t sell it.</P>
-            <P>You are responsible for what you record. Please don&apos;t use DreamLog to store or send anything illegal, harassing, or that violates someone else&apos;s rights.</P>
+            <P>You are responsible for what you record. Please don&apos;t use Ode to store or send anything illegal, harassing, or that violates someone else&apos;s rights.</P>
           </Section>
 
           <Section title="Subscriptions and payments">
-            <Item label="Plans">DreamLog has a Free plan and two paid options - DreamLog+ and DreamLog Pro. Paid plans are one-time passes: 30 days (monthly) or 365 days (annual). They don&apos;t auto-renew. You pay once, get your pass, and buy again if you want more.</Item>
+            <Item label="Plans">Ode has a Free plan and two paid options - Ode+ and Ode Pro. Paid plans are one-time passes: 30 days (monthly) or 365 days (annual). They don&apos;t auto-renew. You pay once, get your pass, and buy again if you want more.</Item>
             <Item label="Therapy sessions">Sessions can be purchased individually or are included in Pro. Your very first session is always free. The charge goes through when the session begins.</Item>
             <Item label="Refunds">Because access starts the moment you purchase, we can&apos;t refund unused days. If a technical issue stopped you from accessing the app, email us at <a href="mailto:support@dreamlog.app" style={{ color: 'var(--gold)' }}>support@dreamlog.app</a> within 7 days.</Item>
             <Item label="Price changes">If prices change, we&apos;ll give you at least 14 days&apos; notice by email or in-app.</Item>
@@ -67,23 +67,23 @@ export default function TermsPage() {
               <li>Try to reverse-engineer, decompile, or extract the app&apos;s source code.</li>
               <li>Use bots or automated tools to scrape or bulk-access the service.</li>
               <li>Attempt to access another user&apos;s data.</li>
-              <li>Use DreamLog in ways that break the law.</li>
+              <li>Use Ode in ways that break the law.</li>
               <li>Impersonate someone else or misrepresent your professional credentials to get therapist access.</li>
             </ul>
           </Section>
 
           <Section title="Intellectual property">
-            <P>The DreamLog name, logo, design, and all original content we create belong to us. Please don&apos;t use them without permission.</P>
+            <P>The Ode name, logo, design, and all original content we create belong to us. Please don&apos;t use them without permission.</P>
             <P>Your journal content stays yours. AI-generated reflections are made for your personal use - we don&apos;t claim copyright over them.</P>
           </Section>
 
           <Section title="No guarantees">
-            <P>DreamLog is provided as-is. We can&apos;t promise the service will always be available, error-free, or that every AI reflection will be perfectly accurate for your situation.</P>
-            <P>AI-generated reflections are not clinical assessments. They can be wrong, incomplete, or miss important context. Please don&apos;t make major personal, medical, or legal decisions based solely on what DreamLog tells you.</P>
+            <P>Ode is provided as-is. We can&apos;t promise the service will always be available, error-free, or that every AI reflection will be perfectly accurate for your situation.</P>
+            <P>AI-generated reflections are not clinical assessments. They can be wrong, incomplete, or miss important context. Please don&apos;t make major personal, medical, or legal decisions based solely on what Ode tells you.</P>
           </Section>
 
           <Section title="Our liability is limited">
-            <P>To the extent the law allows, DreamLog and its operators are not liable for indirect, incidental, or consequential damages from your use of the service - including emotional distress, data loss, or decisions made based on AI output.</P>
+            <P>To the extent the law allows, Ode and its operators are not liable for indirect, incidental, or consequential damages from your use of the service - including emotional distress, data loss, or decisions made based on AI output.</P>
             <P>If we are found liable for something, the maximum we owe is what you paid us in the 30 days before the issue arose.</P>
           </Section>
 
@@ -92,7 +92,7 @@ export default function TermsPage() {
           </Section>
 
           <Section title="If these Terms change">
-            <P>We&apos;ll tell you about any significant changes at least 14 days before they take effect, by email or in-app notice. If you keep using DreamLog after that, it means you&apos;ve accepted the updated Terms.</P>
+            <P>We&apos;ll tell you about any significant changes at least 14 days before they take effect, by email or in-app notice. If you keep using Ode after that, it means you&apos;ve accepted the updated Terms.</P>
           </Section>
 
           <Section title="Contact">
@@ -103,7 +103,7 @@ export default function TermsPage() {
       </div>
 
       <footer style={{ borderTop: '1px solid var(--border)', padding: '32px 60px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 16 }}>
-        <span style={{ fontSize: '0.78rem', color: 'var(--muted-2)' }}>© 2026 DreamLog</span>
+        <span style={{ fontSize: '0.78rem', color: 'var(--muted-2)' }}>© 2026 Ode</span>
         <div style={{ display: 'flex', gap: 24 }}>
           <a href="/privacy" style={{ fontSize: '0.78rem', color: 'var(--muted)', textDecoration: 'none' }}>Privacy Policy</a>
           <a href="/terms" style={{ fontSize: '0.78rem', color: 'var(--muted)', textDecoration: 'none' }}>Terms</a>

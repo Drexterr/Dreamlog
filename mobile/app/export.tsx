@@ -42,7 +42,7 @@ export default function ExportScreen() {
     try {
       const { url, headers } = await api.exportPDFParams(selected);
 
-      const filename = `dreamlog-${selected}-${new Date().toISOString().slice(0, 7)}.pdf`;
+      const filename = `ode-${selected}-${new Date().toISOString().slice(0, 7)}.pdf`;
       const cacheDir = (FileSystem as unknown as Record<string, string | null>)['cacheDirectory'] ?? '';
       const dest = cacheDir + filename;
 
@@ -61,7 +61,7 @@ export default function ExportScreen() {
 
       await Sharing.shareAsync(result.uri, {
         mimeType: 'application/pdf',
-        dialogTitle: 'Share your DreamLog journal',
+        dialogTitle: 'Share your Ode journal',
         UTI: 'com.adobe.pdf',
       });
     } catch {

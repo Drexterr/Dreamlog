@@ -66,7 +66,7 @@ export default function PricingPage() {
       <nav style={{ maxWidth: 1100, margin: '0 auto', padding: '24px 40px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none', color: '#e8ddd0' }}>
           <div style={{ width: 28, height: 28, borderRadius: 7, background: '#c8955a', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: "'Cormorant Garamond', serif", fontStyle: 'italic', fontWeight: 700, fontSize: '1rem', color: '#18150f' }}>D</div>
-          <span style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '1.1rem', fontWeight: 600 }}>DreamLog</span>
+          <span style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '1.1rem', fontWeight: 600 }}>Ode</span>
         </Link>
         <Link href="/#download" style={{ background: '#c8955a', color: '#18150f', borderRadius: 100, padding: '9px 20px', fontSize: '0.84rem', fontWeight: 700, textDecoration: 'none' }}>
           Download Free
@@ -143,7 +143,7 @@ export default function PricingPage() {
           {/* Plus — featured */}
           <div style={{ background: 'rgba(200,149,90,0.07)', border: '1px solid rgba(212,165,106,0.35)', borderRadius: 20, padding: '32px 28px', display: 'flex', flexDirection: 'column', position: 'relative' }}>
             <div style={{ position: 'absolute', top: -12, left: '50%', transform: 'translateX(-50%)', background: '#c8955a', color: '#18150f', fontSize: '0.65rem', fontWeight: 800, letterSpacing: '1.5px', textTransform: 'uppercase', padding: '5px 14px', borderRadius: 100, whiteSpace: 'nowrap' }}>Most popular</div>
-            <div style={{ marginBottom: 6, fontSize: '0.82rem', fontWeight: 600, color: 'rgba(232,221,208,0.45)' }}>DreamLog+</div>
+            <div style={{ marginBottom: 6, fontSize: '0.82rem', fontWeight: 600, color: 'rgba(232,221,208,0.45)' }}>Ode+</div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 4 }}>
               <span style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '2.4rem', fontWeight: 300, lineHeight: 1, opacity: ready ? 1 : 0, transition: 'opacity 0.3s' }}>{planPrice('plus')}</span>
               {saveBadge('plus')}
@@ -159,13 +159,13 @@ export default function PricingPage() {
               ))}
             </div>
             <Link href="/#download" style={{ background: '#c8955a', color: '#18150f', borderRadius: 12, padding: '13px', textAlign: 'center', fontWeight: 700, fontSize: '0.88rem', textDecoration: 'none' }}>
-              Get DreamLog+
+              Get Ode+
             </Link>
           </div>
 
           {/* Pro */}
           <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 20, padding: '32px 28px', display: 'flex', flexDirection: 'column' }}>
-            <div style={{ marginBottom: 6, fontSize: '0.82rem', fontWeight: 600, color: 'rgba(232,221,208,0.45)' }}>DreamLog Pro</div>
+            <div style={{ marginBottom: 6, fontSize: '0.82rem', fontWeight: 600, color: 'rgba(232,221,208,0.45)' }}>Ode Pro</div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 4 }}>
               <span style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '2.4rem', fontWeight: 300, lineHeight: 1, opacity: ready ? 1 : 0, transition: 'opacity 0.3s' }}>{planPrice('pro')}</span>
               {saveBadge('pro')}
@@ -173,7 +173,7 @@ export default function PricingPage() {
             <div style={{ fontSize: '0.78rem', color: 'rgba(232,221,208,0.35)', marginBottom: 16 }}>{perLine('pro')}</div>
             <p style={{ fontSize: '0.84rem', color: 'rgba(232,221,208,0.5)', margin: '0 0 20px', lineHeight: 1.6 }}>Everything in Plus, plus one therapy session every month.</p>
             <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 24 }}>
-              {[`Everything in DreamLog+`, '1 Therapy Session / month', `Extra sessions at ${memberExtra} (member price)`, 'Unlimited therapist share', 'Priority processing'].map(f => (
+              {[`Everything in Ode+`, '1 Therapy Session / month', `Extra sessions at ${memberExtra} (member price)`, 'Unlimited therapist share', 'Priority processing'].map(f => (
                 <div key={f} style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
                   <Check />
                   <span style={{ fontSize: '0.84rem', color: 'rgba(232,221,208,0.55)', lineHeight: 1.4 }}>{f}</span>
@@ -181,7 +181,7 @@ export default function PricingPage() {
               ))}
             </div>
             <Link href="/#download" style={{ border: '1px solid rgba(255,255,255,0.15)', color: '#e8ddd0', borderRadius: 12, padding: '13px', textAlign: 'center', fontWeight: 600, fontSize: '0.88rem', textDecoration: 'none' }}>
-              Get DreamLog Pro
+              Get Ode Pro
             </Link>
           </div>
         </div>
@@ -229,7 +229,7 @@ export default function PricingPage() {
       </main>
 
       <footer style={{ borderTop: '1px solid rgba(255,255,255,0.07)', padding: '28px 40px', maxWidth: 1100, margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 16 }}>
-        <span style={{ fontSize: '0.74rem', color: 'rgba(232,221,208,0.3)' }}>© 2026 DreamLog</span>
+        <span style={{ fontSize: '0.74rem', color: 'rgba(232,221,208,0.3)' }}>© 2026 Ode</span>
         <div style={{ display: 'flex', gap: 24 }}>
           {[['Home', '/'], ['Privacy', '/privacy'], ['Terms', '/terms'], ['Support', 'mailto:support@dreamlog.app']].map(([label, href]) => (
             <a key={label} href={href} style={{ fontSize: '0.8rem', color: 'rgba(232,221,208,0.4)', textDecoration: 'none' }}>{label}</a>

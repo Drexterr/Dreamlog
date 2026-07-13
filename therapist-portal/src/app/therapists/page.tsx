@@ -6,7 +6,7 @@ export default function TherapistsPage() {
       <nav style={{ maxWidth: 1100, margin: '0 auto', padding: '24px 40px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none', color: '#e8ddd0' }}>
           <div style={{ width: 28, height: 28, borderRadius: 7, background: '#c8955a', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: "'Cormorant Garamond', serif", fontStyle: 'italic', fontWeight: 700, fontSize: '1rem', color: '#18150f' }}>D</div>
-          <span style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '1.1rem', fontWeight: 600 }}>DreamLog</span>
+          <span style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '1.1rem', fontWeight: 600 }}>Ode</span>
         </Link>
         <Link href="/login" style={{ background: '#c8955a', color: '#18150f', borderRadius: 100, padding: '9px 20px', fontSize: '0.84rem', fontWeight: 700, textDecoration: 'none' }}>
           Open Therapist Portal
@@ -22,7 +22,7 @@ export default function TherapistsPage() {
             Your clients arrive<br />already knowing<br /><em style={{ color: '#c8955a' }}>what they feel.</em>
           </h1>
           <p style={{ fontSize: '1rem', color: 'rgba(232,221,208,0.55)', lineHeight: 1.85, margin: '0 0 36px', maxWidth: 560 }}>
-            DreamLog is a voice journaling app your clients use between sessions. When they choose to share, you receive a structured AI brief — mood trends, recurring themes, and the questions they couldn&apos;t put into words — before you even say hello.
+            Ode is a voice journaling app your clients use between sessions. When they choose to share, you receive a structured AI brief — mood trends, recurring themes, and the questions they couldn&apos;t put into words — before you even say hello.
           </p>
           <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap' }}>
             <Link href="/login" style={{ background: '#c8955a', color: '#18150f', borderRadius: 12, padding: '13px 26px', fontWeight: 700, fontSize: '0.9rem', textDecoration: 'none' }}>
@@ -45,7 +45,7 @@ export default function TherapistsPage() {
               {
                 step: '01',
                 title: 'Client journals daily',
-                body: 'Your client speaks for 2 minutes or 20 — whatever arrives. DreamLog transcribes, analyses, and stores a structured reflection after every entry. No effort from you.',
+                body: 'Your client speaks for 2 minutes or 20 — whatever arrives. Ode transcribes, analyses, and stores a structured reflection after every entry. No effort from you.',
               },
               {
                 step: '02',
@@ -107,7 +107,7 @@ export default function TherapistsPage() {
         <div style={{ background: 'rgba(200,149,90,0.05)', border: '1px solid rgba(200,149,90,0.18)', borderRadius: 20, padding: '48px 52px', marginBottom: 80 }}>
           <div style={{ fontSize: '0.7rem', letterSpacing: '2.5px', color: 'rgba(200,149,90,0.5)', textTransform: 'uppercase', marginBottom: 16 }}>Early access · Beta</div>
           <h2 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 'clamp(1.6rem, 3vw, 2.4rem)', fontWeight: 300, margin: '0 0 16px', lineHeight: 1.2 }}>
-            We&apos;re inviting therapists to test DreamLog with their clients.
+            We&apos;re inviting therapists to test Ode with their clients.
           </h2>
           <p style={{ fontSize: '0.95rem', color: 'rgba(232,221,208,0.55)', lineHeight: 1.8, margin: '0 0 28px', maxWidth: 560 }}>
             If you see potential in voice journaling as a between-session tool, we&apos;d like to partner with you. Early access is free — and your feedback directly shapes what gets built next.
@@ -127,11 +127,11 @@ export default function TherapistsPage() {
           <h2 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 'clamp(1.4rem, 2.5vw, 2rem)', fontWeight: 300, margin: '0 0 36px' }}>Questions therapists ask</h2>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
             {[
-              { q: 'Is it HIPAA-compliant?', a: 'DreamLog uses encrypted transit (HTTPS) and encrypted storage. Audio is never retained. We are building toward full HIPAA compliance — reach us at support@dreamlog.app for a current data-processing assessment.' },
-              { q: 'Does it claim to be therapy?', a: 'No. Every session and Therapy Mode interaction includes a clear disclaimer. DreamLog is an AI-assisted reflection tool, not a licensed therapeutic service. We are explicit about this in the product and in our Terms.' },
+              { q: 'Is it HIPAA-compliant?', a: 'Ode uses encrypted transit (HTTPS) and encrypted storage. Audio is never retained. We are building toward full HIPAA compliance — reach us at support@dreamlog.app for a current data-processing assessment.' },
+              { q: 'Does it claim to be therapy?', a: 'No. Every session and Therapy Mode interaction includes a clear disclaimer. Ode is an AI-assisted reflection tool, not a licensed therapeutic service. We are explicit about this in the product and in our Terms.' },
               { q: 'What happens if a client discloses crisis content?', a: 'Two-stage automated detection runs on every journal entry and every Therapy Mode message. If crisis content is flagged, the user immediately sees hotline resources: iCall, Vandrevala Foundation, and 988. Entries flagged as crisis are excluded from mood analytics and handled separately. You are not a first responder in this system — the system handles it.' },
-              { q: 'Can I recommend this to all my clients?', a: 'DreamLog is suitable for adults who want a private journaling tool. It is not designed for clients in acute psychiatric crisis, active psychosis, or who require clinical monitoring. Use your professional judgement — the same way you would recommend a book or a journaling prompt.' },
-              { q: 'Is the therapist portal free?', a: 'Yes. Registering as a therapist and accessing client briefs costs nothing. Clients pay for their own DreamLog plan; they can share with any registered therapist regardless of their plan tier.' },
+              { q: 'Can I recommend this to all my clients?', a: 'Ode is suitable for adults who want a private journaling tool. It is not designed for clients in acute psychiatric crisis, active psychosis, or who require clinical monitoring. Use your professional judgement — the same way you would recommend a book or a journaling prompt.' },
+              { q: 'Is the therapist portal free?', a: 'Yes. Registering as a therapist and accessing client briefs costs nothing. Clients pay for their own Ode plan; they can share with any registered therapist regardless of their plan tier.' },
             ].map((item, i) => (
               <div key={item.q} style={{ padding: '22px 0', borderBottom: '1px solid rgba(255,255,255,0.06)', borderTop: i === 0 ? '1px solid rgba(255,255,255,0.06)' : 'none' }}>
                 <div style={{ fontSize: '0.95rem', fontWeight: 600, color: '#e8ddd0', marginBottom: 10 }}>{item.q}</div>
@@ -143,7 +143,7 @@ export default function TherapistsPage() {
       </main>
 
       <footer style={{ borderTop: '1px solid rgba(255,255,255,0.07)', padding: '28px 40px', maxWidth: 1100, margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 16 }}>
-        <span style={{ fontSize: '0.74rem', color: 'rgba(232,221,208,0.3)' }}>© 2026 DreamLog</span>
+        <span style={{ fontSize: '0.74rem', color: 'rgba(232,221,208,0.3)' }}>© 2026 Ode</span>
         <div style={{ display: 'flex', gap: 24 }}>
           {[['Home', '/'], ['Pricing', '/pricing'], ['About', '/about'], ['Teams', '/teams'], ['Privacy', '/privacy'], ['Terms', '/terms']].map(([label, href]) => (
             <a key={label} href={href} style={{ fontSize: '0.8rem', color: 'rgba(232,221,208,0.4)', textDecoration: 'none' }}>{label}</a>

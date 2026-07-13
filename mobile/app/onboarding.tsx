@@ -376,7 +376,7 @@ export default function OnboardingScreen() {
               },
             ]}
           >
-            <Text style={[styles.wordmark, { color: colors.purple300 }]}>DreamLog</Text>
+            <Text style={[styles.wordmark, { color: colors.purple300 }]}>Ode</Text>
             <Text style={[styles.welcomeHeading, { color: colors.textPrimary }]}>
               A private space{'\n'}for honest thought.
             </Text>
@@ -483,7 +483,7 @@ export default function OnboardingScreen() {
             keyboardShouldPersistTaps="handled"
             style={[styles.scrollLayer, { opacity: contentOpacity }]}
           >
-            <Text style={[styles.wordmark, { color: colors.purple300 }]}>DreamLog</Text>
+            <Text style={[styles.wordmark, { color: colors.purple300 }]}>Ode</Text>
             <TouchableOpacity testID={T.onboarding.back} accessibilityLabel="Back" style={styles.backTop} onPress={() => setStep(0)}>
               <Text style={[styles.backTopText, { color: colors.textMuted }]}>← Back</Text>
             </TouchableOpacity>
@@ -608,7 +608,7 @@ export default function OnboardingScreen() {
       {/* ── Steps 3 + 4 + 5 via ScrollView ── */}
       {(step === 3 || step === 4 || step === 5) && (
         <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
-          <Text style={[styles.wordmark, { color: colors.purple300 }]}>DreamLog</Text>
+          <Text style={[styles.wordmark, { color: colors.purple300 }]}>Ode</Text>
 
           {/* ── Step 3: Name ── */}
           {step === 3 && (
@@ -653,7 +653,7 @@ export default function OnboardingScreen() {
               </TouchableOpacity>
               <Text style={[styles.heading, { color: colors.textPrimary }]}>How old are you?</Text>
               <Text style={[styles.sub, { color: colors.textSecondary }]}>
-                Optional — helps us understand who uses DreamLog. Never shared.
+                Optional — helps us understand who uses Ode. Never shared.
               </Text>
               <View style={styles.ageList}>
                 {AGE_RANGES.map((a) => {
@@ -770,7 +770,7 @@ export default function OnboardingScreen() {
       {/* ── Step 6: Journal vs Therapy gate ── */}
       {step === 6 && (
         <ScrollView contentContainerStyle={styles.scroll}>
-          <Text style={[styles.wordmark, { color: colors.purple300 }]}>DreamLog</Text>
+          <Text style={[styles.wordmark, { color: colors.purple300 }]}>Ode</Text>
           <Text style={[styles.heading, { color: colors.textPrimary }]}>How would you like to begin?</Text>
           <Text style={[styles.sub, { color: colors.textSecondary }]}>
             You can always switch later — both live in the app.

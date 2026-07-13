@@ -1,16 +1,16 @@
-# DreamLog Therapist Workspace
+# Ode Therapist Workspace
 
-The therapist workspace lets a practicing therapist use DreamLog as their daily practice tool —
+The therapist workspace lets a practicing therapist use Ode as their daily practice tool —
 in the mobile app **and** the web portal (`therapist-portal/`). It serves two kinds of clients:
 
-1. **External clients** — the therapist's own offline clients who do not use DreamLog.
+1. **External clients** — the therapist's own offline clients who do not use Ode.
    The therapist manages them entirely: adds them, photographs handwritten session notes,
    edits the extracted bullets, and generates AI session summaries.
-2. **Linked app clients** — DreamLog users who explicitly consented (in their app) to share
+2. **Linked app clients** — Ode users who explicitly consented (in their app) to share
    journal *summaries* with the therapist. Read-only mood trends + AI pre-session briefs
    (Phase 5g). The therapist can also attach their own session notes to a linked client.
 
-A therapist is a normal DreamLog user with a `therapists` row (`therapists.user_id → users.id`).
+A therapist is a normal Ode user with a `therapists` row (`therapists.user_id → users.id`).
 Same Supabase JWT, same auth middleware — the "I'm a therapist" pill on the mobile auth screen
 only changes *where the user lands after login*, not how they authenticate. Therapists get the
 full journaling product too ("My journal →" on the dashboard).

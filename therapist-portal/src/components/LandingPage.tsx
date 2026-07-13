@@ -543,7 +543,7 @@ export default function LandingPage() {
       <nav className={`landing-nav${scrolled ? ' scrolled' : ''}`}>
         <a href="/" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <div style={{ width: 28, height: 28, borderRadius: 7, background: 'var(--gold)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: "'Cormorant Garamond', serif", fontStyle: 'italic', fontWeight: 700, fontSize: '1rem', color: '#18150f' }}>D</div>
-          <span style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '1.1rem', fontWeight: 600 }}>DreamLog</span>
+          <span style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '1.1rem', fontWeight: 600 }}>Ode</span>
         </a>
         <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
           <a href="#features" className="nav-link" style={{ padding: '8px 14px', fontSize: '0.86rem', color: 'var(--muted)', fontWeight: 500 }}>Features</a>
@@ -573,7 +573,7 @@ export default function LandingPage() {
               Your thoughts,<br /><em style={{ color: 'var(--gold)' }}>out loud.</em>
             </h1>
             <p style={{ fontSize: '1.05rem', color: 'var(--muted)', lineHeight: 1.75, margin: '0 0 36px', maxWidth: 440, animation: 'heroIn 0.8s cubic-bezier(0.16,1,0.3,1) both', animationDelay: '0.22s' }}>
-              Record your day in your own voice. DreamLog listens, finds the threads you keep returning to, and shows you what you actually mean — not just what you said.
+              Record your day in your own voice. Ode listens, finds the threads you keep returning to, and shows you what you actually mean — not just what you said.
             </p>
             <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', animation: 'heroIn 0.8s cubic-bezier(0.16,1,0.3,1) both', animationDelay: '0.34s' }}>
               <a href={dlHref} className="btn-primary" style={{ padding: '14px 28px', fontSize: '0.92rem' }}>Start journaling free</a>
@@ -600,7 +600,7 @@ export default function LandingPage() {
           {/* connecting line */}
           <div style={{ position: 'absolute', top: 18, left: '16.66%', right: '16.66%', height: 1, background: 'linear-gradient(90deg, transparent, var(--border-mid), var(--border-mid), transparent)', pointerEvents: 'none' }} />
           {[
-            { n: '1', title: 'Speak freely', body: 'Open DreamLog and talk. No typing, no prompts. Two minutes or an hour — it just records.' },
+            { n: '1', title: 'Speak freely', body: 'Open Ode and talk. No typing, no prompts. Two minutes or an hour — it just records.' },
             { n: '2', title: 'AI reflects', body: "Your words get transcribed and cross-referenced with your last five entries. That's where the patterns come from." },
             { n: '3', title: 'See the pattern', body: 'The same names keep appearing. The same worries. The same small hope. You start to see what actually matters to you.' },
           ].map((step, i) => (
@@ -628,7 +628,7 @@ export default function LandingPage() {
               No scores. No streaks. No productivity guilt. Just a summary of what you actually said this week — the names, the feelings, the question worth sitting with.
             </p>
             <p style={{ fontSize: '0.95rem', color: 'var(--muted)', lineHeight: 1.8, margin: '16px 0 0' }}>
-              The card on the right shows what a Tuesday reflection looks like. DreamLog picked up the morning walk, a quiet worry about <span style={{ color: 'var(--text)' }}>family</span>, and left one question worth carrying into Wednesday.
+              The card on the right shows what a Tuesday reflection looks like. Ode picked up the morning walk, a quiet worry about <span style={{ color: 'var(--text)' }}>family</span>, and left one question worth carrying into Wednesday.
             </p>
           </div>
 
@@ -763,7 +763,7 @@ export default function LandingPage() {
           <div className="feat-hero reveal" style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: '16px 0 0 0', padding: '36px 32px 40px', transitionDelay: '0s' }}>
             <div className="feat-icon" style={{ color: 'var(--gold)', marginBottom: 20, opacity: 0.75 }}><IconMic /></div>
             <div style={{ fontWeight: 700, fontSize: '1.05rem', color: 'var(--text)', marginBottom: 12, letterSpacing: '-0.01em' }}>Voice journaling</div>
-            <p style={{ fontSize: '0.88rem', color: 'var(--muted)', margin: 0, lineHeight: 1.8 }}>Speak naturally. No typing, no prompts. DreamLog captures your thoughts the way they actually arrive — unfiltered, in your own voice.</p>
+            <p style={{ fontSize: '0.88rem', color: 'var(--muted)', margin: 0, lineHeight: 1.8 }}>Speak naturally. No typing, no prompts. Ode captures your thoughts the way they actually arrive — unfiltered, in your own voice.</p>
           </div>
           <div className="feat-hero reveal" style={{ background: 'rgba(200,149,90,0.04)', border: '1px solid rgba(200,149,90,0.18)', borderRadius: '0 16px 0 0', padding: '36px 32px 40px', transitionDelay: '0.1s' }}>
             <div className="feat-icon" style={{ color: 'var(--gold)', marginBottom: 20, opacity: 0.75 }}><IconSparkle /></div>
@@ -818,7 +818,7 @@ export default function LandingPage() {
               { quote: 'Talking feels different. Something about hearing my own voice makes the reflection land.', attr: 'Priya, 28 · 3-month user' },
               { quote: "It says what I actually said. That's a harder and better thing.", attr: 'Ananya, 34 · six weeks in' },
               { quote: 'I was sceptical. Then it named the feeling I\'d been trying to describe for two years.', attr: 'Karan, 29 · using Dream Mode' },
-              { quote: 'My therapist asked how I got so clear about what I was feeling. I showed her DreamLog.', attr: 'Meera, 37 · Plus subscriber' },
+              { quote: 'My therapist asked how I got so clear about what I was feeling. I showed her Ode.', attr: 'Meera, 37 · Plus subscriber' },
             ].map(t => (
               <div key={t.attr} style={{ paddingLeft: 16, borderLeft: '1px solid var(--border)' }}>
                 <p className="serif" style={{ fontStyle: 'italic', fontSize: '0.95rem', color: 'var(--muted)', margin: '0 0 10px', lineHeight: 1.75 }}>&ldquo;{t.quote}&rdquo;</p>
@@ -915,8 +915,8 @@ export default function LandingPage() {
 
         {/* Plus + Pro — 2 columns, Plus naturally dominates with more features */}
         <div className="pricing-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-          <PricingCard name="DreamLog+" price={planPrice('plus')} period={perLine('plus')} badge={saveBadge('plus')} sub="Unlimited entries. All modes. The complete journaling product." features={['Unlimited entries', 'All 5 journaling modes', 'Dream Decoder (Jungian + Vedic)', 'Life Graph & Mood History', 'Weekly + Annual Reviews', 'Life Chapters', 'PDF export', 'Therapist share (5/month)']} cta="Get DreamLog+" downloadHref={dlHref} featured ready={ready} />
-          <PricingCard name="DreamLog Pro" price={planPrice('pro')} period={perLine('pro')} badge={saveBadge('pro')} sub="Everything in Plus, plus one therapy session every month." features={['Everything in Plus', '1 Therapy Session / month', `Extra sessions at ${currency === 'INR' ? '₹299' : currency === 'EUR' ? '€4.99' : '$4.99'}`, 'Unlimited therapist share', 'Priority processing']} cta="Get DreamLog Pro" downloadHref={dlHref} ready={ready} />
+          <PricingCard name="Ode+" price={planPrice('plus')} period={perLine('plus')} badge={saveBadge('plus')} sub="Unlimited entries. All modes. The complete journaling product." features={['Unlimited entries', 'All 5 journaling modes', 'Dream Decoder (Jungian + Vedic)', 'Life Graph & Mood History', 'Weekly + Annual Reviews', 'Life Chapters', 'PDF export', 'Therapist share (5/month)']} cta="Get Ode+" downloadHref={dlHref} featured ready={ready} />
+          <PricingCard name="Ode Pro" price={planPrice('pro')} period={perLine('pro')} badge={saveBadge('pro')} sub="Everything in Plus, plus one therapy session every month." features={['Everything in Plus', '1 Therapy Session / month', `Extra sessions at ${currency === 'INR' ? '₹299' : currency === 'EUR' ? '€4.99' : '$4.99'}`, 'Unlimited therapist share', 'Priority processing']} cta="Get Ode Pro" downloadHref={dlHref} ready={ready} />
         </div>
         <p style={{ marginTop: 14, fontSize: '0.76rem', color: 'var(--muted-2)', textAlign: 'right' }}>
           one-time passes (30 or 365 days) · managed in-app · no auto-renew
@@ -935,11 +935,11 @@ export default function LandingPage() {
             </div>
             <div className="faq-item">
               <h3>How is this different from a general AI chat?</h3>
-              <p>It knows your history. Every reflection is grounded in your last 5 entries — the emotions, topics, and patterns that recur. A general chat has no memory. DreamLog does.</p>
+              <p>It knows your history. Every reflection is grounded in your last 5 entries — the emotions, topics, and patterns that recur. A general chat has no memory. Ode does.</p>
             </div>
             <div className="faq-item">
               <h3>Does it work in Hindi or Hinglish?</h3>
-              <p>Yes. Your language is detected automatically. Reflections are generated in the same language. Hindi and Hinglish support is included from DreamLog+.</p>
+              <p>Yes. Your language is detected automatically. Reflections are generated in the same language. Hindi and Hinglish support is included from Ode+.</p>
             </div>
           </div>
           <div className="faq-col stagger">
@@ -982,7 +982,7 @@ export default function LandingPage() {
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 32, flexWrap: 'wrap' }}>
           <a href="/" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <div style={{ width: 26, height: 26, borderRadius: 6, background: 'var(--gold)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: "'Cormorant Garamond', serif", fontStyle: 'italic', fontWeight: 700, fontSize: '0.95rem', color: '#18150f' }}>D</div>
-            <span className="serif" style={{ fontSize: '1rem', fontWeight: 600 }}>DreamLog</span>
+            <span className="serif" style={{ fontSize: '1rem', fontWeight: 600 }}>Ode</span>
           </a>
           <div style={{ display: 'flex', gap: 28, flexWrap: 'wrap', alignItems: 'center' }}>
             {[
@@ -1005,7 +1005,7 @@ export default function LandingPage() {
 
         {/* Bottom row: copyright left, crisis lines right */}
         <div style={{ marginTop: 24, paddingTop: 20, borderTop: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
-          <span style={{ fontSize: '0.74rem', color: 'var(--muted-2)' }}>© 2026 DreamLog · Built for honesty, not performance.</span>
+          <span style={{ fontSize: '0.74rem', color: 'var(--muted-2)' }}>© 2026 Ode · Built for honesty, not performance.</span>
           <div style={{ display: 'flex', gap: 20, flexWrap: 'wrap' }}>
             <span style={{ fontSize: '0.7rem', color: 'var(--muted-2)', opacity: 0.6 }}>If you need help:</span>
             {[

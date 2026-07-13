@@ -69,7 +69,7 @@ function buildPlans(currency: Currency, period: BillingPeriod): PlanCard[] {
     {
       plan: 'plus',
       emoji: '⭐',
-      title: 'DreamLog+',
+      title: 'Ode+',
       subtitle: 'The complete journal',
       price: priceFor('plus'),
       priceSub: priceSubFor('plus'),
@@ -90,13 +90,13 @@ function buildPlans(currency: Currency, period: BillingPeriod): PlanCard[] {
     {
       plan: 'pro',
       emoji: '🔮',
-      title: 'DreamLog Pro',
+      title: 'Ode Pro',
       subtitle: 'Journal + therapy',
       price: priceFor('pro'),
       priceSub: priceSubFor('pro'),
       saveBadge: saveBadgeFor('pro'),
       features: [
-        'Everything in DreamLog+',
+        'Everything in Ode+',
         '1 Therapy session included / month',
         `Extra sessions at member price (${THERAPY_MEMBER_SESSION_PRICE[currency]})`,
         'Unlimited therapist sharing',
@@ -167,7 +167,7 @@ export default function UpgradeScreen() {
       if (purchase) await finishPurchase(purchase);
 
       Alert.alert(
-        'Welcome to ' + (targetPlan === 'plus' ? 'DreamLog+' : 'DreamLog Pro') + '!',
+        'Welcome to ' + (targetPlan === 'plus' ? 'Ode+' : 'Ode Pro') + '!',
         period === 'annual' ? 'Your 365-day pass is now active.' : 'Your 30-day pass is now active.',
         [{ text: 'Continue', onPress: () => router.back() }],
       );

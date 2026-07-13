@@ -9,7 +9,7 @@ import (
 
 func TestBuildSystemPrompt_NoGoal_ContainsNoCoreText(t *testing.T) {
 	prompt := buildSystemPrompt("")
-	if !strings.Contains(prompt, "DreamLog's reflection companion") {
+	if !strings.Contains(prompt, "Ode's reflection companion") {
 		t.Error("system prompt must contain the core identity description")
 	}
 	if strings.Contains(prompt, "JOURNALING GOAL CONTEXT") {
@@ -230,7 +230,7 @@ func TestDetectScriptLanguage_EmptyTranscript_ReturnsHIForHindi(t *testing.T) {
 
 func TestBuildSystemPromptForLanguage_ENUsesEnglishPrompt(t *testing.T) {
 	prompt := buildSystemPromptForLanguage("stress", "en")
-	if !strings.Contains(prompt, "DreamLog's reflection companion") {
+	if !strings.Contains(prompt, "Ode's reflection companion") {
 		t.Error("English prompt must contain core identity")
 	}
 	if !strings.Contains(prompt, "JOURNALING GOAL CONTEXT") {
@@ -240,8 +240,8 @@ func TestBuildSystemPromptForLanguage_ENUsesEnglishPrompt(t *testing.T) {
 
 func TestBuildSystemPromptForLanguage_HIUsesHindiPrompt(t *testing.T) {
 	prompt := buildSystemPromptForLanguage("", "hi")
-	if !strings.Contains(prompt, "DreamLog") {
-		t.Error("Hindi prompt must contain DreamLog")
+	if !strings.Contains(prompt, "Ode") {
+		t.Error("Hindi prompt must contain Ode")
 	}
 	// Hindi prompt must output JSON schema in Hindi context
 	if !strings.Contains(prompt, "emotional_tone") {
@@ -254,8 +254,8 @@ func TestBuildSystemPromptForLanguage_HIUsesHindiPrompt(t *testing.T) {
 
 func TestBuildSystemPromptForLanguage_HinglishUsesHinglishPrompt(t *testing.T) {
 	prompt := buildSystemPromptForLanguage("", "hinglish")
-	if !strings.Contains(prompt, "DreamLog") {
-		t.Error("Hinglish prompt must contain DreamLog")
+	if !strings.Contains(prompt, "Ode") {
+		t.Error("Hinglish prompt must contain Ode")
 	}
 	if !strings.Contains(prompt, "emotional_tone") {
 		t.Error("Hinglish prompt must include emotional_tone field in output schema")
@@ -281,7 +281,7 @@ func TestBuildSystemPromptForLanguage_HinglishGoalInjected(t *testing.T) {
 
 func TestBuildSystemPromptForLanguage_UnknownLangFallsBackToEnglish(t *testing.T) {
 	prompt := buildSystemPromptForLanguage("", "zh")
-	if !strings.Contains(prompt, "DreamLog's reflection companion") {
+	if !strings.Contains(prompt, "Ode's reflection companion") {
 		t.Error("Unknown language must fall back to English prompt")
 	}
 }
@@ -290,18 +290,18 @@ func TestBuildSystemPromptForLanguage_UnknownLangFallsBackToEnglish(t *testing.T
 
 func TestBuildSystemPromptForMode_ProcessingUsesLanguageAwarePrompt(t *testing.T) {
 	enPrompt := buildSystemPromptForModeAndLanguage("", "en", "processing")
-	if !strings.Contains(enPrompt, "DreamLog's reflection companion") {
+	if !strings.Contains(enPrompt, "Ode's reflection companion") {
 		t.Error("processing mode (en) must use English prompt")
 	}
 	hiPrompt := buildSystemPromptForModeAndLanguage("", "hi", "processing")
-	if !strings.Contains(hiPrompt, "DreamLog") {
+	if !strings.Contains(hiPrompt, "Ode") {
 		t.Error("processing mode (hi) must use Hindi prompt")
 	}
 }
 
 func TestBuildSystemPromptForMode_EmptyModeFallsToProcessing(t *testing.T) {
 	prompt := buildSystemPromptForModeAndLanguage("", "en", "")
-	if !strings.Contains(prompt, "DreamLog's reflection companion") {
+	if !strings.Contains(prompt, "Ode's reflection companion") {
 		t.Error("empty mode must fall back to processing (English) prompt")
 	}
 }

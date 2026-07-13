@@ -102,7 +102,7 @@ export default function PortalSidebar({ therapistName, therapistCredentials }: P
             fontStyle: 'italic', fontWeight: 700, fontSize: '1.1rem', color: '#0c0b09',
           }}>D</div>
           <span style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '1.15rem', fontWeight: 600, color: 'var(--text)', letterSpacing: 0.3 }}>
-            DreamLog
+            Ode
           </span>
         </a>
         <div style={{

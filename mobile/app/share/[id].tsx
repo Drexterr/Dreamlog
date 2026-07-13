@@ -63,8 +63,8 @@ export default function ShareTherapistScreen() {
   const handleShare = async (link: CreateShareLinkResult) => {
     try {
       await Share.share({
-        message: `Here's my DreamLog emotional summary for the past 30 days.\n\nLink: ${link.url}\nPasscode: ${link.passcode}\n\nThis link expires in 72 hours.`,
-        title: 'My DreamLog Summary',
+        message: `Here's my Ode emotional summary for the past 30 days.\n\nLink: ${link.url}\nPasscode: ${link.passcode}\n\nThis link expires in 72 hours.`,
+        title: 'My Ode Summary',
       });
     } catch {}
   };

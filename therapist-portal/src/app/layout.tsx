@@ -3,17 +3,17 @@ import './globals.css';
 
 export const metadata: Metadata = {
   title: {
-    default: 'DreamLog — Voice Journaling with AI Reflection',
-    template: '%s · DreamLog',
+    default: 'Ode — Voice Journaling with AI Reflection',
+    template: '%s · Ode',
   },
   description:
-    'Talk for two minutes or twenty. DreamLog listens, transcribes, and reflects back something worth sitting with — grounded in everything you have shared before.',
+    'Talk for two minutes or twenty. Ode listens, transcribes, and reflects back something worth sitting with — grounded in everything you have shared before.',
   keywords: ['voice journaling', 'AI reflection', 'mental wellness', 'mood tracking', 'therapy companion'],
   openGraph: {
-    title: 'DreamLog — Voice Journaling with AI Reflection',
+    title: 'Ode — Voice Journaling with AI Reflection',
     description: 'Your thoughts, out loud. Voice journaling with AI reflections, mood patterns, and therapist sharing.',
     type: 'website',
-    siteName: 'DreamLog',
+    siteName: 'Ode',
   },
 };
 

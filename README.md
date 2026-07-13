@@ -1,6 +1,6 @@
-# DreamLog
+# Ode
 
-A production-grade voice journaling app. Speak your day - DreamLog transcribes it, reflects back what it hears, and tracks your emotional patterns over time.
+A production-grade voice journaling app. Speak your day - Ode transcribes it, reflects back what it hears, and tracks your emotional patterns over time.
 
 ---
 

@@ -221,7 +221,7 @@ func (h *MoodHandler) UseFreeze(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"freeze_count": count, "freeze_date": input.FreezeDate})
 }
 
-// GET /mood/history?range=30d|90d|365d - requires DreamLog+ or higher.
+// GET /mood/history?range=30d|90d|365d - requires Ode+ or higher.
 func (h *MoodHandler) MoodHistory(c *gin.Context) {
 	user := middleware.UserFromCtx(c.Request.Context())
 	if user == nil {
@@ -229,7 +229,7 @@ func (h *MoodHandler) MoodHistory(c *gin.Context) {
 		return
 	}
 	if !user.EffectivePlan().AtLeast(models.PlanPlus) {
-		c.Error(apierr.Forbidden("mood history requires DreamLog+ or higher"))
+		c.Error(apierr.Forbidden("mood history requires Ode+ or higher"))
 		return
 	}
 	userID := user.ID

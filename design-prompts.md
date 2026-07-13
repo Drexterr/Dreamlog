@@ -1,4 +1,4 @@
-# DreamLog — AI Design Prompts
+# Ode — AI Design Prompts
 
 Two prompts to hand to an emergent AI design tool (v0, Bolt, Lovable, etc.).
 Goal: give the AI enough product context to invent a fresh UI direction — not recreate what exists.
@@ -7,7 +7,7 @@ Goal: give the AI enough product context to invent a fresh UI direction — not 
 
 ## PROMPT 1 — Mobile App
 
-Design the mobile app for **DreamLog** — a voice journaling app that uses AI to turn spoken thoughts into emotional reflections.
+Design the mobile app for **Ode** — a voice journaling app that uses AI to turn spoken thoughts into emotional reflections.
 
 ### What the app does
 
@@ -49,7 +49,7 @@ Design the complete mobile app: onboarding, home screen, recording, processing/w
 
 ## PROMPT 2 — Product Website (with Therapist Portal)
 
-Design the website for **DreamLog** — a voice journaling app with AI-powered emotional reflections. The website serves two purposes in one: a public-facing product site that acquires users and communicates the product's value, and a logged-in therapist portal where mental health professionals manage their clients' data. Both live under the same domain and share the same visual identity.
+Design the website for **Ode** — a voice journaling app with AI-powered emotional reflections. The website serves two purposes in one: a public-facing product site that acquires users and communicates the product's value, and a logged-in therapist portal where mental health professionals manage their clients' data. Both live under the same domain and share the same visual identity.
 
 ---
 
@@ -59,13 +59,13 @@ This is what a potential user or therapist sees before they sign up. It needs to
 
 **What the site communicates:**
 
-DreamLog is a private voice journaling app. You speak, the AI listens, and it reflects back what it hears — your emotional patterns, recurring themes, the things you keep coming back to. It is not a chatbot. It is not therapy. It is a mirror for your inner life, built for people who think faster than they type.
+Ode is a private voice journaling app. You speak, the AI listens, and it reflects back what it hears — your emotional patterns, recurring themes, the things you keep coming back to. It is not a chatbot. It is not therapy. It is a mirror for your inner life, built for people who think faster than they type.
 
 **The audience is two groups:**
 
 1. **Individual users** — people dealing with stress, anxiety, grief, relationship difficulty, career transitions, or just wanting to understand themselves better. They want something private, non-judgmental, and actually useful — not another journaling app that's just a text editor with a dark mode.
 
-2. **Therapists and counsellors** — mental health professionals who want to stay connected to their clients' emotional state between sessions. DreamLog gives them a data layer: mood trends, AI summaries of entries, and a pre-session brief generated before each appointment.
+2. **Therapists and counsellors** — mental health professionals who want to stay connected to their clients' emotional state between sessions. Ode gives them a data layer: mood trends, AI summaries of entries, and a pre-session brief generated before each appointment.
 
 **Key things the homepage should convey:**
 
@@ -73,7 +73,7 @@ DreamLog is a private voice journaling app. You speak, the AI listens, and it re
 - The AI knows your history — reflections get more personal over time as patterns emerge
 - There is a Therapy Mode: a real-time AI conversation (up to 1 hour) that the AI enters already knowing your emotional context from past entries. Four AI companion styles: Comforting, Rational, CBT-informed, Mindful
 - Crisis safety is built in — every entry and therapy session is screened; if distress signals are detected, the app surfaces professional resources immediately
-- Pricing: Free tier (10 entries/month), DreamLog+ (₹249/month · $5.99 — unlimited journaling, all modes, weekly reviews, mood history), DreamLog Pro (₹499/month · $9.99 — everything plus 1 therapy session/month), Pay-per-session therapy (₹499 · $7.99 each)
+- Pricing: Free tier (10 entries/month), Ode+ (₹249/month · $5.99 — unlimited journaling, all modes, weekly reviews, mood history), Ode Pro (₹499/month · $9.99 — everything plus 1 therapy session/month), Pay-per-session therapy (₹499 · $7.99 each)
 - Available on iOS and Android
 
 **Pages to design:**
@@ -92,7 +92,7 @@ Once a therapist signs in, they enter a dashboard that lives within the same sit
 
 **How it works:**
 
-Therapists register on the site and link clients who use the DreamLog mobile app. The client shares a UUID from their app settings — no email lookup, preserving privacy. Once linked, the therapist sees aggregated emotional data from the client's journal history.
+Therapists register on the site and link clients who use the Ode mobile app. The client shares a UUID from their app settings — no email lookup, preserving privacy. Once linked, the therapist sees aggregated emotional data from the client's journal history.
 
 **What therapists see:**
 

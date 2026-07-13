@@ -82,9 +82,9 @@ func (s *SubscriptionService) CheckShareQuota(ctx context.Context, userID uuid.U
 
 // sentinel errors - checked by handlers via errors.Is.
 var (
-	errEntryQuotaExceeded = fmt.Errorf("monthly entry limit reached; upgrade to DreamLog+ for unlimited entries")
-	errShareNotAllowed    = fmt.Errorf("therapist share links require DreamLog+ or higher")
-	errShareQuotaExceeded = fmt.Errorf("monthly share link limit reached; upgrade to DreamLog Pro for unlimited shares")
+	errEntryQuotaExceeded = fmt.Errorf("monthly entry limit reached; upgrade to Ode+ for unlimited entries")
+	errShareNotAllowed    = fmt.Errorf("therapist share links require Ode+ or higher")
+	errShareQuotaExceeded = fmt.Errorf("monthly share link limit reached; upgrade to Ode Pro for unlimited shares")
 )
 
 // IsEntryQuotaExceeded returns true for the free-plan entry limit error.

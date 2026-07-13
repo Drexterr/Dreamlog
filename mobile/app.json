@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "DreamLog",
+    "name": "Ode",
     "slug": "dreamlog",
     "version": "1.0.0",
     "runtimeVersion": "1.0.0",
@@ -36,7 +36,7 @@
       [
         "expo-av",
         {
-          "microphonePermission": "Allow DreamLog to access your microphone to record voice journals."
+          "microphonePermission": "Allow Ode to access your microphone to record voice journals."
         }
       ],
       "expo-font",
@@ -49,8 +49,8 @@
       [
         "expo-image-picker",
         {
-          "photosPermission": "Allow DreamLog to access your photos so therapists can upload photos of session notes.",
-          "cameraPermission": "Allow DreamLog to use the camera so therapists can photograph session notes."
+          "photosPermission": "Allow Ode to access your photos so therapists can upload photos of session notes.",
+          "cameraPermission": "Allow Ode to use the camera so therapists can photograph session notes."
         }
       ],
       [
@@ -67,8 +67,8 @@
       "bundleIdentifier": "com.dreamlog.app",
       "usesAppleSignIn": true,
       "infoPlist": {
-        "NSMicrophoneUsageDescription": "Allow DreamLog to access your microphone to record voice journals.",
-        "NSHealthUpdateUsageDescription": "DreamLog writes a Mindful Session to Apple Health after each completed journal entry.",
+        "NSMicrophoneUsageDescription": "Allow Ode to access your microphone to record voice journals.",
+        "NSHealthUpdateUsageDescription": "Ode writes a Mindful Session to Apple Health after each completed journal entry.",
         "ITSAppUsesNonExemptEncryption": false
       },
       "entitlements": {

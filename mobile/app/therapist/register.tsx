@@ -71,7 +71,7 @@ export default function TherapistRegisterScreen() {
           <Text style={[styles.title, { color: colors.textPrimary }]}>Therapist profile</Text>
           <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
             Set up your practice workspace. You can manage your own clients' session notes and also
-            see DreamLog users who share their journal with you.
+            see Ode users who share their journal with you.
           </Text>
 
           <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>

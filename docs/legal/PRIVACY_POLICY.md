@@ -1,6 +1,6 @@
 # Privacy Policy
 
-**DreamLog - Voice Journaling App**
+**Ode - Voice Journaling App**
 **Effective Date:** 29 May 2026
 **Last Updated:** 29 May 2026
 
@@ -21,7 +21,7 @@ Before the legal detail: here is what actually happens to your data, in plain En
 
 ## 1. Who We Are
 
-DreamLog ("we", "us", "our") is operated by [Company Name], registered in India. We provide a voice journaling application with AI-powered emotional reflections.
+Ode ("we", "us", "our") is operated by [Company Name], registered in India. We provide a voice journaling application with AI-powered emotional reflections.
 
 For privacy questions, contact us at: **privacy@dreamlog.app**
 
@@ -162,7 +162,7 @@ We will respond to verifiable data requests within **30 days**.
 
 ## 7. B2B Corporate Wellness - Special Provisions
 
-If you use DreamLog through an employer's corporate wellness program:
+If you use Ode through an employer's corporate wellness program:
 
 - **Your employer cannot read your journal.** They receive only anonymised, aggregated mood statistics across teams of 5 or more people. Individual entries are never exposed.
 - **You choose to participate.** Enrollment is voluntary and self-initiated.
@@ -174,7 +174,7 @@ If you use DreamLog through an employer's corporate wellness program:
 
 ## 8. Crisis Detection - How It Works and Its Limits
 
-DreamLog uses automated crisis detection on your transcripts as a safety feature. This is not a substitute for emergency services.
+Ode uses automated crisis detection on your transcripts as a safety feature. This is not a substitute for emergency services.
 
 **What it does:**
 - Scans transcripts for phrases associated with crisis or self-harm
@@ -194,7 +194,7 @@ Crisis entries are **excluded from all sharing features**, mood analytics shared
 
 ## 9. Therapist Dashboard - Special Provisions
 
-If you link your account to a registered therapist on DreamLog:
+If you link your account to a registered therapist on Ode:
 
 - The therapist sees **AI-generated summaries** of your entries, not your raw transcripts
 - Mood scores and topic trends are shared
@@ -205,7 +205,7 @@ If you link your account to a registered therapist on DreamLog:
 
 ## 10. Children's Privacy
 
-DreamLog is not intended for users under the age of 18. We do not knowingly collect personal data from minors. If you believe a minor has created an account, contact us at privacy@dreamlog.app and we will delete the account within 72 hours.
+Ode is not intended for users under the age of 18. We do not knowingly collect personal data from minors. If you believe a minor has created an account, contact us at privacy@dreamlog.app and we will delete the account within 72 hours.
 
 ---
 

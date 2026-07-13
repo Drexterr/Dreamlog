@@ -59,7 +59,7 @@ func GetPlanLimits(p Plan) *PlanLimits {
 			Plan: PlanPlus, MonthlyEntries: -1, MonthlyShares: PlusMonthlyShares,
 			HasPDFExport: true, HasWeeklyReview: true, HasMoodHistory: true,
 			HasHindi: true, HasAllModes: true, HasStreakFreeze: true, HasTherapistShare: true,
-			DisplayName: "DreamLog+", Price: "₹249/month · €5.99/month · $5.99/month",
+			DisplayName: "Ode+", Price: "₹249/month · €5.99/month · $5.99/month",
 		}
 	case PlanPro:
 		// Pro = everything in Plus + therapy (1 included session/month, member
@@ -68,7 +68,7 @@ func GetPlanLimits(p Plan) *PlanLimits {
 			Plan: PlanPro, MonthlyEntries: -1, MonthlyShares: -1,
 			HasPDFExport: true, HasWeeklyReview: true, HasMoodHistory: true,
 			HasHindi: true, HasAllModes: true, HasStreakFreeze: true, HasTherapistShare: true,
-			DisplayName: "DreamLog Pro", Price: "₹499/month · €9.99/month · $9.99/month",
+			DisplayName: "Ode Pro", Price: "₹499/month · €9.99/month · $9.99/month",
 		}
 	case PlanB2B:
 		return &PlanLimits{

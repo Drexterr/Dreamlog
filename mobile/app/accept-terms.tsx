@@ -51,7 +51,7 @@ export default function AcceptTermsScreen() {
         </View>
         <Text style={[styles.title, { color: colors.textPrimary }]}>Before you continue</Text>
         <Text style={[styles.body, { color: colors.textSecondary }]}>
-          DreamLog stores your voice-journal transcripts and reflections to give you personalized
+          Ode stores your voice-journal transcripts and reflections to give you personalized
           insights. Please review and accept our terms to use the app.
         </Text>
 

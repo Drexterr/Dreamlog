@@ -1,6 +1,6 @@
 # ═══════════════════════════════════════════════════════════════════════════
 # AUTHENTICATION TESTING
-# DreamLog is guest-first. Auth is triggered on-demand via the bottom AuthSheet
+# Ode is guest-first. Auth is triggered on-demand via the bottom AuthSheet
 # (src/components/AuthSheet.tsx) when a guest attempts a gated action. Email +
 # Google + Apple all route through Supabase. All tap targets use the stable
 # testIDs in mobile/src/testIDs.ts.

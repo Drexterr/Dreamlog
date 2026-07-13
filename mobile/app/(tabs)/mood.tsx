@@ -390,8 +390,8 @@ export default function MoodScreen() {
   const handleShare = async () => {
     if (!streak) return;
     const message = streak.current_streak > 0
-      ? `I've journaled for ${streak.current_streak} days in a row on DreamLog. Building emotional awareness, one day at a time.`
-      : `I've logged ${streak.total_days} journal entries on DreamLog. Voice journaling is changing how I understand myself.`;
+      ? `I've journaled for ${streak.current_streak} days in a row on Ode. Building emotional awareness, one day at a time.`
+      : `I've logged ${streak.total_days} journal entries on Ode. Voice journaling is changing how I understand myself.`;
     try {
       await Share.share({ message });
     } catch {

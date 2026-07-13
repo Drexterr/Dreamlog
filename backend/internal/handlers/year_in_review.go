@@ -18,7 +18,7 @@ func NewAnnualReviewHandler(repo annualReviewListRepo) *AnnualReviewHandler {
 }
 
 // GetLatest returns the most recent completed annual review for the authenticated user.
-// GET /reviews/annual/latest - requires DreamLog+ or higher.
+// GET /reviews/annual/latest - requires Ode+ or higher.
 func (h *AnnualReviewHandler) GetLatest(c *gin.Context) {
 	user := middleware.UserFromCtx(c.Request.Context())
 	if user == nil {
@@ -26,7 +26,7 @@ func (h *AnnualReviewHandler) GetLatest(c *gin.Context) {
 		return
 	}
 	if !user.EffectivePlan().AtLeast(models.PlanPlus) {
-		c.Error(apierr.Forbidden("annual reviews require DreamLog+ or higher"))
+		c.Error(apierr.Forbidden("annual reviews require Ode+ or higher"))
 		return
 	}
 	rv, err := h.repo.GetLatestCompleted(c.Request.Context(), user.ID)
@@ -42,7 +42,7 @@ func (h *AnnualReviewHandler) GetLatest(c *gin.Context) {
 }
 
 // List returns all completed annual reviews for the authenticated user.
-// GET /reviews/annual - requires DreamLog+ or higher.
+// GET /reviews/annual - requires Ode+ or higher.
 func (h *AnnualReviewHandler) List(c *gin.Context) {
 	user := middleware.UserFromCtx(c.Request.Context())
 	if user == nil {
@@ -50,7 +50,7 @@ func (h *AnnualReviewHandler) List(c *gin.Context) {
 		return
 	}
 	if !user.EffectivePlan().AtLeast(models.PlanPlus) {
-		c.Error(apierr.Forbidden("annual reviews require DreamLog+ or higher"))
+		c.Error(apierr.Forbidden("annual reviews require Ode+ or higher"))
 		return
 	}
 	rv, err := h.repo.ListCompleted(c.Request.Context(), user.ID)

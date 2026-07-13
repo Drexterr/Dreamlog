@@ -29,7 +29,7 @@ endif
 # ── Default: print help ───────────────────────────────────────────────────────
 help:
 	@echo ""
-	@echo "DreamLog - available make targets"
+	@echo "Ode - available make targets"
 	@echo ""
 	@echo "  Dev lifecycle"
 	@echo "    make dev              Build + start all services (detached)"
@@ -128,7 +128,7 @@ dev:
 	@$(COPY_ENV)
 	docker compose up --build -d
 	@echo ""
-	@echo "DreamLog running"
+	@echo "Ode running"
 	@echo "  API            http://localhost:8080/health"
 	@echo "  MinIO console  http://localhost:9001  (minioadmin / minioadmin_secret)"
 	@echo "  PostgreSQL     localhost:5432"

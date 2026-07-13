@@ -4,7 +4,7 @@ import { useEffect, useRef } from 'react';
 import * as THREE from 'three';
 
 /**
- * HeroScene — "from noise to clarity", the DreamLog story in 3D.
+ * HeroScene — "from noise to clarity", the Ode story in 3D.
  *
  * A cloud of thought-particles cycles through an emotional arc:
  *   chaos    — dispersed, jittery, cold blue-grey (the overwhelmed mind)

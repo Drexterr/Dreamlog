@@ -1,8 +1,8 @@
-# DreamLog Architecture
+# Ode Architecture
 
 ## System Overview
 
-DreamLog is a voice journaling app. The core pipeline: user speaks → audio uploaded to object storage → worker transcribes → AI analyzes → reflection stored → mobile displays.
+Ode is a voice journaling app. The core pipeline: user speaks → audio uploaded to object storage → worker transcribes → AI analyzes → reflection stored → mobile displays.
 
 Two independent runtimes:
 - **API** (`cmd/api`) - HTTP server, handles all client requests, runs DB migrations on startup

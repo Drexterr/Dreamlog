@@ -120,8 +120,8 @@ func TestExportHandler_ExportPDF_Monthly_Returns200WithPDF(t *testing.T) {
 	if !strings.Contains(cd, "attachment") {
 		t.Errorf("Content-Disposition must contain attachment, got %q", cd)
 	}
-	if !strings.Contains(cd, "dreamlog-monthly") {
-		t.Errorf("Content-Disposition must contain dreamlog-monthly, got %q", cd)
+	if !strings.Contains(cd, "ode-monthly") {
+		t.Errorf("Content-Disposition must contain ode-monthly, got %q", cd)
 	}
 	if w.Body.Len() == 0 {
 		t.Error("response body must not be empty for PDF")
@@ -143,8 +143,8 @@ func TestExportHandler_ExportPDF_Yearly_Returns200WithPDF(t *testing.T) {
 		t.Errorf("Content-Type: want application/pdf, got %s", ct)
 	}
 	cd := w.Header().Get("Content-Disposition")
-	if !strings.Contains(cd, "dreamlog-yearly") {
-		t.Errorf("Content-Disposition must contain dreamlog-yearly, got %q", cd)
+	if !strings.Contains(cd, "ode-yearly") {
+		t.Errorf("Content-Disposition must contain ode-yearly, got %q", cd)
 	}
 }
 
@@ -160,7 +160,7 @@ func TestExportHandler_ExportPDF_DefaultPeriod_Returns200(t *testing.T) {
 	}
 	// Default is monthly.
 	cd := w.Header().Get("Content-Disposition")
-	if !strings.Contains(cd, "dreamlog-monthly") {
+	if !strings.Contains(cd, "ode-monthly") {
 		t.Errorf("default period must use monthly filename, got %q", cd)
 	}
 }
@@ -177,7 +177,7 @@ func TestExportHandler_ExportPDF_UnknownPeriod_DefaultsToMonthly(t *testing.T) {
 		t.Fatalf("unknown period: want 200 (defaults to monthly), got %d", w.Code)
 	}
 	cd := w.Header().Get("Content-Disposition")
-	if !strings.Contains(cd, "dreamlog-weekly") && !strings.Contains(cd, "dreamlog-monthly") {
+	if !strings.Contains(cd, "ode-weekly") && !strings.Contains(cd, "ode-monthly") {
 		t.Errorf("unexpected Content-Disposition: %q", cd)
 	}
 }

@@ -108,7 +108,7 @@ function CrisisCareView({
 
       {/* Closing */}
       <Text style={[styles.crisisClosing, { color: colors.textMuted }]}>
-        DreamLog will be here when you're ready. Tonight, please reach out.
+        Ode will be here when you're ready. Tonight, please reach out.
       </Text>
 
       {/* Done */}

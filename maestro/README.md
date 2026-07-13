@@ -1,6 +1,6 @@
-# DreamLog — Maestro E2E Test Suite
+# Ode — Maestro E2E Test Suite
 
-End-to-end UI automation for the DreamLog mobile app (React Native / Expo,
+End-to-end UI automation for the Ode mobile app (React Native / Expo,
 `com.dreamlog.app`) using [Maestro](https://maestro.mobile.dev).
 
 ```

@@ -11,7 +11,7 @@
 #      a soft-hide that keeps session history, distinct from
 #      "Delete everything" in flow 08.
 #
-# Linked-client sessions (a DreamLog user who consented to share their
+# Linked-client sessions (an Ode user who consented to share their
 # journal, as opposed to the therapist's own offline client) are NOT covered
 # here: creating one requires a second real account to exchange a user ID
 # out-of-band and approve the link (see docs/API_CONTRACT.md → "Therapist
@@ -64,7 +64,7 @@ tags:
     id: "therapist-dashboard-my-clients"
 - assertVisible:
     id: "therapist-clients-screen"
-- assertVisible: "DreamLog clients"          # linked-clients section renders (even if empty)
+- assertVisible: "Ode clients"          # linked-clients section renders (even if empty)
 - tapOn:
     id: "therapist-clients-add-button"
 - tapOn:

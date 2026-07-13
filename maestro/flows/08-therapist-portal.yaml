@@ -6,7 +6,7 @@
 # cleanup (delete session, delete client).
 #
 # Distinct from the journal-user suite (flows 01-07): this is a therapist
-# identity layered on top of the same DreamLog account system (see
+# identity layered on top of the same Ode account system (see
 # docs/ARCHITECTURE.md "Therapist Workspace"). A therapist keeps their own
 # journal too ("My journal →"), but this flow stays entirely in the
 # workspace surfaces under app/therapist/*.tsx.

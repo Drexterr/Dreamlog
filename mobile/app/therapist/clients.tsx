@@ -17,7 +17,7 @@ import { useTheme } from '../../src/context/ThemeContext';
 import { T } from '../../src/testIDs';
 import type { ExternalClient, ClientSummary } from '../../src/types';
 
-// Client list: the therapist's own (external) clients plus DreamLog users who
+// Client list: the therapist's own (external) clients plus Ode users who
 // consented to share their journal (linked clients).
 export default function TherapistClientsScreen() {
   const [external, setExternal] = useState<ExternalClient[]>([]);
@@ -135,15 +135,15 @@ export default function TherapistClientsScreen() {
           ))
         )}
 
-        {/* Linked DreamLog users */}
-        <Text style={[styles.sectionTitle, { color: colors.textPrimary, marginTop: 24 }]}>DreamLog clients</Text>
+        {/* Linked Ode users */}
+        <Text style={[styles.sectionTitle, { color: colors.textPrimary, marginTop: 24 }]}>Ode clients</Text>
         <Text style={[styles.privacyHint, { color: colors.textMuted }]}>
           App users who consented to share their journal summaries with you.
         </Text>
         {linked.length === 0 ? (
           <View style={[styles.emptyCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
             <Text style={[styles.emptyText, { color: colors.textMuted }]}>
-              No linked app users yet. Ask a client using DreamLog to share their user ID with you,
+              No linked app users yet. Ask a client using Ode to share their user ID with you,
               then link them from the web portal — they approve the request in their app.
             </Text>
           </View>

@@ -1,6 +1,6 @@
 # ANTIGRAVITY.md
 
-This file provides system guidelines, rules, and repository links for the **Antigravity** AI coding assistant when working with the DreamLog repository.
+This file provides system guidelines, rules, and repository links for the **Antigravity** AI coding assistant when working with the Ode repository.
 
 ---
 

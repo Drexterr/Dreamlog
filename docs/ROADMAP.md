@@ -1,4 +1,4 @@
-# DreamLog Roadmap
+# Ode Roadmap
 
 ## Phase Status
 
@@ -418,12 +418,12 @@ Canonical pricing, unit economics, and decisions log: **docs/PRICING.md** (final
 Free
   10 entries/month | basic reflection | 7-day mood chart | 3-turn follow-up
 
-DreamLog+ (the complete journal) - ₹249/month India | $5.99/month Global
+Ode+ (the complete journal) - ₹249/month India | $5.99/month Global
   Unlimited entries | Hindi support | Life Graph | Weekly + Annual Reviews
   All prompt modes | PDF export | Apple Health sync
   Streak freeze | Therapist share (5/month)
 
-DreamLog Pro (journal + therapy) - ₹499/month India | $9.99/month Global
+Ode Pro (journal + therapy) - ₹499/month India | $9.99/month Global
   Everything in Plus | 1 Therapy Session included/month
   Extra sessions at member price (₹299 / $4.99)
   Unlimited therapist share | Priority processing
@@ -442,7 +442,7 @@ B2B Wellness - ₹199/employee/month (min 50 employees)
 ## Phase 9 - Therapist Workspace ✅
 Migration: `000034_therapist_notes.up.sql` · Full doc: `docs/THERAPIST_PORTAL.md`
 
-Makes DreamLog a therapist's daily practice tool - in the app and the web portal - for
+Makes Ode a therapist's daily practice tool - in the app and the web portal - for
 their own offline clients, not just linked app users.
 
 Built:

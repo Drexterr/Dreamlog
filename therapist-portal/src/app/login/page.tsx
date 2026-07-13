@@ -63,7 +63,7 @@ export default function LoginPage() {
             fontWeight: 700, fontSize: '1.1rem', color: '#0c0b09',
           }}>D</div>
           <span style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '1.15rem', fontWeight: 600, color: 'var(--text)' }}>
-            DreamLog
+            Ode
           </span>
         </a>
 
@@ -82,7 +82,7 @@ export default function LoginPage() {
 
         {/* Privacy note */}
         <p style={{ fontSize: '0.74rem', color: 'var(--muted-2)', lineHeight: 1.7, margin: 0 }}>
-          DreamLog journaling lives in the mobile app.<br />
+          Ode journaling lives in the mobile app.<br />
           This portal is for therapists.
         </p>
       </div>
@@ -209,7 +209,7 @@ export default function LoginPage() {
           </form>
 
           <p style={{ textAlign: 'center', marginTop: 28, color: 'var(--muted-2)', fontSize: '0.76rem', lineHeight: 1.6 }}>
-            New to DreamLog?{' '}
+            New to Ode?{' '}
             <a href="/" style={{ color: 'var(--muted)' }}>Learn more</a>{' · '}
             <a href="/login" onClick={() => setMode('register')} style={{ color: 'var(--muted)' }}>For therapists</a>
           </p>

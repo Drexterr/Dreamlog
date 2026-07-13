@@ -1,4 +1,4 @@
-# DreamLog API Contract
+# Ode API Contract
 
 **Base URL (dev):** `http://localhost:8080`
 **Auth:** All endpoints except `/health`, `/version`, `/auth/register`, `/auth/login`, `GET /share/:token`, and `GET /journeys` require `Authorization: Bearer <jwt>`
@@ -982,7 +982,7 @@ Errors: `400` missing entry_id or invalid session UUID · `409` session already 
 ```
 
 ### POST /therapists/clients/link
-Requests a link to a client by their DreamLog user ID (shared out-of-band). The
+Requests a link to a client by their Ode user ID (shared out-of-band). The
 link is created in `pending` state and **grants no access to the client's data**
 until the client approves it (see the client-facing consent endpoints below).
 This prevents a self-registered "therapist" from reading a client's journal

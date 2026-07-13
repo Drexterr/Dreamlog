@@ -1,4 +1,4 @@
-// DreamLog design tokens — warm espresso
+// Ode design tokens — warm espresso
 
 export type ThemeKey = 'stress' | 'anxiety' | 'grief' | 'depression' | 'relationships' | 'career' | 'trauma' | 'curious';
 

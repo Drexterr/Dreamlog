@@ -435,7 +435,7 @@ func newShareTestRouterWithQuota(t *testing.T, repo *fakeShareRepo, quota shareQ
 
 func TestShareHandler_Create_FreePlanReturns403(t *testing.T) {
 	freeUser := &models.User{ID: uuid.New(), Email: "free@test.com", Plan: models.PlanFree}
-	quota := &fakeShareQuota{err: errors.New("therapist share links require DreamLog+ or higher")}
+	quota := &fakeShareQuota{err: errors.New("therapist share links require Ode+ or higher")}
 	r := newShareTestRouterWithQuota(t, &fakeShareRepo{}, quota, freeUser)
 
 	w := httptest.NewRecorder()

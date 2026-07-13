@@ -21,7 +21,7 @@ const (
 	ClientSessionFailed     ClientSessionStatus = "failed"
 )
 
-// ExternalClient is a client the therapist manages who is NOT a DreamLog user.
+// ExternalClient is a client the therapist manages who is NOT an Ode user.
 // Name is decrypted by the service layer before this struct is returned.
 type ExternalClient struct {
 	ID            uuid.UUID  `json:"id"`

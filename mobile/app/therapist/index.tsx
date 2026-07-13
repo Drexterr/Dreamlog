@@ -142,7 +142,7 @@ export default function TherapistDashboard() {
         {recent.length === 0 ? (
           <View style={[styles.emptyCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
             <Text style={[styles.emptyText, { color: colors.textMuted }]}>
-              No sessions yet. Photograph your handwritten notes after a consultation and DreamLog
+              No sessions yet. Photograph your handwritten notes after a consultation and Ode
               will turn them into an editable digital record.
             </Text>
           </View>

@@ -74,7 +74,7 @@ export default function DashboardPage() {
       setLinkInput('');
       setShowAddClient(false);
     } catch {
-      setLinkError('Client not found or already linked. Ask your client to share their DreamLog user ID from Settings.');
+      setLinkError('Client not found or already linked. Ask your client to share their Ode user ID from Settings.');
     } finally {
       setLinking(false);
     }
@@ -271,9 +271,9 @@ export default function DashboardPage() {
               )}
             </div>
 
-            {/* Note from DreamLog */}
+            {/* Note from Ode */}
             <div className="card" style={{ background: 'rgba(201,169,110,0.04)', borderColor: 'rgba(201,169,110,0.12)' }}>
-              <div className="eyebrow" style={{ marginBottom: 14, color: 'var(--gold)' }}>A NOTE FROM DREAMLOG</div>
+              <div className="eyebrow" style={{ marginBottom: 14, color: 'var(--gold)' }}>A NOTE FROM ODE</div>
               {loading ? (
                 <div className="skeleton" style={{ height: 80 }} />
               ) : note ? (
@@ -465,7 +465,7 @@ export default function DashboardPage() {
               Add a client
             </h2>
             <p style={{ color: 'var(--muted)', fontSize: '0.86rem', margin: '0 0 24px', lineHeight: 1.6 }}>
-              Ask your client to go to <strong style={{ color: 'var(--text)' }}>Settings → Share User ID</strong> in the DreamLog app and send you their ID.
+              Ask your client to go to <strong style={{ color: 'var(--text)' }}>Settings → Share User ID</strong> in the Ode app and send you their ID.
             </p>
             <input
               value={linkInput}

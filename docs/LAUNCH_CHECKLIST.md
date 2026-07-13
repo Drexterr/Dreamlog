@@ -1,4 +1,4 @@
-# DreamLog Launch Checklist
+# Ode Launch Checklist
 
 Everything left to set up before (and right after) publishing to the App Store and Play Store.
 Status as of 2026-06-10, following the full codebase audit (all tests passing, `go vet` clean,
@@ -199,11 +199,11 @@ Decision: **do not build a custom portal** — use off-the-shelf monitoring. A h
 can't capture on-device crashes and would duplicate weeks of what these tools give free.
 
 - [ ] **Create a Sentry account** (free Developer tier ~5k events/month) with three projects:
-  - [ ] `dreamlog-mobile` — `@sentry/react-native` via the Expo config plugin; upload source
+  - [ ] `ode-mobile` — `@sentry/react-native` via the Expo config plugin; upload source
         maps in EAS build so JS stack traces are readable; tag releases with the app version.
-  - [ ] `dreamlog-backend` — `sentry-go` + Gin middleware on `cmd/api`; panic capture in
+  - [ ] `ode-backend` — `sentry-go` + Gin middleware on `cmd/api`; panic capture in
         `cmd/worker` (wrap the job handler so failed pipeline jobs report with `entry_id`).
-  - [ ] `dreamlog-portal` — `@sentry/nextjs` in `therapist-portal/`.
+  - [ ] `ode-portal` — `@sentry/nextjs` in `therapist-portal/`.
   - [ ] Set up alert rules: email/Slack on any new error type + on error-rate spike.
 - [ ] **Uptime monitoring**: UptimeRobot (free) pinging `GET /health` every 5 min, alert on downtime.
 - [ ] **Store dashboards**: check Android Vitals (Play Console) and Xcode Organizer crashes

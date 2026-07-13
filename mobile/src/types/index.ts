@@ -639,7 +639,7 @@ export interface TermsState {
   current_version: string;
 }
 
-// GET /therapists/clients - linked DreamLog users (consented app clients)
+// GET /therapists/clients - linked Ode users (consented app clients)
 export interface ClientSummary {
   client_id: string;
   name: string;

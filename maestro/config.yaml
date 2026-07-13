@@ -1,4 +1,4 @@
-# Maestro global configuration for the DreamLog test suite.
+# Maestro global configuration for the Ode test suite.
 # Docs: https://maestro.mobile.dev/reference/configuration
 #
 # `flows` scopes `maestro test maestro/` to only the top-level scenario flows in

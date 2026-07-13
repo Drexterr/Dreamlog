@@ -206,7 +206,7 @@ export default function SessionNotesPage() {
           Session notes
         </h1>
         <p className="text-sm mb-6" style={{ color: 'var(--text-muted, #9ca3af)' }}>
-          Photograph your handwritten notes — DreamLog extracts them into editable bullets and can
+          Photograph your handwritten notes — Ode extracts them into editable bullets and can
           summarize each session. Notes are encrypted at rest; photos are deleted after extraction.
         </p>
 

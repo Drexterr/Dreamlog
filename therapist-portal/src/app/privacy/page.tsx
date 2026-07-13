@@ -7,7 +7,7 @@ export default function PrivacyPage() {
       <nav style={{ borderBottom: '1px solid var(--border)', padding: '0 60px', height: 64, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <a href="/" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none' }}>
           <div style={{ width: 28, height: 28, borderRadius: 7, background: 'var(--gold)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: "'Cormorant Garamond', serif", fontStyle: 'italic', fontWeight: 700, fontSize: '1rem', color: '#18150f' }}>D</div>
-          <span style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '1.1rem', fontWeight: 600 }}>DreamLog</span>
+          <span style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '1.1rem', fontWeight: 600 }}>Ode</span>
         </a>
         <a href="/" style={{ fontSize: '0.84rem', color: 'var(--muted)', textDecoration: 'none' }}>← Back to home</a>
       </nav>
@@ -19,14 +19,14 @@ export default function PrivacyPage() {
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 48 }}>
 
-          <Section title="What DreamLog Actually Is">
-            <P>DreamLog is a voice journaling app. You talk, we turn it into text, reflect it back to you, and help you make sense of your inner life over time. The whole thing is built on one core belief: your thoughts belong to you. Not us. Not brands. Not data brokers. You.</P>
+          <Section title="What Ode Actually Is">
+            <P>Ode is a voice journaling app. You talk, we turn it into text, reflect it back to you, and help you make sense of your inner life over time. The whole thing is built on one core belief: your thoughts belong to you. Not us. Not brands. Not data brokers. You.</P>
             <P>This document tells you exactly what we collect, why we need it, how long we hold onto it, and what you can do about any of it.</P>
           </Section>
 
           <Section title="What We Collect and Why">
             <Item label="Voice recordings">When you record something, the audio goes straight to secure cloud storage without ever touching our servers. Once it has been transcribed, the audio file is deleted permanently. We genuinely don&apos;t keep it. There&apos;s no archive of your voice sitting somewhere.</Item>
-            <Item label="Transcripts">The text version of what you said is stored on our servers. This is the heart of DreamLog - it&apos;s what powers your journal history, your reflections, and the emotional patterns we track over time.</Item>
+            <Item label="Transcripts">The text version of what you said is stored on our servers. This is the heart of Ode - it&apos;s what powers your journal history, your reflections, and the emotional patterns we track over time.</Item>
             <Item label="AI-generated content">The reflections, mood scores, emotional tags, key quotes, nudge messages, and dream interpretations we generate - these get saved alongside your entry so your history stays intact.</Item>
             <Item label="Your account details">Just your email and display name. If you sign in with Google or Apple, we only see what you explicitly authorise - nothing more.</Item>
             <Item label="Your notification token">If you turn on morning nudges, we store a device token to deliver them. You can switch it off anytime in Settings and it&apos;s gone.</Item>
@@ -40,7 +40,7 @@ export default function PrivacyPage() {
           <Section title="How We Actually Use Your Data">
             <Item label="To write your reflection">Your latest transcript, along with your five most recent entries for context, gets sent to Anthropic&apos;s Claude API. That&apos;s what generates your personalised reflection. Anthropic doesn&apos;t use API data for training by default.</Item>
             <Item label="To spot if you're struggling">Every transcript is automatically checked for signs of distress - first by keyword matching, and if it&apos;s unclear, by a follow-up AI check. If something concerning is detected, crisis resources appear immediately. No human reads your entries.</Item>
-            <Item label="To get better over time">The more you use DreamLog, the more it understands your recurring patterns, themes, and emotional language. This all lives in your account and never leaves it.</Item>
+            <Item label="To get better over time">The more you use Ode, the more it understands your recurring patterns, themes, and emotional language. This all lives in your account and never leaves it.</Item>
             <Item label="To send your morning nudge">If you opt into notifications, we craft a short message based on your last entry and send it at whatever time you choose via Firebase. It&apos;s entirely optional.</Item>
             <Item label="For Therapist Share">If you choose to share a link with your therapist, they get an anonymised view of your mood trends and AI summaries - never your actual transcripts or recordings. The link is passcode-protected and expires after 72 hours automatically.</Item>
           </Section>
@@ -53,7 +53,7 @@ export default function PrivacyPage() {
           </Section>
 
           <Section title="The Services We Work With">
-            <P>We use a small number of trusted external providers to run DreamLog. Here&apos;s who they are and what they do with your data:</P>
+            <P>We use a small number of trusted external providers to run Ode. Here&apos;s who they are and what they do with your data:</P>
             <Item label="Anthropic (Claude)" href="https://www.anthropic.com/privacy">Generates your reflections and handles crisis detection. They don&apos;t train on API submissions.</Item>
             <Item label="OpenAI (Whisper)" href="https://openai.com/policies/privacy-policy">Transcribes your audio. Audio is sent to them only for this purpose.</Item>
             <Item label="Cloudflare R2">Holds your audio temporarily while transcription is happening, then it&apos;s deleted.</Item>
@@ -66,7 +66,7 @@ export default function PrivacyPage() {
           <Section title="A Note on Mental Health Data">
             <P>Journal entries and mood data are sensitive. We treat them that way:</P>
             <ul style={{ paddingLeft: 20, color: 'var(--muted)', lineHeight: 2.2, fontSize: '0.9rem', margin: 0 }}>
-              <li>No DreamLog employee reads your entries.</li>
+              <li>No Ode employee reads your entries.</li>
               <li>Crisis detection is automated - no human review.</li>
               <li>Therapist Share is opt-in, anonymised, and passcode-protected.</li>
               <li>We don&apos;t use your emotional data to target you with ads.</li>
@@ -75,7 +75,7 @@ export default function PrivacyPage() {
           </Section>
 
           <Section title="Children">
-            <P>DreamLog isn&apos;t for anyone under 13. If you think a child has made an account, email us at <a href="mailto:support@dreamlog.app" style={{ color: 'var(--gold)' }}>support@dreamlog.app</a> and we&apos;ll delete it straight away.</P>
+            <P>Ode isn&apos;t for anyone under 13. If you think a child has made an account, email us at <a href="mailto:support@dreamlog.app" style={{ color: 'var(--gold)' }}>support@dreamlog.app</a> and we&apos;ll delete it straight away.</P>
           </Section>
 
           <Section title="Your Rights">
@@ -107,7 +107,7 @@ export default function PrivacyPage() {
       </div>
 
       <footer style={{ borderTop: '1px solid var(--border)', padding: '32px 60px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 16 }}>
-        <span style={{ fontSize: '0.78rem', color: 'var(--muted-2)' }}>© 2026 DreamLog</span>
+        <span style={{ fontSize: '0.78rem', color: 'var(--muted-2)' }}>© 2026 Ode</span>
         <div style={{ display: 'flex', gap: 24 }}>
           <a href="/privacy" style={{ fontSize: '0.78rem', color: 'var(--muted)', textDecoration: 'none' }}>Privacy Policy</a>
           <a href="/terms" style={{ fontSize: '0.78rem', color: 'var(--muted)', textDecoration: 'none' }}>Terms</a>

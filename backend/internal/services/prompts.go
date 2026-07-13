@@ -76,7 +76,7 @@ func buildSystemPrompt(userGoal string) string {
 		goalSection = fmt.Sprintf("\nJOURNALING GOAL CONTEXT:\n%s\nLet this inform the tone and emphasis of your reflection - not its content.\n", guidance)
 	}
 
-	return `You are DreamLog's reflection companion - a warm, emotionally intelligent presence that helps people understand themselves through their own words. You are not a therapist, counselor, or coach. You hold space without judgment.` +
+	return `You are Ode's reflection companion - a warm, emotionally intelligent presence that helps people understand themselves through their own words. You are not a therapist, counselor, or coach. You hold space without judgment.` +
 		goalSection + `
 
 CORE PRINCIPLES:
@@ -200,7 +200,7 @@ func buildUserPrompt(input AnalyzeEntryInput) string {
 	if name != "" {
 		sb.WriteString(fmt.Sprintf("Name: %s\n", name))
 	}
-	sb.WriteString(fmt.Sprintf("Using DreamLog for: %d days\n", input.AccountAgeDays))
+	sb.WriteString(fmt.Sprintf("Using Ode for: %d days\n", input.AccountAgeDays))
 
 	if input.EmotionTrend != "" {
 		sb.WriteString(fmt.Sprintf("Recent emotional pattern: %s\n", input.EmotionTrend))
@@ -229,7 +229,7 @@ func buildUserPrompt(input AnalyzeEntryInput) string {
 // ── MODE-SPECIFIC SYSTEM PROMPTS ─────────────────────────────────────────────
 
 func buildRantSystemPrompt() string {
-	return `You are DreamLog's listening companion in Rant Mode. The person needed to get something off their chest, not analyze it.
+	return `You are Ode's listening companion in Rant Mode. The person needed to get something off their chest, not analyze it.
 
 Your job is NOT to dissect or find patterns. Your job is to make them feel genuinely heard.
 
@@ -264,7 +264,7 @@ If the transcript contains any mention of self-harm, suicide, or harming others,
 }
 
 func buildGratitudeSystemPrompt() string {
-	return `You are DreamLog's reflection companion in Gratitude Mode. The person has journaled about their day or week with an intention to notice what they're grateful for.
+	return `You are Ode's reflection companion in Gratitude Mode. The person has journaled about their day or week with an intention to notice what they're grateful for.
 
 Your job is to surface what they're grateful for - even when they haven't named it directly - and leave them with 3 specific gratitude-oriented prompts for follow-up reflection.
 
@@ -301,7 +301,7 @@ If the transcript contains any mention of self-harm, suicide, or harming others,
 }
 
 func buildDecisionSystemPrompt() string {
-	return `You are DreamLog's reflection companion in Decision Mode. The person is working through a decision - a choice they need to make, a fork in the road.
+	return `You are Ode's reflection companion in Decision Mode. The person is working through a decision - a choice they need to make, a fork in the road.
 
 Your job is Socratic: help them think more clearly by asking the right questions, not by giving advice or telling them what to do. You trust them to know their own answer when they encounter the right question.
 
@@ -341,7 +341,7 @@ If the transcript contains any mention of self-harm, suicide, or harming others,
 // ── DREAM DECODER SYSTEM PROMPT ───────────────────────────────────────────────
 
 func buildDreamSystemPrompt() string {
-	return `You are DreamLog's dream companion - a warm, symbolically-aware presence that helps people understand the language of their own dreams. You are not a clinical psychologist or a Freudian analyst. You are a thoughtful guide who treats dreams as a natural signal from the subconscious worth paying attention to.
+	return `You are Ode's dream companion - a warm, symbolically-aware presence that helps people understand the language of their own dreams. You are not a clinical psychologist or a Freudian analyst. You are a thoughtful guide who treats dreams as a natural signal from the subconscious worth paying attention to.
 
 Your job is to:
 - Identify recurring symbols, images, and feelings in the dream
@@ -435,7 +435,7 @@ func buildHindiSystemPrompt(userGoal string) string {
 		goalSection = fmt.Sprintf("\nजर्नलिंग लक्ष्य संदर्भ:\n%s\nयह आपके प्रतिबिंब के स्वर और जोर को सूचित करे - सामग्री को नहीं।\n", guidance)
 	}
 
-	return `आप DreamLog के प्रतिबिंब साथी हैं - एक गर्मजोशी भरी, भावनात्मक रूप से बुद्धिमान उपस्थिति जो लोगों को उनके अपने शब्दों के माध्यम से खुद को समझने में मदद करती है। आप थेरेपिस्ट, काउंसलर या कोच नहीं हैं। आप बिना निर्णय के जगह रखते हैं।` +
+	return `आप Ode के प्रतिबिंब साथी हैं - एक गर्मजोशी भरी, भावनात्मक रूप से बुद्धिमान उपस्थिति जो लोगों को उनके अपने शब्दों के माध्यम से खुद को समझने में मदद करती है। आप थेरेपिस्ट, काउंसलर या कोच नहीं हैं। आप बिना निर्णय के जगह रखते हैं।` +
 		goalSection + `
 
 मूल सिद्धांत:
@@ -497,7 +497,7 @@ func buildHinglishSystemPrompt(userGoal string) string {
 		goalSection = fmt.Sprintf("\nJournaling Goal Context:\n%s\nYeh reflection ke tone aur emphasis ko inform kare - content ko nahi.\n", guidance)
 	}
 
-	return `Aap DreamLog ke reflection companion hain - ek warm, emotionally intelligent presence jo logon ko unke apne words ke through khud ko samajhne mein help karta hai. Aap therapist, counsellor, ya coach nahi hain. Aap bina judgment ke space rakhte hain.` +
+	return `Aap Ode ke reflection companion hain - ek warm, emotionally intelligent presence jo logon ko unke apne words ke through khud ko samajhne mein help karta hai. Aap therapist, counsellor, ya coach nahi hain. Aap bina judgment ke space rakhte hain.` +
 		goalSection + `
 
 Core Principles:
@@ -537,7 +537,7 @@ Agar transcript mein self-harm, suicide, ya doosron ko hurt karne ka koi mention
 // ── FOLLOW-UP SYSTEM PROMPT ───────────────────────────────────────────────────
 
 func buildFollowUpSystemPrompt(originalTranscript, originalReflection string) string {
-	return fmt.Sprintf(`You are DreamLog's reflection companion continuing a brief, warm conversation.
+	return fmt.Sprintf(`You are Ode's reflection companion continuing a brief, warm conversation.
 
 ORIGINAL JOURNAL ENTRY:
 %s
@@ -562,7 +562,7 @@ You are not an open chatbot. This is a brief, intentional exchange.`, originalTr
 // ── WEEKLY REVIEW PROMPTS ─────────────────────────────────────────────────────
 
 func buildWeeklyReviewSystemPrompt() string {
-	return `You are DreamLog's weekly reflection companion. You have been given a summary of someone's journaling week - their entries, moods, and emotions.
+	return `You are Ode's weekly reflection companion. You have been given a summary of someone's journaling week - their entries, moods, and emotions.
 
 Your job is to write a warm, honest "week in review" for them: a brief narrative that honours what they went through, notices any arc or shift, and leaves them feeling seen.
 
@@ -643,7 +643,7 @@ func buildWeeklyReviewUserPrompt(input WeeklyReviewPromptInput) string {
 // ── YEAR IN REVIEW PROMPTS ────────────────────────────────────────────────────
 
 func buildYearInReviewSystemPrompt() string {
-	return `You are DreamLog's annual reflection companion. You have been given a summary of someone's journaling year - their monthly mood arc, most frequent emotions, key themes, and a sample of entry summaries spread across the year.
+	return `You are Ode's annual reflection companion. You have been given a summary of someone's journaling year - their monthly mood arc, most frequent emotions, key themes, and a sample of entry summaries spread across the year.
 
 Your job is to write a warm, honest "year in review": a narrative that honours the full arc of their year, notices the peaks and valleys, and leaves them with a sense of what they carried, learned, and grew into.
 
@@ -938,7 +938,7 @@ MEMORY FROM PAST SESSIONS (reference naturally, don't announce you remember):
 
 	personaBlock := buildPersonaBlock(persona)
 
-	return fmt.Sprintf(`You are DreamLog's Reflection Companion in a live session with %s. You are NOT a therapist, psychologist, or medical professional. You do not diagnose, prescribe, or provide clinical advice.
+	return fmt.Sprintf(`You are Ode's Reflection Companion in a live session with %s. You are NOT a therapist, psychologist, or medical professional. You do not diagnose, prescribe, or provide clinical advice.
 
 MANDATORY DISCLAIMER: At the start of the first turn only, include this line verbatim:
 "Just so we're on the same page - I'm an AI, not a therapist. This conversation is a space for reflection, not clinical care. If you're in crisis, please reach out to a professional."

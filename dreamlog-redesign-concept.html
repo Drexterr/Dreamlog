@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <meta name="description" content="Interactive redesign direction for DreamLog." />
-  <title>DreamLog — redesign direction</title>
+  <meta name="description" content="Interactive redesign direction for Ode." />
+  <title>Ode — redesign direction</title>
   <style>
     :root {
       --ink: #11232b;
@@ -159,7 +159,7 @@
   <div class="top-note">Interactive redesign concept <span>· choose a path, open the consent details, and inspect the rationale</span></div>
   <header>
     <nav class="shell nav" aria-label="Concept navigation">
-      <a class="mark" href="#main"><i>D</i> DreamLog</a>
+      <a class="mark" href="#main"><i>O</i> Ode</a>
       <div class="nav-links">
         <a href="#paths">Two paths</a>
         <a href="#consent">Privacy</a>
@@ -175,8 +175,8 @@
         <div>
           <p class="eyeline" id="mode-label">For private reflection</p>
           <h1 class="display" id="hero-title">A place to hear yourself.</h1>
-          <p id="hero-copy">Speak the thoughts that do not fit on a page. DreamLog holds the thread, so you can notice what keeps asking for your attention.</p>
-          <div class="mode-switch" role="tablist" aria-label="Choose your DreamLog path">
+          <p id="hero-copy">Speak the thoughts that do not fit on a page. Ode holds the thread, so you can notice what keeps asking for your attention.</p>
+          <div class="mode-switch" role="tablist" aria-label="Choose your Ode path">
             <button type="button" role="tab" id="self-tab" aria-selected="true" aria-controls="hero-copy" data-mode="self">I’m here for myself</button>
             <button type="button" role="tab" id="therapist-tab" aria-selected="false" aria-controls="hero-copy" data-mode="therapist">I work with clients</button>
           </div>
@@ -185,13 +185,13 @@
             <a class="button button--quiet" id="secondary-action" href="#paths">See how it works</a>
           </div>
         </div>
-        <div class="hero-art" aria-label="A DreamLog voice journal transcript preview">
+        <div class="hero-art" aria-label="An Ode voice journal transcript preview">
           <article class="transcript">
             <div class="transcript__meta"><span id="entry-date">Thursday · 10:42 pm</span><span>01:04</span></div>
             <blockquote id="entry-text">“I think I have been calling it busy because tired sounded more honest.”</blockquote>
             <div class="wave" aria-hidden="true"><b></b><b></b><b></b><b></b><b></b><b></b><b></b><b></b></div>
           </article>
-          <aside class="artifact" id="art-note"><small>DreamLog notices</small>“busy” and “tired” have appeared together three times this month.</aside>
+          <aside class="artifact" id="art-note"><small>Ode notices</small>“busy” and “tired” have appeared together three times this month.</aside>
         </div>
       </div>
     </section>
@@ -201,7 +201,7 @@
         <p class="eyeline">Less performance. More noticing.</p>
         <div class="promise-copy">
           <h2 class="display" id="promise-title"><span class="quote-mark">“</span>Start where you are.</h2>
-          <p>DreamLog’s strongest message is not that it is intelligent. It is that it gives a person a private, practical way to stay with their own words for another minute.</p>
+          <p>Ode’s strongest message is not that it is intelligent. It is that it gives a person a private, practical way to stay with their own words for another minute.</p>
         </div>
       </div>
     </section>
@@ -282,21 +282,21 @@
       </div>
     </section>
   </main>
-  <footer><div class="shell footer-row"><span>DreamLog redesign direction · interactive static concept</span><span>WCAG AA contrast · reduced-motion aware</span></div></footer>
+  <footer><div class="shell footer-row"><span>Ode redesign direction · interactive static concept</span><span>WCAG AA contrast · reduced-motion aware</span></div></footer>
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
   <script>
     const modes = {
       self: {
         label: 'For private reflection', title: 'A place to hear yourself.',
-        copy: 'Speak the thoughts that do not fit on a page. DreamLog holds the thread, so you can notice what keeps asking for your attention.',
+        copy: 'Speak the thoughts that do not fit on a page. Ode holds the thread, so you can notice what keeps asking for your attention.',
         primary: 'Start with one honest minute', secondary: 'See how it works', href: '#paths',
         date: 'Thursday · 10:42 pm', entry: '“I think I have been calling it busy because tired sounded more honest.”',
-        note: '<small>DreamLog notices</small>“busy” and “tired” have appeared together three times this month.'
+        note: '<small>Ode notices</small>“busy” and “tired” have appeared together three times this month.'
       },
       therapist: {
         label: 'For client-led collaboration', title: 'Better sessions begin before the room.',
-        copy: 'DreamLog helps clients arrive with the patterns they choose to share—so you can spend less time reconstructing the week and more time working with it.',
+        copy: 'Ode helps clients arrive with the patterns they choose to share—so you can spend less time reconstructing the week and more time working with it.',
         primary: 'Explore the therapist portal', secondary: 'See the consent model', href: '#consent',
         date: 'Client brief · shared today', entry: '“The client selected this summary. The journal behind it remains theirs.”',
         note: '<small>Client control</small>3 selected entries · passcode protected · expires in 72 hours'

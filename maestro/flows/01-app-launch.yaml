@@ -21,7 +21,7 @@ tags:
 # ── 2. Brand + primary CTA rendered (splash handed off cleanly) ──
 # Maestro does a FULL-string regex match, so we assert the exact wordmark and the
 # Begin button's testID rather than a partial of the multi-line heading.
-- assertVisible: "DreamLog"
+- assertVisible: "Ode"
 - assertVisible:
     id: "onboarding-begin"
 

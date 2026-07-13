@@ -235,7 +235,7 @@ export default function AuthScreen() {
       >
         <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
           <View style={[styles.orb, { backgroundColor: colors.purple600, shadowColor: colors.purple500 }]} />
-          <Text style={[styles.title, { color: colors.textPrimary }]}>DreamLog</Text>
+          <Text style={[styles.title, { color: colors.textPrimary }]}>Ode</Text>
           <Text style={[styles.subtitle, { color: colors.textSecondary }]}>Your AI listener that remembers</Text>
 
           {/* Role pill: user vs therapist */}

@@ -42,7 +42,7 @@ export default function TherapySummaryScreen() {
   const handleShare = async () => {
     if (!session?.post_session_summary) return;
     await Share.share({
-      message: `My reflection session summary:\n\n${session.post_session_summary}\n\n- via DreamLog`,
+      message: `My reflection session summary:\n\n${session.post_session_summary}\n\n- via Ode`,
     });
   };
 

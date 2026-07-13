@@ -104,7 +104,7 @@ func nudgePresentation(nudgeType string) (title, dataType string) {
 	case models.NudgeTypeStreakRisk:
 		return "Your streak is waiting", "streak_risk"
 	case models.NudgeTypeReengagement:
-		return "DreamLog", "reengagement"
+		return "Ode", "reengagement"
 	default:
 		return "Your morning reflection", "morning_nudge"
 	}

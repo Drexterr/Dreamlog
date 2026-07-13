@@ -6,7 +6,7 @@ export default function TeamsPage() {
       <nav style={{ maxWidth: 1100, margin: '0 auto', padding: '24px 40px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none', color: '#e8ddd0' }}>
           <div style={{ width: 28, height: 28, borderRadius: 7, background: '#c8955a', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: "'Cormorant Garamond', serif", fontStyle: 'italic', fontWeight: 700, fontSize: '1rem', color: '#18150f' }}>D</div>
-          <span style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '1.1rem', fontWeight: 600 }}>DreamLog</span>
+          <span style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '1.1rem', fontWeight: 600 }}>Ode</span>
         </Link>
         <a href="mailto:support@dreamlog.app?subject=Team Wellness Enquiry" style={{ background: '#c8955a', color: '#18150f', borderRadius: 100, padding: '9px 20px', fontSize: '0.84rem', fontWeight: 700, textDecoration: 'none' }}>
           Talk to us →
@@ -19,7 +19,7 @@ export default function TeamsPage() {
         <div style={{ maxWidth: 760, marginBottom: 80 }}>
           <div style={{ fontSize: '0.7rem', letterSpacing: '2.5px', color: 'rgba(232,221,208,0.3)', textTransform: 'uppercase', marginBottom: 20 }}>Corporate wellness</div>
           <h1 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 'clamp(2.6rem, 5.5vw, 4.2rem)', fontWeight: 300, margin: '0 0 24px', lineHeight: 1.1, letterSpacing: '-0.02em' }}>
-            DreamLog for teams<br /><em style={{ color: '#c8955a' }}>who actually care.</em>
+            Ode for teams<br /><em style={{ color: '#c8955a' }}>who actually care.</em>
           </h1>
           <p style={{ fontSize: '1rem', color: 'rgba(232,221,208,0.55)', lineHeight: 1.85, margin: '0 0 36px', maxWidth: 600 }}>
             Aggregate, anonymized emotional wellbeing insights across your team. Individual journals stay private — always. HR sees patterns, never people.
@@ -44,14 +44,14 @@ export default function TeamsPage() {
                 Untreated mental health issues cost Indian companies an estimated ₹1.3 lakh per employee per year in lost productivity, absenteeism, and attrition. That number is invisible until it isn&apos;t.
               </p>
               <p style={{ fontSize: '0.9rem', color: 'rgba(232,221,208,0.5)', lineHeight: 1.8, margin: '16px 0 0' }}>
-                India&apos;s 2024 Occupational Safety and Health Code makes mental health support mandatory for specific employee categories. DreamLog helps you comply — and actually help.
+                India&apos;s 2024 Occupational Safety and Health Code makes mental health support mandatory for specific employee categories. Ode helps you comply — and actually help.
               </p>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
               {[
                 { stat: '₹1.3L', label: 'Annual productivity loss per employee with untreated stress (WHO, 2024)' },
                 { stat: '67%', label: 'Indian employers who increased digital wellness budgets in 2024 (APA)' },
-                { stat: '₹199', label: 'What DreamLog costs per employee per month' },
+                { stat: '₹199', label: 'What Ode costs per employee per month' },
               ].map(item => (
                 <div key={item.stat} style={{ display: 'flex', gap: 20, alignItems: 'flex-start', paddingBottom: 16, borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
                   <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '1.8rem', fontWeight: 300, color: '#c8955a', lineHeight: 1, flexShrink: 0, minWidth: 72 }}>{item.stat}</div>
@@ -134,7 +134,7 @@ export default function TeamsPage() {
       </main>
 
       <footer style={{ borderTop: '1px solid rgba(255,255,255,0.07)', padding: '28px 40px', maxWidth: 1100, margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 16 }}>
-        <span style={{ fontSize: '0.74rem', color: 'rgba(232,221,208,0.3)' }}>© 2026 DreamLog · Built for honesty, not performance.</span>
+        <span style={{ fontSize: '0.74rem', color: 'rgba(232,221,208,0.3)' }}>© 2026 Ode · Built for honesty, not performance.</span>
         <div style={{ display: 'flex', gap: 24 }}>
           {[['Home', '/'], ['Pricing', '/pricing'], ['Therapists', '/therapists'], ['About', '/about'], ['Privacy', '/privacy'], ['Terms', '/terms']].map(([label, href]) => (
             <a key={label} href={href} style={{ fontSize: '0.8rem', color: 'rgba(232,221,208,0.4)', textDecoration: 'none' }}>{label}</a>

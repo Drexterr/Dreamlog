@@ -2,7 +2,7 @@
  * Therapist Link Requests — client-facing consent screen.
  *
  * A therapist can request a link to a client (any authenticated user) by their
- * DreamLog user ID. That link stays in `pending` and grants no access until the
+ * Ode user ID. That link stays in `pending` and grants no access until the
  * client approves it here. This screen lists those pending requests and lets the
  * client approve (grant the therapist read access to their journal summaries) or
  * decline (reject / revoke).

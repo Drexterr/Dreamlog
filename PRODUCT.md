@@ -6,15 +6,15 @@ brand
 
 ## Users
 
-DreamLog serves people who need a private, low-friction way to speak through their day, and therapists who want more useful session context without taking ownership of a client’s journal. Individual visitors are often arriving in a quiet, emotionally charged moment; clinicians are assessing whether the tool respects consent, boundaries, and their workflow.
+Ode serves people who need a private, low-friction way to speak through their day, and therapists who want more useful session context without taking ownership of a client’s journal. Individual visitors are often arriving in a quiet, emotionally charged moment; clinicians are assessing whether the tool respects consent, boundaries, and their workflow.
 
 ## Product Purpose
 
-DreamLog turns a spoken reflection into a private journal, a grounded response, and long-term emotional patterns. It helps people notice what recurs without presenting itself as therapy. Its therapist pathway enables a client to selectively share a time-limited summary for better sessions while retaining control of their underlying material.
+Ode turns a spoken reflection into a private journal, a grounded response, and long-term emotional patterns. It helps people notice what recurs without presenting itself as therapy. Its therapist pathway enables a client to selectively share a time-limited summary for better sessions while retaining control of their underlying material.
 
 ## Brand Personality
 
-Intimate, human, and steady. DreamLog should feel like a quiet place to return to: emotionally warm enough to invite honesty, precise enough to earn trust, and direct enough to prompt a first try.
+Intimate, human, and steady. Ode should feel like a quiet place to return to: emotionally warm enough to invite honesty, precise enough to earn trust, and direct enough to prompt a first try.
 
 ## Anti-references
 

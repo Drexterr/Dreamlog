@@ -1,4 +1,4 @@
-# DreamLog Pricing & Unit Economics
+# Ode Pricing & Unit Economics
 
 Final pricing model decided 2026-06-11. This is the single source of truth for prices,
 margins, infrastructure costs, and the analytics we track to validate the model.

@@ -19,7 +19,7 @@ When working in the mobile: also read @mobile/CLAUDE.md
 
 ## Project Overview
 
-DreamLog is a voice journaling app with AI-powered reflections. Users record audio journals; the backend transcribes them, runs crisis screening, builds context from recent entries, and calls Claude to generate personalized reflections. Users can follow up with a 3-turn conversation.
+Ode is a voice journaling app with AI-powered reflections. Users record audio journals; the backend transcribes them, runs crisis screening, builds context from recent entries, and calls Claude to generate personalized reflections. Users can follow up with a 3-turn conversation.
 
 ## Commands
 

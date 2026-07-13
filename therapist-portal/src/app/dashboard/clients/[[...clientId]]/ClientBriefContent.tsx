@@ -299,7 +299,7 @@ export default function ClientBriefContent() {
 
           <p style={{ marginTop: 36, fontSize: '0.72rem', color: 'var(--muted-2)', lineHeight: 1.8 }}>
             This brief is generated from AI-summarised journal entries only. Raw transcripts, voice recordings, and crisis entries
-            are never included. The client consented to share this data with you via the DreamLog app. Your access is
+            are never included. The client consented to share this data with you via the Ode app. Your access is
             consent-gated and revocable by each client at any time.
           </p>
         </div>

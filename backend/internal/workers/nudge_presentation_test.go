@@ -18,7 +18,7 @@ func TestNudgePresentation_ByType(t *testing.T) {
 		{models.NudgeTypeMorning, "Your morning reflection", "morning_nudge"},
 		{models.NudgeTypeCheckin, "You asked me to check in", "checkin"},
 		{models.NudgeTypeStreakRisk, "Your streak is waiting", "streak_risk"},
-		{models.NudgeTypeReengagement, "DreamLog", "reengagement"},
+		{models.NudgeTypeReengagement, "Ode", "reengagement"},
 		{"unknown_future_type", "Your morning reflection", "morning_nudge"},
 	}
 	for _, c := range cases {
