@@ -307,15 +307,15 @@ therapy_messages
   input_mode TEXT               -- 'voice' | 'text'
   created_at TIMESTAMPTZ
 
-payments                        -- payment records for plan upgrades; one row per intent (migration 000026)
+payments                        -- purchase records for plan upgrades; one row per store transaction (migrations 000026, 000029, 000035)
   id UUID PK
   user_id UUID FK → users
-  payment_intent_id TEXT UNIQUE -- Stripe PaymentIntent ID; unique for replay protection
+  transaction_id TEXT UNIQUE    -- store transaction ID (Apple transaction_id / Play orderId); unique for replay protection
   plan TEXT                     -- plan granted: plus | pro
-  amount_paise INT              -- amount charged in smallest currency unit
-  currency TEXT                 -- 'inr' | 'usd'
-  store TEXT DEFAULT 'stripe'   -- 'stripe' | 'apple' | 'google' (migration 000029)
-  product_id TEXT               -- IAP product identifier, e.g. "com.dreamlog.app.plus.monthly" (migration 000029)
+  amount BIGINT                 -- 0 for IAP rows (price is store-managed); legacy Stripe rows kept their amount
+  currency TEXT                 -- '' for IAP rows; legacy Stripe rows: 'inr' | 'usd'
+  store TEXT                    -- 'apple' | 'google' ('stripe' on legacy rows)
+  product_id TEXT               -- IAP product identifier, e.g. "com.dreamlog.app.plus.monthly"
   country CHAR(2)               -- ISO 3166-1 alpha-2, e.g. "IN" | "US" (migration 000029)
   created_at TIMESTAMPTZ
 
@@ -629,4 +629,5 @@ included session), or included in Pro plan (1 session/month). See docs/PRICING.m
 | TTS (Therapy Mode) | Skipped / stubbed | Azure Speech TTS (empathetic SSML styles + Hindi voices); falls back to OpenAI TTS when `AZURE_TTS_KEY` unset |
 | Auth | Manual JWT from jwt.io | Supabase Auth |
 | Push notifications | Skipped (no FCM credentials) | Firebase Cloud Messaging |
+| IAP verification | Skipped - /billing/upgrade grants without proof | Apple verifyReceipt + Google Play Developer API (`services/iap.go`) |
 | Migrations | Auto-run on API startup | Auto-run on API startup |

@@ -11,15 +11,13 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
-import { useStripe } from '@stripe/stripe-react-native';
 import { api } from '../src/api/client';
+import { purchasePlanPass, finishPurchase, isUserCancelled } from '../src/services/iap';
 import { useTheme } from '../src/context/ThemeContext';
 import {
   resetAndDetectRegion,
   PLAN_PRICE,
-  PLAN_PRICE_SHORT,
   PLAN_PRICE_ANNUAL,
-  PLAN_PRICE_ANNUAL_SHORT,
   PLAN_PRICE_ANNUAL_MONTHLY_EQUIV,
   PLAN_ANNUAL_SAVINGS,
   MAX_ANNUAL_SAVINGS,
@@ -27,6 +25,7 @@ import {
 } from '../src/services/region';
 import type { RegionCurrency } from '../src/services/region';
 import type { Plan, BillingPeriod, BillingPlanResponse } from '../src/types';
+import { T, upgradePeriodID, upgradeCtaID } from '../src/testIDs';
 
 type Currency = RegionCurrency;
 
@@ -111,7 +110,6 @@ function buildPlans(currency: Currency, period: BillingPeriod): PlanCard[] {
 export default function UpgradeScreen() {
   const router = useRouter();
   const { colors } = useTheme();
-  const { initPaymentSheet, presentPaymentSheet } = useStripe();
 
   const [currency, setCurrency] = useState<Currency | null>(null); // set once from device locale
   const [billing, setBilling] = useState<BillingPlanResponse | null>(null);
@@ -140,38 +138,33 @@ export default function UpgradeScreen() {
     setPurchasing(targetPlan);
 
     try {
-      // Step 1: create a Stripe PaymentIntent on the backend
-      const intent = await api.createPaymentIntent(targetPlan, activeCurrency, period);
-
-      // Step 2: init the Stripe payment sheet
-      const payLabel = period === 'annual'
-        ? PLAN_PRICE_ANNUAL_SHORT[targetPlan][activeCurrency]
-        : PLAN_PRICE_SHORT[targetPlan][activeCurrency];
-      const { error: initError } = await initPaymentSheet({
-        paymentIntentClientSecret: intent.client_secret,
-        merchantDisplayName: 'DreamLog',
-        style: 'alwaysDark',
-        primaryButtonLabel: `Pay ${payLabel}`,
-      });
-      if (initError) {
-        Alert.alert('Payment error', initError.message);
-        return;
-      }
-
-      // Step 3: present the payment sheet
-      const { error: presentError } = await presentPaymentSheet();
-      if (presentError) {
-        if (presentError.code !== 'Canceled') {
-          Alert.alert('Payment failed', presentError.message);
+      // Step 1: native store purchase sheet (App Store / Google Play).
+      // Returns null when IAP is unavailable (Expo Go / dev) - the backend
+      // dev stub then grants the plan without verification.
+      let purchase;
+      try {
+        purchase = await purchasePlanPass(targetPlan, period);
+      } catch (err) {
+        if (!isUserCancelled(err)) {
+          Alert.alert('Purchase failed', 'The store could not complete the purchase. You have not been charged.');
         }
         return;
       }
 
-      // Step 4: payment confirmed - the backend re-verifies the PaymentIntent
-      // with Stripe before granting the plan and sets the expiry server-side.
-      const paymentIntentId = intent.client_secret.split('_secret')[0];
-      const updated = await api.upgradePlan(targetPlan, paymentIntentId, period);
+      // Step 2: the backend verifies the purchase with the store before
+      // granting the plan and sets the expiry server-side.
+      const updated = await api.upgradePlan(
+        targetPlan,
+        period,
+        purchase
+          ? { platform: purchase.platform, product_id: purchase.productId, purchase_token: purchase.purchaseToken }
+          : undefined,
+      );
       setBilling(updated);
+
+      // Step 3: only now mark the store transaction consumed. If the app dies
+      // before this, the store re-delivers the purchase on next launch.
+      if (purchase) await finishPurchase(purchase);
 
       Alert.alert(
         'Welcome to ' + (targetPlan === 'plus' ? 'DreamLog+' : 'DreamLog Pro') + '!',
@@ -179,11 +172,14 @@ export default function UpgradeScreen() {
         [{ text: 'Continue', onPress: () => router.back() }],
       );
     } catch {
-      Alert.alert('Something went wrong', 'Please try again.');
+      Alert.alert(
+        'Something went wrong',
+        'Your purchase could not be confirmed. If you were charged, reopen the app to retry - your purchase is saved with the store.',
+      );
     } finally {
       setPurchasing(null);
     }
-  }, [activeCurrency, period, purchasing, initPaymentSheet, presentPaymentSheet, router]);
+  }, [period, purchasing, router]);
 
   if (loading) {
     return (
@@ -196,12 +192,12 @@ export default function UpgradeScreen() {
   }
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.bg }]}>
+    <View testID={T.upgrade.screen} style={[styles.container, { backgroundColor: colors.bg }]}>
       <StatusBar barStyle="light-content" />
       <SafeAreaView style={{ flex: 1 }}>
         {/* Header */}
         <View style={[styles.header, { borderBottomColor: colors.borderFaint }]}>
-          <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
+          <TouchableOpacity testID={T.upgrade.back} onPress={() => router.back()} style={styles.backBtn}>
             <Text style={[styles.backText, { color: colors.textMuted }]}>← Back</Text>
           </TouchableOpacity>
           <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>Choose a Plan</Text>
@@ -217,6 +213,7 @@ export default function UpgradeScreen() {
               return (
                 <TouchableOpacity
                   key={p}
+                  testID={upgradePeriodID(p)}
                   style={[styles.periodSegment, selected && { backgroundColor: colors.brand }]}
                   onPress={() => setPeriod(p)}
                   activeOpacity={0.8}
@@ -300,6 +297,7 @@ export default function UpgradeScreen() {
                 {/* CTA button */}
                 {isUpgradeable && (
                   <TouchableOpacity
+                    testID={upgradeCtaID(card.plan)}
                     style={[styles.ctaBtn, { backgroundColor: card.highlight ? colors.brand : colors.cardSolid, borderColor: colors.brand, borderWidth: card.highlight ? 0 : 1 }]}
                     onPress={() => handleUpgrade(card.plan as 'plus' | 'pro')}
                     disabled={!!purchasing}
@@ -331,7 +329,7 @@ export default function UpgradeScreen() {
           {/* Footer */}
           <View style={styles.footer}>
             <Text style={[styles.footerText, { color: colors.textFaint }]}>
-              Secured by Stripe · One-time payment · No hidden fees
+              Billed securely by the App Store / Google Play · One-time purchase · No hidden fees
             </Text>
             <Text style={[styles.footerText, { color: colors.textFaint }]}>
               Each purchase is a one-time pass ({period === 'annual' ? '365 days' : '30 days'}).

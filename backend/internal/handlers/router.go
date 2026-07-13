@@ -40,14 +40,13 @@ type Deps struct {
 	AnalyticsRepo        *repositories.AnalyticsRepository
 	AnalyticsSvc         *services.AnalyticsService
 	ClaudeSvc            *services.ClaudeService
+	IAPSvc               *services.IAPService
 	JWTSecret            string
 	SupabaseJWKSURL      string
 	AppBaseURL           string
 	MinimumAppVersion    string
 	AndroidStoreURL      string
 	IOSStoreURL          string
-	StripeSecretKey      string
-	StripePublishableKey string
 	StorageProxyBaseURL  string
 	Log                  *zap.Logger
 }
@@ -89,11 +88,11 @@ func NewRouter(deps Deps) http.Handler {
 	auth.PUT("/me", userHandler.UpdateMe)
 	auth.DELETE("/me", userHandler.DeleteMe)
 
-	// Billing / subscription
-	billingHandler := NewBillingHandler(deps.SubscriptionSvc, deps.PaymentRepo, deps.AnalyticsSvc, deps.StripeSecretKey, deps.StripePublishableKey)
+	// Billing / subscription (purchases happen in the store SDKs on-device;
+	// the backend verifies receipts server-side before granting a plan)
+	billingHandler := NewBillingHandler(deps.SubscriptionSvc, deps.PaymentRepo, deps.AnalyticsSvc, deps.IAPSvc)
 	auth.GET("/billing/plan", billingHandler.GetPlan)
 	auth.POST("/billing/upgrade", billingHandler.Upgrade)
-	auth.POST("/billing/create-payment-intent", billingHandler.CreatePaymentIntent)
 
 	entryHandler := NewEntryHandler(deps.EntrySvc, deps.StorageSvc, deps.SubscriptionSvc)
 	// Upload proxy: only registered when STORAGE_PROXY_BASE_URL is set (local MinIO dev only)

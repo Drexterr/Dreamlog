@@ -45,6 +45,7 @@
       "@react-native-firebase/app",
       "@react-native-firebase/messaging",
       "expo-apple-authentication",
+      "expo-iap",
       [
         "expo-image-picker",
         {

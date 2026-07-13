@@ -99,68 +99,58 @@ Response `200`:
 }
 ```
 
-### POST /billing/create-payment-intent
-Creates a Stripe PaymentIntent for a plan upgrade. The mobile uses the returned `client_secret` to present the Stripe payment sheet. When `STRIPE_SECRET_KEY` is not configured (dev), returns a stub `client_secret`.
-
-```json
-// Request
-{ "plan": "plus | pro", "currency": "inr | usd | eur", "period": "monthly | annual" }
-// period is optional and defaults to "monthly"
-
-// Response 200
-{
-  "client_secret":   "pi_..._secret_...",  // passed to Stripe SDK initPaymentSheet
-  "amount":          24900,                // amount in smallest unit (paise / cents)
-  "currency":        "inr",
-  "publishable_key": "pk_live_..."
-}
-
-// Errors
-400 - invalid plan (must be plus or pro), invalid currency, or invalid period
-```
-
-**Amounts** (canonical prices in `docs/PRICING.md`; EUR mirrors USD):
-| Plan | INR | USD |
-|---|---|---|
-| plus monthly | 24900 paise (₹249) | 599 cents ($5.99) |
-| plus annual  | 199900 paise (₹1,999) | 3999 cents ($39.99) |
-| pro monthly  | 49900 paise (₹499) | 999 cents ($9.99) |
-| pro annual   | 449900 paise (₹4,499) | 7999 cents ($79.99) |
-
 ### POST /billing/upgrade
-Called after Stripe payment succeeds. The backend **verifies the payment with
-Stripe server-side** before granting anything - it never trusts the client's
-claim that payment happened. Plan expiry is set server-side to now + 30 days
-(monthly) or now + 365 days (annual) — payments are one-time passes, not
-auto-renewing subscriptions.
+Called after an In-App Purchase completes in the store SDK (`expo-iap`). The
+backend **verifies the purchase with the store server-side** (Apple
+`verifyReceipt` / Google Play Developer API) before granting anything - it
+never trusts the client's claim that payment happened. Plan expiry is set
+server-side to now + 30 days (monthly) or now + 365 days (annual) — purchases
+are one-time consumable passes, not auto-renewing subscriptions. Pricing is
+store-managed per product, so there is no amount check server-side.
 
 ```json
 // Request
-{ "plan": "free | plus | pro", "payment_intent_id": "pi_...", "period": "monthly | annual" }
-// period is optional and defaults to "monthly"
+{
+  "plan":           "free | plus | pro",
+  "period":         "monthly | annual",      // optional, defaults to "monthly"
+  "platform":       "ios | android",
+  "product_id":     "com.dreamlog.app.plus.monthly",
+  "purchase_token": "..."   // iOS: base64 app receipt · Android: Play purchase token
+}
 
 // Response 200
 { "plan": "plus", "plan_expires_at": "RFC3339 | null", "limits": { /* PlanLimits */ } }
 
 // Errors
-400 - invalid or missing plan; invalid period; missing payment_intent_id;
-      payment was made for a different plan or billing period; payment amount
-      below plan price; b2b requested (b2b is provisioned by sales, not self-serve)
-402 - payment intent exists but has not succeeded
-409 - payment intent already used to grant a plan (replay protection)
+400 - invalid or missing plan; invalid period; missing/invalid platform;
+      missing product_id or purchase_token; unknown product_id; product does
+      not match the requested plan or billing period; b2b requested (b2b is
+      provisioned by sales, not self-serve)
+402 - the store rejected the purchase (not purchased, pending, refunded, or forged)
+409 - store transaction already used to grant a plan (replay protection)
+500 - store verification unavailable (retry later; the purchase is safe with the store)
 ```
 
+**Product catalogue** (must match App Store Connect / Play Console SKUs and
+`backend/internal/services/iap.go`; display prices in `docs/PRICING.md`):
+| Product ID | Grants |
+|---|---|
+| `com.dreamlog.app.plus.monthly` | Plus, 30-day pass |
+| `com.dreamlog.app.plus.annual`  | Plus, 365-day pass |
+| `com.dreamlog.app.pro.monthly`  | Pro, 30-day pass |
+| `com.dreamlog.app.pro.annual`   | Pro, 365-day pass |
+
 Rules:
-- `plan: "free"` (self-downgrade) needs no payment and clears the expiry.
-- For `plus`/`pro` the referenced PaymentIntent must be `succeeded`, carry
-  `metadata.plan` and `metadata.period` matching the request (intents created
-  before annual passes have no period metadata and are treated as monthly),
-  and match the plan price for that period.
-- Each `payment_intent_id` grants a plan exactly once (`payments` table,
-  unique on intent ID).
-- Dev mode (no `STRIPE_SECRET_KEY`): verification is skipped; paid plans are
-  granted with a server-set 30- or 365-day expiry so the local stack needs no
-  external APIs.
+- `plan: "free"` (self-downgrade) needs no purchase and clears the expiry.
+- For `plus`/`pro` the purchase is verified with the store for the exact
+  `product_id`, and the product must map to the requested plan + period.
+- Each store transaction grants a plan exactly once (`payments` table, unique
+  on `transaction_id` - Apple transaction_id / Play orderId).
+- The mobile app finishes (consumes) the store transaction only **after** this
+  endpoint succeeds, so an interrupted flow is re-delivered by the store.
+- Dev mode (no `APPLE_SHARED_SECRET` / `GOOGLE_PLAY_CREDENTIALS_JSON`):
+  verification is skipped; paid plans are granted with a server-set 30- or
+  365-day expiry so the local stack needs no external APIs.
 
 **Plan gating:**
 

@@ -121,6 +121,7 @@ func main() {
 	analyticsSvc := services.NewAnalyticsService(analyticsRepo)
 	ttsSvc := services.NewTTSService(&cfg.OpenAI, &cfg.AzureTTS, storageClient)
 	crisisDetector := services.NewCrisisDetector(claudeSvc)
+	iapSvc := services.NewIAPService(&cfg.IAP)
 
 	// Therapist notes: per-therapist envelope encryption + OCR job queue.
 	masterKey, derivedKey, err := pkgcrypto.ResolveMasterKey(cfg.Security.MasterEncryptionKey, cfg.Supabase.JWTSecret)
@@ -170,14 +171,13 @@ func main() {
 		AnalyticsRepo:        analyticsRepo,
 		AnalyticsSvc:         analyticsSvc,
 		ClaudeSvc:            claudeSvc,
+		IAPSvc:               iapSvc,
 		JWTSecret:            cfg.Supabase.JWTSecret,
 		SupabaseJWKSURL:      supabaseJWKSURL(cfg.Supabase.URL),
 		AppBaseURL:           cfg.App.BaseURL,
 		MinimumAppVersion:    cfg.App.MinimumAppVersion,
 		AndroidStoreURL:      cfg.App.AndroidStoreURL,
 		IOSStoreURL:          cfg.App.IOSStoreURL,
-		StripeSecretKey:      cfg.Stripe.SecretKey,
-		StripePublishableKey: cfg.Stripe.PublishableKey,
 		StorageProxyBaseURL:  cfg.Storage.ProxyBaseURL,
 		Log:                  log,
 	})

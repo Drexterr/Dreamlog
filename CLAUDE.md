@@ -146,4 +146,5 @@ All config is injected via environment variables (see `.env.example`). Key vars:
 | `STORAGE_ENDPOINT` | MinIO (dev) or R2 endpoint |
 | `WHISPER_API_URL` | Local Whisper server or OpenAI API URL |
 | `AZURE_TTS_KEY` / `AZURE_TTS_REGION` | Azure Speech TTS for therapy voice (blank = OpenAI fallback or skipped in dev) |
+| `APPLE_SHARED_SECRET` / `GOOGLE_PLAY_CREDENTIALS_JSON` | Server-side IAP receipt verification (blank = plan upgrades granted without verification in dev) |
 | `EXPO_PUBLIC_API_URL` | Backend URL consumed by mobile |

@@ -141,13 +141,13 @@ Therapy Sessions may also be purchased individually: ₹499 / $7.99 per session
 (₹299 / $4.99 per extra session for DreamLog Pro subscribers beyond the one
 session included in their plan).
 
-### 7.2 Auto-Renewal
+### 7.2 One-Time Passes - No Auto-Renewal
 
-Paid subscriptions auto-renew at the end of each billing period. You authorise us to charge your payment method on file. You will receive a reminder 7 days before renewal.
+Paid plans are sold as **one-time passes** (30 days for monthly, 365 days for annual), purchased as In-App Purchases through the Apple App Store or Google Play. A pass does **not** auto-renew and you will never be charged automatically. When a pass expires, your account returns to the Free plan and you may purchase a new pass at any time.
 
 ### 7.3 Cancellation
 
-You may cancel your subscription at any time from Settings → Subscription. Cancellation takes effect at the end of the current billing period - you retain access until then. We do not offer prorated refunds for partial periods.
+Because passes do not auto-renew, there is no recurring charge to cancel. Your pass remains active until its expiry date. We do not offer prorated refunds for unused days (see 7.4 for refund exceptions).
 
 ### 7.4 Refunds
 
@@ -158,6 +158,8 @@ We will issue a full refund if:
 - Applicable consumer protection law (including the Consumer Protection Act 2019, India) requires a refund
 
 Refund requests: billing@dreamlog.app
+
+Purchases made through the Apple App Store or Google Play may also be eligible for refunds directly from Apple or Google under their respective store policies; refunds granted by the store are processed by the store, not by DreamLog.
 
 ### 7.5 Price Changes
 

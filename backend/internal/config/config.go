@@ -22,7 +22,7 @@ type Config struct {
 	FCM       FCMConfig
 	App       AppConfig
 	Worker    WorkerConfig
-	Stripe    StripeConfig
+	IAP       IAPConfig
 	Security  SecurityConfig
 }
 
@@ -109,9 +109,13 @@ type AppConfig struct {
 	IOSStoreURL       string // App Store listing URL; empty until the app is live on the App Store
 }
 
-type StripeConfig struct {
-	SecretKey      string
-	PublishableKey string
+// IAPConfig holds credentials for server-side In-App Purchase verification.
+// Purchases happen in the store SDKs on-device; the backend only ever verifies
+// receipts/tokens against Apple and Google before granting a plan.
+type IAPConfig struct {
+	AppleSharedSecret         string // App Store Connect shared secret for /verifyReceipt
+	GooglePlayCredentialsJSON string // service-account JSON with androidpublisher access
+	GooglePlayPackageName     string // Android application ID, e.g. com.dreamlog.app
 }
 
 type WorkerConfig struct {
@@ -186,9 +190,10 @@ func Load() (*Config, error) {
 			AndroidStoreURL:   getEnv("ANDROID_STORE_URL", "https://play.google.com/store/apps/details?id=com.dreamlog.app"),
 			IOSStoreURL:       getEnv("IOS_STORE_URL", ""),
 		},
-		Stripe: StripeConfig{
-			SecretKey:      getEnv("STRIPE_SECRET_KEY", ""),
-			PublishableKey: getEnv("STRIPE_PUBLISHABLE_KEY", ""),
+		IAP: IAPConfig{
+			AppleSharedSecret:         getEnv("APPLE_SHARED_SECRET", ""),
+			GooglePlayCredentialsJSON: getEnv("GOOGLE_PLAY_CREDENTIALS_JSON", ""),
+			GooglePlayPackageName:     getEnv("GOOGLE_PLAY_PACKAGE_NAME", "com.dreamlog.app"),
 		},
 		Worker: WorkerConfig{
 			Concurrency:   parseInt("WORKER_CONCURRENCY", 4),

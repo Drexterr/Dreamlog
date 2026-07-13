@@ -474,11 +474,12 @@ export interface BillingPlanResponse {
   all_plans: Record<Plan, PlanLimits>;
 }
 
-export interface CreatePaymentIntentResponse {
-  client_secret: string;
-  amount: number;
-  currency: string;
-  publishable_key: string;
+// Server-side IAP verification payload sent with POST /billing/upgrade.
+// purchase_token: iOS = base64 app receipt, Android = Play purchase token.
+export interface IAPVerification {
+  platform: 'ios' | 'android';
+  product_id: string;
+  purchase_token: string;
 }
 
 export interface VersionInfo {

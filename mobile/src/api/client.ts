@@ -8,12 +8,12 @@ import {
   BillingPlanResponse,
   CheckinResponse,
   Conversation,
-  CreatePaymentIntentResponse,
   CreateShareLinkResult,
   Entry,
   EntryAnalysis,
   EntryMode,
   Flashback,
+  IAPVerification,
   InsightCardData,
   InsightShareResult,
   JourneyListResponse,
@@ -378,21 +378,13 @@ export const api = {
   getBillingPlan: (): Promise<BillingPlanResponse> =>
     http.get<BillingPlanResponse>('/billing/plan').then((r) => r.data),
 
-  createPaymentIntent: (
-    plan: 'plus' | 'pro',
-    currency: 'inr' | 'usd' | 'eur',
-    period: BillingPeriod = 'monthly',
-  ): Promise<CreatePaymentIntentResponse> =>
+  // purchase is required for paid plans in production - the backend verifies
+  // the In-App Purchase with the store (Apple / Google) before granting.
+  // Expiry is server-set (30 days for monthly, 365 for annual). Omitting
+  // purchase only works against a dev backend with no store credentials.
+  upgradePlan: (plan: Plan, period: BillingPeriod = 'monthly', purchase?: IAPVerification): Promise<BillingPlanResponse> =>
     http
-      .post<CreatePaymentIntentResponse>('/billing/create-payment-intent', { plan, currency, period })
-      .then((r) => r.data),
-
-  // paymentIntentId is required for paid plans in production - the backend
-  // verifies the payment with Stripe before granting. Expiry is server-set
-  // (30 days for monthly, 365 for annual).
-  upgradePlan: (plan: Plan, paymentIntentId?: string, period: BillingPeriod = 'monthly'): Promise<BillingPlanResponse> =>
-    http
-      .post<BillingPlanResponse>('/billing/upgrade', { plan, payment_intent_id: paymentIntentId, period })
+      .post<BillingPlanResponse>('/billing/upgrade', { plan, period, ...purchase })
       .then((r) => r.data),
 };
 

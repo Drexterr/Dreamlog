@@ -2,7 +2,6 @@ import 'react-native-gesture-handler';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Animated, StyleSheet, Text, View } from 'react-native';
 import { Slot, SplashScreen, useRouter, useSegments } from 'expo-router';
-import { StripeProvider } from '@stripe/stripe-react-native';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
 
 GoogleSignin.configure({
@@ -68,8 +67,6 @@ function GreetingOverlay({ name, opacity }: { name: string; opacity: Animated.Va
     </Animated.View>
   );
 }
-
-const STRIPE_PK = process.env.EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY ?? '';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -311,25 +308,23 @@ export default function RootLayout() {
   }
 
   return (
-    <StripeProvider publishableKey={STRIPE_PK} merchantIdentifier="merchant.com.dreamlog">
-      <ThemeProvider>
-        <AuthContext.Provider value={{ isAuthenticated: hasToken, requestAuth }}>
-          <GuidedTourProvider>
-            <Slot />
-            <GuidedTour />
-            {showGreeting && greetingName ? (
-              <GreetingOverlay name={greetingName} opacity={greetingOpacity} />
-            ) : null}
-            {forceUpdate ? <ForceUpdateScreen info={forceUpdate} /> : null}
-            <AuthSheet
-              visible={showAuthSheet}
-              prompt="Sign in to continue"
-              onClose={closeAuthSheet}
-            />
-          </GuidedTourProvider>
-        </AuthContext.Provider>
-      </ThemeProvider>
-    </StripeProvider>
+    <ThemeProvider>
+      <AuthContext.Provider value={{ isAuthenticated: hasToken, requestAuth }}>
+        <GuidedTourProvider>
+          <Slot />
+          <GuidedTour />
+          {showGreeting && greetingName ? (
+            <GreetingOverlay name={greetingName} opacity={greetingOpacity} />
+          ) : null}
+          {forceUpdate ? <ForceUpdateScreen info={forceUpdate} /> : null}
+          <AuthSheet
+            visible={showAuthSheet}
+            prompt="Sign in to continue"
+            onClose={closeAuthSheet}
+          />
+        </GuidedTourProvider>
+      </AuthContext.Provider>
+    </ThemeProvider>
   );
 }
 

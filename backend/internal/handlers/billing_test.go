@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -11,6 +12,7 @@ import (
 
 	"github.com/dreamlog/backend/internal/middleware"
 	"github.com/dreamlog/backend/internal/models"
+	"github.com/dreamlog/backend/internal/services"
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
@@ -370,33 +372,51 @@ func TestBillingHandler_GetPlan_FreeLimitsHaveMonthlyEntries(t *testing.T) {
 	}
 }
 
-// ── Verified (production) mode: payment must be proven server-side ───────────
+// ── Verified (production) mode: purchase must be proven server-side ──────────
 
 type fakePaymentRecorder struct {
-	seen map[string]bool
+	seen        map[string]bool
+	lastStore   string
+	lastProduct string
 }
 
-func (f *fakePaymentRecorder) Record(_ context.Context, _ uuid.UUID, intentID string, _ models.Plan, _ int64, _ string) (bool, error) {
+func (f *fakePaymentRecorder) Record(_ context.Context, _ uuid.UUID, transactionID string, _ models.Plan, store, productID string) (bool, error) {
 	if f.seen == nil {
 		f.seen = map[string]bool{}
 	}
-	if f.seen[intentID] {
+	f.lastStore = store
+	f.lastProduct = productID
+	if f.seen[transactionID] {
 		return false, nil
 	}
-	f.seen[intentID] = true
+	f.seen[transactionID] = true
 	return true, nil
 }
 
-// stripeStub serves GET /v1/payment_intents/:id with a canned intent.
-func stripeStub(t *testing.T, intent map[string]interface{}) *httptest.Server {
-	t.Helper()
-	return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
-		_ = json.NewEncoder(w).Encode(intent)
-	}))
+// fakeIAPVerifier stands in for IAPService: configured, and returns a fixed
+// transaction ID or error for any purchase token.
+type fakeIAPVerifier struct {
+	txID         string
+	err          error
+	lastPlatform string
+	lastProduct  string
+	lastToken    string
 }
 
-func newVerifiedBillingRouter(t *testing.T, svc planManager, payments paymentRecorder, stripeURL string, testUser *models.User) *gin.Engine {
+func (f *fakeIAPVerifier) Configured() bool { return true }
+
+func (f *fakeIAPVerifier) VerifyPurchase(_ context.Context, platform, productID, purchaseToken string) (string, error) {
+	f.lastPlatform, f.lastProduct, f.lastToken = platform, productID, purchaseToken
+	if f.err != nil {
+		return "", f.err
+	}
+	if f.txID != "" {
+		return f.txID, nil
+	}
+	return "tx_" + purchaseToken, nil
+}
+
+func newVerifiedBillingRouter(t *testing.T, svc planManager, payments paymentRecorder, iap purchaseVerifier, testUser *models.User) *gin.Engine {
 	t.Helper()
 	gin.SetMode(gin.TestMode)
 	log := zap.NewNop()
@@ -405,7 +425,7 @@ func newVerifiedBillingRouter(t *testing.T, svc planManager, payments paymentRec
 	r.Use(middleware.ErrorHandler(log))
 	r.Use(middleware.AuthMiddleware(billingTestSecret, "", &fakeProvisioner{user: testUser}, log))
 
-	h := &BillingHandler{svc: svc, payments: payments, stripeSecretKey: "sk_test_123", stripeBaseURL: stripeURL}
+	h := &BillingHandler{svc: svc, payments: payments, iap: iap}
 	r.GET("/billing/plan", h.GetPlan)
 	r.POST("/billing/upgrade", h.Upgrade)
 	return r
@@ -422,67 +442,88 @@ func postUpgrade(t *testing.T, r *gin.Engine, body map[string]string) *httptest.
 	return w
 }
 
-func TestBillingHandler_UpgradeVerified_MissingPaymentIntent_Returns400(t *testing.T) {
-	r := newVerifiedBillingRouter(t, &fakePlanManager{}, &fakePaymentRecorder{}, "http://localhost:0", billingTestUser(models.PlanFree))
-	w := postUpgrade(t, r, map[string]string{"plan": "plus"})
+// iapBody builds a valid verified-upgrade request body, with overrides.
+func iapBody(overrides map[string]string) map[string]string {
+	body := map[string]string{
+		"plan":           "plus",
+		"period":         "monthly",
+		"platform":       "android",
+		"product_id":     services.IAPProductPlusMonthly,
+		"purchase_token": "token-1",
+	}
+	for k, v := range overrides {
+		body[k] = v
+	}
+	return body
+}
+
+func TestBillingHandler_UpgradeVerified_MissingPurchaseToken_Returns400(t *testing.T) {
+	r := newVerifiedBillingRouter(t, &fakePlanManager{}, &fakePaymentRecorder{}, &fakeIAPVerifier{}, billingTestUser(models.PlanFree))
+	w := postUpgrade(t, r, map[string]string{"plan": "plus", "platform": "android", "product_id": services.IAPProductPlusMonthly})
 	if w.Code != http.StatusBadRequest {
-		t.Fatalf("expected 400 without payment_intent_id, got %d: %s", w.Code, w.Body.String())
+		t.Fatalf("expected 400 without purchase_token, got %d: %s", w.Code, w.Body.String())
 	}
 }
 
-func TestBillingHandler_UpgradeVerified_PaymentNotSucceeded_Returns402(t *testing.T) {
-	stripe := stripeStub(t, map[string]interface{}{
-		"id": "pi_1", "status": "requires_payment_method", "amount": 24900, "currency": "inr",
-		"metadata": map[string]string{"plan": "plus"},
-	})
-	defer stripe.Close()
+func TestBillingHandler_UpgradeVerified_MissingPlatform_Returns400(t *testing.T) {
+	r := newVerifiedBillingRouter(t, &fakePlanManager{}, &fakePaymentRecorder{}, &fakeIAPVerifier{}, billingTestUser(models.PlanFree))
+	w := postUpgrade(t, r, iapBody(map[string]string{"platform": ""}))
+	if w.Code != http.StatusBadRequest {
+		t.Fatalf("expected 400 without platform, got %d: %s", w.Code, w.Body.String())
+	}
+}
 
-	r := newVerifiedBillingRouter(t, &fakePlanManager{}, &fakePaymentRecorder{}, stripe.URL, billingTestUser(models.PlanFree))
-	w := postUpgrade(t, r, map[string]string{"plan": "plus", "payment_intent_id": "pi_1"})
+func TestBillingHandler_UpgradeVerified_UnknownProduct_Returns400(t *testing.T) {
+	r := newVerifiedBillingRouter(t, &fakePlanManager{}, &fakePaymentRecorder{}, &fakeIAPVerifier{}, billingTestUser(models.PlanFree))
+	w := postUpgrade(t, r, iapBody(map[string]string{"product_id": "com.dreamlog.app.mystery.box"}))
+	if w.Code != http.StatusBadRequest {
+		t.Fatalf("expected 400 for unknown product, got %d: %s", w.Code, w.Body.String())
+	}
+}
+
+func TestBillingHandler_UpgradeVerified_PurchaseInvalid_Returns402(t *testing.T) {
+	iap := &fakeIAPVerifier{err: services.ErrPurchaseInvalid}
+	r := newVerifiedBillingRouter(t, &fakePlanManager{}, &fakePaymentRecorder{}, iap, billingTestUser(models.PlanFree))
+	w := postUpgrade(t, r, iapBody(nil))
 	if w.Code != http.StatusPaymentRequired {
-		t.Fatalf("expected 402 for unpaid intent, got %d: %s", w.Code, w.Body.String())
+		t.Fatalf("expected 402 for invalid purchase, got %d: %s", w.Code, w.Body.String())
 	}
 }
 
-func TestBillingHandler_UpgradeVerified_WrongPlanMetadata_Returns400(t *testing.T) {
-	stripe := stripeStub(t, map[string]interface{}{
-		"id": "pi_2", "status": "succeeded", "amount": 24900, "currency": "inr",
-		"metadata": map[string]string{"plan": "plus"},
-	})
-	defer stripe.Close()
+func TestBillingHandler_UpgradeVerified_StoreUnreachable_Returns500(t *testing.T) {
+	iap := &fakeIAPVerifier{err: errors.New("network down")}
+	r := newVerifiedBillingRouter(t, &fakePlanManager{}, &fakePaymentRecorder{}, iap, billingTestUser(models.PlanFree))
+	w := postUpgrade(t, r, iapBody(nil))
+	if w.Code != http.StatusInternalServerError {
+		t.Fatalf("expected 500 when store verification is unreachable, got %d: %s", w.Code, w.Body.String())
+	}
+}
 
-	// Paid for plus, asking for pro.
-	r := newVerifiedBillingRouter(t, &fakePlanManager{}, &fakePaymentRecorder{}, stripe.URL, billingTestUser(models.PlanFree))
-	w := postUpgrade(t, r, map[string]string{"plan": "pro", "payment_intent_id": "pi_2"})
+func TestBillingHandler_UpgradeVerified_WrongPlanForProduct_Returns400(t *testing.T) {
+	// Bought the plus product, asking for pro.
+	r := newVerifiedBillingRouter(t, &fakePlanManager{}, &fakePaymentRecorder{}, &fakeIAPVerifier{}, billingTestUser(models.PlanFree))
+	w := postUpgrade(t, r, iapBody(map[string]string{"plan": "pro"}))
 	if w.Code != http.StatusBadRequest {
 		t.Fatalf("expected 400 for plan mismatch, got %d: %s", w.Code, w.Body.String())
 	}
 }
 
-func TestBillingHandler_UpgradeVerified_AmountTooLow_Returns400(t *testing.T) {
-	stripe := stripeStub(t, map[string]interface{}{
-		"id": "pi_3", "status": "succeeded", "amount": 100, "currency": "inr",
-		"metadata": map[string]string{"plan": "pro"},
-	})
-	defer stripe.Close()
-
-	r := newVerifiedBillingRouter(t, &fakePlanManager{}, &fakePaymentRecorder{}, stripe.URL, billingTestUser(models.PlanFree))
-	w := postUpgrade(t, r, map[string]string{"plan": "pro", "payment_intent_id": "pi_3"})
+func TestBillingHandler_UpgradeVerified_PeriodMismatch_Returns400(t *testing.T) {
+	// Bought the monthly product, asking for an annual pass.
+	r := newVerifiedBillingRouter(t, &fakePlanManager{}, &fakePaymentRecorder{}, &fakeIAPVerifier{}, billingTestUser(models.PlanFree))
+	w := postUpgrade(t, r, iapBody(map[string]string{"period": "annual"}))
 	if w.Code != http.StatusBadRequest {
-		t.Fatalf("expected 400 for amount mismatch, got %d: %s", w.Code, w.Body.String())
+		t.Fatalf("expected 400 for period mismatch, got %d: %s", w.Code, w.Body.String())
 	}
 }
 
 func TestBillingHandler_UpgradeVerified_Success_GrantsServerExpiry(t *testing.T) {
-	stripe := stripeStub(t, map[string]interface{}{
-		"id": "pi_4", "status": "succeeded", "amount": 49900, "currency": "inr",
-		"metadata": map[string]string{"plan": "pro"},
-	})
-	defer stripe.Close()
-
 	svc := &fakePlanManager{}
-	r := newVerifiedBillingRouter(t, svc, &fakePaymentRecorder{}, stripe.URL, billingTestUser(models.PlanFree))
-	w := postUpgrade(t, r, map[string]string{"plan": "pro", "payment_intent_id": "pi_4"})
+	payments := &fakePaymentRecorder{}
+	r := newVerifiedBillingRouter(t, svc, payments, &fakeIAPVerifier{}, billingTestUser(models.PlanFree))
+	w := postUpgrade(t, r, iapBody(map[string]string{
+		"plan": "pro", "product_id": services.IAPProductProMonthly, "platform": "ios",
+	}))
 	if w.Code != http.StatusOK {
 		t.Fatalf("expected 200, got %d: %s", w.Code, w.Body.String())
 	}
@@ -492,18 +533,31 @@ func TestBillingHandler_UpgradeVerified_Success_GrantsServerExpiry(t *testing.T)
 	if svc.upgradedExpiry == nil {
 		t.Fatal("expected server-set expiry on verified upgrade")
 	}
+	if payments.lastStore != "apple" {
+		t.Errorf("ios purchase must be recorded with store=apple, got %q", payments.lastStore)
+	}
+	if payments.lastProduct != services.IAPProductProMonthly {
+		t.Errorf("product_id must be recorded, got %q", payments.lastProduct)
+	}
+}
+
+func TestBillingHandler_UpgradeVerified_Android_RecordsGoogleStore(t *testing.T) {
+	payments := &fakePaymentRecorder{}
+	r := newVerifiedBillingRouter(t, &fakePlanManager{}, payments, &fakeIAPVerifier{}, billingTestUser(models.PlanFree))
+	if w := postUpgrade(t, r, iapBody(nil)); w.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d: %s", w.Code, w.Body.String())
+	}
+	if payments.lastStore != "google" {
+		t.Errorf("android purchase must be recorded with store=google, got %q", payments.lastStore)
+	}
 }
 
 func TestBillingHandler_UpgradeVerified_Annual_GrantsYearExpiry(t *testing.T) {
-	stripe := stripeStub(t, map[string]interface{}{
-		"id": "pi_a1", "status": "succeeded", "amount": 449900, "currency": "inr",
-		"metadata": map[string]string{"plan": "pro", "period": "annual"},
-	})
-	defer stripe.Close()
-
 	svc := &fakePlanManager{}
-	r := newVerifiedBillingRouter(t, svc, &fakePaymentRecorder{}, stripe.URL, billingTestUser(models.PlanFree))
-	w := postUpgrade(t, r, map[string]string{"plan": "pro", "payment_intent_id": "pi_a1", "period": "annual"})
+	r := newVerifiedBillingRouter(t, svc, &fakePaymentRecorder{}, &fakeIAPVerifier{}, billingTestUser(models.PlanFree))
+	w := postUpgrade(t, r, iapBody(map[string]string{
+		"plan": "pro", "period": "annual", "product_id": services.IAPProductProAnnual,
+	}))
 	if w.Code != http.StatusOK {
 		t.Fatalf("expected 200, got %d: %s", w.Code, w.Body.String())
 	}
@@ -516,72 +570,34 @@ func TestBillingHandler_UpgradeVerified_Annual_GrantsYearExpiry(t *testing.T) {
 	}
 }
 
-func TestBillingHandler_UpgradeVerified_PeriodMismatch_Returns400(t *testing.T) {
-	// Paid the monthly price, asking for an annual pass.
-	stripe := stripeStub(t, map[string]interface{}{
-		"id": "pi_a2", "status": "succeeded", "amount": 24900, "currency": "inr",
-		"metadata": map[string]string{"plan": "plus", "period": "monthly"},
-	})
-	defer stripe.Close()
-
-	r := newVerifiedBillingRouter(t, &fakePlanManager{}, &fakePaymentRecorder{}, stripe.URL, billingTestUser(models.PlanFree))
-	w := postUpgrade(t, r, map[string]string{"plan": "plus", "payment_intent_id": "pi_a2", "period": "annual"})
-	if w.Code != http.StatusBadRequest {
-		t.Fatalf("expected 400 for period mismatch, got %d: %s", w.Code, w.Body.String())
-	}
-}
-
-func TestBillingHandler_UpgradeVerified_LegacyIntentNoPeriod_TreatedAsMonthly(t *testing.T) {
-	// Intents created before annual passes carry no period metadata.
-	stripe := stripeStub(t, map[string]interface{}{
-		"id": "pi_a3", "status": "succeeded", "amount": 24900, "currency": "inr",
-		"metadata": map[string]string{"plan": "plus"},
-	})
-	defer stripe.Close()
-
-	svc := &fakePlanManager{}
-	r := newVerifiedBillingRouter(t, svc, &fakePaymentRecorder{}, stripe.URL, billingTestUser(models.PlanFree))
-	w := postUpgrade(t, r, map[string]string{"plan": "plus", "payment_intent_id": "pi_a3"})
-	if w.Code != http.StatusOK {
-		t.Fatalf("legacy monthly intent must still verify, got %d: %s", w.Code, w.Body.String())
-	}
-	if got := time.Until(*svc.upgradedExpiry); got > 31*24*time.Hour {
-		t.Fatalf("legacy intent must grant a 30-day pass, got %v", got)
-	}
-}
-
-func TestBillingHandler_UpgradeVerified_ReplayedIntent_Returns409(t *testing.T) {
-	stripe := stripeStub(t, map[string]interface{}{
-		"id": "pi_5", "status": "succeeded", "amount": 24900, "currency": "inr",
-		"metadata": map[string]string{"plan": "plus"},
-	})
-	defer stripe.Close()
-
+func TestBillingHandler_UpgradeVerified_ReplayedTransaction_Returns409(t *testing.T) {
 	payments := &fakePaymentRecorder{}
-	r := newVerifiedBillingRouter(t, &fakePlanManager{}, payments, stripe.URL, billingTestUser(models.PlanFree))
+	// Fixed transaction ID: both requests resolve to the same store transaction.
+	iap := &fakeIAPVerifier{txID: "GPA.1234-5678"}
+	r := newVerifiedBillingRouter(t, &fakePlanManager{}, payments, iap, billingTestUser(models.PlanFree))
 
-	if w := postUpgrade(t, r, map[string]string{"plan": "plus", "payment_intent_id": "pi_5"}); w.Code != http.StatusOK {
+	if w := postUpgrade(t, r, iapBody(nil)); w.Code != http.StatusOK {
 		t.Fatalf("first use must succeed, got %d: %s", w.Code, w.Body.String())
 	}
-	if w := postUpgrade(t, r, map[string]string{"plan": "plus", "payment_intent_id": "pi_5"}); w.Code != http.StatusConflict {
-		t.Fatalf("replayed intent must return 409, got %d: %s", w.Code, w.Body.String())
+	if w := postUpgrade(t, r, iapBody(nil)); w.Code != http.StatusConflict {
+		t.Fatalf("replayed transaction must return 409, got %d: %s", w.Code, w.Body.String())
 	}
 }
 
 func TestBillingHandler_UpgradeVerified_B2BSelfServe_Returns400(t *testing.T) {
-	r := newVerifiedBillingRouter(t, &fakePlanManager{}, &fakePaymentRecorder{}, "http://localhost:0", billingTestUser(models.PlanFree))
+	r := newVerifiedBillingRouter(t, &fakePlanManager{}, &fakePaymentRecorder{}, &fakeIAPVerifier{}, billingTestUser(models.PlanFree))
 	w := postUpgrade(t, r, map[string]string{"plan": "b2b"})
 	if w.Code != http.StatusBadRequest {
 		t.Fatalf("b2b must not be self-serve in production, got %d: %s", w.Code, w.Body.String())
 	}
 }
 
-func TestBillingHandler_UpgradeVerified_DowngradeToFree_NoPaymentNeeded(t *testing.T) {
+func TestBillingHandler_UpgradeVerified_DowngradeToFree_NoPurchaseNeeded(t *testing.T) {
 	svc := &fakePlanManager{}
-	r := newVerifiedBillingRouter(t, svc, &fakePaymentRecorder{}, "http://localhost:0", billingTestUser(models.PlanPro))
+	r := newVerifiedBillingRouter(t, svc, &fakePaymentRecorder{}, &fakeIAPVerifier{}, billingTestUser(models.PlanPro))
 	w := postUpgrade(t, r, map[string]string{"plan": "free"})
 	if w.Code != http.StatusOK {
-		t.Fatalf("downgrade to free must not require payment, got %d: %s", w.Code, w.Body.String())
+		t.Fatalf("downgrade to free must not require a purchase, got %d: %s", w.Code, w.Body.String())
 	}
 	if svc.upgradedPlan != models.PlanFree {
 		t.Fatalf("expected free, got %s", svc.upgradedPlan)
@@ -591,105 +607,20 @@ func TestBillingHandler_UpgradeVerified_DowngradeToFree_NoPaymentNeeded(t *testi
 	}
 }
 
-// ── POST /billing/create-payment-intent (dev stub mode) ─────────────────────
-
-func newPaymentIntentRouter(t *testing.T) *gin.Engine {
-	t.Helper()
-	gin.SetMode(gin.TestMode)
-	log := zap.NewNop()
-	r := gin.New()
-	r.Use(middleware.ErrorHandler(log))
-	r.Use(middleware.AuthMiddleware(billingTestSecret, "", &fakeProvisioner{user: billingTestUser(models.PlanFree)}, log))
-	h := &BillingHandler{svc: &fakePlanManager{}, stripePublishableKey: "pk_test_x"}
-	r.POST("/billing/create-payment-intent", h.CreatePaymentIntent)
-	return r
-}
-
-func postPaymentIntent(t *testing.T, r *gin.Engine, body map[string]string) *httptest.ResponseRecorder {
-	t.Helper()
-	raw, _ := json.Marshal(body)
-	w := httptest.NewRecorder()
-	req, _ := http.NewRequest(http.MethodPost, "/billing/create-payment-intent", bytes.NewReader(raw))
-	req.Header.Set("Authorization", "Bearer "+billingTestJWT(t))
-	req.Header.Set("Content-Type", "application/json")
-	r.ServeHTTP(w, req)
-	return w
-}
-
-func TestCreatePaymentIntent_DevStub_ReturnsStubSecret(t *testing.T) {
-	r := newPaymentIntentRouter(t)
-	w := postPaymentIntent(t, r, map[string]string{"plan": "plus", "currency": "inr"})
-	if w.Code != http.StatusOK {
-		t.Fatalf("expected 200, got %d: %s", w.Code, w.Body.String())
+func TestIAPCatalog_CoversAllPaidPlanPeriods(t *testing.T) {
+	want := map[string]services.IAPProduct{
+		services.IAPProductPlusMonthly: {Plan: models.PlanPlus, Period: "monthly"},
+		services.IAPProductPlusAnnual:  {Plan: models.PlanPlus, Period: "annual"},
+		services.IAPProductProMonthly:  {Plan: models.PlanPro, Period: "monthly"},
+		services.IAPProductProAnnual:   {Plan: models.PlanPro, Period: "annual"},
 	}
-	var resp map[string]interface{}
-	json.Unmarshal(w.Body.Bytes(), &resp)
-	if resp["client_secret"] == "" || resp["client_secret"] == nil {
-		t.Error("expected stub client_secret in dev mode")
+	if len(services.IAPCatalog) != len(want) {
+		t.Fatalf("catalog size: want %d, got %d", len(want), len(services.IAPCatalog))
 	}
-	if resp["amount"] != float64(24900) {
-		t.Errorf("plus INR amount: want 24900, got %v", resp["amount"])
-	}
-}
-
-func TestCreatePaymentIntent_DevStub_AnnualAmount(t *testing.T) {
-	r := newPaymentIntentRouter(t)
-	w := postPaymentIntent(t, r, map[string]string{"plan": "plus", "currency": "inr", "period": "annual"})
-	if w.Code != http.StatusOK {
-		t.Fatalf("expected 200, got %d: %s", w.Code, w.Body.String())
-	}
-	var resp map[string]interface{}
-	json.Unmarshal(w.Body.Bytes(), &resp)
-	if resp["amount"] != float64(199900) {
-		t.Errorf("plus INR annual amount: want 199900, got %v", resp["amount"])
-	}
-}
-
-func TestCreatePaymentIntent_InvalidPeriod_Returns400(t *testing.T) {
-	r := newPaymentIntentRouter(t)
-	if w := postPaymentIntent(t, r, map[string]string{"plan": "plus", "currency": "inr", "period": "weekly"}); w.Code != http.StatusBadRequest {
-		t.Fatalf("expected 400 for invalid period, got %d", w.Code)
-	}
-}
-
-func TestCreatePaymentIntent_InvalidCurrency_Returns400(t *testing.T) {
-	r := newPaymentIntentRouter(t)
-	if w := postPaymentIntent(t, r, map[string]string{"plan": "plus", "currency": "gbp"}); w.Code != http.StatusBadRequest {
-		t.Fatalf("expected 400 for unsupported currency, got %d", w.Code)
-	}
-}
-
-func TestCreatePaymentIntent_FreePlan_Returns400(t *testing.T) {
-	r := newPaymentIntentRouter(t)
-	if w := postPaymentIntent(t, r, map[string]string{"plan": "free", "currency": "usd"}); w.Code != http.StatusBadRequest {
-		t.Fatalf("expected 400 for free plan, got %d", w.Code)
-	}
-}
-
-func TestPlanAmount_AllCurrencies(t *testing.T) {
-	cases := []struct {
-		plan     models.Plan
-		currency string
-		period   string
-		want     int64
-	}{
-		{models.PlanPlus, "inr", "monthly", 24900},
-		{models.PlanPro, "inr", "monthly", 49900},
-		{models.PlanPlus, "usd", "monthly", 599},
-		{models.PlanPro, "usd", "monthly", 999},
-		{models.PlanPlus, "eur", "monthly", 599},
-		{models.PlanPro, "eur", "monthly", 999},
-		{models.PlanPlus, "inr", "annual", 199900},
-		{models.PlanPro, "inr", "annual", 449900},
-		{models.PlanPlus, "usd", "annual", 3999},
-		{models.PlanPro, "usd", "annual", 7999},
-		{models.PlanPlus, "eur", "annual", 3999},
-		{models.PlanPro, "eur", "annual", 7999},
-		{models.PlanFree, "inr", "monthly", 0},
-	}
-	for _, tc := range cases {
-		if got := planAmount(tc.plan, tc.currency, tc.period); got != tc.want {
-			t.Errorf("planAmount(%s, %s, %s): want %d, got %d", tc.plan, tc.currency, tc.period, tc.want, got)
+	for id, p := range want {
+		got, ok := services.IAPCatalog[id]
+		if !ok || got != p {
+			t.Errorf("catalog[%s]: want %+v, got %+v (ok=%v)", id, p, got, ok)
 		}
 	}
 }

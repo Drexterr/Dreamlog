@@ -109,7 +109,7 @@ Your FCM device token is shared with Google Firebase solely to deliver push noti
 
 ### 4.5 Payment Processors
 
-Subscription payments are processed by [Razorpay / Stripe]. We do not store card numbers. Payment processors receive only your email and payment amount.
+All purchases are processed as In-App Purchases by Apple (App Store) or Google (Google Play), depending on your device. We never see or store your card details. We receive only a purchase confirmation from the store (product purchased and an anonymous transaction identifier) to activate your plan.
 
 ---
 

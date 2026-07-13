@@ -2,17 +2,13 @@ package handlers
 
 import (
 	"context"
-	"encoding/json"
-	"fmt"
-	"io"
+	"errors"
 	"net/http"
-	"net/url"
-	"strconv"
-	"strings"
 	"time"
 
 	"github.com/dreamlog/backend/internal/middleware"
 	"github.com/dreamlog/backend/internal/models"
+	"github.com/dreamlog/backend/internal/services"
 	"github.com/dreamlog/backend/pkg/apierr"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -26,11 +22,18 @@ type planManager interface {
 
 // paymentRecorder is what BillingHandler needs from PaymentRepository.
 type paymentRecorder interface {
-	Record(ctx context.Context, userID uuid.UUID, paymentIntentID string, plan models.Plan, amount int64, currency string) (bool, error)
+	Record(ctx context.Context, userID uuid.UUID, transactionID string, plan models.Plan, store, productID string) (bool, error)
 }
 
-// Payments are one-time PaymentIntents (a 30-day or 365-day pass), not
-// recurring subscriptions - the mobile copy must describe them as such.
+// purchaseVerifier is what BillingHandler needs from IAPService: server-side
+// verification of App Store / Play Store purchases.
+type purchaseVerifier interface {
+	Configured() bool
+	VerifyPurchase(ctx context.Context, platform, productID, purchaseToken string) (string, error)
+}
+
+// Purchases are one-time store products (a 30-day or 365-day pass), not
+// auto-renewing subscriptions - the mobile copy must describe them as such.
 const (
 	periodMonthly = "monthly"
 	periodAnnual  = "annual"
@@ -40,7 +43,7 @@ const (
 )
 
 // normalizePeriod validates the billing period, defaulting to monthly for
-// requests (and legacy PaymentIntents) that don't carry one.
+// requests that don't carry one.
 func normalizePeriod(p string) (string, bool) {
 	switch p {
 	case "", periodMonthly:
@@ -60,12 +63,10 @@ func planDuration(period string) time.Duration {
 }
 
 type BillingHandler struct {
-	svc                  planManager
-	payments             paymentRecorder
-	analytics            analyticsTracker
-	stripeSecretKey      string
-	stripePublishableKey string
-	stripeBaseURL        string // overridable in tests; defaults to the real Stripe API
+	svc       planManager
+	payments  paymentRecorder
+	analytics analyticsTracker
+	iap       purchaseVerifier
 }
 
 // analyticsTracker is the subset of AnalyticsService used by BillingHandler.
@@ -73,18 +74,14 @@ type analyticsTracker interface {
 	TrackUser(ctx context.Context, userID uuid.UUID, event string, props map[string]any)
 }
 
-func NewBillingHandler(svc planManager, payments paymentRecorder, analytics analyticsTracker, stripeSecretKey, stripePublishableKey string) *BillingHandler {
+func NewBillingHandler(svc planManager, payments paymentRecorder, analytics analyticsTracker, iap purchaseVerifier) *BillingHandler {
 	return &BillingHandler{
-		svc:                  svc,
-		payments:             payments,
-		analytics:            analytics,
-		stripeSecretKey:      stripeSecretKey,
-		stripePublishableKey: stripePublishableKey,
-		stripeBaseURL:        stripeAPIBaseURL,
+		svc:       svc,
+		payments:  payments,
+		analytics: analytics,
+		iap:       iap,
 	}
 }
-
-const stripeAPIBaseURL = "https://api.stripe.com"
 
 // GET /billing/plan - returns the authenticated user's current plan and its limits.
 func (h *BillingHandler) GetPlan(c *gin.Context) {
@@ -104,25 +101,30 @@ func (h *BillingHandler) GetPlan(c *gin.Context) {
 	})
 }
 
-// POST /billing/upgrade - sets the user's plan after server-side payment verification.
+// POST /billing/upgrade - sets the user's plan after server-side IAP verification.
 //
 // Security model:
 //   - free: always allowed (self-downgrade), clears expiry.
-//   - plus/pro with Stripe configured: payment_intent_id is REQUIRED. The
-//     intent is fetched from Stripe and must be succeeded, for the requested
-//     plan, and for the exact amount. Each intent grants a plan exactly once
-//     (payments table, unique on payment_intent_id). Expiry is set
-//     server-side to now + 30 days - never taken from the client.
-//   - b2b with Stripe configured: rejected; b2b is provisioned out-of-band.
-//   - Dev (no STRIPE_SECRET_KEY): grants without verification so the local
+//   - plus/pro with IAP configured: platform, product_id, and purchase_token
+//     are REQUIRED. The purchase is verified with the store (Apple
+//     verifyReceipt / Play purchases.products.get); the product must map to
+//     the requested plan+period; each store transaction grants a plan exactly
+//     once (payments table, unique on transaction_id). Expiry is set
+//     server-side - never taken from the client. Pricing is store-managed, so
+//     there is no amount check: a verified purchase of the product is proof
+//     the store collected its price.
+//   - b2b: rejected in production; b2b is provisioned out-of-band.
+//   - Dev (no store credentials): grants without verification so the local
 //     stack needs no external APIs.
 func (h *BillingHandler) Upgrade(c *gin.Context) {
 	userID := middleware.UserIDFromCtx(c.Request.Context())
 
 	var req struct {
-		Plan            models.Plan `json:"plan" binding:"required"`
-		PaymentIntentID string      `json:"payment_intent_id"`
-		Period          string      `json:"period"`
+		Plan          models.Plan `json:"plan" binding:"required"`
+		Period        string      `json:"period"`
+		Platform      string      `json:"platform"`       // "ios" | "android"
+		ProductID     string      `json:"product_id"`     // store SKU, e.g. com.dreamlog.app.plus.monthly
+		PurchaseToken string      `json:"purchase_token"` // iOS: base64 receipt; Android: Play purchase token
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
 		_ = c.Error(apierr.BadRequest("invalid request body", err.Error()))
@@ -147,9 +149,9 @@ func (h *BillingHandler) Upgrade(c *gin.Context) {
 
 	switch {
 	case req.Plan == models.PlanFree:
-		// Self-downgrade: no payment, no expiry.
+		// Self-downgrade: no purchase, no expiry.
 
-	case h.stripeSecretKey == "":
+	case h.iap == nil || !h.iap.Configured():
 		// Dev stub: grant paid plans with a server-set expiry for the period.
 		if req.Plan != models.PlanB2B {
 			t := time.Now().Add(planDuration(period))
@@ -161,43 +163,46 @@ func (h *BillingHandler) Upgrade(c *gin.Context) {
 		return
 
 	default:
-		// Production: verify the payment with Stripe before granting anything.
-		if req.PaymentIntentID == "" {
-			_ = c.Error(apierr.BadRequest("payment_intent_id is required"))
+		// Production: verify the purchase with the store before granting anything.
+		if req.Platform != "ios" && req.Platform != "android" {
+			_ = c.Error(apierr.BadRequest("platform must be ios or android"))
 			return
 		}
-		intent, err := retrieveStripePaymentIntent(c.Request.Context(), h.stripeBaseURL, h.stripeSecretKey, req.PaymentIntentID)
-		if err != nil {
-			_ = c.Error(apierr.Internal("payment verification unavailable"))
+		if req.ProductID == "" || req.PurchaseToken == "" {
+			_ = c.Error(apierr.BadRequest("product_id and purchase_token are required"))
 			return
 		}
-		if intent.Status != "succeeded" {
-			_ = c.Error(apierr.New(http.StatusPaymentRequired, "payment has not succeeded"))
+		product, known := services.IAPCatalog[req.ProductID]
+		if !known {
+			_ = c.Error(apierr.BadRequest("unknown product_id"))
 			return
 		}
-		if intent.Metadata.Plan != string(req.Plan) {
-			_ = c.Error(apierr.BadRequest("payment was made for a different plan"))
-			return
-		}
-		// Legacy intents (created before annual passes) carry no period
-		// metadata and normalize to monthly.
-		intentPeriod, ok := normalizePeriod(intent.Metadata.Period)
-		if !ok || intentPeriod != period {
-			_ = c.Error(apierr.BadRequest("payment was made for a different billing period"))
-			return
-		}
-		if intent.Amount < planAmount(req.Plan, intent.Currency, period) {
-			_ = c.Error(apierr.BadRequest("payment amount does not match plan price"))
+		if product.Plan != req.Plan || product.Period != period {
+			_ = c.Error(apierr.BadRequest("purchase was made for a different plan or billing period"))
 			return
 		}
 
-		inserted, err := h.payments.Record(c.Request.Context(), userID, intent.ID, req.Plan, intent.Amount, intent.Currency)
+		transactionID, err := h.iap.VerifyPurchase(c.Request.Context(), req.Platform, req.ProductID, req.PurchaseToken)
 		if err != nil {
-			_ = c.Error(apierr.Internal("failed to record payment"))
+			if errors.Is(err, services.ErrPurchaseInvalid) {
+				_ = c.Error(apierr.New(http.StatusPaymentRequired, "purchase could not be verified"))
+				return
+			}
+			_ = c.Error(apierr.Internal("purchase verification unavailable"))
+			return
+		}
+
+		store := "apple"
+		if req.Platform == "android" {
+			store = "google"
+		}
+		inserted, err := h.payments.Record(c.Request.Context(), userID, transactionID, req.Plan, store, req.ProductID)
+		if err != nil {
+			_ = c.Error(apierr.Internal("failed to record purchase"))
 			return
 		}
 		if !inserted {
-			_ = c.Error(apierr.Conflict("this payment has already been used"))
+			_ = c.Error(apierr.Conflict("this purchase has already been used"))
 			return
 		}
 
@@ -227,219 +232,6 @@ func (h *BillingHandler) Upgrade(c *gin.Context) {
 		"plan_expires_at": user.PlanExpiresAt,
 		"limits":          limits,
 	})
-}
-
-// POST /billing/create-payment-intent - creates a Stripe PaymentIntent for a plan upgrade.
-// Returns client_secret for the mobile Stripe SDK to present the payment sheet.
-// When STRIPE_SECRET_KEY is not set (dev), returns a stub client_secret.
-func (h *BillingHandler) CreatePaymentIntent(c *gin.Context) {
-	var req struct {
-		Plan     models.Plan `json:"plan"     binding:"required"`
-		Currency string      `json:"currency" binding:"required"`
-		Period   string      `json:"period"`
-	}
-	if err := c.ShouldBindJSON(&req); err != nil {
-		_ = c.Error(apierr.BadRequest("invalid request body", err.Error()))
-		return
-	}
-
-	if req.Currency != "inr" && req.Currency != "usd" && req.Currency != "eur" {
-		_ = c.Error(apierr.BadRequest("currency must be inr, eur, or usd"))
-		return
-	}
-
-	switch req.Plan {
-	case models.PlanPlus, models.PlanPro:
-		// only paid plans can be purchased
-	default:
-		_ = c.Error(apierr.BadRequest("plan must be plus or pro"))
-		return
-	}
-
-	period, ok := normalizePeriod(req.Period)
-	if !ok {
-		_ = c.Error(apierr.BadRequest("period must be monthly or annual"))
-		return
-	}
-
-	amount := planAmount(req.Plan, req.Currency, period)
-
-	// Dev mode: Stripe keys not configured - return a test stub.
-	if h.stripeSecretKey == "" {
-		c.JSON(http.StatusOK, gin.H{
-			"client_secret":   "pi_stub_dev_only_secret",
-			"amount":          amount,
-			"currency":        req.Currency,
-			"publishable_key": h.stripePublishableKey,
-		})
-		return
-	}
-
-	clientSecret, err := createStripePaymentIntent(
-		c.Request.Context(),
-		h.stripeSecretKey,
-		amount,
-		req.Currency,
-		string(req.Plan),
-		period,
-	)
-	if err != nil {
-		_ = c.Error(apierr.Internal("payment service unavailable"))
-		return
-	}
-
-	c.JSON(http.StatusOK, gin.H{
-		"client_secret":   clientSecret,
-		"amount":          amount,
-		"currency":        req.Currency,
-		"publishable_key": h.stripePublishableKey,
-	})
-}
-
-// planAmount returns the payment amount in the smallest currency unit (paise / euro cents / cents).
-// Annual passes are discounted vs 12x monthly (India ~33%/25%, global ~44%/33%) —
-// canonical prices and margin math live in docs/PRICING.md.
-func planAmount(plan models.Plan, currency, period string) int64 {
-	annual := period == periodAnnual
-	switch currency {
-	case "inr":
-		switch plan {
-		case models.PlanPlus:
-			if annual {
-				return 199900 // ₹1,999
-			}
-			return 24900 // ₹249
-		case models.PlanPro:
-			if annual {
-				return 449900 // ₹4,499
-			}
-			return 49900 // ₹499
-		}
-	case "eur":
-		switch plan {
-		case models.PlanPlus:
-			if annual {
-				return 3999 // €39.99
-			}
-			return 599 // €5.99
-		case models.PlanPro:
-			if annual {
-				return 7999 // €79.99
-			}
-			return 999 // €9.99
-		}
-	default: // usd
-		switch plan {
-		case models.PlanPlus:
-			if annual {
-				return 3999 // $39.99
-			}
-			return 599 // $5.99
-		case models.PlanPro:
-			if annual {
-				return 7999 // $79.99
-			}
-			return 999 // $9.99
-		}
-	}
-	return 0
-}
-
-// createStripePaymentIntent calls the Stripe API directly using net/http (no SDK dependency).
-func createStripePaymentIntent(ctx context.Context, secretKey string, amount int64, currency, planMeta, periodMeta string) (string, error) {
-	body := url.Values{}
-	body.Set("amount", strconv.FormatInt(amount, 10))
-	body.Set("currency", currency)
-	body.Set("automatic_payment_methods[enabled]", "true")
-	body.Set("metadata[plan]", planMeta)
-	body.Set("metadata[period]", periodMeta)
-	body.Set("metadata[product]", "dreamlog_subscription")
-
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost,
-		"https://api.stripe.com/v1/payment_intents",
-		strings.NewReader(body.Encode()),
-	)
-	if err != nil {
-		return "", err
-	}
-	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-	req.SetBasicAuth(secretKey, "")
-
-	resp, err := http.DefaultClient.Do(req)
-	if err != nil {
-		return "", err
-	}
-	defer resp.Body.Close()
-
-	raw, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return "", err
-	}
-
-	var result struct {
-		ClientSecret string `json:"client_secret"`
-		Error        *struct {
-			Message string `json:"message"`
-		} `json:"error"`
-	}
-	if err := json.Unmarshal(raw, &result); err != nil {
-		return "", err
-	}
-	if result.Error != nil {
-		return "", fmt.Errorf("stripe: %s", result.Error.Message)
-	}
-	return result.ClientSecret, nil
-}
-
-// stripePaymentIntent is the subset of the Stripe PaymentIntent object we verify.
-type stripePaymentIntent struct {
-	ID       string `json:"id"`
-	Status   string `json:"status"`
-	Amount   int64  `json:"amount"`
-	Currency string `json:"currency"`
-	Metadata struct {
-		Plan   string `json:"plan"`
-		Period string `json:"period"`
-	} `json:"metadata"`
-}
-
-// retrieveStripePaymentIntent fetches a PaymentIntent from Stripe for server-side
-// verification. Never trust payment state reported by the client.
-func retrieveStripePaymentIntent(ctx context.Context, baseURL, secretKey, intentID string) (*stripePaymentIntent, error) {
-	if baseURL == "" {
-		baseURL = stripeAPIBaseURL
-	}
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet,
-		baseURL+"/v1/payment_intents/"+url.PathEscape(intentID), nil)
-	if err != nil {
-		return nil, err
-	}
-	req.SetBasicAuth(secretKey, "")
-
-	resp, err := http.DefaultClient.Do(req)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-
-	raw, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return nil, err
-	}
-
-	var result struct {
-		stripePaymentIntent
-		Error *struct {
-			Message string `json:"message"`
-		} `json:"error"`
-	}
-	if err := json.Unmarshal(raw, &result); err != nil {
-		return nil, err
-	}
-	if result.Error != nil {
-		return nil, fmt.Errorf("stripe: %s", result.Error.Message)
-	}
-	return &result.stripePaymentIntent, nil
 }
 
 // allPlanDetails returns the limits for every plan - used on pricing pages.

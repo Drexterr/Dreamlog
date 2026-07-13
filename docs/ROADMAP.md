@@ -222,7 +222,7 @@ Features built beyond the original roadmap phases:
 ### 7a - Subscription & Billing API ✅
 - `plan TEXT` + `plan_expires_at TIMESTAMPTZ` columns added to `users`
 - `GET /billing/plan` - returns current plan + all plan limits; mobile reads this on Settings screen
-- `POST /billing/upgrade` - sets plan (stub in dev, payment gateway in prod)
+- `POST /billing/upgrade` - sets plan (stub in dev; in prod verifies an In-App Purchase with the store server-side — see LAUNCH_CHECKLIST §1)
 - Plan gating enforced in handlers: `mood/history`, `reviews/weekly`, `reviews/annual`, `share`, `export/pdf`
 
 ### 7b - Guided Journeys ✅
@@ -403,7 +403,9 @@ One codebase ships to both stores via EAS — no separate iOS app. Shared `versi
 ### Remaining (needs owner accounts — see LAUNCH_CHECKLIST §1, §2b, §2c)
 - Apple Developer enrollment → APNs key, `GoogleService-Info.plist` (iOS builds fail without it),
   iOS OAuth client for Google Sign-In, Supabase Apple provider
-- IAP vs web-only purchase decision (biggest blocker, both stores)
+- IAP store setup: create the 4 consumable products + set verification secrets
+  (code shipped 2026-07-13: `expo-iap` client + server-side receipt verification;
+  Stripe removed — see LAUNCH_CHECKLIST §1)
 - Privacy policy, store listings, data-safety forms, Sentry/uptime monitoring, CI race-detector gate
 
 ---

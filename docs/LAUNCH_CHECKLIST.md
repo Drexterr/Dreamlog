@@ -10,31 +10,46 @@ Legend: 🔴 blocker (store rejection or broken feature) · 🟡 should-do befor
 
 ## 1. Payments 🔴
 
-The single biggest launch risk. Decide the approach first — it affects everything below it.
+**Decision made + implemented 2026-07-13: In-App Purchases on both stores; Stripe removed.**
+Plan passes are consumable IAP products purchased via `expo-iap` on-device and verified
+server-side (`backend/internal/services/iap.go`: Apple `verifyReceipt`, Google Play
+Developer API). The mobile finishes (consumes) a transaction only after the backend
+grants the plan, so interrupted flows are re-delivered by the store.
 
-- [ ] **Decide: In-App Purchase vs web-only purchases.** DreamLog+ / Pro subscriptions and
-      therapy session packs are digital content consumed in-app. Apple (Guideline 3.1.1) and
-      Google Play **require IAP / Play Billing** for digital goods — the current Stripe payment
-      sheet will be rejected on iOS. Options:
-  - Move subscriptions + session packs to IAP/Play Billing (RevenueCat is the usual way to
-    manage both stores with one SDK and gives receipt validation + webhooks).
-  - Or remove purchase UI from the apps entirely and sell only via web (Stripe stays; apps
-    just reflect the plan from `GET /billing/plan`).
+Left to do (needs your store accounts):
+
+- [ ] **Create the 4 IAP products** in App Store Connect and the Play Console, as
+      *consumable* products with these exact IDs (they must match
+      `backend/internal/services/iap.go` and `mobile/src/services/iap.ts`):
+      `com.dreamlog.app.plus.monthly`, `com.dreamlog.app.plus.annual`,
+      `com.dreamlog.app.pro.monthly`, `com.dreamlog.app.pro.annual`.
+      List prices per docs/PRICING.md.
+- [ ] **Set backend env on Railway (API process):** `APPLE_SHARED_SECRET` (App Store
+      Connect → App → App Information → App-Specific Shared Secret) and
+      `GOOGLE_PLAY_CREDENTIALS_JSON` (service account with Play Console access —
+      Monetization → "View financial data" permission; can reuse the FCM service
+      account if granted). Optional: `GOOGLE_PLAY_PACKAGE_NAME` (defaults to
+      `com.dreamlog.app`). While unset, `/billing/upgrade` grants plans WITHOUT
+      verification (dev stub) — do not launch without these.
+- [ ] **Rebuild both apps** (`eas build`) — `expo-iap` is a native module; purchases do
+      not work in Expo Go or via OTA update.
+- [ ] **Test end-to-end** with sandbox testers (App Store sandbox account / Play
+      internal-testing license testers): buy Plus monthly, verify `payments` row
+      (store, product_id, transaction_id) and `plan_expires_at` ≈ +30 days; kill the
+      app between purchase and grant and confirm the store re-delivers.
 - [ ] **Implement therapy pay-per-use billing server-side.** `TherapyService.computeBilling`
       currently returns `402` in production with a "real payment would be processed here"
-      comment — non-Pro users can never buy a session. Wire the charge (IAP receipt validation
-      or Stripe PaymentIntent, per the decision above).
-- [ ] **Replace the Stripe publishable key placeholder.** `mobile/.env` has
-      `EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_live_...` (literal placeholder). Set the real key,
-      or better: inject it via `eas.json` production `env` like the other public vars.
-- [ ] Verify `STRIPE_SECRET_KEY` is set on the production backend (Railway) if Stripe stays.
+      comment — non-Pro users can never buy a session. Wire a therapy-session consumable
+      SKU through the same IAP verification path.
+- [ ] Enroll in the App Store Small Business Program + Play 15% tier (docs/PRICING.md).
 
 ### Billing integrity & subscription compliance (found 2026-06-10 audit)
 
-- [x] **Fix `POST /billing/upgrade` trusting the client.** ✅ Done 2026-06-10: the endpoint now
-      requires `payment_intent_id`, verifies it with Stripe server-side (status `succeeded`,
-      plan metadata match, amount match), and each intent grants a plan exactly once
-      (`payments` table, migration 000026). B2B is no longer self-serve in production.
+- [x] **Fix `POST /billing/upgrade` trusting the client.** ✅ Done 2026-06-10 (Stripe),
+      re-implemented for IAP 2026-07-13: the endpoint requires platform + product_id +
+      purchase_token, verifies the purchase with the store server-side, and each store
+      transaction grants a plan exactly once (`payments` table, unique transaction_id,
+      migrations 000026/000035). B2B is no longer self-serve in production.
 - [x] **Enforce `plan_expires_at`.** ✅ Done: `User.EffectivePlan()` added; all plan-gating call
       sites (mood history, reviews, export, share, entries quota, therapy billing) and
       `GET /billing/plan` now treat an expired plan as `free`.
@@ -46,10 +61,11 @@ The single biggest launch risk. Decide the approach first — it affects everyth
 - [x] **Cancellation path.** ✅ Resolved by the 30-day-pass model: there is no recurring charge to
       cancel. NOTE: if/when payments move to IAP subscriptions, the OS manage-subscription link
       becomes mandatory again.
-- [ ] **Add payment reconciliation webhook** (Stripe webhook or RevenueCat events) so
-      "charged but plan not set" can't happen when the app dies mid-flow. Mitigated for now:
-      the user can retry `POST /billing/upgrade` with the same `payment_intent_id` as long as
-      the first attempt never recorded it; full webhook still recommended.
+- [x] **"Charged but plan not set" recovery.** ✅ Resolved by the IAP flow 2026-07-13: the
+      mobile finishes (consumes) the store transaction only AFTER `/billing/upgrade`
+      succeeds, so if the app dies mid-flow the store re-delivers the unfinished purchase
+      on next launch and the upgrade can be retried with the same transaction. Optional
+      hardening later: App Store Server Notifications / Play RTDN for refunds.
 
 ## 2. Store compliance 🔴
 
@@ -102,8 +118,9 @@ produces the iOS binary from the same code. The items below are the iOS-only set
       add `{ "iosUrlScheme": "com.googleusercontent.apps.XXXX" }` to the
       `@react-native-google-signin/google-signin` plugin config in `app.json`. Without it,
       Google sign-in crashes on iOS.
-- [ ] **Apple IAP** — see section 1. Applies with full force on iOS: Stripe payment sheets for
-      digital goods are a guaranteed rejection.
+- [ ] **Apple IAP** — see section 1. Code is done (`expo-iap` + server verification);
+      what remains here is creating the products in App Store Connect and setting
+      `APPLE_SHARED_SECRET` on the backend.
 - [ ] **Device testing without a Mac**: `eas device:create` (registers your iPhone's UDID), then
       `eas build --profile development --platform ios`, install via the EAS link, run
       `npx expo start` and connect over Wi-Fi. For release validation:

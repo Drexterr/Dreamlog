@@ -27,8 +27,11 @@ sales-led and off-store.
 | **B2B Wellness** | ₹199/employee/mo (min 50) | custom | Invoiced, not in stores |
 
 EUR mirrors USD (€5.99 / €39.99 / €9.99 / €79.99; sessions €7.99 / €4.99).
-Until the IAP migration lands, both periods are sold as **one-time passes** via Stripe:
-monthly = 30-day pass, annual = 365-day pass, expiry always set server-side.
+Plan passes are sold as **consumable In-App Purchases** (App Store / Google Play,
+verified server-side): monthly = 30-day pass, annual = 365-day pass, expiry always
+set server-side. Stripe was removed 2026-07-13; store pricing is configured per
+product in App Store Connect / Play Console (the tables above are the list prices
+to configure there).
 
 ### What each tier includes
 
@@ -73,7 +76,9 @@ Therapy session (standalone, any plan incl. Free)
   web-only Stripe keeps ~8 more points of revenue but forbids any in-app purchase path
   (Guideline 3.1.1) and makes us merchant of record for Indian GST. Not worth it
   pre-traction. Web checkout can be added later as a parallel channel (never linked from
-  the iOS app).
+  the iOS app). **Implemented 2026-07-13**: direct store IAP (`expo-iap` on mobile,
+  server-side receipt verification on the backend) — no RevenueCat dependency; plan
+  passes stay consumables, not auto-renewing subscriptions.
 - **Annual passes added 2026-07-02** — upfront cash, locked-in retention, and a
   permanent *honest* "% off" badge (annual-vs-monthly is the legitimate version of
   discount anchoring; we do NOT inflate list prices to fake a permanent discount —
@@ -271,23 +276,28 @@ Code/doc changes to land the new pricing:
       49900/999/€999 (superseded later by IAP migration) ✅ 2026-06-11
 - [x] Docs synced: API_CONTRACT.md, ROADMAP.md, ARCHITECTURE.md, TESTING.md,
       legal/TERMS_AND_CONDITIONS.md ✅ 2026-06-11
-- [ ] IAP migration (RevenueCat): 2 subscriptions + 2 consumables, both stores
+- [x] IAP migration: 4 consumable plan-pass SKUs, both stores; `expo-iap` client +
+      server-side receipt verification (`services/iap.go`); Stripe removed ✅ 2026-07-13
+- [ ] Create the 4 products in App Store Connect + Play Console
+      (`com.dreamlog.app.{plus,pro}.{monthly,annual}`) at the list prices above
 - [ ] Enroll: App Store Small Business Program + Play 15% tier
 - [ ] Therapy pay-per-use charge server-side (`computeBilling` still returns 402 in
-      prod for non-included sessions - wire IAP receipt / payment verification)
+      prod for non-included sessions - wire a therapy-session consumable SKU through
+      the same IAP verification path)
 - [x] `analytics_events` migration (000028) + `services/analytics.go` + `repositories/analytics.go` wired via `handlers/router.go` ✅ 2026-06-11
 - [x] Extend `payments` table: `store`, `product_id`, `country` — migration 000029 ✅ 2026-06-11
-- [x] Annual passes: backend `period` on `/billing/create-payment-intent` +
-      `/billing/upgrade` (Stripe metadata verification, 365-day server-set expiry),
-      annual amounts + tests ✅ 2026-07-02
+- [x] Annual passes: backend `period` on `/billing/upgrade` (365-day server-set
+      expiry), annual amounts + tests ✅ 2026-07-02 (Stripe verification since
+      replaced by store IAP verification, 2026-07-13)
 - [x] Mobile upgrade screen: Monthly/Annual segmented toggle (annual default,
       savings badges, per-month equivalents); annual price constants in
       `src/services/region.ts` ✅ 2026-07-02
 - [x] Website: Monthly/Annual toggle on `/pricing` + homepage pricing section;
       EUR aligned to canonical (€5.99/€9.99, session €7.99, member €4.99);
       terms page pass copy updated ✅ 2026-07-02
-- [ ] IAP migration note: when RevenueCat lands, annual SKUs become real
-      auto-renewing yearly subscriptions (4 subscription SKUs + 2 consumables)
+- [ ] Future option: convert plan passes from consumables to real auto-renewing
+      subscriptions (would require subscription SKUs + renewal webhooks; the
+      current one-time-pass model needs neither)
 
 ---
 
