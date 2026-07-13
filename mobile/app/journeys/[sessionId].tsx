@@ -17,6 +17,7 @@ import { useTheme } from '../../src/context/ThemeContext';
 import { useRecorder } from '../../src/hooks/useRecorder';
 import { uploadRecording } from '../../src/services/upload';
 import type { JourneySession, JourneyStep } from '../../src/types';
+import { T } from '../../src/testIDs';
 
 // ── Step row ──────────────────────────────────────────────────────────────────
 function StepRow({
@@ -133,6 +134,7 @@ function RecordStep({
         <View style={styles.recordCenter}>
           <Animated.View style={{ transform: [{ scale: pulseAnim }] }}>
             <TouchableOpacity
+              testID={T.journeySession.recordButton}
               style={[
                 styles.recordBtn,
                 {
@@ -227,12 +229,12 @@ export default function JourneySessionScreen() {
   const currentStep: JourneyStep | undefined = session.steps[session.current_step];
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.bg }]}>
+    <View testID={T.journeySession.screen} style={[styles.container, { backgroundColor: colors.bg }]}>
       <StatusBar barStyle="light-content" />
       <SafeAreaView style={styles.safe}>
         {/* Header */}
         <View style={styles.header}>
-          <TouchableOpacity onPress={() => router.back()} style={styles.backBtn} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+          <TouchableOpacity testID={T.journeySession.back} onPress={() => router.back()} style={styles.backBtn} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
             <Text style={[styles.backArrow, { color: colors.textSecondary }]}>←</Text>
           </TouchableOpacity>
           <Text style={[styles.headerTitle, { color: colors.textPrimary }]} numberOfLines={1}>

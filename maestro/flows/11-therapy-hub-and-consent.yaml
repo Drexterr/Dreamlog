@@ -1,0 +1,142 @@
+# ═══════════════════════════════════════════════════════════════════════════
+# THERAPY HUB (index + pricing) + THERAPIST-LINK CONSENT (client-facing)
+# 05-core-features.yaml drives the persona-picker directly via the Explore
+# card's "Start a Session" text; it never exercises the redesigned therapy
+# hub screen (app/therapy/index.tsx) or the pricing screen (app/therapy/
+# pricing.tsx) — both previously had zero Maestro coverage. This flow also
+# covers app/therapist-requests.tsx, the screen a normal user (not a
+# therapist) uses to approve/decline a therapist's request to view their
+# journal summaries (docs/ARCHITECTURE.md → Therapist Dashboard).
+#
+# REQUIRES:
+#   • A running backend. Session history / pending requests are
+#     data-dependent — assertions are `optional: true`.
+#   • A verified account (EMAIL_EXISTING / PASSWORD).
+# ═══════════════════════════════════════════════════════════════════════════
+appId: com.dreamlog.app
+env:
+  EMAIL_EXISTING: "bharatbanthia2207+tester@gmail.com"
+  PASSWORD: "DreamTest!2026"
+tags:
+  - therapy
+  - consent
+---
+- clearState
+- launchApp:
+    clearKeychain: true
+    permissions:
+      notifications: allow
+- runFlow: ../subflows/complete-onboarding-guest.yaml
+- runFlow: ../subflows/open-auth-sheet.yaml
+- runFlow: ../subflows/sign-in-email.yaml
+- extendedWaitUntil:
+    visible:
+      id: "record-screen"
+    timeout: 20000
+- tapOn:
+    id: "record-cancel"
+- extendedWaitUntil:
+    visible:
+      id: "home-screen"
+    timeout: 10000
+
+# ─────────────────────────────────────────────────────────────────────────
+# THERAPY 1 — Hub screen: hero, companion styles, plans link
+# ─────────────────────────────────────────────────────────────────────────
+- tapOn:
+    id: "tab-explore"
+- extendedWaitUntil:
+    visible:
+      id: "explore-screen"
+    timeout: 10000
+- tapOn:
+    id: "explore-therapy"
+- extendedWaitUntil:
+    visible:
+      id: "therapy-index-screen"
+    timeout: 10000
+- assertVisible: "Start a Session"
+- takeScreenshot: "therapy-index-hub"
+
+# Resume banner only renders when a session is already active — optional.
+- assertVisible:
+    id: "therapy-index-resume-banner"
+    optional: true
+
+# ─────────────────────────────────────────────────────────────────────────
+# THERAPY 2 — Pricing screen: option cards + persona chips
+# ─────────────────────────────────────────────────────────────────────────
+- tapOn:
+    id: "therapy-index-plans-link"
+- extendedWaitUntil:
+    visible:
+      id: "therapy-pricing-screen"
+    timeout: 10000
+- assertVisible: "Therapy Sessions"
+- assertVisible:
+    id: "therapy-pricing-cta-single"
+- assertVisible:
+    id: "therapy-pricing-cta-pro"
+- takeScreenshot: "therapy-pricing-options"
+- tapOn:
+    id: "therapy-pricing-back"
+- extendedWaitUntil:
+    visible:
+      id: "therapy-index-screen"
+    timeout: 8000
+
+# ─────────────────────────────────────────────────────────────────────────
+# THERAPY 3 — Start button routes into the persona picker (same as
+# explore-therapy's own CTA, but exercises therapy-index-start specifically)
+# ─────────────────────────────────────────────────────────────────────────
+- tapOn:
+    id: "therapy-index-start"
+- assertVisible:
+    id: "persona-screen"
+    timeout: 8000
+- tapOn:
+    id: "persona-back"
+
+# ─────────────────────────────────────────────────────────────────────────
+# CONSENT 1 — Therapist link requests (client-facing approve/decline)
+# ─────────────────────────────────────────────────────────────────────────
+- tapOn:
+    id: "tab-settings"
+- extendedWaitUntil:
+    visible:
+      id: "settings-screen"
+    timeout: 10000
+- tapOn:
+    text: "Therapist requests"
+- extendedWaitUntil:
+    visible:
+      id: "therapist-requests-screen"
+    timeout: 10000
+- assertVisible: "Therapist Requests"
+- takeScreenshot: "therapist-requests-screen"
+
+# If a real therapist has requested a link to this account, exercise decline
+# (safer than approve — doesn't grant a stranger access to journal data in
+# an automated run). Entirely data-dependent, optional.
+- runFlow:
+    when:
+      visible:
+        id: "therapist-requests-decline"
+    commands:
+      - tapOn:
+          id: "therapist-requests-decline"
+      - extendedWaitUntil:
+          visible: "Decline"
+          timeout: 6000
+          optional: true
+      - tapOn:
+          text: "Decline"
+          optional: true
+      - takeScreenshot: "therapist-request-declined"
+
+- tapOn:
+    id: "therapist-requests-back"
+- extendedWaitUntil:
+    visible:
+      id: "settings-screen"
+    timeout: 8000

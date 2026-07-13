@@ -21,6 +21,7 @@ import * as FileSystem from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
 import { api } from '../src/api/client';
 import { useTheme } from '../src/context/ThemeContext';
+import { T, exportPeriodID } from '../src/testIDs';
 
 type Period = 'monthly' | 'yearly';
 
@@ -71,12 +72,12 @@ export default function ExportScreen() {
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.bg }]}>
+    <View testID={T.exportScreen.screen} style={[styles.container, { backgroundColor: colors.bg }]}>
       <StatusBar barStyle="light-content" />
       <SafeAreaView style={{ flex: 1 }}>
         <View style={styles.inner}>
 
-          <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
+          <TouchableOpacity testID={T.exportScreen.back} onPress={() => router.back()} style={styles.backBtn}>
             <Text style={[styles.backText, { color: colors.textMuted }]}>← Back</Text>
           </TouchableOpacity>
 
@@ -109,6 +110,7 @@ export default function ExportScreen() {
             return (
               <TouchableOpacity
                 key={p.key}
+                testID={exportPeriodID(p.key)}
                 style={[
                   styles.periodCard,
                   { backgroundColor: colors.card, borderColor: isActive ? colors.brand : colors.borderFaint },
@@ -133,6 +135,7 @@ export default function ExportScreen() {
 
           {/* Export button */}
           <TouchableOpacity
+            testID={T.exportScreen.exportButton}
             style={[styles.exportBtn, { backgroundColor: colors.brand }, loading && { opacity: 0.6 }]}
             onPress={handleExport}
             disabled={loading}

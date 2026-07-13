@@ -27,6 +27,7 @@ import { useRouter } from 'expo-router';
 import { api } from '../src/api/client';
 import { useTheme } from '../src/context/ThemeContext';
 import type { Person, PersonDetail, PersonMention, PersonRole, PersonSentiment } from '../src/types';
+import { T } from '../src/testIDs';
 
 // The avatar shows the person's initial (identifies the person); the role is
 // carried by the text chip beside the name.
@@ -238,11 +239,11 @@ export default function RelationshipsScreen() {
     s === 'positive' ? colors.moodGreen : s === 'negative' ? colors.moodRed : colors.textMuted;
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.bg }]}>
+    <View testID={T.relationships.screen} style={[styles.container, { backgroundColor: colors.bg }]}>
       <StatusBar barStyle="light-content" />
       <SafeAreaView style={{ flex: 1 }}>
         <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
-          <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
+          <TouchableOpacity testID={T.relationships.back} onPress={() => router.back()} style={styles.backBtn}>
             <Text style={styles.backText}>← Back</Text>
           </TouchableOpacity>
 
@@ -371,6 +372,7 @@ export default function RelationshipsScreen() {
                         {/* Manage actions */}
                         <View style={styles.actionsRow}>
                           <TouchableOpacity
+                            testID={T.relationships.renameAction}
                             onPress={() => {
                               setManagePerson(p);
                               setRenameText(p.name);
@@ -380,6 +382,7 @@ export default function RelationshipsScreen() {
                             <Text style={styles.actionBtn}>Rename</Text>
                           </TouchableOpacity>
                           <TouchableOpacity
+                            testID={T.relationships.mergeAction}
                             onPress={() => {
                               setManagePerson(p);
                               setMode('merge');
@@ -387,7 +390,7 @@ export default function RelationshipsScreen() {
                           >
                             <Text style={styles.actionBtn}>Merge</Text>
                           </TouchableOpacity>
-                          <TouchableOpacity onPress={() => handleHide(p)}>
+                          <TouchableOpacity testID={T.relationships.hideAction} onPress={() => handleHide(p)}>
                             <Text style={[styles.actionBtn, { color: colors.moodRed }]}>Hide</Text>
                           </TouchableOpacity>
                         </View>
@@ -412,6 +415,7 @@ export default function RelationshipsScreen() {
             <Text style={styles.modalTitle}>Rename</Text>
             <Text style={styles.modalSub}>Tidy up how this person appears on your map.</Text>
             <TextInput
+              testID={T.relationships.renameInput}
               style={styles.input}
               value={renameText}
               onChangeText={setRenameText}
@@ -420,10 +424,11 @@ export default function RelationshipsScreen() {
               autoFocus
             />
             <View style={styles.modalActions}>
-              <TouchableOpacity style={styles.modalCancel} onPress={closeManage}>
+              <TouchableOpacity testID={T.relationships.renameCancel} style={styles.modalCancel} onPress={closeManage}>
                 <Text style={styles.modalCancelText}>Cancel</Text>
               </TouchableOpacity>
               <TouchableOpacity
+                testID={T.relationships.renameSave}
                 style={[styles.modalSave, (busy || !renameText.trim()) && { opacity: 0.5 }]}
                 onPress={handleRename}
                 disabled={busy || !renameText.trim()}
@@ -474,7 +479,7 @@ export default function RelationshipsScreen() {
                 <Text style={styles.mentionEmpty}>No other people to merge.</Text>
               )}
             </ScrollView>
-            <TouchableOpacity style={[styles.modalCancel, { marginTop: 12 }]} onPress={closeManage}>
+            <TouchableOpacity testID={T.relationships.mergeCancel} style={[styles.modalCancel, { marginTop: 12 }]} onPress={closeManage}>
               <Text style={styles.modalCancelText}>Cancel</Text>
             </TouchableOpacity>
           </View>

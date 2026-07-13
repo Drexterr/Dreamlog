@@ -108,10 +108,16 @@ tags:
 # ─────────────────────────────────────────────────────────────────────────
 # PORTAL 4 — Edit bullets: add a note, save changes
 # ─────────────────────────────────────────────────────────────────────────
+# tapOn: text: "Note…" (the new empty bullet's placeholder) was unreliable —
+# RN TextInput placeholders aren't matched consistently by Maestro's
+# accessibility-tree text search, and a mismatch landed the tap (and typed
+# text) inside the FIRST bullet's existing content instead. Target the new
+# bullet directly by its index (this is the 2nd bullet — index 1 — since the
+# typed-notes path seeded exactly one bullet in PORTAL 3).
 - tapOn:
     id: "therapist-session-add-bullet"
 - tapOn:
-    text: "Note…"
+    id: "therapist-session-bullet-input-1"
 - inputText: ${SESSION_BULLET_ADDED}
 - hideKeyboard
 - tapOn:

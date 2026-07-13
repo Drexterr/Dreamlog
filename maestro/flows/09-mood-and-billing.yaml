@@ -1,0 +1,190 @@
+# ═══════════════════════════════════════════════════════════════════════════
+# MOOD TAB + BILLING/UPGRADE
+# Closes the coverage gap on app/(tabs)/mood.tsx and app/upgrade.tsx — neither
+# had any Maestro coverage before this flow (see docs/TESTING.md discussion).
+#
+# Covers: streak cards, streak freeze, Life Graph range selector, weekly-review
+# share-insight modal (open + cancel — the "Share Card" / "Share streak"
+# buttons themselves open the native OS share sheet, which Maestro cannot
+# script; see 03-authentication.yaml for the same limitation with OAuth), and
+# the Upgrade screen's monthly/annual toggle + plan cards. The purchase CTA
+# itself is NOT tapped — it launches the native App Store / Google Play
+# purchase sheet, another un-scriptable OS modal (same category as the share sheet / OAuth dialogs).
+#
+# REQUIRES:
+#   • A running backend for mood/streak/billing data. All data-dependent
+#     assertions are `optional: true` so the flow still validates the UI
+#     against a fresh/empty account.
+#   • A verified account (EMAIL_EXISTING / PASSWORD).
+# ═══════════════════════════════════════════════════════════════════════════
+appId: com.dreamlog.app
+env:
+  EMAIL_EXISTING: "bharatbanthia2207+tester@gmail.com"
+  PASSWORD: "DreamTest!2026"
+tags:
+  - mood
+  - billing
+---
+- clearState
+- launchApp:
+    clearKeychain: true
+    permissions:
+      notifications: allow
+- runFlow: ../subflows/complete-onboarding-guest.yaml
+- runFlow: ../subflows/open-auth-sheet.yaml
+- runFlow: ../subflows/sign-in-email.yaml
+# Sign-in resumes the record intent (guest tapped record to trigger the
+# sheet) — cancel back to Home explicitly, same pattern as 07/05.
+- extendedWaitUntil:
+    visible:
+      id: "record-screen"
+    timeout: 20000
+- tapOn:
+    id: "record-cancel"
+- extendedWaitUntil:
+    visible:
+      id: "home-screen"
+    timeout: 10000
+
+# ─────────────────────────────────────────────────────────────────────────
+# MOOD 1 — Mood tab renders (streaks, chart, Life Graph)
+# ─────────────────────────────────────────────────────────────────────────
+- tapOn:
+    id: "tab-mood"
+- extendedWaitUntil:
+    visible:
+      id: "mood-screen"
+    timeout: 10000
+
+# Dismiss the milestone celebration modal if the account's streak happens to
+# land on 7/21/50/100 right now (MilestoneModal in mood.tsx renders as a
+# full-screen native Modal, which overlays the tab bar too and would
+# otherwise silently swallow every subsequent tap in this flow).
+- runFlow:
+    when:
+      visible:
+        id: "mood-milestone-continue"
+    commands:
+      - tapOn:
+          id: "mood-milestone-continue"
+      - extendedWaitUntil:
+          visible:
+            id: "mood-screen"
+          timeout: 6000
+
+- assertVisible: "Mood Map"
+- takeScreenshot: "mood-screen"
+
+# ─────────────────────────────────────────────────────────────────────────
+# MOOD 2 — Streak freeze (only rendered when the streak is broken AND a
+# freeze is available — data-dependent, optional)
+# ─────────────────────────────────────────────────────────────────────────
+- runFlow:
+    when:
+      visible:
+        id: "mood-freeze-button"
+    commands:
+      - tapOn:
+          id: "mood-freeze-button"
+      - extendedWaitUntil:
+          visible: "Freeze Applied"
+          timeout: 8000
+          optional: true
+      - tapOn:
+          text: "OK"
+          optional: true
+      - takeScreenshot: "mood-freeze-applied"
+
+# ─────────────────────────────────────────────────────────────────────────
+# MOOD 3 — Share streak link renders (native share sheet — assert only)
+# ─────────────────────────────────────────────────────────────────────────
+- assertVisible:
+    id: "mood-share-streak"
+    optional: true
+
+# ─────────────────────────────────────────────────────────────────────────
+# MOOD 4 — Life Graph range selector (30D / 90D / 1Y)
+# ─────────────────────────────────────────────────────────────────────────
+- runFlow:
+    when:
+      visible:
+        id: "mood-range-90d"
+    commands:
+      - tapOn:
+          id: "mood-range-90d"
+      - extendedWaitUntil:
+          visible:
+            id: "mood-range-90d"
+          timeout: 6000
+      - tapOn:
+          id: "mood-range-365d"
+      - tapOn:
+          id: "mood-range-30d"
+      - takeScreenshot: "mood-life-graph-ranges"
+
+# ─────────────────────────────────────────────────────────────────────────
+# MOOD 5 — Share Insight modal opens and can be dismissed via Cancel
+# (only rendered once there's mood data — optional)
+# ─────────────────────────────────────────────────────────────────────────
+- runFlow:
+    when:
+      visible:
+        id: "mood-share-insight-button"
+    commands:
+      - tapOn:
+          id: "mood-share-insight-button"
+      - extendedWaitUntil:
+          visible:
+            id: "mood-share-modal-cancel"
+          timeout: 8000
+      - takeScreenshot: "mood-share-insight-modal"
+      - tapOn:
+          id: "mood-share-modal-cancel"
+      - extendedWaitUntil:
+          visible:
+            id: "mood-screen"
+          timeout: 6000
+
+# ─────────────────────────────────────────────────────────────────────────
+# BILLING 1 — Upgrade screen: reached from Settings, plan cards + toggle
+# ─────────────────────────────────────────────────────────────────────────
+- tapOn:
+    id: "tab-settings"
+- extendedWaitUntil:
+    visible:
+      id: "settings-screen"
+    timeout: 10000
+- runFlow:
+    when:
+      visible:
+        id: "settings-upgrade"
+    commands:
+      - tapOn:
+          id: "settings-upgrade"
+      - assertVisible:
+          id: "upgrade-screen"
+      - assertVisible: "Choose a Plan"
+      - takeScreenshot: "upgrade-screen-annual"
+
+      # Toggle to monthly pricing and back to annual (default).
+      - tapOn:
+          id: "upgrade-period-monthly"
+      - extendedWaitUntil:
+          visible:
+            id: "upgrade-period-monthly"
+          timeout: 6000
+      - takeScreenshot: "upgrade-screen-monthly"
+      - tapOn:
+          id: "upgrade-period-annual"
+
+      # CTA buttons render (not tapped — launches the native store purchase sheet).
+      - assertVisible:
+          id: "upgrade-cta-plus"
+          optional: true
+
+      - tapOn:
+          id: "upgrade-back"
+      - extendedWaitUntil:
+          visible:
+            id: "settings-screen"
+          timeout: 8000

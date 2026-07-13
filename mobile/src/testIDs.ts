@@ -111,13 +111,24 @@ export const T = {
 
   // ── Reflection screen (app/reflection/[id].tsx) ──
   reflection: {
-    checkinButton: 'reflection-checkin-button',
+    checkinButton:      'reflection-checkin-button',
+    tellMoreButton:      'reflection-tell-more-button',
+    shareTherapistButton:'reflection-share-therapist-button',
+    doneButton:           'reflection-done-button',
   },
 
   // ── Auth role pill (app/auth.tsx) ──
   authRole: {
-    me:        'auth-role-me',
-    therapist: 'auth-role-therapist',
+    me:            'auth-role-me',
+    therapist:     'auth-role-therapist',
+    therapistHint: 'auth-role-therapist-hint',
+  },
+
+  // ── One-time terms acceptance gate (app/accept-terms.tsx) ──
+  acceptTerms: {
+    screen:    'accept-terms-screen',
+    checkbox:  'accept-terms-checkbox',
+    continue:  'accept-terms-continue',
   },
 
   // ── Therapist workspace (app/therapist/*.tsx) ──
@@ -159,6 +170,7 @@ export const T = {
     sessionAddBullet:       'therapist-session-add-bullet',
     sessionSaveChanges:     'therapist-session-save-changes',
     sessionDelete:          'therapist-session-delete',
+    sessionBulletInput:     (i: number) => `therapist-session-bullet-input-${i}`,
   },
 
   // ── Therapy persona picker (app/therapy/persona-picker.tsx) ──
@@ -176,6 +188,119 @@ export const T = {
     sendButton:  'therapy-send-button',
     endButton:   'therapy-end-button',
   },
+
+  // ── Mood tab (app/(tabs)/mood.tsx) ──
+  mood: {
+    screen:            'mood-screen',
+    freezeButton:      'mood-freeze-button',
+    shareStreak:        'mood-share-streak',
+    shareInsightButton: 'mood-share-insight-button',
+    milestoneShare:      'mood-milestone-share',
+    milestoneContinue:   'mood-milestone-continue',
+    shareModalCancel:    'mood-share-modal-cancel',
+    shareModalShare:     'mood-share-modal-share',
+  },
+
+  // ── Upgrade / billing (app/upgrade.tsx) ──
+  upgrade: {
+    screen: 'upgrade-screen',
+    back:   'upgrade-back',
+  },
+
+  // ── Guided Journeys (app/journeys.tsx, app/journeys/[sessionId].tsx) ──
+  journeys: {
+    screen: 'journeys-screen',
+    back:   'journeys-back',
+  },
+  journeySession: {
+    screen:        'journey-session-screen',
+    back:          'journey-session-back',
+    recordButton:  'journey-session-record',
+  },
+
+  // ── Relationship Map (app/relationships.tsx) ──
+  relationships: {
+    screen:        'relationships-screen',
+    back:          'relationships-back',
+    renameAction:  'relationships-rename-action',
+    mergeAction:   'relationships-merge-action',
+    hideAction:    'relationships-hide-action',
+    renameInput:   'relationships-rename-input',
+    renameSave:    'relationships-rename-save',
+    renameCancel:  'relationships-rename-cancel',
+    mergeCancel:   'relationships-merge-cancel',
+  },
+
+  // ── Share with Therapist (app/share/[id].tsx) ──
+  share: {
+    screen:        'share-screen',
+    back:          'share-back',
+    createButton:  'share-create-button',
+    sendButton:    'share-send-button',
+    revokeButton:  'share-revoke-button',
+  },
+
+  // ── Journal entries list (app/entries.tsx) ──
+  entriesList: {
+    screen:       'entries-screen',
+    back:         'entries-back',
+    searchInput:  'entries-search-input',
+  },
+
+  // ── Change emotional goal (app/change-goal.tsx) ──
+  changeGoal: {
+    screen: 'change-goal-screen',
+    back:   'change-goal-back',
+  },
+
+  // ── PDF Export (app/export.tsx) ──
+  exportScreen: {
+    screen:        'export-screen',
+    back:          'export-back',
+    exportButton:  'export-button',
+  },
+
+  // ── Therapist link requests, client-facing (app/therapist-requests.tsx) ──
+  therapistRequests: {
+    screen:          'therapist-requests-screen',
+    back:            'therapist-requests-back',
+    approveButton:   'therapist-requests-approve',
+    declineButton:   'therapist-requests-decline',
+  },
+
+  // ── Follow-up conversation (app/followup/[id].tsx) ──
+  followup: {
+    input:       'followup-input',
+    sendButton:  'followup-send',
+    closeButton: 'followup-close',
+    goodnight:   'followup-goodnight',
+  },
+
+  // ── Processing poll screen (app/processing/[id].tsx) ──
+  processing: {
+    screen: 'processing-screen',
+  },
+
+  // ── Therapy index / hero (app/therapy/index.tsx) ──
+  therapyIndex: {
+    screen:        'therapy-index-screen',
+    startButton:   'therapy-index-start',
+    plansLink:     'therapy-index-plans-link',
+    resumeBanner:  'therapy-index-resume-banner',
+  },
+
+  // ── Therapy pricing (app/therapy/pricing.tsx) ──
+  therapyPricing: {
+    screen: 'therapy-pricing-screen',
+    back:   'therapy-pricing-back',
+  },
+
+  // ── Therapy post-session summary (app/therapy/summary/[id].tsx) ──
+  therapySummary: {
+    shareButton:      'therapy-summary-share',
+    newSessionButton: 'therapy-summary-new-session',
+    backToJournal:    'therapy-summary-back-to-journal',
+  },
 } as const;
 
 // ── Per-item id builders (lists) ──
@@ -183,3 +308,10 @@ export const onboardingGoalID = (goal: string) => `onboarding-goal-${goal}`;
 export const onboardingAgeID  = (age: string)  => `onboarding-age-${age}`;
 export const recordModeID     = (mode: string) => `record-mode-${mode}`;
 export const personaCardID    = (persona: string) => `persona-card-${persona}`;
+export const moodRangeID      = (range: string) => `mood-range-${range}`;
+export const upgradePeriodID  = (period: string) => `upgrade-period-${period}`;
+export const upgradeCtaID     = (plan: string) => `upgrade-cta-${plan}`;
+export const journeyStartID   = (journeyId: string) => `journeys-start-${journeyId}`;
+export const changeGoalID     = (goal: string) => `change-goal-${goal}`;
+export const exportPeriodID   = (period: string) => `export-period-${period}`;
+export const therapyPricingCtaID = (optionId: string) => `therapy-pricing-cta-${optionId}`;

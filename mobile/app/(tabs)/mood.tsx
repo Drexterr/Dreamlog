@@ -17,6 +17,7 @@ import { useTheme } from '../../src/context/ThemeContext';
 import type { AnnualReview, DailyMood, MoodArcDay, MoodHistoryResponse, StreakInfo, WeeklyReview } from '../../src/types';
 import ShareInsightModal from '../../src/components/ShareInsightModal';
 import PatternRadar from '../../src/components/PatternRadar';
+import { T, moodRangeID } from '../../src/testIDs';
 
 // ── Milestone data ─────────────────────────────────────────────────────────────
 
@@ -202,10 +203,10 @@ function MilestoneModal({
           <Text style={styles.milestoneTitle}>{label}</Text>
           <Text style={styles.milestoneMessage}>{message}</Text>
           <View style={styles.milestoneActions}>
-            <TouchableOpacity style={styles.shareBtn} onPress={onShare}>
+            <TouchableOpacity testID={T.mood.milestoneShare} style={styles.shareBtn} onPress={onShare}>
               <Text style={styles.shareBtnText}>Share</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.closeBtn} onPress={onClose}>
+            <TouchableOpacity testID={T.mood.milestoneContinue} style={styles.closeBtn} onPress={onClose}>
               <Text style={styles.closeBtnText}>Continue</Text>
             </TouchableOpacity>
           </View>
@@ -241,6 +242,7 @@ function LifeGraph({ history, range, onRangeChange }: {
           {ranges.map((r) => (
             <TouchableOpacity
               key={r}
+              testID={moodRangeID(r)}
               style={[styles.rangeBtn, range === r && styles.rangeBtnActive]}
               onPress={() => onRangeChange(r)}
             >
@@ -410,7 +412,7 @@ export default function MoodScreen() {
   const streakBroken = streak && streak.current_streak === 0 && streak.total_days > 0;
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.bg }]}>
+    <View testID={T.mood.screen} style={[styles.container, { backgroundColor: colors.bg }]}>
       <StatusBar barStyle="light-content" />
       <SafeAreaView style={{ flex: 1 }}>
         <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
@@ -440,6 +442,7 @@ export default function MoodScreen() {
                   </Text>
                   {streak.freeze_count > 0 && (
                     <TouchableOpacity
+                      testID={T.mood.freezeButton}
                       style={styles.freezeBtn}
                       onPress={handleUseFreeze}
                       disabled={usingFreeze}
@@ -463,7 +466,7 @@ export default function MoodScreen() {
                         ❄ {streak.freeze_count} freeze{streak.freeze_count !== 1 ? 's' : ''} available
                       </Text>
                     )}
-                    <TouchableOpacity onPress={handleShare}>
+                    <TouchableOpacity testID={T.mood.shareStreak} onPress={handleShare}>
                       <Text style={styles.shareLink}>Share streak</Text>
                     </TouchableOpacity>
                   </View>
@@ -499,7 +502,7 @@ export default function MoodScreen() {
             <>
               <View style={styles.sectionHeader}>
                 <Text style={styles.sectionLabel}>WEEKLY REVIEW</Text>
-                <TouchableOpacity onPress={() => setShowShareModal(true)}>
+                <TouchableOpacity testID={T.mood.shareInsightButton} onPress={() => setShowShareModal(true)}>
                   <Text style={styles.shareInsightLink}>Share card</Text>
                 </TouchableOpacity>
               </View>
@@ -510,6 +513,7 @@ export default function MoodScreen() {
           {/* Share insight button when there's mood data but no weekly review */}
           {!weeklyReview && moods.length > 0 && (
             <TouchableOpacity
+              testID={T.mood.shareInsightButton}
               style={styles.shareInsightBtn}
               onPress={() => setShowShareModal(true)}
             >

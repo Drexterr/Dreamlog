@@ -1,0 +1,11 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<testsuites>
+  <testsuite name="Test Suite" device="Pixel_9" tests="1" failures="1" time="286.0">
+    <testcase id="09-mood-and-billing" name="09-mood-and-billing" classname="09-mood-and-billing" file="maestro\flows\09-mood-and-billing.yaml" time="286.0" status="ERROR">
+      <properties>
+        <property name="tags" value="mood, billing"/>
+      </properties>
+      <failure>Assertion is false: id: settings-screen is visible</failure>
+    </testcase>
+  </testsuite>
+</testsuites>

@@ -15,6 +15,7 @@ import { useRouter } from 'expo-router';
 import { api } from '../src/api/client';
 import { useTheme } from '../src/context/ThemeContext';
 import type { TimelineEntry } from '../src/types';
+import { T } from '../src/testIDs';
 
 function MoodDot({ score, size = 8 }: { score: number; size?: number }) {
   const { moodToColor } = useTheme();
@@ -164,12 +165,12 @@ export default function EntriesScreen() {
   }
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.bg }]}>
+    <View testID={T.entriesList.screen} style={[styles.container, { backgroundColor: colors.bg }]}>
       <StatusBar barStyle="light-content" />
       <SafeAreaView style={styles.safe}>
         {/* Header */}
         <View style={styles.header}>
-          <TouchableOpacity onPress={() => router.back()} style={styles.backBtn} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+          <TouchableOpacity testID={T.entriesList.back} onPress={() => router.back()} style={styles.backBtn} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
             <Text style={[styles.backArrow, { color: colors.textSecondary }]}>←</Text>
           </TouchableOpacity>
           <View style={styles.headerText}>
@@ -188,6 +189,7 @@ export default function EntriesScreen() {
             <View style={[styles.searchHandle, { backgroundColor: colors.textMuted }]} />
           </View>
           <TextInput
+            testID={T.entriesList.searchInput}
             style={[styles.searchInput, { color: colors.textPrimary }]}
             value={searchQuery}
             onChangeText={handleSearch}

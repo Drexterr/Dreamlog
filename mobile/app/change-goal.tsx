@@ -15,6 +15,7 @@ import { api } from '../src/api/client';
 import { Fonts } from '../src/theme';
 import { useTheme } from '../src/context/ThemeContext';
 import type { UserGoal } from '../src/types';
+import { T, changeGoalID } from '../src/testIDs';
 
 const { width: SW, height: SH } = Dimensions.get('window');
 
@@ -54,12 +55,12 @@ export default function ChangeGoalScreen() {
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.bg }]}>
+    <View testID={T.changeGoal.screen} style={[styles.container, { backgroundColor: colors.bg }]}>
       <StatusBar barStyle="light-content" />
       <SafeAreaView style={{ flex: 1 }}>
         {/* Header */}
         <View style={[styles.header, { borderBottomColor: colors.borderFaint }]}>
-          <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
+          <TouchableOpacity testID={T.changeGoal.back} onPress={() => router.back()} style={styles.backBtn}>
             <Text style={[styles.backText, { color: colors.textMuted }]}>← Back</Text>
           </TouchableOpacity>
           <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>Emotional Goal</Text>
@@ -80,6 +81,7 @@ export default function ChangeGoalScreen() {
               return (
                 <TouchableOpacity
                   key={g.key}
+                  testID={changeGoalID(g.key)}
                   style={[
                     styles.goalCard,
                     {

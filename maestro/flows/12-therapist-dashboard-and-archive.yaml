@@ -1,0 +1,153 @@
+# ═══════════════════════════════════════════════════════════════════════════
+# THERAPIST WORKSPACE — dashboard quick-action entry point + client archive
+# 08-therapist-portal.yaml covers the client-detail → add-session → summarize
+# → delete pipeline end-to-end. This flow covers the two therapist-side paths
+# that one didn't touch:
+#   1. Starting a session from the DASHBOARD quick action ("＋ New session
+#      notes") rather than from a client's detail screen — a different entry
+#      point into app/therapist/add-session.tsx, which also exercises the
+#      client-picker chips and the "Type notes" mode there.
+#   2. Archiving a client (long-press → Archive) instead of deleting one —
+#      a soft-hide that keeps session history, distinct from
+#      "Delete everything" in flow 08.
+#
+# Linked-client sessions (a DreamLog user who consented to share their
+# journal, as opposed to the therapist's own offline client) are NOT covered
+# here: creating one requires a second real account to exchange a user ID
+# out-of-band and approve the link (see docs/API_CONTRACT.md → "Therapist
+# Link Consent"), which has no discoverable UI path to automate end-to-end.
+# The approve/decline UI itself IS covered from the client side in
+# 11-therapy-hub-and-consent.yaml.
+#
+# The photo/OCR notes path remains out of scope (needs a real camera +
+# async worker), same as flow 08.
+#
+# REQUIRES:
+#   • A running backend reachable at EXPO_PUBLIC_API_URL, STUB_AI_ANALYSIS=true
+#     recommended for deterministic behavior.
+#   • A seeded Supabase account for EMAIL_THERAPIST (see flow 08 header).
+# ═══════════════════════════════════════════════════════════════════════════
+appId: com.dreamlog.app
+env:
+  EMAIL_THERAPIST: "bharatbanthia2207+maestro-therapist@gmail.com"
+  PASSWORD_THERAPIST: "DreamTest!2026"
+  THERAPIST_NAME: "Dr. Maestro Test"
+  THERAPIST_CREDENTIALS: "M.Phil Clinical Psychology"
+  CLIENT_NAME: "Rohan M (QA Dashboard)"
+  SESSION_BULLET_TYPED: "Reviewed coping strategies from last week"
+tags:
+  - therapist
+  - dashboard
+---
+- clearState
+- launchApp:
+    clearKeychain: true
+    permissions:
+      notifications: allow
+- runFlow: ../subflows/complete-onboarding-guest.yaml
+- runFlow: ../subflows/sign-in-as-therapist.yaml
+- takeScreenshot: "therapist-dashboard-metrics"
+
+# ─────────────────────────────────────────────────────────────────────────
+# DASHBOARD 1 — Metrics row renders (clients / this-week / total sessions)
+# ─────────────────────────────────────────────────────────────────────────
+- assertVisible:
+    id: "therapist-dashboard-screen"
+- assertVisible: "clients"
+- assertVisible: "this week"
+- assertVisible: "total sessions"
+
+# ─────────────────────────────────────────────────────────────────────────
+# DASHBOARD 2 — Add a client first (needed as a target for the quick action)
+# ─────────────────────────────────────────────────────────────────────────
+- tapOn:
+    id: "therapist-dashboard-my-clients"
+- assertVisible:
+    id: "therapist-clients-screen"
+- assertVisible: "DreamLog clients"          # linked-clients section renders (even if empty)
+- tapOn:
+    id: "therapist-clients-add-button"
+- tapOn:
+    id: "therapist-clients-add-name-input"
+- inputText: ${CLIENT_NAME}
+- hideKeyboard
+- tapOn:
+    id: "therapist-clients-add-submit"
+- extendedWaitUntil:
+    visible: ${CLIENT_NAME}
+    timeout: 10000
+
+# ─────────────────────────────────────────────────────────────────────────
+# DASHBOARD 3 — "＋ New session notes" quick action from the dashboard
+# ─────────────────────────────────────────────────────────────────────────
+- back
+- extendedWaitUntil:
+    visible:
+      id: "therapist-dashboard-screen"
+    timeout: 8000
+- tapOn:
+    id: "therapist-dashboard-new-session"
+- assertVisible: "New session notes"
+- tapOn: ${CLIENT_NAME}                       # client chip, selected by name
+- tapOn:
+    id: "therapist-add-session-type-tab"
+- tapOn:
+    id: "therapist-add-session-bullets-input"
+- inputText: ${SESSION_BULLET_TYPED}
+- hideKeyboard
+- tapOn:
+    id: "therapist-add-session-submit"
+- extendedWaitUntil:
+    visible:
+      id: "therapist-session-detail-screen"
+    timeout: 15000
+- assertVisible: ${SESSION_BULLET_TYPED}
+- takeScreenshot: "therapist-dashboard-quick-session"
+
+# ─────────────────────────────────────────────────────────────────────────
+# DASHBOARD 4 — Cleanup: delete the session, then delete the client
+# (delete rather than archive, to keep the seeded account tidy across reruns
+# — archiving is exercised separately below on a throwaway client)
+# ─────────────────────────────────────────────────────────────────────────
+- tapOn:
+    id: "therapist-session-delete"
+- tapOn:
+    text: "Delete"
+- extendedWaitUntil:
+    visible:
+      id: "therapist-client-detail-screen"
+    timeout: 10000
+- tapOn:
+    id: "therapist-client-detail-delete"
+- tapOn:
+    text: "Delete everything"
+- extendedWaitUntil:
+    visible:
+      id: "therapist-clients-screen"
+    timeout: 10000
+
+# ─────────────────────────────────────────────────────────────────────────
+# DASHBOARD 5 — Archive a client (long-press → Archive) — distinct from
+# delete: the client and their session history are kept, just hidden.
+# ─────────────────────────────────────────────────────────────────────────
+- tapOn:
+    id: "therapist-clients-add-button"
+- tapOn:
+    id: "therapist-clients-add-name-input"
+- inputText: "Archive Test Client"
+- hideKeyboard
+- tapOn:
+    id: "therapist-clients-add-submit"
+- extendedWaitUntil:
+    visible: "Archive Test Client"
+    timeout: 10000
+- longPressOn: "Archive Test Client"
+- extendedWaitUntil:
+    visible: "Archive client?"
+    timeout: 6000
+- tapOn:
+    text: "Archive"
+- extendedWaitUntil:
+    notVisible: "Archive Test Client"
+    timeout: 10000
+- takeScreenshot: "therapist-client-archived"

@@ -458,6 +458,7 @@ export default function ReflectionScreen() {
               {/* CTAs */}
               <Animated.View style={[styles.ctaWrap, { opacity: fadeAnim }]}>
                 <TouchableOpacity
+                  testID={T.reflection.tellMoreButton}
                   style={[styles.tellMoreBtn, { backgroundColor: colors.card, borderColor: colors.border }]}
                   onPress={handleTellMeMore}
                   activeOpacity={0.8}
@@ -493,6 +494,7 @@ export default function ReflectionScreen() {
                 </TouchableOpacity>
 
                 <TouchableOpacity
+                  testID={T.reflection.shareTherapistButton}
                   style={[styles.shareTherapistBtn, { backgroundColor: colors.card, borderColor: colors.borderFaint }]}
                   onPress={handleShareTherapist}
                   activeOpacity={0.8}
@@ -503,6 +505,7 @@ export default function ReflectionScreen() {
                 </TouchableOpacity>
 
                 <TouchableOpacity
+                  testID={T.reflection.doneButton}
                   style={[styles.goodnightBtn, { borderColor: colors.borderFaint }]}
                   onPress={handleDone}
                   activeOpacity={0.8}

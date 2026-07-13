@@ -13,6 +13,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { api } from '../../src/api/client';
 import { useTheme } from '../../src/context/ThemeContext';
 import { writeMindfulSession } from '../../src/services/health';
+import { T } from '../../src/testIDs';
 
 const MESSAGES = [
   'Listening to your words…',
@@ -91,7 +92,7 @@ export default function ProcessingScreen() {
   }, [id]);
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.bg }]}>
+    <View testID={T.processing.screen} style={[styles.container, { backgroundColor: colors.bg }]}>
       <StatusBar barStyle="light-content" />
       <SafeAreaView style={styles.safe}>
         {failed ? (

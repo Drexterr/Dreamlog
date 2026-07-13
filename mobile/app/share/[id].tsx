@@ -26,6 +26,7 @@ import { useRouter } from 'expo-router';
 import { api } from '../../src/api/client';
 import { useTheme } from '../../src/context/ThemeContext';
 import type { CreateShareLinkResult, ShareLink } from '../../src/types';
+import { T } from '../../src/testIDs';
 
 export default function ShareTherapistScreen() {
   const router = useRouter();
@@ -92,13 +93,13 @@ export default function ShareTherapistScreen() {
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.bg }]}>
+    <View testID={T.share.screen} style={[styles.container, { backgroundColor: colors.bg }]}>
       <StatusBar barStyle="light-content" />
       <SafeAreaView style={{ flex: 1 }}>
         <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
 
           {/* Header */}
-          <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
+          <TouchableOpacity testID={T.share.back} onPress={() => router.back()} style={styles.backBtn}>
             <Text style={[styles.backText, { color: colors.textMuted }]}>← Back</Text>
           </TouchableOpacity>
 
@@ -127,6 +128,7 @@ export default function ShareTherapistScreen() {
               <Text style={[styles.passcode, { color: colors.textPrimary }]}>{newLink.passcode}</Text>
               <Text style={[styles.newLinkLabel, { color: colors.textMuted }]}>Expires {formatExpiry(newLink.expires_at)}</Text>
               <TouchableOpacity
+                testID={T.share.sendButton}
                 style={[styles.shareBtn, { backgroundColor: colors.brand }]}
                 onPress={() => handleShare(newLink)}
                 activeOpacity={0.85}
@@ -139,6 +141,7 @@ export default function ShareTherapistScreen() {
           {/* Create button */}
           {!newLink && (
             <TouchableOpacity
+              testID={T.share.createButton}
               style={[styles.createBtn, { backgroundColor: colors.brand }, creating && { opacity: 0.6 }]}
               onPress={handleCreate}
               disabled={creating}
@@ -169,7 +172,7 @@ export default function ShareTherapistScreen() {
                           Expires {formatExpiry(link.expires_at)}
                         </Text>
                       </View>
-                      <TouchableOpacity onPress={() => handleRevoke(link.id)} activeOpacity={0.7}>
+                      <TouchableOpacity testID={T.share.revokeButton} onPress={() => handleRevoke(link.id)} activeOpacity={0.7}>
                         <Text style={styles.revokeText}>Revoke</Text>
                       </TouchableOpacity>
                     </View>

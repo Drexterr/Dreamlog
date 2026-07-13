@@ -17,6 +17,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { api } from '../../src/api/client';
 import { useTheme } from '../../src/context/ThemeContext';
 import type { Conversation, ConversationMessage } from '../../src/types';
+import { T } from '../../src/testIDs';
 
 const MAX_TURNS = 3;
 
@@ -137,7 +138,7 @@ export default function FollowUpScreen() {
         {/* Header */}
         <View style={[styles.header, { borderBottomColor: colors.borderFaint }]}>
           <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>Continue</Text>
-          <TouchableOpacity onPress={() => router.back()} style={styles.closeBtn}>
+          <TouchableOpacity testID={T.followup.closeButton} onPress={() => router.back()} style={styles.closeBtn}>
             <Text style={[styles.closeText, { color: colors.textMuted }]}>Done</Text>
           </TouchableOpacity>
         </View>
@@ -182,6 +183,7 @@ export default function FollowUpScreen() {
           <View style={[styles.closedBanner, { borderTopColor: colors.borderFaint }]}>
             <Text style={[styles.closedText, { color: colors.textMuted }]}>You've reached the end of this conversation.</Text>
             <TouchableOpacity
+              testID={T.followup.goodnight}
               style={[styles.goodnightBtn, { backgroundColor: colors.card, borderColor: colors.border }]}
               onPress={() => router.replace('/(tabs)')}
               activeOpacity={0.8}
@@ -196,6 +198,7 @@ export default function FollowUpScreen() {
           >
             <View style={[styles.inputRow, { borderTopColor: colors.borderFaint }]}>
               <TextInput
+                testID={T.followup.input}
                 style={[styles.input, { backgroundColor: colors.cardSolid, borderColor: colors.borderFaint, color: colors.textPrimary }]}
                 value={input}
                 onChangeText={setInput}
@@ -208,6 +211,7 @@ export default function FollowUpScreen() {
                 onSubmitEditing={sendMessage}
               />
               <TouchableOpacity
+                testID={T.followup.sendButton}
                 style={[styles.sendBtn, { backgroundColor: colors.card, borderColor: colors.border }, !canSend && styles.sendBtnDisabled]}
                 onPress={sendMessage}
                 disabled={!canSend}

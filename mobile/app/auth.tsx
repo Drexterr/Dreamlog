@@ -260,7 +260,7 @@ export default function AuthScreen() {
             </TouchableOpacity>
           </View>
           {role === 'therapist' && (
-            <Text style={[styles.roleHint, { color: colors.textMuted }]}>
+            <Text testID={T.authRole.therapistHint} style={[styles.roleHint, { color: colors.textMuted }]}>
               Manage your clients' session notes, get AI summaries, and use the journal yourself.
             </Text>
           )}

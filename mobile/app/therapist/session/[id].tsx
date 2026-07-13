@@ -212,6 +212,7 @@ export default function SessionDetailScreen() {
                 <View key={i} style={styles.bulletRow}>
                   <Text style={[styles.bulletDot, { color: colors.textMuted }]}>•</Text>
                   <TextInput
+                    testID={T.therapistPortal.sessionBulletInput(i)}
                     style={[styles.bulletInput, { backgroundColor: colors.card, borderColor: colors.border, color: colors.textPrimary }]}
                     value={b}
                     onChangeText={v => updateBullet(i, v)}

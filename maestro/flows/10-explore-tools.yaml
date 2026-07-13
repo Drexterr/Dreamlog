@@ -1,0 +1,263 @@
+# ═══════════════════════════════════════════════════════════════════════════
+# EXPLORE TAB DEEP SURFACES — Journeys, Relationship Map, Share-with-Therapist,
+# PDF Export. None of these had Maestro coverage before this flow; the Explore
+# tab's four launch cards (journeys/relationships/entries/therapy) were
+# covered in 04-navigation.yaml, but the screens they open were not exercised.
+#
+# REQUIRES:
+#   • A running backend. Journey templates, relationships, and export all read
+#     real data — assertions on data-dependent content are `optional: true`
+#     so the flow still validates the UI against a fresh/empty account.
+#   • A verified account (EMAIL_EXISTING / PASSWORD).
+#   • Share-with-Therapist is reached via a completed entry's reflection
+#     screen — if the account has no completed entries yet, that block is
+#     skipped (optional). Run 05-core-features first to seed one entry.
+# ═══════════════════════════════════════════════════════════════════════════
+appId: com.dreamlog.app
+env:
+  EMAIL_EXISTING: "bharatbanthia2207+tester@gmail.com"
+  PASSWORD: "DreamTest!2026"
+tags:
+  - explore
+  - journeys
+  - relationships
+  - share
+  - export
+---
+- clearState
+- launchApp:
+    clearKeychain: true
+    permissions:
+      notifications: allow
+- runFlow: ../subflows/complete-onboarding-guest.yaml
+- runFlow: ../subflows/open-auth-sheet.yaml
+- runFlow: ../subflows/sign-in-email.yaml
+- extendedWaitUntil:
+    visible:
+      id: "record-screen"
+    timeout: 20000
+- tapOn:
+    id: "record-cancel"
+- extendedWaitUntil:
+    visible:
+      id: "home-screen"
+    timeout: 10000
+
+# ─────────────────────────────────────────────────────────────────────────
+# EXPLORE 1 — Guided Journeys: browse catalogue, start one (creates a real
+# journey_sessions row — non-destructive, mirrors doStart() in journeys.tsx)
+# ─────────────────────────────────────────────────────────────────────────
+- tapOn:
+    id: "tab-explore"
+- extendedWaitUntil:
+    visible:
+      id: "explore-screen"
+    timeout: 10000
+- tapOn:
+    id: "explore-journeys"
+- extendedWaitUntil:
+    visible:
+      id: "journeys-screen"
+    timeout: 10000
+- takeScreenshot: "journeys-catalogue"
+
+# Start the first template if the catalogue rendered (backend-dependent).
+- runFlow:
+    when:
+      visible:
+        id: "journeys-start-stress_relief"
+    commands:
+      - tapOn:
+          id: "journeys-start-stress_relief"
+      - extendedWaitUntil:
+          visible:
+            id: "journey-session-screen"
+          timeout: 15000
+      - takeScreenshot: "journey-session-started"
+      - assertVisible:
+          id: "journey-session-record"
+      - tapOn:
+          id: "journey-session-back"
+
+- tapOn:
+    id: "journeys-back"
+- extendedWaitUntil:
+    visible:
+      id: "explore-screen"
+    timeout: 8000
+
+# ─────────────────────────────────────────────────────────────────────────
+# EXPLORE 2 — Relationship Map: renders list or empty state
+# ─────────────────────────────────────────────────────────────────────────
+- tapOn:
+    id: "explore-relationships"
+- extendedWaitUntil:
+    visible:
+      id: "relationships-screen"
+    timeout: 10000
+- assertVisible: "Relationship Map"
+- takeScreenshot: "relationships-map"
+
+# If at least one person was extracted, exercise the manage actions
+# (rename → cancel, to avoid mutating real data non-idempotently).
+- runFlow:
+    when:
+      visible:
+        id: "relationships-rename-action"
+    commands:
+      - tapOn:
+          id: "relationships-rename-action"
+      - extendedWaitUntil:
+          visible:
+            id: "relationships-rename-input"
+          timeout: 6000
+      - tapOn:
+          id: "relationships-rename-cancel"
+
+- tapOn:
+    id: "relationships-back"
+- extendedWaitUntil:
+    visible:
+      id: "explore-screen"
+    timeout: 8000
+
+# ─────────────────────────────────────────────────────────────────────────
+# EXPLORE 3 — Journal entries + PDF export (reached via Settings → Export)
+# ─────────────────────────────────────────────────────────────────────────
+- tapOn:
+    id: "explore-entries"
+- extendedWaitUntil:
+    visible:
+      id: "entries-screen"
+    timeout: 10000
+- takeScreenshot: "entries-list"
+- tapOn:
+    id: "entries-back"
+
+- tapOn:
+    id: "tab-settings"
+- extendedWaitUntil:
+    visible:
+      id: "settings-screen"
+    timeout: 10000
+- tapOn:
+    id: "settings-export-row"
+- extendedWaitUntil:
+    visible:
+      id: "export-screen"
+    timeout: 10000
+- assertVisible: "Export Journal"
+
+# Period selector — switch to yearly then back to monthly (default).
+- tapOn:
+    id: "export-period-yearly"
+- extendedWaitUntil:
+    visible:
+      id: "export-period-yearly"
+    timeout: 6000
+- tapOn:
+    id: "export-period-monthly"
+- takeScreenshot: "export-screen"
+
+# Generate & download — safe even with zero entries (produces an empty-state
+# PDF); the native share sheet that follows is not scripted (see 09).
+- tapOn:
+    id: "export-button"
+- extendedWaitUntil:
+    visible: "Export failed"
+    timeout: 20000
+    optional: true
+- tapOn:
+    id: "export-back"
+- extendedWaitUntil:
+    visible:
+      id: "settings-screen"
+    timeout: 8000
+
+# ─────────────────────────────────────────────────────────────────────────
+# EXPLORE 4 — Share with Therapist: create a link, then revoke it
+# (reached from a completed entry's reflection screen — optional, needs data)
+# ─────────────────────────────────────────────────────────────────────────
+- tapOn:
+    id: "tab-explore"
+- tapOn:
+    id: "explore-entries"
+- runFlow:
+    when:
+      visible:
+        id: "entries-screen"
+    commands:
+      - tapOn:
+          point: "50%,25%"
+          optional: true
+      - runFlow:
+          when:
+            visible:
+              id: "reflection-share-therapist-button"
+          commands:
+            - tapOn:
+                id: "reflection-share-therapist-button"
+            - extendedWaitUntil:
+                visible:
+                  id: "share-screen"
+                timeout: 8000
+            - assertVisible: "Share with Therapist"
+            - tapOn:
+                id: "share-create-button"
+            - extendedWaitUntil:
+                visible: "Link created"
+                timeout: 10000
+            - takeScreenshot: "share-link-created"
+            # "Send to therapist" opens the native share sheet — not tapped.
+            - assertVisible:
+                id: "share-send-button"
+
+            # Revoke the link we just created (cleanup — keeps the account tidy).
+            - runFlow:
+                when:
+                  visible:
+                    id: "share-revoke-button"
+                commands:
+                  - tapOn:
+                      id: "share-revoke-button"
+                  - extendedWaitUntil:
+                      visible: "Revoke"
+                      timeout: 6000
+                      optional: true
+                  - tapOn:
+                      text: "Revoke"
+                      optional: true
+
+            - tapOn:
+                id: "share-back"
+            - extendedWaitUntil:
+                visible:
+                  id: "entries-screen"
+                timeout: 8000
+
+# ─────────────────────────────────────────────────────────────────────────
+# EXPLORE 5 — Follow-up conversation ("Tell me more" → 3-turn chat, ADR-006)
+# Reuses the same completed entry (optional — needs data, same as EXPLORE 4).
+# ─────────────────────────────────────────────────────────────────────────
+      - tapOn:
+          point: "50%,25%"
+          optional: true
+      - runFlow:
+          when:
+            visible:
+              id: "reflection-tell-more-button"
+          commands:
+            - tapOn:
+                id: "reflection-tell-more-button"
+            - extendedWaitUntil:
+                visible:
+                  id: "followup-input"
+                timeout: 8000
+            - assertVisible: "Continue"
+            - takeScreenshot: "followup-opened"
+            - tapOn:
+                id: "followup-close"
+            - extendedWaitUntil:
+                visible:
+                  id: "entries-screen"
+                timeout: 8000

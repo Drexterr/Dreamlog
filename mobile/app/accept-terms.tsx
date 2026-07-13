@@ -13,6 +13,7 @@ import { useRouter } from 'expo-router';
 import { api } from '../src/api/client';
 import { useTheme } from '../src/context/ThemeContext';
 import { resolvePostAuthRoute } from '../src/services/postAuthRoute';
+import { T } from '../src/testIDs';
 
 const TERMS_URL = 'https://dreamlog.app/terms';
 const PRIVACY_URL = 'https://dreamlog.app/privacy';
@@ -43,7 +44,7 @@ export default function AcceptTermsScreen() {
   };
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.bg }]}>
+    <SafeAreaView testID={T.acceptTerms.screen} style={[styles.container, { backgroundColor: colors.bg }]}>
       <ScrollView contentContainerStyle={styles.scroll}>
         <View style={[styles.iconWrap, { backgroundColor: colors.purple600 + '33' }]}>
           <Text style={styles.icon}>📜</Text>
@@ -66,7 +67,7 @@ export default function AcceptTermsScreen() {
           </TouchableOpacity>
         </View>
 
-        <TouchableOpacity style={styles.consentRow} onPress={() => setAgreed(a => !a)} activeOpacity={0.7}>
+        <TouchableOpacity testID={T.acceptTerms.checkbox} style={styles.consentRow} onPress={() => setAgreed(a => !a)} activeOpacity={0.7}>
           <View
             style={[
               styles.checkbox,
@@ -84,6 +85,7 @@ export default function AcceptTermsScreen() {
         {!!error && <Text style={styles.errorText}>{error}</Text>}
 
         <TouchableOpacity
+          testID={T.acceptTerms.continue}
           style={[
             styles.button,
             { backgroundColor: colors.purple600, shadowColor: colors.purple500 },

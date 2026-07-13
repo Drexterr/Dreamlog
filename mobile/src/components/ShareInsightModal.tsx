@@ -23,6 +23,7 @@ import InsightCard, { CARD_WIDTH, CARD_HEIGHT } from './InsightCard';
 import { useTheme } from '../context/ThemeContext';
 import type { ThemeColors } from '../theme';
 import { api } from '../api/client';
+import { T } from '../testIDs';
 import type { MoodArcDay } from '../types';
 
 /** Warm, shareable caption that accompanies the card image. */
@@ -134,10 +135,11 @@ export default function ShareInsightModal({
 
           {/* Actions */}
           <View style={styles.actions}>
-            <TouchableOpacity style={styles.cancelBtn} onPress={onClose}>
+            <TouchableOpacity testID={T.mood.shareModalCancel} style={styles.cancelBtn} onPress={onClose}>
               <Text style={styles.cancelText}>Cancel</Text>
             </TouchableOpacity>
             <TouchableOpacity
+              testID={T.mood.shareModalShare}
               style={[styles.shareBtn, sharing && styles.shareBtnDisabled]}
               onPress={handleShare}
               disabled={sharing}

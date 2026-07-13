@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <testsuites>
-  <testsuite name="Test Suite" device="Pixel_9" tests="1" failures="0" time="278.0">
-    <testcase id="07-journal-hook-model" name="07-journal-hook-model" classname="07-journal-hook-model" file="maestro\flows\07-journal-hook-model.yaml" time="278.0" status="SUCCESS">
+  <testsuite name="Test Suite" device="Pixel_9" tests="1" failures="0" time="232.0">
+    <testcase id="07-journal-hook-model" name="07-journal-hook-model" classname="07-journal-hook-model" file="maestro\flows\07-journal-hook-model.yaml" time="232.0" status="SUCCESS">
       <properties>
         <property name="tags" value="journal, hook-model"/>
       </properties>

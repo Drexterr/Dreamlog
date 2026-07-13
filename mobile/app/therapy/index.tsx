@@ -17,6 +17,7 @@ import { useAuth } from '../../src/context/AuthContext';
 import type { TherapySessionSummary, TherapyPersona } from '../../src/types';
 import { PERSONA_META } from '../../src/types';
 import { getCachedRegion, THERAPY_SESSION_PRICE } from '../../src/services/region';
+import { T } from '../../src/testIDs';
 
 // Per-persona accent colors — intentional identity, not themed
 const PERSONA_ACCENT: Record<TherapyPersona, string> = {
@@ -202,7 +203,7 @@ export default function TherapyIndexScreen() {
   const activeSession = sessions.find((s) => s.status === 'active');
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.bg }]}>
+    <View testID={T.therapyIndex.screen} style={[styles.container, { backgroundColor: colors.bg }]}>
       <StatusBar barStyle="light-content" />
       <SafeAreaView style={{ flex: 1 }}>
         <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
@@ -226,6 +227,7 @@ export default function TherapyIndexScreen() {
           {/* Resume active session */}
           {activeSession && (
             <TouchableOpacity
+              testID={T.therapyIndex.resumeBanner}
               style={[styles.resumeBanner, {
                 backgroundColor: `${PERSONA_ACCENT[(activeSession.persona ?? 'comforting') as TherapyPersona]}18`,
                 borderColor: PERSONA_ACCENT[(activeSession.persona ?? 'comforting') as TherapyPersona],
@@ -286,6 +288,7 @@ export default function TherapyIndexScreen() {
 
           {/* CTA */}
           <TouchableOpacity
+            testID={T.therapyIndex.startButton}
             style={[styles.startBtn, { backgroundColor: colors.brand }]}
             onPress={handleStart}
             activeOpacity={0.85}
@@ -297,7 +300,7 @@ export default function TherapyIndexScreen() {
             <Text style={[styles.pricingNote, { color: colors.textMuted }]}>
               First session free  ·  {priceDisplay}/session
             </Text>
-            <TouchableOpacity onPress={() => router.push('/therapy/pricing' as any)} activeOpacity={0.7}>
+            <TouchableOpacity testID={T.therapyIndex.plansLink} onPress={() => router.push('/therapy/pricing' as any)} activeOpacity={0.7}>
               <Text style={[styles.pricingLink, { color: colors.brand }]}>Plans</Text>
             </TouchableOpacity>
           </View>

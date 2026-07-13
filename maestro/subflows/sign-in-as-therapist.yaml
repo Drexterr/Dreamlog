@@ -85,8 +85,20 @@ appId: com.dreamlog.app
     id: "tab-settings"                       # T.tab.settings
 - assertVisible:
     id: "settings-screen"
+# The sign-out row is below the fold on most screen sizes — scroll until visible.
+- scrollUntilVisible:
+    element:
+      id: "settings-sign-out"                # T.settings.signOut
+    direction: DOWN
+    timeout: 10000
 - tapOn:
-    id: "settings-sign-out"                  # T.settings.signOut
+    id: "settings-sign-out"
+# Confirmation alert ("Sign out" / "This will clear your stored session.") —
+# confirm via its "SIGN OUT" button.
+- extendedWaitUntil:
+    visible: "SIGN OUT"
+    timeout: 5000
+- tapOn: "SIGN OUT"
 - extendedWaitUntil:
     visible:
       id: "auth-role-therapist"              # T.authRole.therapist
@@ -96,7 +108,10 @@ appId: com.dreamlog.app
 # the sheet) shows the email/password fields directly — no toggle needed.
 - tapOn:
     id: "auth-role-therapist"
-- assertVisible: "Manage your clients' session notes"
+- extendedWaitUntil:
+    visible:
+      id: "auth-role-therapist-hint"          # T.authRole.therapistHint
+    timeout: 8000
 - tapOn:
     id: "auth-tab-login"
 - tapOn:
@@ -109,6 +124,24 @@ appId: com.dreamlog.app
 - hideKeyboard
 - tapOn:
     id: "auth-submit"
+
+# A brand-new account (tos_accepted_at unset) is routed through the one-time
+# terms gate before therapist routing — see resolvePostAuthRoute(). Guarded:
+# a returning account with terms already accepted skips straight past this.
+- extendedWaitUntil:
+    visible:
+      id: "accept-terms-screen"               # T.acceptTerms.screen
+    timeout: 10000
+    optional: true
+- runFlow:
+    when:
+      visible:
+        id: "accept-terms-screen"
+    commands:
+      - tapOn:
+          id: "accept-terms-checkbox"          # T.acceptTerms.checkbox
+      - tapOn:
+          id: "accept-terms-continue"          # T.acceptTerms.continue
 
 # Step 4 — land on registration (first run) or straight on the dashboard.
 - extendedWaitUntil:
@@ -124,10 +157,11 @@ appId: com.dreamlog.app
           id: "therapist-register-name-input"
       - inputText: ${THERAPIST_NAME}
       - hideKeyboard
-      - tapOn:
-          id: "therapist-register-email-input"
-      - inputText: ${EMAIL_THERAPIST}
-      - hideKeyboard
+      # The email field auto-fills from the signed-in account's own email
+      # (app/therapist/register.tsx: setEmail(prev => prev || u.email || '')),
+      # which already equals EMAIL_THERAPIST — do NOT tap/type into it here;
+      # inputText inserts at the existing cursor position rather than
+      # replacing, corrupting the pre-filled value into an invalid address.
       - tapOn:
           id: "therapist-register-credentials-input"
       - inputText: ${THERAPIST_CREDENTIALS}

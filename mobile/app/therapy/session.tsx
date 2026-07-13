@@ -567,7 +567,7 @@ export default function TherapySessionScreen() {
             )}
           </View>
           {!isEnded ? (
-            <TouchableOpacity onPress={handleEnd} style={[styles.endBtn, { borderColor: colors.border }]}>
+            <TouchableOpacity testID={T.therapy.endButton} onPress={handleEnd} style={[styles.endBtn, { borderColor: colors.border }]}>
               <Text style={[styles.endBtnText, { color: colors.textMuted }]}>End</Text>
             </TouchableOpacity>
           ) : (

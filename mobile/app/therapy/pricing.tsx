@@ -18,6 +18,7 @@ import {
   PLAN_PRICE_SHORT,
 } from '../../src/services/region';
 import type { RegionCurrency } from '../../src/services/region';
+import { T, therapyPricingCtaID } from '../../src/testIDs';
 
 // ── Pricing data ──────────────────────────────────────────────────────────────
 
@@ -101,6 +102,7 @@ function OptionCard({
 
   return (
     <TouchableOpacity
+      testID={therapyPricingCtaID(option.id)}
       style={[
         cardStyles.card,
         {
@@ -281,13 +283,13 @@ export default function TherapyPricingScreen() {
   }
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.bg }]}>
+    <View testID={T.therapyPricing.screen} style={[styles.container, { backgroundColor: colors.bg }]}>
       <StatusBar barStyle="light-content" />
       <SafeAreaView style={{ flex: 1 }}>
         <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
 
           {/* Back */}
-          <TouchableOpacity style={styles.backBtn} onPress={() => router.back()} activeOpacity={0.7}>
+          <TouchableOpacity testID={T.therapyPricing.back} style={styles.backBtn} onPress={() => router.back()} activeOpacity={0.7}>
             <Text style={[styles.backText, { color: colors.textMuted }]}>← Back</Text>
           </TouchableOpacity>
 

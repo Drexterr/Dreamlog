@@ -14,6 +14,7 @@ import { api } from '../src/api/client';
 import { useTheme } from '../src/context/ThemeContext';
 import { useAuth } from '../src/context/AuthContext';
 import type { JourneySession, JourneyTemplate } from '../src/types';
+import { T, journeyStartID } from '../src/testIDs';
 
 // ── Tag pill ──────────────────────────────────────────────────────────────────
 function TagPill({ tag }: { tag: string }) {
@@ -54,6 +55,7 @@ function TemplateCard({
           ))}
         </View>
         <TouchableOpacity
+          testID={journeyStartID(template.id)}
           style={[styles.startBtn, { backgroundColor: colors.purple600 }]}
           onPress={() => onStart(template.id)}
           disabled={!!starting}
@@ -165,12 +167,12 @@ export default function JourneysScreen() {
   const completedSessions = sessions.filter((s) => s.status === 'completed');
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.bg }]}>
+    <View testID={T.journeys.screen} style={[styles.container, { backgroundColor: colors.bg }]}>
       <StatusBar barStyle="light-content" />
       <SafeAreaView style={styles.safe}>
         {/* Header */}
         <View style={styles.header}>
-          <TouchableOpacity onPress={() => router.back()} style={styles.backBtn} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+          <TouchableOpacity testID={T.journeys.back} onPress={() => router.back()} style={styles.backBtn} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
             <Text style={[styles.backArrow, { color: colors.textSecondary }]}>←</Text>
           </TouchableOpacity>
           <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>Guided Journeys</Text>

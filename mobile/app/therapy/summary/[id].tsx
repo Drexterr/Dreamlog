@@ -14,6 +14,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { api } from '../../../src/api/client';
 import { useTheme } from '../../../src/context/ThemeContext';
 import type { TherapySession } from '../../../src/types';
+import { T } from '../../../src/testIDs';
 
 function formatDuration(sec?: number): string {
   if (!sec) return '-';
@@ -95,7 +96,7 @@ export default function TherapySummaryScreen() {
             <Text style={[styles.summaryText, { color: colors.textPrimary }]}>
               {session.post_session_summary}
             </Text>
-            <TouchableOpacity onPress={handleShare} style={styles.shareBtn}>
+            <TouchableOpacity testID={T.therapySummary.shareButton} onPress={handleShare} style={styles.shareBtn}>
               <Text style={[styles.shareBtnText, { color: colors.brand }]}>Share this reflection</Text>
             </TouchableOpacity>
           </View>
@@ -115,6 +116,7 @@ export default function TherapySummaryScreen() {
 
         {/* Actions */}
         <TouchableOpacity
+          testID={T.therapySummary.newSessionButton}
           style={[styles.primaryBtn, { backgroundColor: colors.brand }]}
           onPress={() => router.replace('/therapy' as any)}
           activeOpacity={0.8}
@@ -123,6 +125,7 @@ export default function TherapySummaryScreen() {
         </TouchableOpacity>
 
         <TouchableOpacity
+          testID={T.therapySummary.backToJournal}
           style={styles.secondaryBtn}
           onPress={() => router.replace('/(tabs)' as any)}
           activeOpacity={0.7}

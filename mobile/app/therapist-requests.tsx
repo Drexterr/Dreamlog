@@ -28,6 +28,7 @@ import { api, isApiError } from '../src/api/client';
 import { useTheme } from '../src/context/ThemeContext';
 import type { ThemeColors } from '../src/theme';
 import type { TherapistLinkRequest } from '../src/types';
+import { T } from '../src/testIDs';
 
 function relativeDate(iso: string): string {
   const then = new Date(iso);
@@ -141,7 +142,7 @@ export default function TherapistRequestsScreen() {
   );
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.bg }]}>
+    <View testID={T.therapistRequests.screen} style={[styles.container, { backgroundColor: colors.bg }]}>
       <StatusBar barStyle="light-content" />
       <SafeAreaView style={{ flex: 1 }}>
         <ScrollView
@@ -151,7 +152,7 @@ export default function TherapistRequestsScreen() {
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.brand} />
           }
         >
-          <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
+          <TouchableOpacity testID={T.therapistRequests.back} onPress={() => router.back()} style={styles.backBtn}>
             <Text style={styles.backText}>← Back</Text>
           </TouchableOpacity>
 
@@ -206,6 +207,7 @@ export default function TherapistRequestsScreen() {
 
                     <View style={styles.actionsRow}>
                       <TouchableOpacity
+                        testID={T.therapistRequests.declineButton}
                         style={[styles.declineBtn, busy && styles.btnDisabled]}
                         onPress={() => confirmDecline(req)}
                         disabled={busy}
@@ -214,6 +216,7 @@ export default function TherapistRequestsScreen() {
                         <Text style={styles.declineText}>Decline</Text>
                       </TouchableOpacity>
                       <TouchableOpacity
+                        testID={T.therapistRequests.approveButton}
                         style={[styles.approveBtn, busy && styles.btnDisabled]}
                         onPress={() => confirmApprove(req)}
                         disabled={busy}

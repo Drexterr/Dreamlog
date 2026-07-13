@@ -1,0 +1,335 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="Interactive redesign direction for DreamLog." />
+  <title>DreamLog — redesign direction</title>
+  <style>
+    :root {
+      --ink: #11232b;
+      --ink-soft: #1b3139;
+      --paper: #f4f1ea;
+      --paper-deep: #e6e1d7;
+      --rust: #b64d38;
+      --clay: #d98362;
+      --sun: #f1bd61;
+      --mist: #c8d7d4;
+      --line-dark: rgba(244, 241, 234, .28);
+      --line-light: rgba(17, 35, 43, .2);
+      --muted-dark: #b6c6c2;
+      --muted-light: #53636a;
+      --focus: #ffd47f;
+      --display: "Arial Narrow", "Aptos Display", Arial, sans-serif;
+      --body: Aptos, Arial, sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body { margin: 0; background: var(--paper); color: var(--ink); font-family: var(--body); }
+    button, a { font: inherit; }
+    button { cursor: pointer; }
+    a { color: inherit; }
+    :focus-visible { outline: 3px solid var(--focus); outline-offset: 4px; }
+    .skip { position: fixed; top: -4rem; left: 1rem; z-index: 10; padding: .75rem 1rem; background: var(--sun); color: var(--ink); font-weight: 700; }
+    .skip:focus { top: 1rem; }
+    .shell { width: min(100% - 3rem, 76rem); margin-inline: auto; }
+    .eyeline { font-size: .8rem; letter-spacing: .04em; color: inherit; opacity: .72; }
+    .display { font-family: var(--display); font-weight: 700; letter-spacing: -.045em; text-wrap: balance; }
+    .button { display: inline-flex; align-items: center; justify-content: center; min-height: 3rem; padding: .75rem 1rem; border: 1px solid currentColor; text-decoration: none; font-weight: 700; transition: transform .2s ease, background-color .2s ease, color .2s ease; }
+    .button:hover { transform: translateY(-2px); }
+    .button:active { transform: translateY(1px); }
+    .button--sun { background: var(--sun); color: var(--ink); border-color: var(--sun); }
+    .button--quiet { background: transparent; color: var(--paper); border-color: var(--line-dark); }
+    .button--dark { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+    .button--rust { background: var(--rust); color: #fff9f0; border-color: var(--rust); }
+
+    .top-note { background: var(--sun); color: var(--ink); padding: .55rem 1.5rem; font-size: .78rem; font-weight: 700; text-align: center; }
+    .top-note span { font-weight: 400; }
+    header { background: var(--ink); color: var(--paper); border-bottom: 1px solid var(--line-dark); }
+    .nav { min-height: 5rem; display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+    .mark { display: inline-flex; align-items: center; gap: .65rem; color: var(--paper); text-decoration: none; font-weight: 700; font-size: 1.05rem; }
+    .mark i { width: 1.6rem; height: 1.6rem; display: grid; place-items: center; border: 1px solid var(--sun); color: var(--sun); font-size: .78rem; font-style: normal; }
+    .nav-links { display: flex; align-items: center; gap: 1.3rem; font-size: .9rem; }
+    .nav-links a:not(.button) { color: var(--muted-dark); text-decoration: none; }
+    .nav-links a:not(.button):hover { color: var(--paper); }
+
+    .hero { background: var(--ink); color: var(--paper); padding: clamp(4rem, 8vw, 7.5rem) 0 clamp(3.5rem, 6vw, 6rem); overflow: hidden; }
+    .hero-grid { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(20rem, .95fr); gap: clamp(2.5rem, 7vw, 7rem); align-items: center; }
+    .hero h1 { max-width: 9ch; margin: 1rem 0 1.35rem; font-size: clamp(3.7rem, 8vw, 6.75rem); line-height: .87; }
+    .hero p { max-width: 33rem; color: var(--muted-dark); font-size: clamp(1rem, 1.4vw, 1.15rem); line-height: 1.65; text-wrap: pretty; }
+    .mode-switch { display: inline-flex; border: 1px solid var(--line-dark); margin-top: 1.9rem; }
+    .mode-switch button { min-height: 2.7rem; padding: .55rem .85rem; color: var(--muted-dark); background: transparent; border: 0; border-right: 1px solid var(--line-dark); }
+    .mode-switch button:last-child { border-right: 0; }
+    .mode-switch button[aria-selected="true"] { background: var(--paper); color: var(--ink); font-weight: 700; }
+    .hero-actions { display: flex; flex-wrap: wrap; gap: .75rem; margin-top: 1.1rem; }
+    .hero-art { min-height: 31rem; position: relative; display: grid; place-items: center; }
+    .hero-art::before { content: ""; position: absolute; inset: 5% 0 5% 16%; border: 1px solid var(--line-dark); }
+    .transcript { width: min(100%, 28rem); position: relative; z-index: 1; background: var(--paper); color: var(--ink); padding: 1.7rem; box-shadow: 1.5rem 1.5rem 0 var(--rust); transform: rotate(-2.4deg); }
+    .transcript__meta { display: flex; align-items: center; justify-content: space-between; padding-bottom: .9rem; border-bottom: 1px solid var(--line-light); color: var(--muted-light); font-size: .8rem; }
+    .transcript blockquote { margin: 1.6rem 0 1.9rem; max-width: 19ch; font-family: var(--display); font-size: clamp(1.8rem, 3.4vw, 2.8rem); font-weight: 700; line-height: .98; letter-spacing: -.045em; }
+    .wave { display: flex; align-items: center; height: 2.1rem; gap: 4px; }
+    .wave b { display: block; width: 3px; background: var(--rust); }
+    .wave b:nth-child(1), .wave b:nth-child(8) { height: 20%; } .wave b:nth-child(2), .wave b:nth-child(7) { height: 54%; }
+    .wave b:nth-child(3), .wave b:nth-child(6) { height: 88%; } .wave b:nth-child(4), .wave b:nth-child(5) { height: 45%; }
+    .artifact { position: absolute; right: -1rem; bottom: 1.9rem; z-index: 2; width: 11rem; padding: 1rem; background: var(--sun); color: var(--ink); transform: rotate(4deg); font-size: .88rem; line-height: 1.35; font-weight: 700; }
+    .artifact small { display: block; margin-bottom: .5rem; font-size: .72rem; font-weight: 400; }
+
+    .promise { padding: clamp(4.5rem, 9vw, 8rem) 0; }
+    .promise-grid { display: grid; grid-template-columns: .75fr 1.25fr; gap: clamp(2rem, 8vw, 8rem); }
+    .promise h2 { margin: 0; font-size: clamp(2.5rem, 5vw, 4.8rem); line-height: .95; }
+    .promise-copy { border-top: 1px solid var(--line-light); padding-top: 1.1rem; }
+    .promise-copy p { max-width: 47rem; margin: 0; font-size: clamp(1.2rem, 2vw, 1.6rem); line-height: 1.42; text-wrap: pretty; }
+    .quote-mark { display: inline-block; margin-right: .2em; color: var(--rust); font-size: 1.55em; line-height: 0; vertical-align: -.2em; }
+
+    .paths { background: var(--paper-deep); padding: clamp(4rem, 8vw, 7rem) 0; }
+    .section-title { display: flex; justify-content: space-between; align-items: end; gap: 2rem; margin-bottom: 2.5rem; }
+    .section-title h2 { max-width: 14ch; margin: 0; font-size: clamp(2.5rem, 5vw, 4.8rem); line-height: .93; }
+    .section-title p { max-width: 27rem; margin: 0; color: var(--muted-light); line-height: 1.55; }
+    .paths-grid { display: grid; grid-template-columns: .92fr 1.08fr; border: 1px solid var(--line-light); }
+    .path { min-height: 30rem; padding: clamp(1.5rem, 4vw, 3rem); display: flex; flex-direction: column; align-items: flex-start; }
+    .path:first-child { background: var(--paper); }
+    .path:last-child { color: var(--paper); background: var(--ink-soft); }
+    .path + .path { border-left: 1px solid var(--line-light); }
+    .path h3 { max-width: 9ch; margin: .9rem 0 1rem; font-size: clamp(2.5rem, 4.5vw, 4.5rem); line-height: .9; }
+    .path p { max-width: 29rem; color: var(--muted-light); line-height: 1.6; }
+    .path:last-child p { color: var(--mist); }
+    .path .button { margin-top: auto; }
+    .mini-entry { width: 100%; margin-top: 2.5rem; padding-top: 1.1rem; border-top: 1px solid var(--line-light); font-size: .91rem; line-height: 1.55; }
+    .mini-entry strong { display: block; color: var(--rust); font-size: .76rem; margin-bottom: .4rem; }
+    .share-slate { width: 100%; margin-top: 2.5rem; padding: 1.2rem; border: 1px solid var(--line-dark); }
+    .share-slate p { margin: 0 0 .9rem; font-size: .88rem; }
+    .share-slate div { display: flex; justify-content: space-between; gap: .75rem; padding-top: .75rem; border-top: 1px solid var(--line-dark); color: var(--sun); font-size: .8rem; }
+
+    .consent { background: var(--ink); color: var(--paper); padding: clamp(4.5rem, 9vw, 8rem) 0; }
+    .consent-grid { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(2.5rem, 7vw, 7rem); align-items: start; }
+    .consent h2 { max-width: 10ch; margin: .8rem 0 1.2rem; font-size: clamp(3rem, 6vw, 5.8rem); line-height: .88; }
+    .consent > .shell > .consent-grid > div > p { max-width: 31rem; color: var(--muted-dark); line-height: 1.6; }
+    .consent-list { border-top: 1px solid var(--line-dark); }
+    .consent-item { width: 100%; display: grid; grid-template-columns: 2.8rem 1fr auto; gap: 1rem; align-items: center; padding: 1.15rem 0; color: var(--paper); text-align: left; background: transparent; border: 0; border-bottom: 1px solid var(--line-dark); }
+    .consent-item span:first-child { color: var(--sun); font-size: .8rem; }
+    .consent-item span:nth-child(2) { font-weight: 700; }
+    .consent-item span:last-child { color: var(--muted-dark); transition: transform .2s ease; }
+    .consent-item[aria-expanded="true"] span:last-child { transform: rotate(45deg); }
+    .consent-detail { display: none; margin: -.2rem 0 1rem 3.8rem; max-width: 31rem; color: var(--muted-dark); line-height: 1.5; }
+    .consent-detail.is-open { display: block; }
+
+    .reasoning { padding: clamp(4.5rem, 9vw, 8rem) 0; }
+    .reasoning-grid { display: grid; grid-template-columns: .8fr 1.2fr; gap: clamp(2.5rem, 8vw, 9rem); }
+    .reasoning h2 { margin: 0; font-size: clamp(2.7rem, 5.5vw, 5.4rem); line-height: .9; }
+    .reason-tabs { border-top: 1px solid var(--line-light); }
+    .reason-tab { width: 100%; display: flex; justify-content: space-between; gap: 1rem; padding: 1rem 0; color: var(--ink); text-align: left; background: none; border: 0; border-bottom: 1px solid var(--line-light); font-weight: 700; }
+    .reason-tab span { color: var(--rust); }
+    .reason-panel { display: none; padding: 1.2rem 0 1.5rem; border-bottom: 1px solid var(--line-light); color: var(--muted-light); line-height: 1.6; }
+    .reason-panel.is-open { display: block; }
+    .reason-panel strong { color: var(--ink); }
+
+    .closing { background: var(--rust); color: #fffaf2; padding: clamp(4.5rem, 9vw, 8.5rem) 0; }
+    .closing-grid { display: grid; grid-template-columns: 1.25fr .75fr; gap: 4rem; align-items: end; }
+    .closing h2 { max-width: 9ch; margin: 0; font-size: clamp(3.3rem, 7vw, 6.6rem); line-height: .86; }
+    .closing p { max-width: 25rem; margin: 0 0 1.2rem; line-height: 1.55; }
+    .closing .button--dark { background: var(--ink); color: var(--paper); }
+    footer { background: var(--ink); color: var(--muted-dark); padding: 1.5rem 0; font-size: .82rem; }
+    .footer-row { display: flex; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
+    .toast { position: fixed; right: 1rem; bottom: 1rem; z-index: 20; max-width: 22rem; padding: 1rem; background: var(--sun); color: var(--ink); box-shadow: .45rem .45rem 0 var(--ink); font-weight: 700; opacity: 0; transform: translateY(1rem); pointer-events: none; transition: opacity .2s ease, transform .2s ease; }
+    .toast.is-visible { opacity: 1; transform: translateY(0); }
+
+    @media (max-width: 760px) {
+      .shell { width: min(100% - 2rem, 76rem); }
+      .nav-links a:not(.button) { display: none; }
+      .hero-grid, .promise-grid, .consent-grid, .reasoning-grid, .closing-grid { grid-template-columns: 1fr; }
+      .hero-art { min-height: 23rem; }
+      .transcript { margin-right: 1.3rem; }
+      .promise-grid { gap: 1.5rem; }
+      .section-title { display: block; }
+      .section-title p { margin-top: 1rem; }
+      .paths-grid { grid-template-columns: 1fr; }
+      .path { min-height: 25rem; }
+      .path + .path { border-left: 0; border-top: 1px solid var(--line-light); }
+      .consent-detail { margin-left: 0; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+      *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+    }
+  </style>
+</head>
+<body>
+  <a class="skip" href="#main">Skip to concept</a>
+  <div class="top-note">Interactive redesign concept <span>· choose a path, open the consent details, and inspect the rationale</span></div>
+  <header>
+    <nav class="shell nav" aria-label="Concept navigation">
+      <a class="mark" href="#main"><i>D</i> DreamLog</a>
+      <div class="nav-links">
+        <a href="#paths">Two paths</a>
+        <a href="#consent">Privacy</a>
+        <a href="#reasoning">Why change</a>
+        <a class="button button--sun" href="#closing">Try the direction</a>
+      </div>
+    </nav>
+  </header>
+
+  <main id="main">
+    <section class="hero" aria-labelledby="hero-title">
+      <div class="shell hero-grid">
+        <div>
+          <p class="eyeline" id="mode-label">For private reflection</p>
+          <h1 class="display" id="hero-title">A place to hear yourself.</h1>
+          <p id="hero-copy">Speak the thoughts that do not fit on a page. DreamLog holds the thread, so you can notice what keeps asking for your attention.</p>
+          <div class="mode-switch" role="tablist" aria-label="Choose your DreamLog path">
+            <button type="button" role="tab" id="self-tab" aria-selected="true" aria-controls="hero-copy" data-mode="self">I’m here for myself</button>
+            <button type="button" role="tab" id="therapist-tab" aria-selected="false" aria-controls="hero-copy" data-mode="therapist">I work with clients</button>
+          </div>
+          <div class="hero-actions">
+            <button type="button" class="button button--sun" id="primary-action">Start with one honest minute</button>
+            <a class="button button--quiet" id="secondary-action" href="#paths">See how it works</a>
+          </div>
+        </div>
+        <div class="hero-art" aria-label="A DreamLog voice journal transcript preview">
+          <article class="transcript">
+            <div class="transcript__meta"><span id="entry-date">Thursday · 10:42 pm</span><span>01:04</span></div>
+            <blockquote id="entry-text">“I think I have been calling it busy because tired sounded more honest.”</blockquote>
+            <div class="wave" aria-hidden="true"><b></b><b></b><b></b><b></b><b></b><b></b><b></b><b></b></div>
+          </article>
+          <aside class="artifact" id="art-note"><small>DreamLog notices</small>“busy” and “tired” have appeared together three times this month.</aside>
+        </div>
+      </div>
+    </section>
+
+    <section class="promise" aria-labelledby="promise-title">
+      <div class="shell promise-grid">
+        <p class="eyeline">Less performance. More noticing.</p>
+        <div class="promise-copy">
+          <h2 class="display" id="promise-title"><span class="quote-mark">“</span>Start where you are.</h2>
+          <p>DreamLog’s strongest message is not that it is intelligent. It is that it gives a person a private, practical way to stay with their own words for another minute.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="paths" id="paths" aria-labelledby="paths-title">
+      <div class="shell">
+        <div class="section-title">
+          <h2 class="display" id="paths-title">Two reasons to arrive. Two clear ways in.</h2>
+          <p>The current landing page introduces consumers, therapists, and teams in one long conversion sequence. This direction lets the visitor recognise themselves immediately.</p>
+        </div>
+        <div class="paths-grid">
+          <article class="path">
+            <p class="eyeline">For you</p>
+            <h3 class="display">For the life you live.</h3>
+            <p>Record a thought. Read a reflection grounded in your own recent words. Keep the material private unless you decide otherwise.</p>
+            <div class="mini-entry"><strong>A moment from a journal</strong>“I did not solve anything today, but I did not disappear from it either.”</div>
+            <button type="button" class="button button--dark demo-action">Journal privately</button>
+          </article>
+          <article class="path">
+            <p class="eyeline">For clinicians</p>
+            <h3 class="display">For the work you hold with clients.</h3>
+            <p>Enter a portal designed around consent, not surveillance. Clients choose what becomes useful session context, and for how long.</p>
+            <div class="share-slate"><p>Client sharing brief</p><div><span>3 entries selected by client</span><span>expires in 72h</span></div></div>
+            <button type="button" class="button button--quiet demo-action">Explore the therapist portal</button>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="consent" id="consent" aria-labelledby="consent-title">
+      <div class="shell consent-grid">
+        <div>
+          <p class="eyeline">A visible privacy model</p>
+          <h2 class="display" id="consent-title">Nothing is shared by accident.</h2>
+          <p>Privacy claims are easy to bury in a FAQ. This concept turns them into the product story for clinicians—and makes the client’s control legible before anyone registers.</p>
+        </div>
+        <div class="consent-list">
+          <button class="consent-item" type="button" aria-expanded="false" aria-controls="consent-1"><span>01</span><span>You choose the entry.</span><span aria-hidden="true">+</span></button>
+          <p class="consent-detail" id="consent-1">Only the person journaling can select a summary for sharing. The therapist does not browse a client’s journal history.</p>
+          <button class="consent-item" type="button" aria-expanded="false" aria-controls="consent-2"><span>02</span><span>You choose the person.</span><span aria-hidden="true">+</span></button>
+          <p class="consent-detail" id="consent-2">A share link is generated by the client and protected by their chosen passcode, so the recipient is explicit rather than assumed.</p>
+          <button class="consent-item" type="button" aria-expanded="false" aria-controls="consent-3"><span>03</span><span>You choose the expiry.</span><span aria-hidden="true">+</span></button>
+          <p class="consent-detail" id="consent-3">The link has a short, stated lifespan. That keeps the sharing event bounded to the session it is meant to support.</p>
+          <button class="consent-item" type="button" aria-expanded="false" aria-controls="consent-4"><span>04</span><span>Raw recordings stay private.</span><span aria-hidden="true">+</span></button>
+          <p class="consent-detail" id="consent-4">Therapists see the shared mood trend and AI-generated brief—not a raw transcript or recording—matching the product’s stated client-control model.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="reasoning" id="reasoning" aria-labelledby="reason-title">
+      <div class="shell reasoning-grid">
+        <div>
+          <p class="eyeline">Design rationale</p>
+          <h2 class="display" id="reason-title">What changes—and why.</h2>
+        </div>
+        <div class="reason-tabs">
+          <button class="reason-tab" type="button" aria-expanded="true" aria-controls="reason-1"><span>01</span> Make the first decision human, not technical <span>+</span></button>
+          <div class="reason-panel is-open" id="reason-1"><strong>Change:</strong> replace the current feature-led hero, 3D particle field, phone mockup, and floating cards with one transcript artifact and a two-path choice. <strong>Why:</strong> journaling is emotionally loaded; a recognisable line of thought is more persuasive than a crowded product demo.</div>
+          <button class="reason-tab" type="button" aria-expanded="false" aria-controls="reason-2"><span>02</span> Separate audiences before selling features <span>+</span></button>
+          <div class="reason-panel" id="reason-2"><strong>Change:</strong> give individual journaling and therapist collaboration equal, distinct entry points; keep employer wellness on its own future page. <strong>Why:</strong> the current page has consumer pricing, corporate wellness, clinician copy, features, FAQ, and download CTA competing for one visitor’s attention.</div>
+          <button class="reason-tab" type="button" aria-expanded="false" aria-controls="reason-3"><span>03</span> Make consent a signature experience <span>+</span></button>
+          <div class="reason-panel" id="reason-3"><strong>Change:</strong> tell the therapist story through four user controls rather than generic “secure” language. <strong>Why:</strong> the codebase already supports client-created, passcode-protected, expiring links and shared summaries; that is concrete differentiation worth showing.</div>
+          <button class="reason-tab" type="button" aria-expanded="false" aria-controls="reason-4"><span>04</span> Trade familiar AI styling for authored material <span>+</span></button>
+          <div class="reason-panel" id="reason-4"><strong>Change:</strong> reduce gold shimmer, ambient orbs, hover-lift cards, badges, repeated uppercase eyebrows, and fade-on-scroll choreography. Use solid fields, hairline rules, a transcript, offset paper, and direct copy. <strong>Why:</strong> those repeated SaaS conventions make a sensitive product feel generated rather than considered.</div>
+          <button class="reason-tab" type="button" aria-expanded="false" aria-controls="reason-5"><span>05</span> Keep urgency gentle and specific <span>+</span></button>
+          <div class="reason-panel" id="reason-5"><strong>Change:</strong> lead with “one honest minute” and “begin before you feel ready,” not an abstract promise to understand yourself. <strong>Why:</strong> it offers a believable first action while preserving the warm, intimate tone you chose.</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="closing" id="closing" aria-labelledby="closing-title">
+      <div class="shell closing-grid">
+        <h2 class="display" id="closing-title">Begin before you feel ready.</h2>
+        <div>
+          <p>One private minute can change what you notice. This button is interactive in the concept; in product it should lead directly into a low-pressure first recording.</p>
+          <div class="hero-actions"><button type="button" class="button button--dark demo-action">Start journaling</button><button type="button" class="button button--quiet" id="therapist-cta">I’m a therapist</button></div>
+        </div>
+      </div>
+    </section>
+  </main>
+  <footer><div class="shell footer-row"><span>DreamLog redesign direction · interactive static concept</span><span>WCAG AA contrast · reduced-motion aware</span></div></footer>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script>
+    const modes = {
+      self: {
+        label: 'For private reflection', title: 'A place to hear yourself.',
+        copy: 'Speak the thoughts that do not fit on a page. DreamLog holds the thread, so you can notice what keeps asking for your attention.',
+        primary: 'Start with one honest minute', secondary: 'See how it works', href: '#paths',
+        date: 'Thursday · 10:42 pm', entry: '“I think I have been calling it busy because tired sounded more honest.”',
+        note: '<small>DreamLog notices</small>“busy” and “tired” have appeared together three times this month.'
+      },
+      therapist: {
+        label: 'For client-led collaboration', title: 'Better sessions begin before the room.',
+        copy: 'DreamLog helps clients arrive with the patterns they choose to share—so you can spend less time reconstructing the week and more time working with it.',
+        primary: 'Explore the therapist portal', secondary: 'See the consent model', href: '#consent',
+        date: 'Client brief · shared today', entry: '“The client selected this summary. The journal behind it remains theirs.”',
+        note: '<small>Client control</small>3 selected entries · passcode protected · expires in 72 hours'
+      }
+    };
+    const toast = document.getElementById('toast'); let timer;
+    function notify(message) { toast.textContent = message; toast.classList.add('is-visible'); clearTimeout(timer); timer = setTimeout(() => toast.classList.remove('is-visible'), 3400); }
+    function setMode(mode) {
+      const data = modes[mode];
+      document.querySelectorAll('[data-mode]').forEach(button => button.setAttribute('aria-selected', String(button.dataset.mode === mode)));
+      document.getElementById('mode-label').textContent = data.label;
+      document.getElementById('hero-title').textContent = data.title;
+      document.getElementById('hero-copy').textContent = data.copy;
+      document.getElementById('primary-action').textContent = data.primary;
+      const secondary = document.getElementById('secondary-action'); secondary.textContent = data.secondary; secondary.href = data.href;
+      document.getElementById('entry-date').textContent = data.date;
+      document.getElementById('entry-text').textContent = data.entry;
+      document.getElementById('art-note').innerHTML = data.note;
+    }
+    document.querySelectorAll('[data-mode]').forEach(button => button.addEventListener('click', () => setMode(button.dataset.mode)));
+    document.querySelectorAll('.consent-item').forEach(button => button.addEventListener('click', () => {
+      const panel = document.getElementById(button.getAttribute('aria-controls'));
+      const open = button.getAttribute('aria-expanded') === 'true';
+      button.setAttribute('aria-expanded', String(!open)); panel.classList.toggle('is-open', !open);
+    }));
+    document.querySelectorAll('.reason-tab').forEach(button => button.addEventListener('click', () => {
+      const panel = document.getElementById(button.getAttribute('aria-controls'));
+      const open = button.getAttribute('aria-expanded') === 'true';
+      button.setAttribute('aria-expanded', String(!open)); panel.classList.toggle('is-open', !open);
+    }));
+    document.querySelectorAll('.demo-action').forEach(button => button.addEventListener('click', () => notify('Concept interaction: this would open the lowest-friction first step, with no account wall before the value is clear.')));
+    document.getElementById('primary-action').addEventListener('click', () => notify('Concept interaction: start a one-minute private recording, then show a calm processing state.'));
+    document.getElementById('therapist-cta').addEventListener('click', () => { setMode('therapist'); document.getElementById('main').scrollIntoView({ behavior: 'smooth' }); notify('Switched to the clinician pathway.'); });
+  </script>
+</body>
+</html>
