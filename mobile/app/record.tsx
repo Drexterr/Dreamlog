@@ -237,7 +237,10 @@ function ModeGrid({
 // ── Main screen ───────────────────────────────────────────────────────────────
 export default function RecordScreen() {
   const router = useRouter();
-  const params = useLocalSearchParams<{ mode?: string }>();
+  const params = useLocalSearchParams<{ mode?: string; prompt?: string }>();
+  // Optional starter prompt (from the home starter card) - shown as the tagline.
+  const starterPrompt =
+    typeof params.prompt === 'string' && params.prompt.trim() ? params.prompt.trim() : null;
   const { isAuthenticated, requestAuth } = useAuth();
   const recorder = useRecorder();
 
@@ -315,7 +318,9 @@ export default function RecordScreen() {
   }, [recorder, router]);
 
   const tagline = phase === 'idle'
-    ? (mode ? 'Take your time.\nI\'m listening.' : 'What kind of\nsession is this?')
+    ? (mode
+        ? (starterPrompt ?? 'Take your time.\nI\'m listening.')
+        : 'What kind of\nsession is this?')
     : phase === 'recording'
     ? 'Take your time.\nI\'m here.'
     : 'Almost done…';
@@ -338,7 +343,7 @@ export default function RecordScreen() {
         </View>
 
         {/* Tagline */}
-        <Text style={[styles.tagline, { color: colors.textPrimary }]}>{tagline}</Text>
+        <Text style={[styles.tagline, { color: colors.textPrimary }]} numberOfLines={4}>{tagline}</Text>
 
         {/* Mode grid — shown until recording starts */}
         {phase === 'idle' && (

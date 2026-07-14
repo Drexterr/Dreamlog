@@ -15,7 +15,7 @@ import { useTheme } from '../../src/context/ThemeContext';
 import { useAuth } from '../../src/context/AuthContext';
 import { useGuidedTour } from '../../src/context/GuidedTourContext';
 import { T } from '../../src/testIDs';
-import type { DailyMood, Flashback, StreakInfo } from '../../src/types';
+import type { DailyMood, Flashback, StreakInfo, TimelineEntry } from '../../src/types';
 
 // ── Format date label ─────────────────────────────────────────────────────────
 function formatEntryDate(iso: string): string {
@@ -26,6 +26,51 @@ function formatEntryDate(iso: string): string {
   if (d.toDateString() === now.toDateString()) return 'Today';
   if (d.toDateString() === yesterday.toDateString()) return 'Yesterday';
   return d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+}
+
+// ── Starter prompt ────────────────────────────────────────────────────────────
+// A personalized "place to start" derived from the latest completed analysis.
+// No AI call - reuses morning_nudge / connection_insight the worker already
+// produced. Falls back to a gentle generic prompt for new or returning users.
+interface Starter {
+  title: string;
+  why: string;
+}
+
+const GENERIC_STARTER: Starter = {
+  title: "What's actually on your mind right now?",
+  why: 'No structure needed — one small thing is plenty.',
+};
+
+function deriveStarter(item: TimelineEntry | undefined): Starter {
+  const a = item?.analysis;
+  if (!item || item.entry.status !== 'completed' || !a || a.is_crisis) {
+    return GENERIC_STARTER;
+  }
+
+  // Returning after a gap: lower the bar instead of referencing old details.
+  const daysSince = (Date.now() - new Date(item.entry.created_at).getTime()) / 86_400_000;
+  if (daysSince >= 7) {
+    return {
+      title: "What's been on your mind lately?",
+      why: "It's been a little while — no need to catch up on everything.",
+    };
+  }
+
+  const topic = a.topics?.[0];
+  if (a.connection_insight) {
+    return {
+      title: topic ? `Want to go deeper on ${topic}?` : 'Want to go deeper on this?',
+      why: a.connection_insight,
+    };
+  }
+  if (a.morning_nudge) {
+    return { title: a.morning_nudge, why: 'Picking up from your last entry.' };
+  }
+  if (topic) {
+    return { title: `Where are things with ${topic} today?`, why: 'From your last entry.' };
+  }
+  return GENERIC_STARTER;
 }
 
 // ── Record button ─────────────────────────────────────────────────────────────
@@ -150,6 +195,7 @@ export default function HomeScreen() {
   const [streak, setStreak] = useState<StreakInfo | null>(null);
   const [weekMoods, setWeekMoods] = useState<DailyMood[]>([]);
   const [flashback, setFlashback] = useState<Flashback | null>(null);
+  const [starter, setStarter] = useState<Starter | null>(null);
   const [lastEntry, setLastEntry] = useState<{
     id: string;
     dateLabel: string;
@@ -184,6 +230,7 @@ export default function HomeScreen() {
 
     api.getTimeline(1, 1).then((res) => {
       const item = res.entries?.[0];
+      setStarter(deriveStarter(item));
       if (item?.analysis && item.entry.status === 'completed') {
         const a = item.analysis;
         setLastEntry({
@@ -209,6 +256,11 @@ export default function HomeScreen() {
   const openLastReflection = useCallback(() => {
     if (lastEntry) router.push(`/reflection/${lastEntry.id}` as any);
   }, [lastEntry, router]);
+
+  const openStarter = useCallback(() => {
+    if (!starter) return;
+    router.push({ pathname: '/record', params: { mode: 'processing', prompt: starter.title } });
+  }, [starter, router]);
 
   const greeting = (() => {
     const h = new Date().getHours();
@@ -303,6 +355,28 @@ export default function HomeScreen() {
               </View>
               <Text style={[styles.lastQuote, { color: colors.textSecondary }]} numberOfLines={2}>
                 {flashback.summary}
+              </Text>
+            </TouchableOpacity>
+          </Animated.View>
+        )}
+
+        {/* ── Starter prompt — a personalized place to start (Ash-style) ── */}
+        {starter && isAuthenticated && (
+          <Animated.View style={{ opacity: lastAnim, transform: [{ translateY: lastTranslate }] }}>
+            <TouchableOpacity
+              testID={T.home.starterCard}
+              accessibilityLabel="Start an entry from this prompt"
+              onPress={openStarter}
+              activeOpacity={0.75}
+              style={[styles.starterCard, { backgroundColor: colors.card, borderColor: colors.border }]}
+            >
+              <Text style={[styles.starterLabel, { color: colors.textMuted }]}>a place to start</Text>
+              <View style={styles.starterTitleRow}>
+                <Text style={[styles.starterTitle, { color: colors.textPrimary }]}>{starter.title}</Text>
+                <Text style={[styles.starterArrow, { color: colors.brand }]}>→</Text>
+              </View>
+              <Text style={[styles.starterWhy, { color: colors.textMuted }]} numberOfLines={2}>
+                {starter.why}
               </Text>
             </TouchableOpacity>
           </Animated.View>
@@ -431,6 +505,45 @@ const styles = StyleSheet.create({
     fontFamily: 'Nunito_400Regular',
     fontWeight: '300',
     fontStyle: 'italic',
+  },
+
+  starterCard: {
+    marginTop: 14,
+    padding: 14,
+    borderRadius: 13,
+    borderWidth: 1,
+  },
+  starterLabel: {
+    fontSize: 9,
+    fontFamily: 'Nunito_400Regular',
+    fontWeight: '300',
+    letterSpacing: 0.3,
+    marginBottom: 6,
+  },
+  starterTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
+    gap: 10,
+  },
+  starterTitle: {
+    flex: 1,
+    fontSize: 17,
+    fontFamily: 'CormorantGaramond_300Light',
+    fontWeight: '300',
+    lineHeight: 23,
+  },
+  starterArrow: {
+    fontSize: 15,
+    fontFamily: 'Nunito_400Regular',
+    lineHeight: 23,
+  },
+  starterWhy: {
+    fontSize: 10.5,
+    fontFamily: 'Nunito_400Regular',
+    fontWeight: '300',
+    lineHeight: 15,
+    marginTop: 4,
   },
 
   centerWrap: {

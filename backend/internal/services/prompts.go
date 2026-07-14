@@ -933,6 +933,8 @@ func buildTherapyModeSystemPrompt(ctx TherapyPromptContext, persona, timeRemaini
 		pastStr = fmt.Sprintf(`
 MEMORY FROM PAST SESSIONS (reference naturally, don't announce you remember):
 %s
+
+SESSION OPENING: In your very first reply of this session, pick up the thread from the most recent past session in one natural sentence (e.g. "Last time we talked about...") before responding to what they just said. If it has clearly been a while, acknowledge that gently and lower the bar - never guilt them about the gap. Do this once, in the first reply only - never repeat it in later turns.
 `, strings.Join(parts, "\n"))
 	}
 

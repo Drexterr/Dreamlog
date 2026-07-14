@@ -828,6 +828,25 @@ func TestTherapy_PastSummaryInSystemPrompt(t *testing.T) {
 	}
 }
 
+func TestTherapy_NarratedOpening_WithPastSessions(t *testing.T) {
+	ctx := TherapyPromptContext{
+		Name:                 "Test",
+		PastSessionSummaries: []string{"Talked about work stress."},
+	}
+	prompt := buildTherapyModeSystemPrompt(ctx, "comforting", "Time remaining: 3600 seconds")
+	if !strings.Contains(prompt, "SESSION OPENING") {
+		t.Error("system prompt must instruct a narrated opening when past sessions exist")
+	}
+}
+
+func TestTherapy_NarratedOpening_AbsentOnFirstSession(t *testing.T) {
+	ctx := TherapyPromptContext{Name: "Test"}
+	prompt := buildTherapyModeSystemPrompt(ctx, "comforting", "Time remaining: 3600 seconds")
+	if strings.Contains(prompt, "SESSION OPENING") {
+		t.Error("first-ever session has no past thread to pick up - opening instruction must be absent")
+	}
+}
+
 func TestTherapy_PastSummariesFromSnapshotNotLive(t *testing.T) {
 	// Verify context is read from the stored snapshot, not re-queried on each turn.
 	repo := newFakeTherapyRepo()

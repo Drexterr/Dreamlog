@@ -376,6 +376,15 @@ Incremental UX improvements shipped outside phase gates.
 - When `POST /therapy/sessions` returns 402 (no session credits), `app/therapy/persona-picker.tsx` now calls `router.replace('/therapy/pricing')` instead of showing an Alert
 - User lands directly on the pricing screen where they can purchase a session pack or upgrade to Pro
 
+### Home Starter Prompt Card ✅ (2026-07-14)
+- Personalized "a place to start" card on the home screen — question + one-line why, derived **client-side** from the latest completed analysis (no new API, no AI cost): `connection_insight` → `morning_nudge` → first topic fallback
+- Returning after 7+ days gets a gentle low-bar prompt instead of old details; crisis entries and new users fall back to a generic starter
+- Tapping opens the record screen with Process mode preselected and the prompt shown as the tagline (`/record?mode=processing&prompt=…`)
+
+### Therapy - Narrated Session Opening ✅ (2026-07-14)
+- When past session summaries exist in the context snapshot, the therapy system prompt now instructs Claude to pick up the thread from the most recent session in its **first reply only** ("Last time we talked about…"), acknowledging long gaps gently and never with guilt (`prompts.go`, SESSION OPENING block)
+- Makes the existing ADR-016 memory snapshot *felt* by the user instead of silently informing responses
+
 ---
 
 ## Store Launch Prep 🚧

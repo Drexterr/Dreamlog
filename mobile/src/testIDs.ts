@@ -49,6 +49,7 @@ export const T = {
     recordBtn:   'home-record-button',
     lastEntry:   'home-last-entry',
     weekStrip:   'home-week-strip',
+    starterCard: 'home-starter-card',
   },
 
   // ── Record screen (app/record.tsx) ──
