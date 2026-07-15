@@ -146,7 +146,7 @@ export default function ClientBriefContent() {
               background: 'var(--gold-light)', border: '1px solid rgba(201,169,110,0.2)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               fontSize: 22, color: 'var(--gold)', fontWeight: 700, flexShrink: 0,
-              fontFamily: "'Cormorant Garamond', serif",
+              fontFamily: "'Erode', serif",
             }}>
               {brief.client_name.charAt(0).toUpperCase()}
             </div>
@@ -166,9 +166,9 @@ export default function ClientBriefContent() {
             background: 'rgba(201,169,110,0.04)', animationDelay: '0.05s',
           }}>
             <div className="eyebrow-gold" style={{ marginBottom: 12 }}>PRE-SESSION BRIEF</div>
-            <p className="serif" style={{
+            <p className="quote-serif" style={{
               margin: 0, fontSize: '1.1rem', lineHeight: 1.75,
-              color: 'var(--text)', fontStyle: 'italic',
+              color: 'var(--text)',
             }}>
               {brief.brief}
             </p>
@@ -281,7 +281,7 @@ export default function ClientBriefContent() {
                       </div>
                       <p style={{ margin: 0, fontSize: '0.88rem', lineHeight: 1.65, color: 'var(--text)' }}>{entry.summary}</p>
                       {entry.key_quote && (
-                        <p className="serif" style={{ margin: '10px 0 0', fontSize: '0.95rem', color: 'var(--muted)', fontStyle: 'italic', lineHeight: 1.5 }}>
+                        <p className="quote-serif" style={{ margin: '10px 0 0', fontSize: '0.95rem', color: 'var(--muted)', lineHeight: 1.5 }}>
                           &ldquo;{entry.key_quote}&rdquo;
                         </p>
                       )}

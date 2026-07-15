@@ -2,11 +2,11 @@ import Link from 'next/link';
 
 export default function TeamsPage() {
   return (
-    <div style={{ background: '#18150f', color: '#e8ddd0', minHeight: '100vh', fontFamily: "'Nunito', sans-serif" }}>
+    <div style={{ background: '#18150f', color: '#e8ddd0', minHeight: '100vh', fontFamily: "'Hanken Grotesk', sans-serif" }}>
       <nav style={{ maxWidth: 1100, margin: '0 auto', padding: '24px 40px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none', color: '#e8ddd0' }}>
-          <div style={{ width: 28, height: 28, borderRadius: 7, background: '#c8955a', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: "'Cormorant Garamond', serif", fontStyle: 'italic', fontWeight: 700, fontSize: '1rem', color: '#18150f' }}>D</div>
-          <span style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '1.1rem', fontWeight: 600 }}>Ode</span>
+          <div style={{ width: 28, height: 28, borderRadius: 7, background: '#c8955a', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: "'Erode', serif", fontStyle: 'italic', fontWeight: 700, fontSize: '1rem', color: '#18150f' }}>O</div>
+          <span style={{ fontFamily: "'Erode', serif", fontSize: '1.1rem', fontWeight: 600 }}>Ode</span>
         </Link>
         <a href="mailto:support@dreamlog.app?subject=Team Wellness Enquiry" style={{ background: '#c8955a', color: '#18150f', borderRadius: 100, padding: '9px 20px', fontSize: '0.84rem', fontWeight: 700, textDecoration: 'none' }}>
           Talk to us →
@@ -18,7 +18,7 @@ export default function TeamsPage() {
         {/* Hero */}
         <div style={{ maxWidth: 760, marginBottom: 80 }}>
           <div style={{ fontSize: '0.7rem', letterSpacing: '2.5px', color: 'rgba(232,221,208,0.3)', textTransform: 'uppercase', marginBottom: 20 }}>Corporate wellness</div>
-          <h1 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 'clamp(2.6rem, 5.5vw, 4.2rem)', fontWeight: 300, margin: '0 0 24px', lineHeight: 1.1, letterSpacing: '-0.02em' }}>
+          <h1 style={{ fontFamily: "'Erode', serif", fontSize: 'clamp(2.6rem, 5.5vw, 4.2rem)', fontWeight: 300, margin: '0 0 24px', lineHeight: 1.1, letterSpacing: '-0.02em' }}>
             Ode for teams<br /><em style={{ color: '#c8955a' }}>who actually care.</em>
           </h1>
           <p style={{ fontSize: '1rem', color: 'rgba(232,221,208,0.55)', lineHeight: 1.85, margin: '0 0 36px', maxWidth: 600 }}>
@@ -39,7 +39,7 @@ export default function TeamsPage() {
         <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 16, padding: '40px 44px', marginBottom: 20 }}>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 48, alignItems: 'center' }}>
             <div>
-              <h2 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 'clamp(1.5rem, 2.5vw, 2rem)', fontWeight: 300, margin: '0 0 16px', lineHeight: 1.2 }}>The cost you&apos;re not measuring</h2>
+              <h2 style={{ fontFamily: "'Erode', serif", fontSize: 'clamp(1.5rem, 2.5vw, 2rem)', fontWeight: 300, margin: '0 0 16px', lineHeight: 1.2 }}>The cost you&apos;re not measuring</h2>
               <p style={{ fontSize: '0.9rem', color: 'rgba(232,221,208,0.5)', lineHeight: 1.8, margin: 0 }}>
                 Untreated mental health issues cost Indian companies an estimated ₹1.3 lakh per employee per year in lost productivity, absenteeism, and attrition. That number is invisible until it isn&apos;t.
               </p>
@@ -54,7 +54,7 @@ export default function TeamsPage() {
                 { stat: '₹199', label: 'What Ode costs per employee per month' },
               ].map(item => (
                 <div key={item.stat} style={{ display: 'flex', gap: 20, alignItems: 'flex-start', paddingBottom: 16, borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-                  <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '1.8rem', fontWeight: 300, color: '#c8955a', lineHeight: 1, flexShrink: 0, minWidth: 72 }}>{item.stat}</div>
+                  <div style={{ fontFamily: "'Erode', serif", fontSize: '1.8rem', fontWeight: 300, color: '#c8955a', lineHeight: 1, flexShrink: 0, minWidth: 72 }}>{item.stat}</div>
                   <p style={{ fontSize: '0.82rem', color: 'rgba(232,221,208,0.45)', margin: 0, lineHeight: 1.6 }}>{item.label}</p>
                 </div>
               ))}
@@ -65,7 +65,7 @@ export default function TeamsPage() {
         {/* What HR sees */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, marginBottom: 80 }}>
           <div style={{ background: 'rgba(200,149,90,0.04)', border: '1px solid rgba(200,149,90,0.15)', borderRadius: 16, padding: '32px 28px' }}>
-            <h3 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '1.3rem', fontWeight: 300, margin: '0 0 20px', fontStyle: 'italic' }}>What HR sees</h3>
+            <h3 style={{ fontFamily: "'Erode', serif", fontSize: '1.3rem', fontWeight: 300, margin: '0 0 20px', fontStyle: 'italic' }}>What HR sees</h3>
             {[
               'Weekly aggregate mood trend (team-level, anonymized)',
               'Top 3 emotional themes across the team this week',
@@ -80,7 +80,7 @@ export default function TeamsPage() {
             ))}
           </div>
           <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 16, padding: '32px 28px' }}>
-            <h3 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '1.3rem', fontWeight: 300, margin: '0 0 20px', fontStyle: 'italic' }}>What HR never sees</h3>
+            <h3 style={{ fontFamily: "'Erode', serif", fontSize: '1.3rem', fontWeight: 300, margin: '0 0 20px', fontStyle: 'italic' }}>What HR never sees</h3>
             {[
               'Any individual employee\'s journal entry or transcript',
               'Which employee said what',
@@ -98,7 +98,7 @@ export default function TeamsPage() {
 
         {/* Features for teams */}
         <div style={{ borderTop: '1px solid rgba(255,255,255,0.07)', paddingTop: 64, marginBottom: 80 }}>
-          <h2 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 'clamp(1.6rem, 3vw, 2.4rem)', fontWeight: 300, margin: '0 0 48px', lineHeight: 1.2 }}>
+          <h2 style={{ fontFamily: "'Erode', serif", fontSize: 'clamp(1.6rem, 3vw, 2.4rem)', fontWeight: 300, margin: '0 0 48px', lineHeight: 1.2 }}>
             What your employees get
           </h2>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 20 }}>
@@ -120,7 +120,7 @@ export default function TeamsPage() {
 
         {/* CTA */}
         <div style={{ background: 'rgba(200,149,90,0.05)', border: '1px solid rgba(200,149,90,0.18)', borderRadius: 20, padding: '52px 56px', textAlign: 'center' }}>
-          <h2 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 'clamp(1.8rem, 3.5vw, 2.8rem)', fontWeight: 300, margin: '0 0 16px', lineHeight: 1.2 }}>
+          <h2 style={{ fontFamily: "'Erode', serif", fontSize: 'clamp(1.8rem, 3.5vw, 2.8rem)', fontWeight: 300, margin: '0 0 16px', lineHeight: 1.2 }}>
             Start with a 30-day pilot.
           </h2>
           <p style={{ fontSize: '0.95rem', color: 'rgba(232,221,208,0.5)', margin: '0 0 32px', lineHeight: 1.75, maxWidth: 480, marginLeft: 'auto', marginRight: 'auto' }}>

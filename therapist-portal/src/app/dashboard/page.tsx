@@ -245,7 +245,7 @@ export default function DashboardPage() {
                         background: 'var(--bg-card-2)', border: '1px solid var(--border)',
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
                         fontSize: 14, color: 'var(--muted)', fontWeight: 700, flexShrink: 0,
-                        fontFamily: "'Cormorant Garamond', serif",
+                        fontFamily: "'Erode', serif",
                       }}>
                         {client.name.charAt(0).toUpperCase()}
                       </div>
@@ -278,8 +278,8 @@ export default function DashboardPage() {
                 <div className="skeleton" style={{ height: 80 }} />
               ) : note ? (
                 <>
-                  <p className="serif" style={{
-                    fontStyle: 'italic', fontSize: '1.05rem', lineHeight: 1.6,
+                  <p className="quote-serif" style={{
+                    fontSize: '1.05rem', lineHeight: 1.6,
                     color: 'var(--text)', margin: '0 0 16px',
                   }}>
                     &ldquo;{note}&rdquo;
@@ -394,7 +394,7 @@ export default function DashboardPage() {
                         width: 34, height: 34, borderRadius: '50%', flexShrink: 0,
                         background: 'rgba(201,169,110,0.1)', border: '1px solid rgba(201,169,110,0.15)',
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        fontSize: 14, color: 'var(--gold)', fontWeight: 700, fontFamily: "'Cormorant Garamond', serif",
+                        fontSize: 14, color: 'var(--gold)', fontWeight: 700, fontFamily: "'Erode', serif",
                       }}>{client.name.charAt(0).toUpperCase()}</div>
                       <div style={{ minWidth: 0 }}>
                         <div style={{ fontWeight: 600, fontSize: '0.9rem', color: 'var(--text)', display: 'flex', alignItems: 'center', gap: 8 }}>

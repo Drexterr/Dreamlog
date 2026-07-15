@@ -139,7 +139,7 @@ function makeWordSprite(text: string, warm: boolean): THREE.Sprite {
   canvas.height = 128;
   const ctx = canvas.getContext('2d');
   if (ctx) {
-    ctx.font = 'italic 300 58px "Cormorant Garamond", Georgia, serif';
+    ctx.font = 'italic 400 58px "Newsreader", Georgia, serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillStyle = warm ? 'rgba(232,221,208,0.95)' : 'rgba(150,160,178,0.9)';

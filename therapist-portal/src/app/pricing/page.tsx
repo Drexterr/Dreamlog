@@ -61,12 +61,12 @@ export default function PricingPage() {
     ) : null;
 
   return (
-    <div style={{ background: '#18150f', color: '#e8ddd0', minHeight: '100vh', fontFamily: "'Nunito', sans-serif" }}>
+    <div style={{ background: '#18150f', color: '#e8ddd0', minHeight: '100vh', fontFamily: "'Hanken Grotesk', sans-serif" }}>
       {/* Nav */}
       <nav style={{ maxWidth: 1100, margin: '0 auto', padding: '24px 40px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none', color: '#e8ddd0' }}>
-          <div style={{ width: 28, height: 28, borderRadius: 7, background: '#c8955a', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: "'Cormorant Garamond', serif", fontStyle: 'italic', fontWeight: 700, fontSize: '1rem', color: '#18150f' }}>D</div>
-          <span style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '1.1rem', fontWeight: 600 }}>Ode</span>
+          <div style={{ width: 28, height: 28, borderRadius: 7, background: '#c8955a', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: "'Erode', serif", fontStyle: 'italic', fontWeight: 700, fontSize: '1rem', color: '#18150f' }}>O</div>
+          <span style={{ fontFamily: "'Erode', serif", fontSize: '1.1rem', fontWeight: 600 }}>Ode</span>
         </Link>
         <Link href="/#download" style={{ background: '#c8955a', color: '#18150f', borderRadius: 100, padding: '9px 20px', fontSize: '0.84rem', fontWeight: 700, textDecoration: 'none' }}>
           Download Free
@@ -77,7 +77,7 @@ export default function PricingPage() {
 
         {/* Header */}
         <div style={{ textAlign: 'center', marginBottom: 64 }}>
-          <h1 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 'clamp(2.8rem, 6vw, 5rem)', fontWeight: 300, margin: '0 0 16px', lineHeight: 1.05, letterSpacing: '-0.02em' }}>
+          <h1 style={{ fontFamily: "'Erode', serif", fontSize: 'clamp(2.8rem, 6vw, 5rem)', fontWeight: 300, margin: '0 0 16px', lineHeight: 1.05, letterSpacing: '-0.02em' }}>
             Honest pricing.
           </h1>
           <p style={{ fontSize: '1rem', color: 'rgba(232,221,208,0.55)', margin: 0, lineHeight: 1.7 }}>
@@ -123,7 +123,7 @@ export default function PricingPage() {
         <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 16, padding: '20px 28px', marginBottom: 14, display: 'flex', alignItems: 'center', gap: 20, flexWrap: 'wrap' }}>
           <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, flexShrink: 0 }}>
             <span style={{ fontSize: '0.8rem', fontWeight: 600, color: 'rgba(232,221,208,0.45)' }}>Free</span>
-            <span style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '1.8rem', fontWeight: 300, opacity: ready ? 1 : 0, transition: 'opacity 0.3s' }}>{p('free')}</span>
+            <span style={{ fontFamily: "'Erode', serif", fontSize: '1.8rem', fontWeight: 300, opacity: ready ? 1 : 0, transition: 'opacity 0.3s' }}>{p('free')}</span>
             <span style={{ fontSize: '0.75rem', color: 'rgba(232,221,208,0.35)' }}>forever</span>
           </div>
           <div style={{ flex: 1, display: 'flex', gap: 18, flexWrap: 'wrap' }}>
@@ -145,7 +145,7 @@ export default function PricingPage() {
             <div style={{ position: 'absolute', top: -12, left: '50%', transform: 'translateX(-50%)', background: '#c8955a', color: '#18150f', fontSize: '0.65rem', fontWeight: 800, letterSpacing: '1.5px', textTransform: 'uppercase', padding: '5px 14px', borderRadius: 100, whiteSpace: 'nowrap' }}>Most popular</div>
             <div style={{ marginBottom: 6, fontSize: '0.82rem', fontWeight: 600, color: 'rgba(232,221,208,0.45)' }}>Ode+</div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 4 }}>
-              <span style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '2.4rem', fontWeight: 300, lineHeight: 1, opacity: ready ? 1 : 0, transition: 'opacity 0.3s' }}>{planPrice('plus')}</span>
+              <span style={{ fontFamily: "'Erode', serif", fontSize: '2.4rem', fontWeight: 300, lineHeight: 1, opacity: ready ? 1 : 0, transition: 'opacity 0.3s' }}>{planPrice('plus')}</span>
               {saveBadge('plus')}
             </div>
             <div style={{ fontSize: '0.78rem', color: 'rgba(232,221,208,0.35)', marginBottom: 16 }}>{perLine('plus')}</div>
@@ -167,7 +167,7 @@ export default function PricingPage() {
           <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 20, padding: '32px 28px', display: 'flex', flexDirection: 'column' }}>
             <div style={{ marginBottom: 6, fontSize: '0.82rem', fontWeight: 600, color: 'rgba(232,221,208,0.45)' }}>Ode Pro</div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 4 }}>
-              <span style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '2.4rem', fontWeight: 300, lineHeight: 1, opacity: ready ? 1 : 0, transition: 'opacity 0.3s' }}>{planPrice('pro')}</span>
+              <span style={{ fontFamily: "'Erode', serif", fontSize: '2.4rem', fontWeight: 300, lineHeight: 1, opacity: ready ? 1 : 0, transition: 'opacity 0.3s' }}>{planPrice('pro')}</span>
               {saveBadge('pro')}
             </div>
             <div style={{ fontSize: '0.78rem', color: 'rgba(232,221,208,0.35)', marginBottom: 16 }}>{perLine('pro')}</div>
@@ -191,7 +191,7 @@ export default function PricingPage() {
           <div>
             <div style={{ fontSize: '0.82rem', fontWeight: 600, color: 'rgba(232,221,208,0.45)', marginBottom: 6 }}>Therapy Session</div>
             <div style={{ display: 'flex', alignItems: 'baseline', gap: 10 }}>
-              <span style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '2rem', fontWeight: 300, opacity: ready ? 1 : 0, transition: 'opacity 0.3s' }}>{p('therapy')}</span>
+              <span style={{ fontFamily: "'Erode', serif", fontSize: '2rem', fontWeight: 300, opacity: ready ? 1 : 0, transition: 'opacity 0.3s' }}>{p('therapy')}</span>
               <span style={{ fontSize: '0.78rem', color: 'rgba(232,221,208,0.35)' }}>per session</span>
             </div>
             <p style={{ fontSize: '0.84rem', color: 'rgba(232,221,208,0.45)', margin: '8px 0 0', lineHeight: 1.6, maxWidth: 480 }}>
@@ -209,7 +209,7 @@ export default function PricingPage() {
 
         {/* FAQ */}
         <div style={{ borderTop: '1px solid rgba(255,255,255,0.07)', paddingTop: 56 }}>
-          <h2 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 'clamp(1.6rem, 3vw, 2.2rem)', fontWeight: 300, margin: '0 0 40px' }}>Common questions</h2>
+          <h2 style={{ fontFamily: "'Erode', serif", fontSize: 'clamp(1.6rem, 3vw, 2.2rem)', fontWeight: 300, margin: '0 0 40px' }}>Common questions</h2>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 60px' }}>
             {[
               { q: 'Does it auto-renew?', a: 'No. Every plan is a one-time pass — 30 days for monthly, 365 days for annual. When it expires you return to Free automatically. Buy again if you want to continue.' },

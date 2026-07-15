@@ -6,15 +6,15 @@ export default function TermsPage() {
       {/* Nav */}
       <nav style={{ borderBottom: '1px solid var(--border)', padding: '0 60px', height: 64, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <a href="/" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none' }}>
-          <div style={{ width: 28, height: 28, borderRadius: 7, background: 'var(--gold)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: "'Cormorant Garamond', serif", fontStyle: 'italic', fontWeight: 700, fontSize: '1rem', color: '#18150f' }}>D</div>
-          <span style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '1.1rem', fontWeight: 600 }}>Ode</span>
+          <div style={{ width: 28, height: 28, borderRadius: 7, background: 'var(--gold)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: "'Erode', serif", fontStyle: 'italic', fontWeight: 700, fontSize: '1rem', color: '#18150f' }}>O</div>
+          <span style={{ fontFamily: "'Erode', serif", fontSize: '1.1rem', fontWeight: 600 }}>Ode</span>
         </a>
         <a href="/" style={{ fontSize: '0.84rem', color: 'var(--muted)', textDecoration: 'none' }}>← Back to home</a>
       </nav>
 
       <div style={{ maxWidth: 740, margin: '0 auto', padding: '72px 40px 120px' }}>
         <div style={{ fontSize: '0.6rem', letterSpacing: '2.5px', textTransform: 'uppercase', color: 'var(--gold)', fontWeight: 600, marginBottom: 20 }}>LEGAL</div>
-        <h1 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 'clamp(2rem, 4vw, 3rem)', fontWeight: 300, margin: '0 0 12px', lineHeight: 1.1 }}>Terms of Service</h1>
+        <h1 style={{ fontFamily: "'Erode', serif", fontSize: 'clamp(2rem, 4vw, 3rem)', fontWeight: 300, margin: '0 0 12px', lineHeight: 1.1 }}>Terms of Service</h1>
         <p style={{ fontSize: '0.84rem', color: 'var(--muted)', margin: '0 0 64px' }}>Last updated: June 2026</p>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 48 }}>
@@ -117,7 +117,7 @@ export default function TermsPage() {
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div>
-      <h2 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '1.35rem', fontWeight: 400, color: 'var(--text)', margin: '0 0 20px', letterSpacing: '-0.01em' }}>{title}</h2>
+      <h2 style={{ fontFamily: "'Erode', serif", fontSize: '1.35rem', fontWeight: 400, color: 'var(--text)', margin: '0 0 20px', letterSpacing: '-0.01em' }}>{title}</h2>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>{children}</div>
     </div>
   );

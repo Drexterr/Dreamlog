@@ -291,7 +291,7 @@ function AppMockup() {
             background: 'rgba(200,149,90,0.06)', border: '1px solid rgba(200,149,90,0.1)',
             borderRadius: 12, padding: '10px 12px',
           }}>
-            <p className="serif" style={{ fontStyle: 'italic', fontSize: 12, color: 'rgba(232,221,208,0.6)', margin: 0, lineHeight: 1.55 }}>
+            <p className="quote-serif" style={{ fontSize: 12, color: 'rgba(232,221,208,0.6)', margin: 0, lineHeight: 1.55 }}>
               &ldquo;I think I was more tired than I realised this week...&rdquo;
             </p>
             <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginTop: 6 }}>
@@ -313,7 +313,7 @@ function AppMockup() {
         <div style={{ fontSize: 9, letterSpacing: 2, color: 'rgba(232,221,208,0.3)', textTransform: 'uppercase', marginBottom: 8 }}>
           A PATTERN
         </div>
-        <p className="serif" style={{ fontStyle: 'italic', fontSize: 13.5, color: '#e8ddd0', lineHeight: 1.6, margin: 0 }}>
+        <p className="quote-serif" style={{ fontSize: 13.5, color: '#e8ddd0', lineHeight: 1.6, margin: 0 }}>
           &ldquo;You sound lighter on weeks you walk in the morning.&rdquo;
         </p>
       </div>
@@ -492,10 +492,10 @@ function BreathingOrb({ ambient }: { ambient?: boolean }) {
       </div>
       <div style={{ textAlign: 'center' }}>
         <div style={{
-          fontFamily: "'Cormorant Garamond', serif",
+          fontFamily: "'Newsreader', Georgia, serif",
           fontSize: running ? '1.35rem' : '1rem',
           fontStyle: 'italic',
-          fontWeight: 300,
+          fontWeight: 400,
           color: running ? 'var(--text)' : 'var(--muted)',
           letterSpacing: 0.5,
           transition: 'color 0.3s, font-size 0.4s ease',
@@ -542,8 +542,8 @@ export default function LandingPage() {
       {/* Nav */}
       <nav className={`landing-nav${scrolled ? ' scrolled' : ''}`}>
         <a href="/" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <div style={{ width: 28, height: 28, borderRadius: 7, background: 'var(--gold)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: "'Cormorant Garamond', serif", fontStyle: 'italic', fontWeight: 700, fontSize: '1rem', color: '#18150f' }}>D</div>
-          <span style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '1.1rem', fontWeight: 600 }}>Ode</span>
+          <div style={{ width: 28, height: 28, borderRadius: 7, background: 'var(--gold)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: "'Erode', serif", fontStyle: 'italic', fontWeight: 700, fontSize: '1rem', color: '#18150f' }}>O</div>
+          <span style={{ fontFamily: "'Erode', serif", fontSize: '1.1rem', fontWeight: 600 }}>Ode</span>
         </a>
         <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
           <a href="#features" className="nav-link" style={{ padding: '8px 14px', fontSize: '0.86rem', color: 'var(--muted)', fontWeight: 500 }}>Features</a>
@@ -637,7 +637,7 @@ export default function LandingPage() {
             <div style={{ fontSize: 9, letterSpacing: 2, color: 'var(--muted-2)', textTransform: 'uppercase', marginBottom: 16 }}>
               TUESDAY · REFLECTION
             </div>
-            <div className="serif" style={{ fontSize: '1.15rem', fontStyle: 'italic', color: 'var(--text)', lineHeight: 1.75, marginBottom: 28 }}>
+            <div className="quote-serif" style={{ fontSize: '1.15rem', color: 'var(--text)', lineHeight: 1.75, marginBottom: 28 }}>
               &ldquo;You sounded lighter on the morning you walked. The evenings, you mentioned a worry about your father, gently, without realising it.&rdquo;
             </div>
             <div style={{ fontSize: 9, letterSpacing: 2, color: 'var(--muted-2)', textTransform: 'uppercase', marginBottom: 12 }}>
@@ -652,7 +652,7 @@ export default function LandingPage() {
               <div style={{ fontSize: 9, letterSpacing: 2, color: 'var(--muted-2)', textTransform: 'uppercase', marginBottom: 10 }}>
                 A SOFT QUESTION TO CARRY
               </div>
-              <p className="serif" style={{ fontSize: '0.98rem', fontStyle: 'italic', color: 'var(--muted)', margin: 0, lineHeight: 1.7 }}>
+              <p className="quote-serif" style={{ fontSize: '0.98rem', color: 'var(--muted)', margin: 0, lineHeight: 1.7 }}>
                 What would it feel like to say what you meant, without the pause before it?
               </p>
             </div>
@@ -729,7 +729,7 @@ export default function LandingPage() {
             <p style={{ fontSize: '0.88rem', color: 'var(--muted)', margin: '0 0 28px', lineHeight: 1.8 }}>
               Read your dream as an inner conversation. The shadows, the figures, the unresolved themes — surfaced gently, without prescription.
             </p>
-            <p className="serif" style={{ fontStyle: 'italic', fontSize: '1rem', color: 'var(--text)', margin: 0, lineHeight: 1.7, opacity: 0.8 }}>
+            <p className="quote-serif" style={{ fontSize: '1rem', color: 'var(--text)', margin: 0, lineHeight: 1.7, opacity: 0.8 }}>
               &ldquo;The man you couldn&apos;t find in the dream might be the part of you that hasn&apos;t been allowed to speak.&rdquo;
             </p>
           </div>
@@ -743,7 +743,7 @@ export default function LandingPage() {
             <p style={{ fontSize: '0.88rem', color: 'var(--muted)', margin: '0 0 28px', lineHeight: 1.8 }}>
               Interpret your dream through traditional Indian symbolism: rivers, doors, animals, time of night. Cultural, careful, contextual.
             </p>
-            <p className="serif" style={{ fontStyle: 'italic', fontSize: '1rem', color: 'var(--text)', margin: 0, lineHeight: 1.7, opacity: 0.8 }}>
+            <p className="quote-serif" style={{ fontSize: '1rem', color: 'var(--text)', margin: 0, lineHeight: 1.7, opacity: 0.8 }}>
               &ldquo;The river that wouldn&apos;t carry you may signify a passage you have not yet asked permission to cross.&rdquo;
             </p>
           </div>
@@ -810,7 +810,7 @@ export default function LandingPage() {
       <div className="reveal" style={{ maxWidth: 1320, margin: '0 auto', padding: '0 60px 80px' }}>
         <div style={{ borderTop: '1px solid var(--border)', paddingTop: 64 }}>
           <div className="serif" style={{ fontSize: 'clamp(0.7rem, 0.9vw, 0.85rem)', fontWeight: 300, letterSpacing: '0.05em', color: 'var(--muted-2)', marginBottom: 24, fontStyle: 'normal' }}>— Rohit, 41 · after his first weekly review</div>
-          <p className="serif reveal-left" style={{ fontSize: 'clamp(1.6rem, 3vw, 2.4rem)', fontWeight: 300, fontStyle: 'italic', lineHeight: 1.55, color: 'var(--text)', margin: '0 0 48px', maxWidth: 820 }}>
+          <p className="quote-serif reveal-left" style={{ fontSize: 'clamp(1.6rem, 3vw, 2.4rem)', lineHeight: 1.55, color: 'var(--text)', margin: '0 0 48px', maxWidth: 820 }}>
             &ldquo;It noticed I kept mentioning my father without realising it. Three entries in a row. Nobody had ever pointed that out before.&rdquo;
           </p>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 32 }}>
@@ -821,7 +821,7 @@ export default function LandingPage() {
               { quote: 'My therapist asked how I got so clear about what I was feeling. I showed her Ode.', attr: 'Meera, 37 · Plus subscriber' },
             ].map(t => (
               <div key={t.attr} style={{ paddingLeft: 16, borderLeft: '1px solid var(--border)' }}>
-                <p className="serif" style={{ fontStyle: 'italic', fontSize: '0.95rem', color: 'var(--muted)', margin: '0 0 10px', lineHeight: 1.75 }}>&ldquo;{t.quote}&rdquo;</p>
+                <p className="quote-serif" style={{ fontSize: '0.95rem', color: 'var(--muted)', margin: '0 0 10px', lineHeight: 1.75 }}>&ldquo;{t.quote}&rdquo;</p>
                 <span style={{ fontSize: '0.74rem', color: 'var(--muted-2)', letterSpacing: '0.02em' }}>{t.attr}</span>
               </div>
             ))}
@@ -839,7 +839,7 @@ export default function LandingPage() {
             <p style={{ fontSize: '0.9rem', color: 'var(--muted)', lineHeight: 1.75, margin: '0 0 24px' }}>
               An AI pre-session brief drawn from what your client chooses to share — mood trends and summaries, never recordings.
             </p>
-            <p className="serif" style={{ fontSize: 'clamp(1.15rem, 2vw, 1.5rem)', fontWeight: 300, fontStyle: 'italic', lineHeight: 1.6, color: 'var(--text)', margin: 0, paddingLeft: 20, borderLeft: '2px solid rgba(200,149,90,0.5)' }}>
+            <p className="quote-serif" style={{ fontSize: 'clamp(1.15rem, 2vw, 1.5rem)', lineHeight: 1.6, color: 'var(--text)', margin: 0, paddingLeft: 20, borderLeft: '2px solid rgba(200,149,90,0.5)' }}>
               Clients choose what to share. Links expire. Raw recordings stay private.
             </p>
           </div>
@@ -981,7 +981,7 @@ export default function LandingPage() {
         {/* Top row: brand left, nav links right */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 32, flexWrap: 'wrap' }}>
           <a href="/" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <div style={{ width: 26, height: 26, borderRadius: 6, background: 'var(--gold)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: "'Cormorant Garamond', serif", fontStyle: 'italic', fontWeight: 700, fontSize: '0.95rem', color: '#18150f' }}>D</div>
+            <div style={{ width: 26, height: 26, borderRadius: 6, background: 'var(--gold)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: "'Erode', serif", fontStyle: 'italic', fontWeight: 700, fontSize: '0.95rem', color: '#18150f' }}>O</div>
             <span className="serif" style={{ fontSize: '1rem', fontWeight: 600 }}>Ode</span>
           </a>
           <div style={{ display: 'flex', gap: 28, flexWrap: 'wrap', alignItems: 'center' }}>

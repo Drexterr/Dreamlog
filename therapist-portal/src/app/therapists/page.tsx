@@ -2,11 +2,11 @@ import Link from 'next/link';
 
 export default function TherapistsPage() {
   return (
-    <div style={{ background: '#18150f', color: '#e8ddd0', minHeight: '100vh', fontFamily: "'Nunito', sans-serif" }}>
+    <div style={{ background: '#18150f', color: '#e8ddd0', minHeight: '100vh', fontFamily: "'Hanken Grotesk', sans-serif" }}>
       <nav style={{ maxWidth: 1100, margin: '0 auto', padding: '24px 40px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none', color: '#e8ddd0' }}>
-          <div style={{ width: 28, height: 28, borderRadius: 7, background: '#c8955a', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: "'Cormorant Garamond', serif", fontStyle: 'italic', fontWeight: 700, fontSize: '1rem', color: '#18150f' }}>D</div>
-          <span style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '1.1rem', fontWeight: 600 }}>Ode</span>
+          <div style={{ width: 28, height: 28, borderRadius: 7, background: '#c8955a', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: "'Erode', serif", fontStyle: 'italic', fontWeight: 700, fontSize: '1rem', color: '#18150f' }}>O</div>
+          <span style={{ fontFamily: "'Erode', serif", fontSize: '1.1rem', fontWeight: 600 }}>Ode</span>
         </Link>
         <Link href="/login" style={{ background: '#c8955a', color: '#18150f', borderRadius: 100, padding: '9px 20px', fontSize: '0.84rem', fontWeight: 700, textDecoration: 'none' }}>
           Open Therapist Portal
@@ -18,7 +18,7 @@ export default function TherapistsPage() {
         {/* Hero */}
         <div style={{ maxWidth: 720, marginBottom: 80 }}>
           <div style={{ fontSize: '0.7rem', letterSpacing: '2.5px', color: 'rgba(232,221,208,0.3)', textTransform: 'uppercase', marginBottom: 20 }}>For mental health professionals</div>
-          <h1 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 'clamp(2.6rem, 5.5vw, 4.2rem)', fontWeight: 300, margin: '0 0 24px', lineHeight: 1.1, letterSpacing: '-0.02em' }}>
+          <h1 style={{ fontFamily: "'Erode', serif", fontSize: 'clamp(2.6rem, 5.5vw, 4.2rem)', fontWeight: 300, margin: '0 0 24px', lineHeight: 1.1, letterSpacing: '-0.02em' }}>
             Your clients arrive<br />already knowing<br /><em style={{ color: '#c8955a' }}>what they feel.</em>
           </h1>
           <p style={{ fontSize: '1rem', color: 'rgba(232,221,208,0.55)', lineHeight: 1.85, margin: '0 0 36px', maxWidth: 560 }}>
@@ -37,7 +37,7 @@ export default function TherapistsPage() {
 
         {/* How it works */}
         <div style={{ borderTop: '1px solid rgba(255,255,255,0.07)', paddingTop: 64, marginBottom: 80 }}>
-          <h2 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 'clamp(1.6rem, 3vw, 2.4rem)', fontWeight: 300, margin: '0 0 48px', lineHeight: 1.2 }}>
+          <h2 style={{ fontFamily: "'Erode', serif", fontSize: 'clamp(1.6rem, 3vw, 2.4rem)', fontWeight: 300, margin: '0 0 48px', lineHeight: 1.2 }}>
             How it works between sessions
           </h2>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 40 }}>
@@ -59,7 +59,7 @@ export default function TherapistsPage() {
               },
             ].map(s => (
               <div key={s.step}>
-                <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '0.7rem', color: 'rgba(200,149,90,0.5)', letterSpacing: 2, marginBottom: 20 }}>{s.step}</div>
+                <div style={{ fontFamily: "'Erode', serif", fontSize: '0.7rem', color: 'rgba(200,149,90,0.5)', letterSpacing: 2, marginBottom: 20 }}>{s.step}</div>
                 <div style={{ fontWeight: 700, fontSize: '0.95rem', color: '#e8ddd0', marginBottom: 10 }}>{s.title}</div>
                 <p style={{ fontSize: '0.87rem', color: 'rgba(232,221,208,0.5)', lineHeight: 1.8, margin: 0 }}>{s.body}</p>
               </div>
@@ -106,7 +106,7 @@ export default function TherapistsPage() {
         {/* Beta invite */}
         <div style={{ background: 'rgba(200,149,90,0.05)', border: '1px solid rgba(200,149,90,0.18)', borderRadius: 20, padding: '48px 52px', marginBottom: 80 }}>
           <div style={{ fontSize: '0.7rem', letterSpacing: '2.5px', color: 'rgba(200,149,90,0.5)', textTransform: 'uppercase', marginBottom: 16 }}>Early access · Beta</div>
-          <h2 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 'clamp(1.6rem, 3vw, 2.4rem)', fontWeight: 300, margin: '0 0 16px', lineHeight: 1.2 }}>
+          <h2 style={{ fontFamily: "'Erode', serif", fontSize: 'clamp(1.6rem, 3vw, 2.4rem)', fontWeight: 300, margin: '0 0 16px', lineHeight: 1.2 }}>
             We&apos;re inviting therapists to test Ode with their clients.
           </h2>
           <p style={{ fontSize: '0.95rem', color: 'rgba(232,221,208,0.55)', lineHeight: 1.8, margin: '0 0 28px', maxWidth: 560 }}>
@@ -124,7 +124,7 @@ export default function TherapistsPage() {
 
         {/* FAQ */}
         <div style={{ borderTop: '1px solid rgba(255,255,255,0.07)', paddingTop: 56 }}>
-          <h2 style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 'clamp(1.4rem, 2.5vw, 2rem)', fontWeight: 300, margin: '0 0 36px' }}>Questions therapists ask</h2>
+          <h2 style={{ fontFamily: "'Erode', serif", fontSize: 'clamp(1.4rem, 2.5vw, 2rem)', fontWeight: 300, margin: '0 0 36px' }}>Questions therapists ask</h2>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
             {[
               { q: 'Is it HIPAA-compliant?', a: 'Ode uses encrypted transit (HTTPS) and encrypted storage. Audio is never retained. We are building toward full HIPAA compliance — reach us at support@dreamlog.app for a current data-processing assessment.' },

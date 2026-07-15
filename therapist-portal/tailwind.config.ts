@@ -15,8 +15,8 @@ const config: Config = {
         },
       },
       fontFamily: {
-        sans: ['Inter', 'system-ui', 'sans-serif'],
-        serif: ['Georgia', 'serif'],
+        sans: ['Hanken Grotesk', 'system-ui', 'sans-serif'],
+        serif: ['Erode', 'Georgia', 'serif'],
       },
     },
   },

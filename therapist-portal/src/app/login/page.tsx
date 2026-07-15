@@ -59,18 +59,18 @@ export default function LoginPage() {
           <div style={{
             width: 30, height: 30, borderRadius: 7, background: 'var(--gold)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontFamily: "'Cormorant Garamond', serif", fontStyle: 'italic',
+            fontFamily: "'Erode', serif", fontStyle: 'italic',
             fontWeight: 700, fontSize: '1.1rem', color: '#0c0b09',
-          }}>D</div>
-          <span style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: '1.15rem', fontWeight: 600, color: 'var(--text)' }}>
+          }}>O</div>
+          <span style={{ fontFamily: "'Erode', serif", fontSize: '1.15rem', fontWeight: 600, color: 'var(--text)' }}>
             Ode
           </span>
         </a>
 
         {/* Quote */}
         <div>
-          <p className="serif" style={{
-            fontSize: 'clamp(1.3rem, 2vw, 1.7rem)', fontWeight: 300, fontStyle: 'italic',
+          <p className="quote-serif" style={{
+            fontSize: 'clamp(1.3rem, 2vw, 1.7rem)',
             color: 'var(--text)', lineHeight: 1.6, margin: '0 0 20px',
           }}>
             &ldquo;{quote.text}&rdquo;

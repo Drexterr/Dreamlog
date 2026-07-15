@@ -23,8 +23,15 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link rel="preconnect" href="https://cdn.fontshare.com" crossOrigin="anonymous" />
+        {/* Hanken Grotesk: body/UI · Newsreader Italic: quotes & reflections */}
         <link
-          href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400;1,600&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap"
+          href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700&family=Newsreader:ital,opsz,wght@1,6..72,400&display=swap"
+          rel="stylesheet"
+        />
+        {/* Erode: display & headings (Fontshare · ITF Free Font License) */}
+        <link
+          href="https://api.fontshare.com/v2/css?f[]=erode@300,400,401,500,600,700&display=swap"
           rel="stylesheet"
         />
       </head>
