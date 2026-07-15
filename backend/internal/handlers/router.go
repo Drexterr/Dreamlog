@@ -6,6 +6,7 @@ import (
 	"github.com/dreamlog/backend/internal/middleware"
 	"github.com/dreamlog/backend/internal/repositories"
 	"github.com/dreamlog/backend/internal/services"
+	sentrygin "github.com/getsentry/sentry-go/gin"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 )
@@ -57,6 +58,11 @@ func NewRouter(deps Deps) http.Handler {
 
 	r.Use(middleware.CORSMiddleware())
 	r.Use(middleware.RecoveryHandler(deps.Log))
+	// Registered after RecoveryHandler so it sees a panic first (deferred
+	// recovery runs innermost-first): Sentry captures it, re-panics, and
+	// RecoveryHandler still produces the 500 response. No-op when Sentry is
+	// not initialized (blank SENTRY_DSN in dev).
+	r.Use(sentrygin.New(sentrygin.Options{Repanic: true}))
 	r.Use(middleware.RequestLogger(deps.Log))
 	r.Use(middleware.ErrorHandler(deps.Log))
 

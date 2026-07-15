@@ -2,6 +2,12 @@ apply plugin: "com.android.application"
 apply plugin: "org.jetbrains.kotlin.android"
 apply plugin: "com.facebook.react"
 
+// Sentry: uploads JS source maps + native symbols on release builds so stack
+// traces are readable. Config in ../sentry.properties; auth via SENTRY_AUTH_TOKEN
+// env (EAS secret). Applied manually because this android/ dir is committed -
+// the @sentry/react-native/expo config plugin only runs during prebuild.
+apply from: new File(["node", "--print", "require.resolve('@sentry/react-native/package.json')"].execute(null, rootDir).text.trim(), "../sentry.gradle")
+
 def projectRoot = rootDir.getAbsoluteFile().getParentFile().getAbsolutePath()
 
 /**

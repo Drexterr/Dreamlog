@@ -10,6 +10,7 @@ import (
 	"github.com/dreamlog/backend/internal/models"
 	"github.com/dreamlog/backend/internal/repositories"
 	"github.com/dreamlog/backend/internal/services"
+	"github.com/dreamlog/backend/pkg/monitoring"
 	"go.uber.org/zap"
 )
 
@@ -102,6 +103,8 @@ func (w *TranscriptionWorker) Run(ctx context.Context) {
 		sem <- struct{}{}
 		go func(p []byte) {
 			defer func() { <-sem }()
+			// Report a job panic to Sentry before it crashes the process.
+			defer monitoring.RecoverRepanic()
 			w.processJob(ctx, p)
 		}(payload)
 	}
@@ -127,6 +130,10 @@ func (w *TranscriptionWorker) processJob(ctx context.Context, payload []byte) {
 
 		if job.Attempt >= w.maxRetries-1 {
 			log.Error("worker: max retries reached, moving to DLQ")
+			monitoring.CaptureErr(err, map[string]string{
+				"job":      "entry_pipeline",
+				"entry_id": job.EntryID.String(),
+			})
 			_ = w.entryRepo.SetFailed(ctx, job.EntryID, "max retries exceeded: "+err.Error())
 			_ = w.queue.EnqueueDLQ(ctx, payload, err.Error())
 			return

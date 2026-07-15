@@ -198,12 +198,32 @@ Backend on Railway (`https://dreamlog-production-f9e2.up.railway.app`):
 Decision: **do not build a custom portal** — use off-the-shelf monitoring. A homegrown portal
 can't capture on-device crashes and would duplicate weeks of what these tools give free.
 
-- [ ] **Create a Sentry account** (free Developer tier ~5k events/month) with three projects:
-  - [ ] `ode-mobile` — `@sentry/react-native` via the Expo config plugin; upload source
-        maps in EAS build so JS stack traces are readable; tag releases with the app version.
-  - [ ] `ode-backend` — `sentry-go` + Gin middleware on `cmd/api`; panic capture in
-        `cmd/worker` (wrap the job handler so failed pipeline jobs report with `entry_id`).
-  - [ ] `ode-portal` — `@sentry/nextjs` in `therapist-portal/`.
+- [x] **Create a Sentry account** ✅ Done 2026-07-15: org `bharat-jain-i5`, **EU region**
+      (Frankfurt, `de.sentry.io`) — free Developer tier, ~5k events/month.
+  - [x] Mobile — ✅ wired 2026-07-15: `@sentry/react-native` ~7.2.0 + Expo config plugin
+        (org/project set for source-map upload), `getSentryExpoConfig` in metro.config.js,
+        init + `Sentry.wrap` in `app/_layout.tsx` (fail-silent: disabled when
+        `EXPO_PUBLIC_SENTRY_DSN` unset; `sendDefaultPii: false`, errors only). DSN set in
+        eas.json preview/preview-local/production profiles. Remaining:
+        - [ ] Create a Sentry **auth token** (sentry.io → Settings → Auth Tokens) and add it
+              to EAS: `eas env:create --scope project --name SENTRY_AUTH_TOKEN --value <token>`
+              — needed so release builds upload source maps (builds succeed without it, but
+              stack traces stay minified). Escape hatch: `SENTRY_DISABLE_AUTO_UPLOAD=true`.
+        - [ ] Rebuild (`eas build`) — Sentry RN is a native module; no Expo Go / OTA-only.
+  - [x] Backend — ✅ wired 2026-07-15: `pkg/monitoring` (fail-silent when `SENTRY_DSN`
+        blank), `sentrygin` middleware on the API (panics + unhandled-500 capture in
+        `middleware/errors.go`), worker panic capture (main + schedulers + job goroutines,
+        re-panic preserved), pipeline failures report with `entry_id` / `session_id` at the
+        DLQ point. Remaining:
+        - [ ] Set `SENTRY_DSN` on Railway — on **both** the API and worker processes:
+              `https://f0534905350a71a9caa0ce0c8d2eaefe@o4511737812287488.ingest.de.sentry.io/4511737888112720`
+  - [x] Portal — ✅ wired 2026-07-15: `@sentry/nextjs` client-side only (portal is a
+        static export - no server runtime). Init in `sentry.client.config.ts` (production
+        builds only, `sendDefaultPii: false`, **no Session Replay** - the portal renders
+        decrypted client notes), render-error capture in `src/app/global-error.tsx`,
+        source-map upload via `withSentryConfig` in `next.config.js` (auth token in
+        gitignored `.env.local`; upload skipped harmlessly when absent). Project slug
+        `ode-portal` confirmed - source-map upload verified working 2026-07-15.
   - [ ] Set up alert rules: email/Slack on any new error type + on error-rate spike.
 - [ ] **Uptime monitoring**: UptimeRobot (free) pinging `GET /health` every 5 min, alert on downtime.
 - [ ] **Store dashboards**: check Android Vitals (Play Console) and Xcode Organizer crashes

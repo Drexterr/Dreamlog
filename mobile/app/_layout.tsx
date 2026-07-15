@@ -3,6 +3,18 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { Animated, StyleSheet, Text, View } from 'react-native';
 import { Slot, SplashScreen, useRouter, useSegments } from 'expo-router';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
+import * as Sentry from '@sentry/react-native';
+
+// Crash reporting. Fail-silent: no DSN (local dev, Expo Go) = fully disabled.
+// sendDefaultPii stays false so journal/therapy content and user identity
+// never leave the device inside an error event. Errors only — no tracing.
+const SENTRY_DSN = process.env.EXPO_PUBLIC_SENTRY_DSN;
+if (SENTRY_DSN) {
+  Sentry.init({
+    dsn: SENTRY_DSN,
+    sendDefaultPii: false,
+  });
+}
 
 GoogleSignin.configure({
   webClientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID,
@@ -70,7 +82,7 @@ function GreetingOverlay({ name, opacity }: { name: string; opacity: Animated.Va
 
 SplashScreen.preventAutoHideAsync();
 
-export default function RootLayout() {
+function RootLayout() {
   const [ready, setReady] = useState(false);
   const [hasToken, setHasToken] = useState(false);
   const [needsOnboarding, setNeedsOnboarding] = useState(false);
@@ -327,4 +339,8 @@ export default function RootLayout() {
     </ThemeProvider>
   );
 }
+
+// Sentry.wrap adds the error boundary + native crash context around the app.
+// Skipped entirely when Sentry is not configured.
+export default SENTRY_DSN ? Sentry.wrap(RootLayout) : RootLayout;
 

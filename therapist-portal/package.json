@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@sentry/nextjs": "^10.65.0",
     "@types/three": "^0.185.0",
     "axios": "^1.7.2",
     "date-fns": "^3.6.0",

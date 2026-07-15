@@ -32,7 +32,12 @@
     },
     "plugins": [
       "expo-router",
-      ["expo-updates", { "channel": "preview" }],
+      [
+        "expo-updates",
+        {
+          "channel": "preview"
+        }
+      ],
       [
         "expo-av",
         {
@@ -59,6 +64,14 @@
           "ios": {
             "useFrameworks": "static"
           }
+        }
+      ],
+      [
+        "@sentry/react-native/expo",
+        {
+          "url": "https://de.sentry.io/",
+          "organization": "bharat-jain-i5",
+          "project": "react-native"
         }
       ]
     ],

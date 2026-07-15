@@ -11,6 +11,7 @@ import (
 
 	"github.com/dreamlog/backend/internal/models"
 	"github.com/dreamlog/backend/internal/services"
+	"github.com/dreamlog/backend/pkg/monitoring"
 	"github.com/google/uuid"
 	"go.uber.org/zap"
 )
@@ -111,6 +112,10 @@ func (w *NoteOCRWorker) processJob(ctx context.Context, payload []byte) {
 
 		if job.Attempt >= w.maxRetries-1 {
 			log.Error("note worker: max retries reached, moving to DLQ")
+			monitoring.CaptureErr(err, map[string]string{
+				"job":        "note_ocr",
+				"session_id": job.SessionID.String(),
+			})
 			_ = w.repo.SetSessionFailed(ctx, job.SessionID, "max retries exceeded: "+err.Error(), true)
 			_ = w.queue.EnqueueDLQ(ctx, payload, err.Error())
 			return

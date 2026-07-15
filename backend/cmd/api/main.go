@@ -17,6 +17,7 @@ import (
 	"github.com/dreamlog/backend/internal/repositories"
 	"github.com/dreamlog/backend/internal/services"
 	pkgcrypto "github.com/dreamlog/backend/pkg/crypto"
+	"github.com/dreamlog/backend/pkg/monitoring"
 	"github.com/dreamlog/backend/pkg/queue"
 	pkgstorage "github.com/dreamlog/backend/pkg/storage"
 	"github.com/golang-migrate/migrate/v4"
@@ -38,6 +39,9 @@ func main() {
 	if err != nil {
 		log.Fatal("config load failed", zap.Error(err))
 	}
+
+	// ── Sentry (no-op when SENTRY_DSN unset) ──────────────────────────────────
+	defer monitoring.InitSentry(cfg.Sentry.DSN, "api", log)()
 
 	// ── Database ─────────────────────────────────────────────────────────────
 	poolCfg, err := pgxpool.ParseConfig(cfg.Database.DSN)

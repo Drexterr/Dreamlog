@@ -136,4 +136,5 @@ APPLE_SHARED_SECRET   App Store Connect shared secret for IAP receipt verificati
 GOOGLE_PLAY_CREDENTIALS_JSON  Service-account JSON with Play Console financial-data access for IAP verification (blank in dev = same stub)
 GOOGLE_PLAY_PACKAGE_NAME      Android application ID for Play IAP verification (default com.dreamlog.app)
 MASTER_ENCRYPTION_KEY Envelope-encryption master key for therapist notes (32 bytes hex/base64; blank in dev = derived from JWT secret; set explicitly in prod; needed on API and worker)
+SENTRY_DSN            Sentry error reporting (blank in dev = disabled entirely; set on API and worker - pipeline failures report from the worker with entry_id)
 ```

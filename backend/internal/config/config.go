@@ -24,6 +24,13 @@ type Config struct {
 	Worker    WorkerConfig
 	IAP       IAPConfig
 	Security  SecurityConfig
+	Sentry    SentryConfig
+}
+
+// SentryConfig configures error reporting. A blank DSN (dev) disables
+// Sentry entirely - all monitoring helpers become no-ops.
+type SentryConfig struct {
+	DSN string
 }
 
 // SecurityConfig holds application-layer encryption settings.
@@ -206,6 +213,9 @@ func Load() (*Config, error) {
 		},
 		Security: SecurityConfig{
 			MasterEncryptionKey: getEnv("MASTER_ENCRYPTION_KEY", ""),
+		},
+		Sentry: SentryConfig{
+			DSN: getEnv("SENTRY_DSN", ""),
 		},
 	}
 	return cfg, nil

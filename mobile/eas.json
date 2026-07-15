@@ -33,7 +33,8 @@
       "channel": "preview",
       "env": {
         "EXPO_PUBLIC_API_URL": "https://dreamlog-production-f9e2.up.railway.app",
-        "EXPO_PUBLIC_SUPABASE_URL": "https://rvmriuwxyxrpyoseqhci.supabase.co"
+        "EXPO_PUBLIC_SUPABASE_URL": "https://rvmriuwxyxrpyoseqhci.supabase.co",
+        "EXPO_PUBLIC_SENTRY_DSN": "https://0fbcb7a80ad06c748c8bc3d06d0dfaf3@o4511737812287488.ingest.de.sentry.io/4511737893683280"
       }
     },
     "preview-local": {
@@ -45,7 +46,8 @@
       },
       "env": {
         "EXPO_PUBLIC_API_URL": "https://dreamlog-production-f9e2.up.railway.app",
-        "EXPO_PUBLIC_SUPABASE_URL": "https://rvmriuwxyxrpyoseqhci.supabase.co"
+        "EXPO_PUBLIC_SUPABASE_URL": "https://rvmriuwxyxrpyoseqhci.supabase.co",
+        "EXPO_PUBLIC_SENTRY_DSN": "https://0fbcb7a80ad06c748c8bc3d06d0dfaf3@o4511737812287488.ingest.de.sentry.io/4511737893683280"
       }
     },
     "production": {
@@ -53,7 +55,8 @@
       "channel": "production",
       "env": {
         "EXPO_PUBLIC_API_URL": "https://dreamlog-production-f9e2.up.railway.app",
-        "EXPO_PUBLIC_SUPABASE_URL": "https://rvmriuwxyxrpyoseqhci.supabase.co"
+        "EXPO_PUBLIC_SUPABASE_URL": "https://rvmriuwxyxrpyoseqhci.supabase.co",
+        "EXPO_PUBLIC_SENTRY_DSN": "https://0fbcb7a80ad06c748c8bc3d06d0dfaf3@o4511737812287488.ingest.de.sentry.io/4511737893683280"
       }
     }
   },

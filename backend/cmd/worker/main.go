@@ -12,6 +12,7 @@ import (
 	"github.com/dreamlog/backend/internal/services"
 	"github.com/dreamlog/backend/internal/workers"
 	pkgcrypto "github.com/dreamlog/backend/pkg/crypto"
+	"github.com/dreamlog/backend/pkg/monitoring"
 	"github.com/dreamlog/backend/pkg/queue"
 	pkgstorage "github.com/dreamlog/backend/pkg/storage"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -30,6 +31,12 @@ func main() {
 	if err != nil {
 		log.Fatal("config load failed", zap.Error(err))
 	}
+
+	// ── Sentry (no-op when SENTRY_DSN unset) ──────────────────────────────────
+	defer monitoring.InitSentry(cfg.Sentry.DSN, "worker", log)()
+	// Report a main-goroutine panic before the process dies; restart
+	// semantics are unchanged (RecoverRepanic re-panics after flushing).
+	defer monitoring.RecoverRepanic()
 
 	// ── Database ─────────────────────────────────────────────────────────────
 	poolCfg, err := pgxpool.ParseConfig(cfg.Database.DSN)
@@ -164,13 +171,21 @@ func main() {
 		cancel()
 	}()
 
-	// Run schedulers in background goroutines.
-	go nudgeScheduler.Run(ctx)
-	go reengagementScheduler.Run(ctx)
-	go streakRiskScheduler.Run(ctx)
-	go weeklyReviewScheduler.Run(ctx)
-	go yearInReviewScheduler.Run(ctx)
-	go noteOCRWorker.Run(ctx)
+	// Run schedulers in background goroutines. Each is wrapped so a panic is
+	// reported to Sentry before it crashes the process (goroutine panics
+	// bypass main's deferred recovery).
+	runReported := func(run func(context.Context)) {
+		go func() {
+			defer monitoring.RecoverRepanic()
+			run(ctx)
+		}()
+	}
+	runReported(nudgeScheduler.Run)
+	runReported(reengagementScheduler.Run)
+	runReported(streakRiskScheduler.Run)
+	runReported(weeklyReviewScheduler.Run)
+	runReported(yearInReviewScheduler.Run)
+	runReported(noteOCRWorker.Run)
 
 	log.Info("starting transcription worker")
 	worker.Run(ctx)

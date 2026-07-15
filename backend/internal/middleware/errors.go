@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/dreamlog/backend/pkg/apierr"
+	sentrygin "github.com/getsentry/sentry-go/gin"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 )
@@ -26,7 +27,11 @@ func ErrorHandler(log *zap.Logger) gin.HandlerFunc {
 			return
 		}
 
-		// Unknown error - do not leak internals.
+		// Unknown error - report to Sentry (no-op when uninitialized), do not
+		// leak internals to the client.
+		if hub := sentrygin.GetHubFromContext(c); hub != nil {
+			hub.CaptureException(err)
+		}
 		log.Error("unhandled error", zap.Error(err),
 			zap.String("path", c.Request.URL.Path),
 			zap.String("method", c.Request.Method),
