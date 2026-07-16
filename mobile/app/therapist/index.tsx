@@ -183,10 +183,10 @@ const styles = StyleSheet.create({
   container: { flex: 1 },
   scroll: { padding: 20, paddingBottom: 48 },
   headerRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 20 },
-  eyebrow: { fontSize: 11, fontFamily: 'Nunito_700Bold', letterSpacing: 1.5, marginBottom: 4 },
-  title: { fontSize: 30, fontFamily: 'CormorantGaramond_500Medium' },
+  eyebrow: { fontSize: 11, fontFamily: 'HankenGrotesk_700Bold', letterSpacing: 1.5, marginBottom: 4 },
+  title: { fontSize: 30, fontFamily: 'Erode_500Medium' },
   journalBtn: { borderWidth: 1, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 10 },
-  journalBtnText: { fontSize: 13, fontFamily: 'Nunito_600SemiBold' },
+  journalBtnText: { fontSize: 13, fontFamily: 'HankenGrotesk_600SemiBold' },
 
   statsRow: { flexDirection: 'row', gap: 10, marginBottom: 20 },
   statCard: {
@@ -196,8 +196,8 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     alignItems: 'center',
   },
-  statValue: { fontSize: 22, fontFamily: 'Nunito_700Bold' },
-  statLabel: { fontSize: 11, fontFamily: 'Nunito_400Regular', marginTop: 2 },
+  statValue: { fontSize: 22, fontFamily: 'HankenGrotesk_700Bold' },
+  statLabel: { fontSize: 11, fontFamily: 'HankenGrotesk_400Regular', marginTop: 2 },
 
   primaryBtn: {
     borderRadius: 14,
@@ -209,7 +209,7 @@ const styles = StyleSheet.create({
     shadowRadius: 12,
     elevation: 6,
   },
-  primaryBtnText: { color: '#fff', fontSize: 16, fontFamily: 'Nunito_600SemiBold', letterSpacing: 0.3 },
+  primaryBtnText: { color: '#fff', fontSize: 16, fontFamily: 'HankenGrotesk_600SemiBold', letterSpacing: 0.3 },
 
   actionRow: { flexDirection: 'row', gap: 10, marginBottom: 28 },
   actionCard: {
@@ -219,12 +219,12 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   actionEmoji: { fontSize: 22, marginBottom: 8 },
-  actionLabel: { fontSize: 15, fontFamily: 'Nunito_600SemiBold' },
-  actionSub: { fontSize: 12, fontFamily: 'Nunito_400Regular', marginTop: 2 },
+  actionLabel: { fontSize: 15, fontFamily: 'HankenGrotesk_600SemiBold' },
+  actionSub: { fontSize: 12, fontFamily: 'HankenGrotesk_400Regular', marginTop: 2 },
 
-  sectionTitle: { fontSize: 20, fontFamily: 'CormorantGaramond_500Medium', marginBottom: 12 },
+  sectionTitle: { fontSize: 20, fontFamily: 'Erode_500Medium', marginBottom: 12 },
   emptyCard: { borderRadius: 16, borderWidth: 1, padding: 20 },
-  emptyText: { fontSize: 13.5, fontFamily: 'Nunito_400Regular', lineHeight: 20 },
+  emptyText: { fontSize: 13.5, fontFamily: 'HankenGrotesk_400Regular', lineHeight: 20 },
 
   sessionCard: {
     borderRadius: 16,
@@ -233,8 +233,8 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   sessionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  sessionClient: { fontSize: 15, fontFamily: 'Nunito_700Bold' },
-  sessionStatus: { fontSize: 12, fontFamily: 'Nunito_600SemiBold' },
-  sessionDate: { fontSize: 12, fontFamily: 'Nunito_400Regular', marginTop: 2, marginBottom: 6 },
-  sessionPreview: { fontSize: 13, fontFamily: 'Nunito_400Regular', lineHeight: 19 },
+  sessionClient: { fontSize: 15, fontFamily: 'HankenGrotesk_700Bold' },
+  sessionStatus: { fontSize: 12, fontFamily: 'HankenGrotesk_600SemiBold' },
+  sessionDate: { fontSize: 12, fontFamily: 'HankenGrotesk_400Regular', marginTop: 2, marginBottom: 6 },
+  sessionPreview: { fontSize: 13, fontFamily: 'HankenGrotesk_400Regular', lineHeight: 19 },
 });

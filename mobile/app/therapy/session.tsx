@@ -241,7 +241,7 @@ const bubbleStyles = StyleSheet.create({
   },
   text: {
     fontSize: 15,
-    fontFamily: 'Nunito_400Regular',
+    fontFamily: 'HankenGrotesk_400Regular',
     lineHeight: 22,
   },
   voicePip: { fontSize: 10, marginTop: 4, textAlign: 'right' },
@@ -252,10 +252,10 @@ const bubbleStyles = StyleSheet.create({
 function CrisisScreen({ colors }: { colors: any }) {
   return (
     <View style={{ gap: 14, padding: 24 }}>
-      <Text style={[{ fontSize: 26, fontFamily: 'CormorantGaramond_600SemiBold', color: colors.textPrimary }]}>
+      <Text style={[{ fontSize: 26, fontFamily: 'Erode_600SemiBold', color: colors.textPrimary }]}>
         You're not alone.
       </Text>
-      <Text style={[{ fontSize: 15, fontFamily: 'Nunito_400Regular', color: colors.textSecondary, lineHeight: 22 }]}>
+      <Text style={[{ fontSize: 15, fontFamily: 'HankenGrotesk_400Regular', color: colors.textSecondary, lineHeight: 22 }]}>
         This session has been paused. Please reach out to one of these resources right now.
       </Text>
       {CRISIS_HOTLINES.map((h) => (
@@ -265,8 +265,8 @@ function CrisisScreen({ colors }: { colors: any }) {
           onPress={() => Linking.openURL(h.tel)}
           activeOpacity={0.8}
         >
-          <Text style={[{ fontSize: 16, fontFamily: 'Nunito_700Bold', color: colors.textPrimary, marginBottom: 4 }]}>{h.name}</Text>
-          <Text style={[{ fontSize: 13, fontFamily: 'Nunito_400Regular', color: colors.textSecondary }]}>{h.info}</Text>
+          <Text style={[{ fontSize: 16, fontFamily: 'HankenGrotesk_700Bold', color: colors.textPrimary, marginBottom: 4 }]}>{h.name}</Text>
+          <Text style={[{ fontSize: 13, fontFamily: 'HankenGrotesk_400Regular', color: colors.textSecondary }]}>{h.info}</Text>
         </TouchableOpacity>
       ))}
     </View>
@@ -707,21 +707,21 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     borderBottomWidth: 1,
   },
-  headerTitle: { fontSize: 16, fontFamily: 'Nunito_700Bold' },
-  headerTimer: { fontSize: 11, fontFamily: 'Nunito_400Regular', marginTop: 2 },
+  headerTitle: { fontSize: 16, fontFamily: 'HankenGrotesk_700Bold' },
+  headerTimer: { fontSize: 11, fontFamily: 'HankenGrotesk_400Regular', marginTop: 2 },
   endBtn: { borderWidth: 1, borderRadius: 8, paddingHorizontal: 12, paddingVertical: 6, width: 60, alignItems: 'center' },
-  endBtnText: { fontSize: 13, fontFamily: 'Nunito_600SemiBold' },
+  endBtnText: { fontSize: 13, fontFamily: 'HankenGrotesk_600SemiBold' },
   backToVoice: { paddingHorizontal: 4 },
-  backToVoiceText: { fontSize: 13, fontFamily: 'Nunito_600SemiBold' },
+  backToVoiceText: { fontSize: 13, fontFamily: 'HankenGrotesk_600SemiBold' },
 
   // De-escalation
   deEscBanner: { borderWidth: 1, paddingHorizontal: 16, paddingVertical: 10 },
-  deEscText: { fontSize: 13, fontFamily: 'Nunito_400Regular', lineHeight: 18 },
+  deEscText: { fontSize: 13, fontFamily: 'HankenGrotesk_400Regular', lineHeight: 18 },
 
   // Messages
   messageScroll: { maxHeight: '38%' },
   messageList: { padding: 16, paddingBottom: 8, gap: 4 },
-  emptyHint: { textAlign: 'center', marginTop: 40, fontSize: 14, fontFamily: 'Nunito_400Regular' },
+  emptyHint: { textAlign: 'center', marginTop: 40, fontSize: 14, fontFamily: 'HankenGrotesk_400Regular' },
 
   // Orb area
   orbArea: {
@@ -733,26 +733,26 @@ const styles = StyleSheet.create({
   },
   orbTagline: {
     fontSize: 14,
-    fontFamily: 'Nunito_400Regular',
+    fontFamily: 'HankenGrotesk_400Regular',
     letterSpacing: 0.5,
     marginBottom: 8,
   },
   recTimer: {
-    fontFamily: 'Nunito_400Regular',
+    fontFamily: 'HankenGrotesk_400Regular',
     fontSize: 15,
     letterSpacing: 2,
     marginTop: 4,
   },
   tapHint: {
     fontSize: 12,
-    fontFamily: 'Nunito_400Regular',
+    fontFamily: 'HankenGrotesk_400Regular',
     letterSpacing: 0.5,
     marginTop: 4,
   },
 
   // Ended
   endedBox: { alignItems: 'center', gap: 16, marginTop: 8 },
-  endedLabel: { fontSize: 15, fontFamily: 'Nunito_400Regular' },
+  endedLabel: { fontSize: 15, fontFamily: 'HankenGrotesk_400Regular' },
   summaryBtn: {
     borderRadius: 14,
     paddingVertical: 14,
@@ -761,7 +761,7 @@ const styles = StyleSheet.create({
   summaryBtnText: {
     color: '#fff',
     fontSize: 15,
-    fontFamily: 'Nunito_700Bold',
+    fontFamily: 'HankenGrotesk_700Bold',
   },
 
   // Bottom bar
@@ -784,7 +784,7 @@ const styles = StyleSheet.create({
     width: 80,
   },
   chatToggleIcon: { fontSize: 14 },
-  chatToggleLabel: { fontSize: 13, fontFamily: 'Nunito_600SemiBold' },
+  chatToggleLabel: { fontSize: 13, fontFamily: 'HankenGrotesk_600SemiBold' },
   bottomCenter: { flex: 1, alignItems: 'center' },
   stopPill: {
     flexDirection: 'row',
@@ -796,7 +796,7 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
   },
   stopDot: { width: 8, height: 8, borderRadius: 4 },
-  stopLabel: { fontSize: 13, fontFamily: 'Nunito_600SemiBold' },
+  stopLabel: { fontSize: 13, fontFamily: 'HankenGrotesk_600SemiBold' },
 
   // Text input (text mode)
   inputBar: {
@@ -813,7 +813,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 10,
     fontSize: 15,
-    fontFamily: 'Nunito_400Regular',
+    fontFamily: 'HankenGrotesk_400Regular',
     maxHeight: 120,
   },
   sendBtn: {
@@ -823,5 +823,5 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  sendBtnText: { color: '#fff', fontSize: 18, fontFamily: 'Nunito_700Bold' },
+  sendBtnText: { color: '#fff', fontSize: 18, fontFamily: 'HankenGrotesk_700Bold' },
 });

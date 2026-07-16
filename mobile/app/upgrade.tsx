@@ -357,11 +357,11 @@ const styles = StyleSheet.create({
   backBtn: { width: 60 },
   backText: {
     fontSize: 15,
-    fontFamily: 'Nunito_400Regular',
+    fontFamily: 'HankenGrotesk_400Regular',
   },
   headerTitle: {
     fontSize: 17,
-    fontFamily: 'Nunito_600SemiBold',
+    fontFamily: 'HankenGrotesk_600SemiBold',
   },
 
   scroll: { padding: 20, paddingBottom: 48 },
@@ -385,7 +385,7 @@ const styles = StyleSheet.create({
   },
   periodSegmentText: {
     fontSize: 14,
-    fontFamily: 'Nunito_600SemiBold',
+    fontFamily: 'HankenGrotesk_600SemiBold',
   },
   saveChip: {
     borderRadius: 8,
@@ -394,7 +394,7 @@ const styles = StyleSheet.create({
   },
   saveChipText: {
     fontSize: 10,
-    fontFamily: 'Nunito_600SemiBold',
+    fontFamily: 'HankenGrotesk_600SemiBold',
     letterSpacing: 0.3,
   },
 
@@ -420,11 +420,11 @@ const styles = StyleSheet.create({
   },
   cardTitle: {
     fontSize: 18,
-    fontFamily: 'CormorantGaramond_500Medium',
+    fontFamily: 'Erode_500Medium',
   },
   cardPrice: {
     fontSize: 15,
-    fontFamily: 'Nunito_600SemiBold',
+    fontFamily: 'HankenGrotesk_600SemiBold',
   },
   priceRow: {
     flexDirection: 'row',
@@ -433,7 +433,7 @@ const styles = StyleSheet.create({
   },
   priceSub: {
     fontSize: 12,
-    fontFamily: 'Nunito_400Regular',
+    fontFamily: 'HankenGrotesk_400Regular',
     marginTop: 2,
   },
 
@@ -444,7 +444,7 @@ const styles = StyleSheet.create({
   },
   badgeText: {
     fontSize: 10,
-    fontFamily: 'Nunito_600SemiBold',
+    fontFamily: 'HankenGrotesk_600SemiBold',
     color: '#fff',
     letterSpacing: 0.5,
   },
@@ -457,14 +457,14 @@ const styles = StyleSheet.create({
   },
   featureCheck: {
     fontSize: 14,
-    fontFamily: 'Nunito_600SemiBold',
+    fontFamily: 'HankenGrotesk_600SemiBold',
     lineHeight: 20,
     width: 14,
   },
   featureText: {
     flex: 1,
     fontSize: 14,
-    fontFamily: 'Nunito_400Regular',
+    fontFamily: 'HankenGrotesk_400Regular',
     lineHeight: 20,
   },
 
@@ -475,7 +475,7 @@ const styles = StyleSheet.create({
   },
   ctaText: {
     fontSize: 15,
-    fontFamily: 'Nunito_600SemiBold',
+    fontFamily: 'HankenGrotesk_600SemiBold',
   },
 
   currentBanner: {
@@ -486,7 +486,7 @@ const styles = StyleSheet.create({
   },
   currentBannerText: {
     fontSize: 13,
-    fontFamily: 'Nunito_400Regular',
+    fontFamily: 'HankenGrotesk_400Regular',
   },
 
   footer: {
@@ -496,7 +496,7 @@ const styles = StyleSheet.create({
   },
   footerText: {
     fontSize: 12,
-    fontFamily: 'Nunito_400Regular',
+    fontFamily: 'HankenGrotesk_400Regular',
     textAlign: 'center',
     lineHeight: 18,
   },

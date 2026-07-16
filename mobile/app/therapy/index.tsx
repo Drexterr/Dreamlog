@@ -154,11 +154,11 @@ const cardStyles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'flex-start',
   },
-  personaName: { fontSize: 14, fontFamily: 'Nunito_700Bold', marginBottom: 1 },
-  date: { fontSize: 12, fontFamily: 'Nunito_400Regular' },
-  statusText: { fontSize: 12, fontFamily: 'Nunito_400Regular' },
-  summary: { fontSize: 13, fontFamily: 'Nunito_400Regular', lineHeight: 19 },
-  meta: { fontSize: 11, fontFamily: 'Nunito_400Regular' },
+  personaName: { fontSize: 14, fontFamily: 'HankenGrotesk_700Bold', marginBottom: 1 },
+  date: { fontSize: 12, fontFamily: 'HankenGrotesk_400Regular' },
+  statusText: { fontSize: 12, fontFamily: 'HankenGrotesk_400Regular' },
+  summary: { fontSize: 13, fontFamily: 'HankenGrotesk_400Regular', lineHeight: 19 },
+  meta: { fontSize: 11, fontFamily: 'HankenGrotesk_400Regular' },
 });
 
 // ── Main screen ───────────────────────────────────────────────────────────────
@@ -344,18 +344,18 @@ const styles = StyleSheet.create({
   scroll: { paddingHorizontal: 20, paddingTop: 16, paddingBottom: 60, overflow: 'visible' },
 
   backBtn: { marginBottom: 28 },
-  backText: { fontSize: 13, fontFamily: 'Nunito_400Regular' },
+  backText: { fontSize: 13, fontFamily: 'HankenGrotesk_400Regular' },
 
   hero: { marginBottom: 32 },
   heroHeading: {
     fontSize: 36,
-    fontFamily: 'CormorantGaramond_300Light',
+    fontFamily: 'Erode_300Light',
     lineHeight: 44,
     marginBottom: 14,
   },
   heroSub: {
     fontSize: 14,
-    fontFamily: 'Nunito_400Regular',
+    fontFamily: 'HankenGrotesk_400Regular',
     lineHeight: 22,
     maxWidth: 300,
   },
@@ -369,13 +369,13 @@ const styles = StyleSheet.create({
     marginBottom: 28,
     gap: 10,
   },
-  resumeTitle: { fontSize: 13, fontFamily: 'Nunito_700Bold', marginBottom: 2 },
-  resumeSub: { fontSize: 12, fontFamily: 'Nunito_400Regular' },
-  resumeArrow: { fontSize: 13, fontFamily: 'Nunito_600SemiBold' },
+  resumeTitle: { fontSize: 13, fontFamily: 'HankenGrotesk_700Bold', marginBottom: 2 },
+  resumeSub: { fontSize: 12, fontFamily: 'HankenGrotesk_400Regular' },
+  resumeArrow: { fontSize: 13, fontFamily: 'HankenGrotesk_600SemiBold' },
 
   quietLabel: {
     fontSize: 12,
-    fontFamily: 'Nunito_400Regular',
+    fontFamily: 'HankenGrotesk_400Regular',
     marginBottom: 12,
   },
   personaRow: { gap: 10, paddingRight: 20, marginBottom: 28 },
@@ -386,8 +386,8 @@ const styles = StyleSheet.create({
     padding: 14,
     gap: 5,
   },
-  personaName: { fontSize: 14, fontFamily: 'Nunito_700Bold' },
-  personaTagline: { fontSize: 11, fontFamily: 'Nunito_400Regular', lineHeight: 15 },
+  personaName: { fontSize: 14, fontFamily: 'HankenGrotesk_700Bold' },
+  personaTagline: { fontSize: 11, fontFamily: 'HankenGrotesk_400Regular', lineHeight: 15 },
 
   startBtn: {
     borderRadius: 12,
@@ -395,7 +395,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 12,
   },
-  startBtnText: { color: '#fff', fontSize: 16, fontFamily: 'Nunito_700Bold' },
+  startBtnText: { color: '#fff', fontSize: 16, fontFamily: 'HankenGrotesk_700Bold' },
 
   pricingRow: {
     flexDirection: 'row',
@@ -404,14 +404,14 @@ const styles = StyleSheet.create({
     gap: 10,
     marginBottom: 32,
   },
-  pricingNote: { fontSize: 12, fontFamily: 'Nunito_400Regular' },
-  pricingLink: { fontSize: 12, fontFamily: 'Nunito_600SemiBold' },
+  pricingNote: { fontSize: 12, fontFamily: 'HankenGrotesk_400Regular' },
+  pricingLink: { fontSize: 12, fontFamily: 'HankenGrotesk_600SemiBold' },
 
   historySection: { marginTop: 4 },
   divider: { height: 1, marginBottom: 16 },
   statLine: {
     fontSize: 12,
-    fontFamily: 'Nunito_400Regular',
+    fontFamily: 'HankenGrotesk_400Regular',
     marginBottom: 16,
   },
 });

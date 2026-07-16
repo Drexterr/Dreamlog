@@ -241,12 +241,12 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: 17,
-    fontFamily: 'Nunito_600SemiBold',
+    fontFamily: 'HankenGrotesk_600SemiBold',
   },
   closeBtn: { padding: 6 },
   closeText: {
     fontSize: 15,
-    fontFamily: 'Nunito_400Regular',
+    fontFamily: 'HankenGrotesk_400Regular',
   },
 
   turnsRow: {
@@ -264,7 +264,7 @@ const styles = StyleSheet.create({
   },
   turnsLabel: {
     fontSize: 12,
-    fontFamily: 'Nunito_400Regular',
+    fontFamily: 'HankenGrotesk_400Regular',
     marginLeft: 4,
   },
 
@@ -279,9 +279,9 @@ const styles = StyleSheet.create({
   userBubble: { alignSelf: 'flex-end' },
   assistantBubble: { alignSelf: 'flex-start' },
   bubbleText: { fontSize: 15, lineHeight: 24 },
-  userText: { fontFamily: 'Nunito_400Regular' },
+  userText: { fontFamily: 'HankenGrotesk_400Regular' },
   assistantText: {
-    fontFamily: 'CormorantGaramond_300Light',
+    fontFamily: 'Erode_300Light',
     fontWeight: '300',
   },
 
@@ -299,7 +299,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     paddingHorizontal: 16,
     paddingVertical: 10,
-    fontFamily: 'Nunito_400Regular',
+    fontFamily: 'HankenGrotesk_400Regular',
     fontSize: 15,
     maxHeight: 120,
   },
@@ -325,7 +325,7 @@ const styles = StyleSheet.create({
   },
   closedText: {
     fontSize: 15,
-    fontFamily: 'CormorantGaramond_400Regular',
+    fontFamily: 'Erode_400Regular',
     textAlign: 'center',
     lineHeight: 24,
   },
@@ -337,6 +337,6 @@ const styles = StyleSheet.create({
   },
   goodnightText: {
     fontSize: 15,
-    fontFamily: 'Nunito_600SemiBold',
+    fontFamily: 'HankenGrotesk_600SemiBold',
   },
 });

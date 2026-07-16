@@ -191,18 +191,18 @@ const cardStyles = StyleSheet.create({
   },
   badgeText: {
     fontSize: 10,
-    fontFamily: 'Nunito_700Bold',
+    fontFamily: 'HankenGrotesk_700Bold',
     color: '#fff',
     letterSpacing: 1,
   },
   title: {
     fontSize: 20,
-    fontFamily: 'CormorantGaramond_600SemiBold',
+    fontFamily: 'Erode_600SemiBold',
     marginBottom: 2,
   },
   subtitle: {
     fontSize: 13,
-    fontFamily: 'Nunito_400Regular',
+    fontFamily: 'HankenGrotesk_400Regular',
     marginBottom: 14,
   },
   priceRow: {
@@ -213,7 +213,7 @@ const cardStyles = StyleSheet.create({
   },
   price: {
     fontSize: 28,
-    fontFamily: 'CormorantGaramond_600SemiBold',
+    fontFamily: 'Erode_600SemiBold',
   },
   savingBadge: {
     borderRadius: 8,
@@ -222,11 +222,11 @@ const cardStyles = StyleSheet.create({
   },
   savingText: {
     fontSize: 12,
-    fontFamily: 'Nunito_700Bold',
+    fontFamily: 'HankenGrotesk_700Bold',
   },
   perSession: {
     fontSize: 12,
-    fontFamily: 'Nunito_400Regular',
+    fontFamily: 'HankenGrotesk_400Regular',
     marginBottom: 14,
   },
   divider: { height: 1, marginBottom: 12 },
@@ -236,8 +236,8 @@ const cardStyles = StyleSheet.create({
     gap: 8,
     marginBottom: 6,
   },
-  featureTick: { fontSize: 13, fontFamily: 'Nunito_700Bold', marginTop: 1 },
-  featureText: { flex: 1, fontSize: 13, fontFamily: 'Nunito_400Regular', lineHeight: 18 },
+  featureTick: { fontSize: 13, fontFamily: 'HankenGrotesk_700Bold', marginTop: 1 },
+  featureText: { flex: 1, fontSize: 13, fontFamily: 'HankenGrotesk_400Regular', lineHeight: 18 },
   cta: {
     borderRadius: 12,
     paddingVertical: 13,
@@ -246,7 +246,7 @@ const cardStyles = StyleSheet.create({
   },
   ctaText: {
     fontSize: 15,
-    fontFamily: 'Nunito_700Bold',
+    fontFamily: 'HankenGrotesk_700Bold',
   },
 });
 
@@ -370,23 +370,23 @@ const styles = StyleSheet.create({
   },
 
   backBtn: { marginBottom: 20 },
-  backText: { fontSize: 14, fontFamily: 'Nunito_400Regular' },
+  backText: { fontSize: 14, fontFamily: 'HankenGrotesk_400Regular' },
 
   wordmark: {
-    fontFamily: 'CormorantGaramond_300Light',
+    fontFamily: 'Erode_300Light',
     fontSize: 13,
     letterSpacing: 2,
     textTransform: 'uppercase',
     marginBottom: 10,
   },
   heading: {
-    fontFamily: 'CormorantGaramond_300Light',
+    fontFamily: 'Erode_300Light',
     fontSize: 34,
     lineHeight: 42,
     marginBottom: 12,
   },
   subheading: {
-    fontFamily: 'Nunito_400Regular',
+    fontFamily: 'HankenGrotesk_400Regular',
     fontSize: 14,
     lineHeight: 22,
     marginBottom: 20,
@@ -401,13 +401,13 @@ const styles = StyleSheet.create({
     marginBottom: 28,
   },
   freeBadgeText: {
-    fontFamily: 'Nunito_700Bold',
+    fontFamily: 'HankenGrotesk_700Bold',
     fontSize: 13,
   },
 
   sectionLabel: {
     fontSize: 10,
-    fontFamily: 'Nunito_700Bold',
+    fontFamily: 'HankenGrotesk_700Bold',
     letterSpacing: 1.5,
     marginBottom: 12,
   },
@@ -422,8 +422,8 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   personaEmoji: { fontSize: 24, marginBottom: 2 },
-  personaName: { fontSize: 13, fontFamily: 'Nunito_700Bold', textAlign: 'center' },
-  personaDesc: { fontSize: 11, fontFamily: 'Nunito_400Regular', textAlign: 'center', lineHeight: 15 },
+  personaName: { fontSize: 13, fontFamily: 'HankenGrotesk_700Bold', textAlign: 'center' },
+  personaDesc: { fontSize: 11, fontFamily: 'HankenGrotesk_400Regular', textAlign: 'center', lineHeight: 15 },
 
   infoBox: {
     borderWidth: 1,
@@ -434,16 +434,16 @@ const styles = StyleSheet.create({
   },
   infoTitle: {
     fontSize: 15,
-    fontFamily: 'Nunito_700Bold',
+    fontFamily: 'HankenGrotesk_700Bold',
     marginBottom: 6,
   },
   infoRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 8 },
-  infoTick: { fontSize: 13, fontFamily: 'Nunito_700Bold', marginTop: 1 },
-  infoText: { flex: 1, fontSize: 13, fontFamily: 'Nunito_400Regular', lineHeight: 19 },
+  infoTick: { fontSize: 13, fontFamily: 'HankenGrotesk_700Bold', marginTop: 1 },
+  infoText: { flex: 1, fontSize: 13, fontFamily: 'HankenGrotesk_400Regular', lineHeight: 19 },
 
   disclaimer: {
     fontSize: 11,
-    fontFamily: 'Nunito_400Regular',
+    fontFamily: 'HankenGrotesk_400Regular',
     lineHeight: 17,
     textAlign: 'center',
     marginTop: 4,

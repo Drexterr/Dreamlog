@@ -343,12 +343,12 @@ const s = StyleSheet.create({
     gap: 12,
   },
   title: {
-    fontFamily: 'CormorantGaramond_300Light',
+    fontFamily: 'Erode_300Light',
     fontSize: 26,
     marginBottom: 2,
   },
   sub: {
-    fontFamily: 'Nunito_400Regular',
+    fontFamily: 'HankenGrotesk_400Regular',
     fontSize: 13,
     lineHeight: 18,
     marginBottom: 4,
@@ -363,7 +363,7 @@ const s = StyleSheet.create({
     paddingVertical: 14,
   },
   socialBtnText: {
-    fontFamily: 'Nunito_600SemiBold',
+    fontFamily: 'HankenGrotesk_600SemiBold',
     fontSize: 15,
   },
   appleBtn: {
@@ -375,7 +375,7 @@ const s = StyleSheet.create({
     paddingVertical: 4,
   },
   emailToggleText: {
-    fontFamily: 'Nunito_400Regular',
+    fontFamily: 'HankenGrotesk_400Regular',
     fontSize: 13,
     borderBottomWidth: 1,
     paddingBottom: 1,
@@ -396,18 +396,18 @@ const s = StyleSheet.create({
     borderRadius: 8,
   },
   tabText: {
-    fontFamily: 'Nunito_600SemiBold',
+    fontFamily: 'HankenGrotesk_600SemiBold',
     fontSize: 13,
   },
   input: {
     borderRadius: 10,
     borderWidth: 1,
     padding: 12,
-    fontFamily: 'Nunito_400Regular',
+    fontFamily: 'HankenGrotesk_400Regular',
     fontSize: 14,
   },
   error: {
-    fontFamily: 'Nunito_400Regular',
+    fontFamily: 'HankenGrotesk_400Regular',
     fontSize: 12,
     color: '#ef4444',
   },
@@ -418,14 +418,14 @@ const s = StyleSheet.create({
   },
   submitBtnText: {
     color: '#fff',
-    fontFamily: 'Nunito_600SemiBold',
+    fontFamily: 'HankenGrotesk_600SemiBold',
     fontSize: 15,
   },
   backLink: {
     alignSelf: 'flex-start',
   },
   backLinkText: {
-    fontFamily: 'Nunito_400Regular',
+    fontFamily: 'HankenGrotesk_400Regular',
     fontSize: 13,
   },
   laterBtn: {
@@ -434,7 +434,7 @@ const s = StyleSheet.create({
     marginTop: 4,
   },
   laterText: {
-    fontFamily: 'Nunito_400Regular',
+    fontFamily: 'HankenGrotesk_400Regular',
     fontSize: 13,
   },
 });

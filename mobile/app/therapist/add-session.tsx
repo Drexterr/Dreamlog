@@ -244,8 +244,8 @@ export default function AddSessionScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   scroll: { padding: 20, paddingBottom: 48 },
-  title: { fontSize: 28, fontFamily: 'CormorantGaramond_500Medium', marginBottom: 22 },
-  label: { fontSize: 11, fontFamily: 'Nunito_700Bold', letterSpacing: 1.5, marginBottom: 10 },
+  title: { fontSize: 28, fontFamily: 'Erode_500Medium', marginBottom: 22 },
+  label: { fontSize: 11, fontFamily: 'HankenGrotesk_700Bold', letterSpacing: 1.5, marginBottom: 10 },
   clientRow: { gap: 8, paddingBottom: 20 },
   clientChip: {
     borderRadius: 999,
@@ -253,7 +253,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 10,
   },
-  clientChipText: { fontSize: 13.5, fontFamily: 'Nunito_600SemiBold' },
+  clientChipText: { fontSize: 13.5, fontFamily: 'HankenGrotesk_600SemiBold' },
   modeTabs: {
     flexDirection: 'row',
     borderRadius: 14,
@@ -262,7 +262,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   modeTab: { flex: 1, paddingVertical: 10, alignItems: 'center', borderRadius: 10 },
-  modeTabText: { fontSize: 13.5, fontFamily: 'Nunito_600SemiBold' },
+  modeTabText: { fontSize: 13.5, fontFamily: 'HankenGrotesk_600SemiBold' },
   photoBtns: { flexDirection: 'row', gap: 10 },
   photoBtn: {
     flex: 1,
@@ -272,7 +272,7 @@ const styles = StyleSheet.create({
     paddingVertical: 26,
   },
   photoBtnEmoji: { fontSize: 28, marginBottom: 6 },
-  photoBtnText: { fontSize: 14, fontFamily: 'Nunito_600SemiBold' },
+  photoBtnText: { fontSize: 14, fontFamily: 'HankenGrotesk_600SemiBold' },
   previewWrap: { borderRadius: 16, borderWidth: 1, overflow: 'hidden' },
   preview: { width: '100%', height: 260 },
   removePhoto: {
@@ -284,18 +284,18 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 6,
   },
-  removePhotoText: { color: '#fff', fontSize: 12, fontFamily: 'Nunito_600SemiBold' },
-  hint: { fontSize: 12, fontFamily: 'Nunito_400Regular', lineHeight: 17, marginTop: 10 },
+  removePhotoText: { color: '#fff', fontSize: 12, fontFamily: 'HankenGrotesk_600SemiBold' },
+  hint: { fontSize: 12, fontFamily: 'HankenGrotesk_400Regular', lineHeight: 17, marginTop: 10 },
   notesInput: {
     borderRadius: 16,
     borderWidth: 1,
     padding: 16,
     minHeight: 180,
     fontSize: 14.5,
-    fontFamily: 'Nunito_400Regular',
+    fontFamily: 'HankenGrotesk_400Regular',
     lineHeight: 21,
   },
-  errorText: { fontSize: 13, color: '#ef4444', fontFamily: 'Nunito_400Regular', marginTop: 14 },
+  errorText: { fontSize: 13, color: '#ef4444', fontFamily: 'HankenGrotesk_400Regular', marginTop: 14 },
   button: {
     borderRadius: 14,
     paddingVertical: 16,
@@ -307,5 +307,5 @@ const styles = StyleSheet.create({
     elevation: 6,
   },
   buttonDisabled: { opacity: 0.6 },
-  buttonText: { color: '#fff', fontSize: 16, fontFamily: 'Nunito_600SemiBold', letterSpacing: 0.5 },
+  buttonText: { color: '#fff', fontSize: 16, fontFamily: 'HankenGrotesk_600SemiBold', letterSpacing: 0.5 },
 });

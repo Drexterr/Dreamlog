@@ -1,0 +1,573 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Ode — The Breath Line</title>
+<style>
+  :root{
+    --bg:#18150f; --bg2:#1f1c14; --card:#26221a; --card-hi:#2d2820;
+    --ink:#e8ddd0; --ink-70:rgba(232,221,208,.68); --ink-45:rgba(232,221,208,.42); --ink-15:rgba(232,221,208,.14); --ink-08:rgba(232,221,208,.08);
+    --amber:#c8955a; --amber-hi:#d4a870; --amber-deep:#a06f35; --glow:rgba(200,149,90,.22);
+    --light:#f2ead9; --paper:#faf6ee; --light-ink:#2a2318;
+    --no:#b5654f;
+    --serif:'Cormorant Garamond',Georgia,'Times New Roman',serif;
+    --sans:'Nunito','Segoe UI',system-ui,sans-serif;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{background:var(--bg);color:var(--ink);font-family:var(--sans);line-height:1.6;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:960px;margin:0 auto;padding:72px 24px 120px}
+
+  .eyebrow{font-size:12px;letter-spacing:.22em;text-transform:uppercase;color:var(--amber);margin:0 0 14px}
+  h1{font-family:var(--serif);font-weight:300;font-size:clamp(38px,6vw,58px);line-height:1.06;margin:0 0 18px;text-wrap:balance}
+  .lede{color:var(--ink-70);max-width:62ch;margin:0}
+  .note{font-size:13px;color:var(--ink-45);max-width:62ch;margin:14px 0 0}
+
+  section{margin-top:84px;border-top:1px solid var(--ink-15);padding-top:44px}
+  .s-label{font-size:12px;letter-spacing:.2em;text-transform:uppercase;color:var(--amber);margin:0 0 8px}
+  h2{font-family:var(--serif);font-weight:400;font-size:30px;margin:0 0 10px;text-wrap:balance}
+  .s-why{color:var(--ink-70);max-width:66ch;margin:0 0 28px}
+  .s-why em{color:var(--ink);font-style:normal;border-bottom:1px dotted var(--ink-45)}
+
+  .stage{background:var(--bg2);border:1px solid var(--ink-15);border-radius:14px;padding:44px 24px;display:flex;justify-content:center;align-items:center;min-height:200px;position:relative;overflow:hidden}
+  .cap{font-size:12px;color:var(--ink-45);margin-top:10px}
+  .pick{position:absolute;top:14px;right:14px;font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--bg);background:var(--amber);padding:4px 10px;border-radius:99px;font-weight:700}
+
+  .vgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px}
+  .vcard{background:var(--bg2);border:1px solid var(--ink-15);border-radius:14px;padding:24px 20px 18px;position:relative}
+  .vcard .art{display:flex;justify-content:center;align-items:center;min-height:110px;margin-bottom:14px}
+  .vcard h3{font-family:var(--serif);font-weight:400;font-size:20px;margin:0 0 6px}
+  .vcard p{font-size:13.5px;color:var(--ink-70);margin:0}
+  .vcard.chosen{border-color:var(--amber);box-shadow:0 0 0 1px var(--amber),0 12px 40px -18px var(--glow)}
+
+  .row{display:flex;gap:16px;margin-top:16px;flex-wrap:wrap;align-items:stretch}
+  .chip{border-radius:12px;display:flex;align-items:center;justify-content:center;border:1px solid var(--ink-15)}
+  .chip.dark{background:var(--bg2)}
+  .chip.light{background:var(--light)}
+  .chip.wide{flex:1;min-width:220px;height:110px}
+  .chip.tall{flex:1;min-width:180px;height:180px;flex-direction:column;gap:14px}
+
+  /* app icon shapes */
+  .appicon{display:flex;align-items:center;justify-content:center;background:linear-gradient(160deg,#221e15,#18150f);border:1px solid var(--ink-15);flex:none}
+  .appicon.on-light{background:linear-gradient(160deg,#fbf5e9,#efe5d2);border-color:rgba(42,35,24,.15)}
+  .appicon.amberfill{background:linear-gradient(160deg,#d4a870,#b9834a);border-color:rgba(24,21,15,.2)}
+  .sz180{width:120px;height:120px;border-radius:27px}
+  .sz120{width:80px;height:80px;border-radius:18px}
+  .sz60{width:60px;height:60px;border-radius:14px}
+  .sz48{width:48px;height:48px;border-radius:11px}
+  .sz29{width:29px;height:29px;border-radius:7px}
+  .round{border-radius:50% !important}
+  .iconrow{display:flex;gap:20px;align-items:flex-end;flex-wrap:wrap}
+  .iconstack{display:flex;flex-direction:column;align-items:center;gap:8px}
+  .iconstack span{font-size:11px;color:var(--ink-45);letter-spacing:.06em}
+
+  /* home screen mock */
+  .homescreen{background:radial-gradient(120% 90% at 30% 0%,#2b2317 0%,#161310 55%,#100e0a 100%);border:1px solid var(--ink-15);border-radius:22px;padding:34px 26px 26px;max-width:420px;margin:0 auto}
+  .hs-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:22px 10px}
+  .hs-item{display:flex;flex-direction:column;align-items:center;gap:7px}
+  .hs-item span{font-size:10.5px;color:rgba(232,221,208,.75)}
+  .hs-icon{width:56px;height:56px;border-radius:14px;flex:none;display:flex;align-items:center;justify-content:center}
+
+  /* phone frame + splash */
+  .phones{display:flex;gap:24px;flex-wrap:wrap;justify-content:center;align-items:flex-start}
+  .phone{width:250px;height:520px;background:var(--bg);border:1.5px solid var(--ink-15);border-radius:38px;padding:10px;box-shadow:0 30px 60px -30px rgba(0,0,0,.8);flex:none}
+  .screen{width:100%;height:100%;border-radius:30px;background:linear-gradient(175deg,#1d1912 0%,#18150f 60%);overflow:hidden;position:relative;display:flex;flex-direction:column}
+  .notch{position:absolute;top:10px;left:50%;transform:translateX(-50%);width:76px;height:20px;background:#0c0a07;border-radius:12px;z-index:3}
+  .splash-center{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:22px}
+  .splash-word{font-family:var(--serif);font-weight:300;font-size:52px;color:var(--ink);letter-spacing:.01em;line-height:1}
+  .phone-label{text-align:center;font-size:12px;color:var(--ink-45);margin-top:12px}
+
+  /* splash animation */
+  .anim-line{stroke-dasharray:100;stroke-dashoffset:100}
+  .anim-dot,.anim-word{opacity:0}
+  @media (prefers-reduced-motion: no-preference){
+    .playing .anim-line{animation:draw 2.1s cubic-bezier(.4,0,.25,1) forwards}
+    .playing .anim-dot{animation:settle .6s ease-out 1.9s forwards}
+    .playing .anim-word{animation:riseIn .9s ease-out 2.3s forwards}
+  }
+  @media (prefers-reduced-motion: reduce){
+    .anim-line{stroke-dashoffset:0}
+    .anim-dot,.anim-word{opacity:1}
+  }
+  @keyframes draw{to{stroke-dashoffset:0}}
+  @keyframes settle{0%{opacity:0;transform:scale(.4)}70%{opacity:1;transform:scale(1.25)}100%{opacity:1;transform:scale(1)}}
+  @keyframes riseIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+  .replay{margin:18px auto 0;display:block;background:none;border:1px solid var(--ink-15);color:var(--ink-70);font-family:var(--sans);font-size:13px;padding:8px 22px;border-radius:99px;cursor:pointer;letter-spacing:.04em}
+  .replay:hover,.replay:focus-visible{border-color:var(--amber);color:var(--amber);outline:none}
+
+  /* processing shimmer */
+  @media (prefers-reduced-motion: no-preference){
+    .listening{stroke-dasharray:26 74;animation:travel 2.6s linear infinite}
+  }
+  @keyframes travel{to{stroke-dashoffset:-100}}
+
+  /* surfaces grid */
+  .surfaces{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px}
+  .surface{background:var(--bg2);border:1px solid var(--ink-15);border-radius:14px;overflow:hidden;display:flex;flex-direction:column}
+  .surface .art{flex:1;display:flex;align-items:center;justify-content:center;padding:26px 20px;min-height:150px}
+  .surface .meta{border-top:1px solid var(--ink-15);padding:12px 18px 14px}
+  .surface .meta h3{font-size:14px;font-weight:700;margin:0 0 2px;color:var(--ink)}
+  .surface .meta p{font-size:12.5px;color:var(--ink-45);margin:0}
+  .surface .art.on-light{background:var(--light)}
+  .surface .art.on-paper{background:var(--paper)}
+
+  /* status bar mock */
+  .statusbar{width:100%;max-width:340px;background:#0e0c09;border-radius:12px;padding:9px 16px;display:flex;align-items:center;gap:10px;border:1px solid var(--ink-15)}
+  .statusbar .time{font-size:12px;font-weight:700;color:#e8ddd0;margin-right:auto}
+  .notif-card{width:100%;max-width:340px;background:rgba(45,40,32,.9);border:1px solid var(--ink-15);border-radius:16px;padding:12px 14px;display:flex;gap:12px;align-items:flex-start}
+  .notif-card .txt b{display:block;font-size:13px;color:var(--ink)}
+  .notif-card .txt small{font-size:12px;color:var(--ink-70);line-height:1.45;display:block}
+
+  /* browser tab mock */
+  .browser{width:100%;max-width:360px;border-radius:12px 12px 0 0;overflow:hidden;border:1px solid rgba(42,35,24,.18);border-bottom:none}
+  .tabs{background:#e3d9c4;display:flex;align-items:flex-end;padding:8px 10px 0;gap:6px}
+  .tab{background:var(--paper);border-radius:9px 9px 0 0;padding:7px 14px;display:flex;align-items:center;gap:8px;font-size:12px;color:var(--light-ink);max-width:210px;white-space:nowrap;overflow:hidden}
+  .tab.inactive{background:transparent;color:rgba(42,35,24,.5)}
+  .urlbar{background:var(--paper);padding:8px 12px}
+  .urlbar i{display:block;background:#eee4d0;border-radius:99px;font-style:normal;font-size:11.5px;color:rgba(42,35,24,.6);padding:5px 14px}
+
+  /* store banner */
+  .banner{width:100%;aspect-ratio:1024/500;max-width:640px;background:radial-gradient(130% 120% at 78% 110%,#31281a 0%,#1d1913 45%,#141109 100%);border-radius:16px;border:1px solid var(--ink-15);display:flex;flex-direction:column;justify-content:center;padding:0 7%;gap:4%;overflow:hidden}
+  .banner .bword{font-family:var(--serif);font-weight:300;color:var(--ink);font-size:clamp(34px,7vw,58px);line-height:1}
+  .banner .btag{color:var(--ink-70);font-size:clamp(12px,2.2vw,16px);margin:0}
+
+  /* insight card */
+  .insight{width:250px;aspect-ratio:1/1;background:linear-gradient(170deg,#241f16,#18150f);border:1px solid var(--ink-15);border-radius:20px;padding:20px;display:flex;flex-direction:column}
+  .insight .iw{font-size:10.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--amber)}
+  .insight .ih{font-family:var(--serif);font-weight:400;font-size:21px;margin:6px 0 0;line-height:1.25}
+  .insight .arc{flex:1;display:flex;align-items:flex-end}
+  .insight .foot{display:flex;align-items:center;justify-content:space-between;border-top:1px solid var(--ink-15);padding-top:12px;margin-top:12px}
+  .insight .foot small{font-size:10.5px;color:var(--ink-45)}
+
+  /* PDF header */
+  .pdf{width:100%;max-width:340px;background:var(--paper);border-radius:6px;box-shadow:0 14px 34px -18px rgba(0,0,0,.65);padding:26px 26px 20px;color:var(--light-ink)}
+  .pdf .p-line{display:flex;align-items:center;gap:12px;border-bottom:1px solid rgba(42,35,24,.14);padding-bottom:16px;margin-bottom:14px}
+  .pdf .p-word{font-family:var(--serif);font-weight:400;font-size:26px;line-height:1}
+  .pdf h4{font-family:var(--serif);font-weight:400;font-size:17px;margin:0 0 2px}
+  .pdf p{font-size:11.5px;color:rgba(42,35,24,.62);margin:0;line-height:1.5}
+
+  /* portal header */
+  .portal{width:100%;max-width:360px;background:var(--light);border-radius:12px;overflow:hidden;border:1px solid rgba(42,35,24,.14)}
+  .portal .p-nav{display:flex;align-items:center;gap:10px;padding:13px 18px;border-bottom:1px solid rgba(42,35,24,.12)}
+  .portal .p-nav .pw{font-family:var(--serif);font-size:22px;color:var(--light-ink);line-height:1}
+  .portal .p-nav .role{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--amber-deep);border:1px solid rgba(160,111,53,.4);padding:3px 8px;border-radius:99px;margin-left:auto}
+  .portal .p-body{padding:14px 18px 18px;font-size:12px;color:rgba(42,35,24,.55)}
+
+  /* scale ladder */
+  .ladder{display:flex;align-items:flex-end;gap:36px;flex-wrap:wrap;justify-content:center}
+  .ladder .step{display:flex;flex-direction:column;align-items:center;gap:10px}
+  .ladder .step span{font-size:11px;color:var(--ink-45)}
+
+  /* clear space */
+  .clearbox{position:relative;padding:34px 40px;border:1.5px dashed rgba(200,149,90,.5);border-radius:8px}
+  .clearbox::after{content:"x";position:absolute;top:6px;right:12px;font-family:var(--serif);font-style:italic;color:var(--amber);font-size:15px}
+
+  /* don'ts */
+  .dgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px}
+  .dcard{background:var(--bg2);border:1px solid var(--ink-15);border-radius:12px;padding:18px 16px 14px;text-align:center}
+  .dcard .art{min-height:70px;display:flex;align-items:center;justify-content:center;margin-bottom:10px}
+  .dcard p{font-size:12.5px;color:var(--ink-70);margin:0}
+  .dcard p b{color:var(--no);font-weight:800;letter-spacing:.06em}
+
+  /* spec */
+  .spec{background:var(--bg2);border:1px solid var(--ink-15);border-radius:14px;padding:22px 24px;overflow-x:auto}
+  .spec pre{margin:0;font:12px/1.7 ui-monospace,'Cascadia Code',Consolas,monospace;color:var(--ink-70);white-space:pre}
+  .spec pre .k{color:var(--amber-hi)}
+  table.tok{width:100%;border-collapse:collapse;font-size:13.5px;margin-top:8px}
+  table.tok th{text-align:left;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-45);font-weight:700;padding:10px 14px 8px;border-bottom:1px solid var(--ink-15)}
+  table.tok td{padding:10px 14px;border-bottom:1px solid var(--ink-08);color:var(--ink-70);vertical-align:middle}
+  table.tok td:first-child{color:var(--ink);white-space:nowrap}
+  .swi{display:inline-block;width:30px;height:18px;border-radius:4px;border:1px solid var(--ink-15);vertical-align:-4px;margin-right:8px}
+  .mono{font-family:ui-monospace,Consolas,monospace;font-size:12.5px}
+
+  .verdict{margin-top:84px;border-top:1px solid var(--ink-15);padding-top:44px}
+  .verdict p{color:var(--ink-70);max-width:66ch}
+  .verdict strong{color:var(--amber)}
+  @media (max-width:560px){ .stage{padding:30px 12px} .phone{width:220px;height:460px} }
+</style>
+</head>
+<body>
+
+<!-- ————— shared mark geometry ————— -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <!-- The mark: decaying tremor, small final breath, settled dot -->
+    <path id="bl-line" d="M 8 32 C 18 10, 28 54, 38 32 C 47 15, 56 49, 65 32 C 73 20, 81 44, 89 32 C 96 25, 103 39, 110 32 C 117 28.5, 124 35.5, 131 32 C 141 30, 153 34, 164 32" fill="none" stroke-linecap="round"/>
+    <circle id="bl-dot" cx="179" cy="32" r="5"/>
+    <g id="bl-mark">
+      <use href="#bl-line" stroke-width="5"/>
+      <use href="#bl-dot"/>
+    </g>
+    <!-- Variant A: round 1 original — ends flat -->
+    <path id="bl-flat" d="M 8 32 C 18 10, 28 54, 38 32 C 47 15, 56 49, 65 32 C 73 20, 81 44, 89 32 C 96 25, 103 39, 110 32 C 117 28.5, 124 35.5, 131 32 L 184 32" fill="none" stroke-linecap="round" stroke-width="5"/>
+    <!-- Variant B: rising exhale -->
+    <path id="bl-rise" d="M 8 32 C 18 10, 28 54, 38 32 C 47 15, 56 49, 65 32 C 73 20, 81 44, 89 32 C 96 25, 103 39, 110 32 C 117 28.5, 124 35.5, 131 32 C 142 31, 153 31, 162 29 C 171 27, 179 25.5, 186 24" fill="none" stroke-linecap="round" stroke-width="5"/>
+    <!-- Variant D: rounder, slower breath -->
+    <g id="bl-soft">
+      <path d="M 8 32 C 22 12, 36 52, 50 32 C 62 16, 74 48, 86 32 C 96 22, 106 42, 116 32 C 125 26, 134 38, 143 32 C 152 28.5, 160 34, 167 32" fill="none" stroke-linecap="round" stroke-width="5"/>
+      <circle cx="181" cy="32" r="5"/>
+    </g>
+    <!-- Icon crop: two waves + settle + dot, heavier stroke, fills a square -->
+    <g id="bl-icon">
+      <path d="M 8 48 C 17 24, 27 72, 37 48 C 45 30, 54 64, 62 48 C 68 39, 74 55, 80 48" fill="none" stroke-linecap="round" stroke-width="7"/>
+      <circle cx="89" cy="48" r="6"/>
+    </g>
+  </defs>
+</svg>
+
+<div class="wrap">
+  <p class="eyebrow">Ode · Identity, Round 2</p>
+  <h1>The Breath Line</h1>
+  <p class="lede">One continuous stroke that trembles like speech and settles into a single point of rest. It's the emotional arc of a journaling session — you speak, it steadies, you land — drawn in one gesture. This page refines the mark, then puts it everywhere it will actually live.</p>
+  <p class="note">Wordmarks are shown in a stand-in serif; final artwork is set in Cormorant Garamond Light, the app's heading face. Palette is the app's own: espresso, amber, cream.</p>
+
+  <div class="stage playing" style="margin-top:44px;min-height:240px" id="hero-stage">
+    <svg width="420" height="140" viewBox="0 0 260 160" role="img" aria-label="Ode wordmark with the Breath Line settling into a full stop">
+      <text x="52" y="86" font-family="Georgia,serif" font-weight="400" font-size="84" fill="#e8ddd0" class="anim-word">ode</text>
+      <g transform="translate(36,84) scale(0.95)" stroke="#c8955a" fill="#d4a870">
+        <use href="#bl-line" stroke-width="5" pathLength="100" class="anim-line"/>
+        <use href="#bl-dot" class="anim-dot" style="transform-origin:179px 32px"/>
+      </g>
+    </svg>
+  </div>
+  <button class="replay" type="button" data-replay="hero-stage">Replay</button>
+
+  <!-- ————— 1 · fixing the tail ————— -->
+  <section>
+    <p class="s-label">The tail</p>
+    <h2>Ending the line without flatlining</h2>
+    <p class="s-why">Round 1 ended dead flat — and in a mental-health app, a trembling line that goes flat sits one association away from <em>flatlining</em>. Three revisions, each keeping the decay but changing where it lands. The dot version wins: the tremor resolves into a point of rest, and in the lockup that dot doubles as a full stop — <em>ode, period. Said. Settled.</em></p>
+    <div class="vgrid">
+      <div class="vcard">
+        <div class="art"><svg width="220" height="76" viewBox="0 0 192 64" stroke="#c8955a"><use href="#bl-flat"/></svg></div>
+        <h3>A · Round 1 — flat tail</h3>
+        <p>The reference. Calm, but the flatline reading is real once you've seen it. Retired.</p>
+      </div>
+      <div class="vcard">
+        <div class="art"><svg width="220" height="76" viewBox="0 0 192 64" stroke="#c8955a"><use href="#bl-rise"/></svg></div>
+        <h3>B · Rising exhale</h3>
+        <p>Ends on a gentle lift. Hopeful, but an unresolved line reads "still climbing" — the session never lands.</p>
+      </div>
+      <div class="vcard chosen">
+        <span class="pick" style="position:absolute;top:12px;right:12px">Chosen</span>
+        <div class="art"><svg width="220" height="76" viewBox="0 0 192 64" stroke="#c8955a" fill="#d4a870"><use href="#bl-mark"/></svg></div>
+        <h3>C · The settled dot</h3>
+        <p>One last small breath, then a point of rest. Solves the flatline, gives the icon a focal anchor, and punctuates the wordmark like a full stop.</p>
+      </div>
+      <div class="vcard">
+        <div class="art"><svg width="220" height="76" viewBox="0 0 192 64" stroke="#c8955a" fill="#d4a870"><use href="#bl-soft"/></svg></div>
+        <h3>D · Softer waves</h3>
+        <p>Rounder, slower tremor — furthest from an ECG trace. Keep this curvature in mind if C ever reads too clinical at final drawing.</p>
+      </div>
+    </div>
+    <p class="cap">All variants: single stroke, round caps, decaying amplitude left to right. The dot is 2× the stroke width.</p>
+  </section>
+
+  <!-- ————— 2 · lockups ————— -->
+  <section>
+    <p class="s-label">Lockups</p>
+    <h2>Three ways the mark and wordmark sit together</h2>
+    <p class="s-why">Primary lockup runs the line beneath the word, settling into the full stop just past it — the line literally underlines what was spoken. Stacked for square spaces, wordmark alone where the line has already appeared on screen.</p>
+    <div class="row">
+      <div class="chip dark wide" style="height:150px">
+        <svg width="230" height="120" viewBox="0 0 260 150"><text x="52" y="82" font-family="Georgia,serif" font-size="80" fill="#e8ddd0">ode</text><g transform="translate(38,80) scale(0.92)" stroke="#c8955a" fill="#d4a870"><use href="#bl-mark"/></g></svg>
+      </div>
+      <div class="chip dark tall" style="height:190px">
+        <svg width="150" height="52" viewBox="0 0 192 64" stroke="#c8955a" fill="#d4a870"><use href="#bl-mark"/></svg>
+        <svg width="120" height="58" viewBox="0 0 130 66"><text x="10" y="52" font-family="Georgia,serif" font-size="58" fill="#e8ddd0">ode</text></svg>
+      </div>
+      <div class="chip light wide" style="height:150px">
+        <svg width="230" height="120" viewBox="0 0 260 150"><text x="52" y="82" font-family="Georgia,serif" font-size="80" fill="#2a2318">ode</text><g transform="translate(38,80) scale(0.92)" stroke="#a06f35" fill="#a06f35"><use href="#bl-mark"/></g></svg>
+      </div>
+    </div>
+    <p class="cap">Primary (horizontal) · stacked · light ground. On light grounds the amber deepens to <span class="mono">#a06f35</span> for contrast.</p>
+  </section>
+
+  <!-- ————— 3 · app icon ————— -->
+  <section>
+    <p class="s-label">App icon</p>
+    <h2>Cropped, thickened, given a place to land</h2>
+    <p class="s-why">The full mark is too wide and too thin for an icon grid. The icon crops to the two most expressive waves plus the settle-and-dot, at a heavier stroke, so it fills the frame and holds its own next to filled icons. Espresso ground is the default; the amber-fill alternate exists if the dark icon ever disappears against a dark wallpaper.</p>
+    <div class="iconrow">
+      <div class="iconstack">
+        <div class="appicon sz180"><svg width="86" height="86" viewBox="0 0 96 96" stroke="#c8955a" fill="#d4a870"><use href="#bl-icon"/></svg></div>
+        <span>iOS 180 px</span>
+      </div>
+      <div class="iconstack">
+        <div class="appicon sz120"><svg width="58" height="58" viewBox="0 0 96 96" stroke="#c8955a" fill="#d4a870"><use href="#bl-icon"/></svg></div>
+        <span>120 px</span>
+      </div>
+      <div class="iconstack">
+        <div class="appicon sz60"><svg width="44" height="44" viewBox="0 0 96 96" stroke="#c8955a" fill="#d4a870"><use href="#bl-icon"/></svg></div>
+        <span>60 px</span>
+      </div>
+      <div class="iconstack">
+        <div class="appicon sz29"><svg width="22" height="22" viewBox="0 0 96 96" stroke="#c8955a" fill="#d4a870" stroke-width="9"><use href="#bl-icon"/></svg></div>
+        <span>29 px</span>
+      </div>
+      <div class="iconstack">
+        <div class="appicon sz120 round"><svg width="52" height="52" viewBox="0 0 96 96" stroke="#c8955a" fill="#d4a870"><use href="#bl-icon"/></svg></div>
+        <span>Android adaptive</span>
+      </div>
+      <div class="iconstack">
+        <div class="appicon amberfill sz120"><svg width="58" height="58" viewBox="0 0 96 96" stroke="#241d12" fill="#241d12"><use href="#bl-icon"/></svg></div>
+        <span>Amber alternate</span>
+      </div>
+      <div class="iconstack">
+        <div class="appicon on-light sz120"><svg width="58" height="58" viewBox="0 0 96 96" stroke="#a06f35" fill="#a06f35"><use href="#bl-icon"/></svg></div>
+        <span>Light alternate</span>
+      </div>
+    </div>
+
+    <div class="homescreen" style="margin-top:36px">
+      <div class="hs-grid">
+        <div class="hs-item"><div class="hs-icon" style="background:linear-gradient(160deg,#3a3f4a,#22252d)"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#cfd6e4" stroke-width="1.8"><rect x="3" y="6" width="18" height="13" rx="3"/><circle cx="12" cy="12.5" r="3.6"/><circle cx="17.4" cy="9" r=".9" fill="#cfd6e4" stroke="none"/></svg></div><span>Camera</span></div>
+        <div class="hs-item"><div class="hs-icon" style="background:linear-gradient(160deg,#4c9e63,#2f7a45)"><svg width="26" height="26" viewBox="0 0 24 24" fill="#eaf6ec"><path d="M12 4c-4.7 0-8.5 3-8.5 6.8 0 2.2 1.3 4.2 3.3 5.4-.1.9-.6 2.1-1.5 2.9 1.7-.1 3.2-.8 4.2-1.5.8.2 1.6.3 2.5.3 4.7 0 8.5-3 8.5-6.9S16.7 4 12 4z"/></svg></div><span>Messages</span></div>
+        <div class="hs-item"><div class="hs-icon" style="background:linear-gradient(160deg,#5a7fd6,#3a58a8)"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#e6ecfa" stroke-width="1.8"><circle cx="12" cy="12" r="8.2"/><path d="M3.8 12h16.4M12 3.8c2.6 2.3 4 5 4 8.2s-1.4 5.9-4 8.2c-2.6-2.3-4-5-4-8.2s1.4-5.9 4-8.2z"/></svg></div><span>Browser</span></div>
+        <div class="hs-item"><div class="hs-icon" style="background:linear-gradient(160deg,#d66a5a,#a83f33)"><svg width="26" height="26" viewBox="0 0 24 24" fill="#fbeae7"><path d="M12 20.5s-7.5-4.6-7.5-9.8C4.5 7.6 6.9 5.5 9.5 5.5c1.5 0 2.5.8 2.5.8s1-.8 2.5-.8c2.6 0 5 2.1 5 5.2 0 5.2-7.5 9.8-7.5 9.8z"/></svg></div><span>Health</span></div>
+        <div class="hs-item"><div class="hs-icon" style="background:linear-gradient(160deg,#221e15,#131009);border:1px solid rgba(232,221,208,.16)"><svg width="34" height="34" viewBox="0 0 96 96" stroke="#c8955a" fill="#d4a870"><use href="#bl-icon"/></svg></div><span>Ode</span></div>
+        <div class="hs-item"><div class="hs-icon" style="background:linear-gradient(160deg,#e0dbd2,#b8b2a6)"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#4c463c" stroke-width="1.8"><circle cx="12" cy="12" r="8.2"/><path d="M12 7.5V12l3 2.2"/></svg></div><span>Clock</span></div>
+        <div class="hs-item"><div class="hs-icon" style="background:linear-gradient(160deg,#8a6fd0,#5f45a5)"><svg width="26" height="26" viewBox="0 0 24 24" fill="#f0eafc"><path d="M9 17.5a2.7 2.7 0 1 1-2-2.6V7l11-2.5v9.3a2.7 2.7 0 1 1-2-2.6V8L9 9.8v7.7z"/></svg></div><span>Music</span></div>
+        <div class="hs-item"><div class="hs-icon" style="background:linear-gradient(160deg,#3d434d,#272b33)"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#d6dbe4" stroke-width="1.8"><circle cx="12" cy="12" r="3.2"/><path d="M12 4.2v2M12 17.8v2M4.2 12h2M17.8 12h2M6.5 6.5l1.4 1.4M16.1 16.1l1.4 1.4M17.5 6.5l-1.4 1.4M7.9 16.1l-1.4 1.4"/></svg></div><span>Settings</span></div>
+      </div>
+    </div>
+    <p class="cap" style="text-align:center">In context: the heavier stroke and the dot give it enough mass to sit beside filled icons without shouting.</p>
+  </section>
+
+  <!-- ————— 4 · splash + motion ————— -->
+  <section>
+    <p class="s-label">Motion</p>
+    <h2>The line is the loading state</h2>
+    <p class="s-why">Cold start: the line draws itself left to right — trembling, steadying — the dot lands, and <em>ode</em> fades up. About three seconds, which is what a cold start costs anyway; the logo absorbs the wait. The same stroke, looping, becomes the processing screen's "listening" state — so the brand gesture and the product's working state are one drawing.</p>
+    <div class="phones">
+      <div>
+        <div class="phone">
+          <div class="screen playing" id="splash-screen">
+            <div class="notch"></div>
+            <div class="splash-center" style="gap:10px">
+              <div class="splash-word anim-word">ode</div>
+              <svg width="170" height="58" viewBox="0 0 192 64" aria-label="Breath line drawing itself">
+                <g stroke="#c8955a" fill="#d4a870">
+                  <use href="#bl-line" stroke-width="5" pathLength="100" class="anim-line"/>
+                  <use href="#bl-dot" class="anim-dot" style="transform-origin:179px 32px"/>
+                </g>
+              </svg>
+            </div>
+          </div>
+        </div>
+        <p class="phone-label">Splash — line draws, dot settles, "ode" above</p>
+      </div>
+      <div>
+        <div class="phone">
+          <div class="screen">
+            <div class="notch"></div>
+            <div class="splash-center" style="gap:26px">
+              <svg width="150" height="50" viewBox="0 0 192 64" aria-label="Breath line looping while processing">
+                <use href="#bl-line" stroke="#c8955a" stroke-width="5" pathLength="100" class="listening"/>
+              </svg>
+              <div style="text-align:center">
+                <div style="font-family:var(--serif);font-size:22px;color:var(--ink)">Listening back…</div>
+                <div style="font-size:12.5px;color:var(--ink-45);margin-top:6px">Your reflection is on its way</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <p class="phone-label">Processing — the same stroke, travelling</p>
+      </div>
+    </div>
+    <button class="replay" type="button" data-replay="splash-screen">Replay splash</button>
+  </section>
+
+  <!-- ————— 5 · every surface ————— -->
+  <section>
+    <p class="s-label">Applications</p>
+    <h2>Everywhere the mark shows up</h2>
+    <p class="s-why">One drawing, six grounds. Dark surfaces get amber on espresso; the therapist portal, PDF exports, and store pages get the deepened amber on cream. Monochrome contexts (Android status bar) use the icon crop as a pure silhouette.</p>
+    <div class="surfaces">
+
+      <div class="surface">
+        <div class="art" style="flex-direction:column;gap:10px">
+          <div class="statusbar">
+            <span class="time">21:04</span>
+            <svg width="17" height="17" viewBox="0 0 96 96" stroke="#e8ddd0" fill="#e8ddd0"><use href="#bl-icon"/></svg>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#e8ddd0" stroke-width="2"><path d="M2 16.5c5.5-6 14.5-6 20 0" opacity=".4"/><path d="M5.5 19c3.6-3.8 9.4-3.8 13 0" opacity=".7"/><circle cx="12" cy="21" r="1.4" fill="#e8ddd0" stroke="none"/></svg>
+            <svg width="20" height="12" viewBox="0 0 26 14" fill="none" stroke="#e8ddd0"><rect x="1" y="1.5" width="20" height="11" rx="3"/><rect x="3" y="3.5" width="13" height="7" rx="1.6" fill="#e8ddd0" stroke="none"/><path d="M23 5v4" stroke-width="2" stroke-linecap="round"/></svg>
+          </div>
+          <div class="notif-card">
+            <div class="appicon sz48" style="flex:none"><svg width="30" height="30" viewBox="0 0 96 96" stroke="#c8955a" fill="#d4a870"><use href="#bl-icon"/></svg></div>
+            <div class="txt"><b>Ode</b><small>Yesterday you said the presentation felt lighter once you started. Worth a word tonight?</small></div>
+          </div>
+        </div>
+        <div class="meta"><h3>Push notification</h3><p>Status-bar glyph is the icon crop as a monochrome silhouette (Android requirement).</p></div>
+      </div>
+
+      <div class="surface">
+        <div class="art on-paper" style="flex-direction:column;align-items:stretch;gap:0;padding-bottom:0">
+          <div class="browser">
+            <div class="tabs">
+              <div class="tab"><svg width="14" height="14" viewBox="0 0 96 96" stroke="#a06f35" fill="#a06f35"><use href="#bl-icon"/></svg> Ode for Therapists</div>
+              <div class="tab inactive">Calendar</div>
+            </div>
+            <div class="urlbar"><i>portal.ode.app/dashboard</i></div>
+          </div>
+        </div>
+        <div class="meta"><h3>Favicon · therapist portal</h3><p>Icon crop at 16 px, deep amber on cream. The dot keeps it legible at tab size.</p></div>
+      </div>
+
+      <div class="surface" style="grid-column:1/-1">
+        <div class="art">
+          <div class="banner">
+            <svg width="34%" viewBox="0 0 192 64" stroke="#c8955a" fill="#d4a870" style="min-width:150px"><use href="#bl-mark"/></svg>
+            <div>
+              <div class="bword">ode</div>
+              <p class="btag">Say it out loud. A voice journal that listens back.</p>
+            </div>
+          </div>
+        </div>
+        <div class="meta"><h3>Store feature graphic</h3><p>Play Store 1024 × 500. The mark gets room; the tagline does the explaining.</p></div>
+      </div>
+
+      <div class="surface">
+        <div class="art">
+          <div class="insight">
+            <div>
+              <span class="iw">My week in Ode</span>
+              <div class="ih">Steadier than<br>last week</div>
+            </div>
+            <div class="arc">
+              <svg width="100%" height="64" viewBox="0 0 210 64" preserveAspectRatio="none" aria-label="Weekly mood arc">
+                <path d="M 6 46 C 32 54, 52 30, 78 34 C 104 38, 124 20, 150 24 C 172 27, 190 18, 204 14" fill="none" stroke="#c8955a" stroke-width="4" stroke-linecap="round"/>
+                <circle cx="204" cy="14" r="4.5" fill="#d4a870"/>
+              </svg>
+            </div>
+            <div class="foot">
+              <svg width="64" height="22" viewBox="0 0 192 64" stroke="#c8955a" fill="#d4a870"><use href="#bl-mark"/></svg>
+              <small>5-day streak</small>
+            </div>
+          </div>
+        </div>
+        <div class="meta"><h3>Shareable insight card</h3><p>The mood arc already speaks the mark's language — a line finding its level, endpoint dotted.</p></div>
+      </div>
+
+      <div class="surface">
+        <div class="art on-light">
+          <div class="portal">
+            <div class="p-nav">
+              <svg width="26" height="26" viewBox="0 0 96 96" stroke="#a06f35" fill="#a06f35"><use href="#bl-icon"/></svg>
+              <span class="pw">ode</span>
+              <span class="role">For therapists</span>
+            </div>
+            <div class="p-body">Dashboard · Clients · Session notes</div>
+          </div>
+        </div>
+        <div class="meta"><h3>Therapist portal header</h3><p>Icon + wordmark, deep amber on cream. The role tag keeps the two products distinct.</p></div>
+      </div>
+
+      <div class="surface">
+        <div class="art on-light">
+          <div class="pdf">
+            <div class="p-line">
+              <svg width="82" height="28" viewBox="0 0 192 64" stroke="#a06f35" fill="#a06f35"><use href="#bl-mark"/></svg>
+              <span class="p-word" style="margin-left:auto">ode</span>
+            </div>
+            <h4>Monthly Reflection — June 2026</h4>
+            <p>Prepared for Bharat · 14 entries · Average mood 68 · Top emotions: hopeful, calm, anxious</p>
+          </div>
+        </div>
+        <div class="meta"><h3>PDF export header</h3><p>Single-color deep amber on paper — survives grayscale printing intact.</p></div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ————— 6 · rules ————— -->
+  <section>
+    <p class="s-label">Usage</p>
+    <h2>Keeping the line honest</h2>
+    <p class="s-why">Clear space is <em>x</em> — the dot's diameter — on all sides. Below 20 px of height, drop the full mark and use the icon crop. The wordmark never appears without either the line or espresso-world styling around it.</p>
+
+    <div class="row">
+      <div class="chip dark wide" style="min-height:160px">
+        <div class="clearbox">
+          <svg width="180" height="60" viewBox="0 0 192 64" stroke="#c8955a" fill="#d4a870"><use href="#bl-mark"/></svg>
+        </div>
+      </div>
+      <div class="chip dark wide" style="min-height:160px">
+        <div class="ladder">
+          <div class="step"><svg width="120" height="40" viewBox="0 0 192 64" stroke="#c8955a" fill="#d4a870"><use href="#bl-mark"/></svg><span>40 px — full mark</span></div>
+          <div class="step"><svg width="72" height="24" viewBox="0 0 192 64" stroke="#c8955a" fill="#d4a870"><use href="#bl-mark"/></svg><span>24 px — minimum</span></div>
+          <div class="step"><svg width="20" height="20" viewBox="0 0 96 96" stroke="#c8955a" fill="#d4a870" stroke-width="8"><use href="#bl-icon"/></svg><span>below → icon crop</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="dgrid" style="margin-top:16px">
+      <div class="dcard">
+        <div class="art"><svg width="150" height="50" viewBox="0 0 192 64" stroke="#c8955a"><use href="#bl-flat"/></svg></div>
+        <p><b>Don't</b> flatten the tail — the dot is the resolution, not a decoration.</p>
+      </div>
+      <div class="dcard">
+        <div class="art"><svg width="150" height="50" viewBox="0 0 192 64"><path d="M 8 32 L 22 6 L 36 58 L 50 10 L 64 54 L 78 16 L 92 48 L 106 22 L 118 40 L 130 28 L 164 32" fill="none" stroke="#c8955a" stroke-width="5" stroke-linejoin="round"/><circle cx="179" cy="32" r="5" fill="#d4a870"/></svg></div>
+        <p><b>Don't</b> sharpen the waves — spikes read as a heart monitor, not a voice.</p>
+      </div>
+      <div class="dcard">
+        <div class="art"><svg width="150" height="50" viewBox="0 0 192 64" stroke="#c8955a" fill="#d4a870" style="transform:scaleY(1.9)"><use href="#bl-mark"/></svg></div>
+        <p><b>Don't</b> stretch or squash — the decay ratio is the drawing.</p>
+      </div>
+      <div class="dcard">
+        <div class="art"><svg width="150" height="50" viewBox="0 0 192 64"><defs><linearGradient id="bad" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#7c5cd6"/><stop offset="1" stop-color="#4fb8c9"/></linearGradient></defs><g stroke="url(#bad)" fill="#4fb8c9"><use href="#bl-line" stroke-width="5"/><use href="#bl-dot"/></g></svg></div>
+        <p><b>Don't</b> recolor or gradient it — amber on espresso, deep amber on cream, or one-color silhouette.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ————— 7 · spec ————— -->
+  <section>
+    <p class="s-label">Spec</p>
+    <h2>The drawing, in numbers</h2>
+    <p class="s-why">Everything needed to reproduce the mark exactly — path data, proportions, and color per ground. Final production artwork should be redrawn once at high fidelity and exported from a single master SVG.</p>
+    <div class="spec">
+      <pre><span class="k">&lt;!-- Full mark · viewBox 0 0 192 64 · stroke 5 · round caps · dot r 5 --&gt;</span>
+&lt;path d="M 8 32 C 18 10, 28 54, 38 32  C 47 15, 56 49, 65 32
+         C 73 20, 81 44, 89 32  C 96 25, 103 39, 110 32
+         C 117 28.5, 124 35.5, 131 32  C 141 30, 153 34, 164 32"/&gt;
+&lt;circle cx="179" cy="32" r="5"/&gt;
+
+<span class="k">&lt;!-- Icon crop · viewBox 0 0 96 96 · stroke 7 · dot r 6 --&gt;</span>
+&lt;path d="M 8 48 C 17 24, 27 72, 37 48  C 45 30, 54 64, 62 48
+         C 68 39, 74 55, 80 48"/&gt;
+&lt;circle cx="89" cy="48" r="6"/&gt;</pre>
+    </div>
+    <table class="tok">
+      <tr><th>Token</th><th>Value</th><th>Use</th></tr>
+      <tr><td><span class="swi" style="background:#c8955a"></span>line / amber</td><td class="mono">#C8955A</td><td>The stroke on dark grounds</td></tr>
+      <tr><td><span class="swi" style="background:#d4a870"></span>dot / amber-hi</td><td class="mono">#D4A870</td><td>The settled dot on dark grounds — one step brighter, the warmest point</td></tr>
+      <tr><td><span class="swi" style="background:#a06f35"></span>amber-deep</td><td class="mono">#A06F35</td><td>Line and dot on cream / paper (portal, PDF, store pages)</td></tr>
+      <tr><td><span class="swi" style="background:#18150f"></span>espresso</td><td class="mono">#18150F</td><td>Primary ground; app-icon background</td></tr>
+      <tr><td><span class="swi" style="background:#e8ddd0"></span>cream</td><td class="mono">#E8DDD0</td><td>Wordmark on dark; monochrome silhouette (status bar)</td></tr>
+      <tr><td>Wordmark</td><td>Cormorant Garamond Light</td><td>Lowercase "ode", tracking −1%; line sits at 0.95× cap-height below baseline</td></tr>
+      <tr><td>Proportions</td><td class="mono">wave decay ≈ 0.72×</td><td>Each wave is ~72% the amplitude of the last; dot Ø = 2× stroke</td></tr>
+      <tr><td>Motion</td><td class="mono">2.1s draw · ease-out</td><td>Splash: draw → dot settles at 1.9s → wordmark rises at 2.3s. Honors reduced-motion.</td></tr>
+    </table>
+  </section>
+
+  <div class="verdict">
+    <h2>Where this lands</h2>
+    <p>The Breath Line works as the whole identity because it isn't just a logo — it's the product's one gesture, reused: the splash draws it, the processing screen loops it, the mood arc echoes it, the notification carries it. The <strong>settled dot</strong> fixes the flatline problem and gives every small rendering a focal point. Next step when you're ready: redraw the master path in a vector tool with the real Cormorant Garamond wordmark, export the icon set (1024 master → iOS sizes + Android adaptive foreground), and swap the splash into <span class="mono">app/_layout.tsx</span> where the greeting overlay already lives.</p>
+  </div>
+</div>
+
+<script>
+  document.querySelectorAll('.replay').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      var el = document.getElementById(btn.getAttribute('data-replay'));
+      if(!el) return;
+      el.classList.remove('playing');
+      void el.offsetWidth;
+      el.classList.add('playing');
+    });
+  });
+</script>
+</body>
+</html>

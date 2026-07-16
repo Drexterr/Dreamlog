@@ -181,18 +181,18 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: 30,
-    fontFamily: 'CormorantGaramond_300Light',
+    fontFamily: 'Erode_300Light',
     marginBottom: 2,
   },
   headerSub: {
     fontSize: 11,
-    fontFamily: 'Nunito_400Regular',
+    fontFamily: 'HankenGrotesk_400Regular',
     letterSpacing: 0.4,
   },
 
   sectionLabel: {
     fontSize: 10,
-    fontFamily: 'Nunito_600SemiBold',
+    fontFamily: 'HankenGrotesk_600SemiBold',
     letterSpacing: 1.5,
     marginBottom: 12,
   },
@@ -210,12 +210,12 @@ const styles = StyleSheet.create({
   entriesLeft: { gap: 2 },
   entriesTitle: {
     fontSize: 15,
-    fontFamily: 'CormorantGaramond_500Medium',
+    fontFamily: 'Erode_500Medium',
     letterSpacing: 0.2,
   },
   entriesDesc: {
     fontSize: 12,
-    fontFamily: 'Nunito_400Regular',
+    fontFamily: 'HankenGrotesk_400Regular',
   },
 
   // Feature cards
@@ -243,12 +243,12 @@ const styles = StyleSheet.create({
   },
   featureTitle: {
     fontSize: 17,
-    fontFamily: 'CormorantGaramond_500Medium',
+    fontFamily: 'Erode_500Medium',
     letterSpacing: 0.2,
   },
   featureDesc: {
     fontSize: 13,
-    fontFamily: 'Nunito_400Regular',
+    fontFamily: 'HankenGrotesk_400Regular',
     lineHeight: 20,
     paddingLeft: 28,
   },
@@ -261,12 +261,12 @@ const styles = StyleSheet.create({
   },
   featureCTA: {
     fontSize: 12,
-    fontFamily: 'Nunito_600SemiBold',
+    fontFamily: 'HankenGrotesk_600SemiBold',
     letterSpacing: 0.3,
   },
   featureArrow: {
     fontSize: 14,
-    fontFamily: 'Nunito_400Regular',
+    fontFamily: 'HankenGrotesk_400Regular',
   },
 
   badge: {
@@ -277,7 +277,7 @@ const styles = StyleSheet.create({
   },
   badgeText: {
     fontSize: 9,
-    fontFamily: 'Nunito_600SemiBold',
+    fontFamily: 'HankenGrotesk_600SemiBold',
     letterSpacing: 0.8,
   },
 });

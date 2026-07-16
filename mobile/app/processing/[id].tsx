@@ -150,24 +150,24 @@ const styles = StyleSheet.create({
 
   message: {
     fontSize: 17,
-    fontFamily: 'CormorantGaramond_300Light',
+    fontFamily: 'Erode_300Light',
     textAlign: 'center',
     paddingHorizontal: 20,
   },
   sub: {
     fontSize: 12,
-    fontFamily: 'Nunito_400Regular',
+    fontFamily: 'HankenGrotesk_400Regular',
   },
 
   errorIcon: { fontSize: 32 },
   errorTitle: {
     fontSize: 20,
-    fontFamily: 'CormorantGaramond_400Regular',
+    fontFamily: 'Erode_400Regular',
     textAlign: 'center',
   },
   errorSub: {
     fontSize: 14,
-    fontFamily: 'Nunito_400Regular',
+    fontFamily: 'HankenGrotesk_400Regular',
     textAlign: 'center',
     lineHeight: 22,
   },
@@ -179,6 +179,6 @@ const styles = StyleSheet.create({
   },
   retryText: {
     fontSize: 15,
-    fontFamily: 'Nunito_600SemiBold',
+    fontFamily: 'HankenGrotesk_600SemiBold',
   },
 });

@@ -525,7 +525,7 @@ const styles = StyleSheet.create({
   container: { flex: 1 },
   loadingCenter: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 24 },
   loadingOrb: { width: 48, height: 48, borderRadius: 24, opacity: 0.7 },
-  loadingText: { fontSize: 14, fontFamily: 'Nunito_400Regular', letterSpacing: 0.5 },
+  loadingText: { fontSize: 14, fontFamily: 'HankenGrotesk_400Regular', letterSpacing: 0.5 },
 
   scroll: { paddingHorizontal: 24, paddingTop: 40, paddingBottom: 60 },
 
@@ -536,12 +536,12 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   fallbackTitle: {
-    fontFamily: 'CormorantGaramond_300Light',
+    fontFamily: 'Erode_300Light',
     fontSize: 28,
     lineHeight: 36,
   },
   fallbackText: {
-    fontFamily: 'Nunito_400Regular',
+    fontFamily: 'HankenGrotesk_400Regular',
     fontSize: 14,
     lineHeight: 22,
     marginBottom: 12,
@@ -549,20 +549,20 @@ const styles = StyleSheet.create({
 
   // ── Crisis styles ──────────────────────────────────────────────────────────
   crisisHeader: {
-    fontFamily: 'CormorantGaramond_300Light',
+    fontFamily: 'Erode_300Light',
     fontSize: 32,
     fontWeight: '300',
     marginBottom: 14,
     lineHeight: 40,
   },
   crisisSubtext: {
-    fontFamily: 'Nunito_400Regular',
+    fontFamily: 'HankenGrotesk_400Regular',
     fontSize: 15,
     lineHeight: 24,
     marginBottom: 32,
   },
   resourceSectionLabel: {
-    fontFamily: 'Nunito_600SemiBold',
+    fontFamily: 'HankenGrotesk_600SemiBold',
     fontSize: 10,
     letterSpacing: 1.5,
     marginBottom: 10,
@@ -576,15 +576,15 @@ const styles = StyleSheet.create({
     padding: 16,
     gap: 12,
   },
-  hotlineName: { fontFamily: 'Nunito_600SemiBold', fontSize: 14, marginBottom: 2 },
-  hotlineHours: { fontFamily: 'Nunito_400Regular', fontSize: 11 },
+  hotlineName: { fontFamily: 'HankenGrotesk_600SemiBold', fontSize: 14, marginBottom: 2 },
+  hotlineHours: { fontFamily: 'HankenGrotesk_400Regular', fontSize: 11 },
   callPill: {
     borderRadius: 10,
     borderWidth: 1,
     paddingHorizontal: 10,
     paddingVertical: 6,
   },
-  callPillText: { fontFamily: 'Nunito_700Bold', fontSize: 12 },
+  callPillText: { fontFamily: 'HankenGrotesk_700Bold', fontSize: 12 },
 
   therapistBtn: {
     borderRadius: 16,
@@ -592,8 +592,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 10,
   },
-  therapistBtnText: { fontFamily: 'Nunito_700Bold', fontSize: 15 },
-  therapistBtnSub: { fontFamily: 'Nunito_400Regular', fontSize: 11, marginTop: 2 },
+  therapistBtnText: { fontFamily: 'HankenGrotesk_700Bold', fontSize: 15 },
+  therapistBtnSub: { fontFamily: 'HankenGrotesk_400Regular', fontSize: 11, marginTop: 2 },
 
   onlineBtn: {
     borderRadius: 16,
@@ -602,11 +602,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 18,
     marginBottom: 10,
   },
-  onlineBtnText: { fontFamily: 'Nunito_600SemiBold', fontSize: 14, marginBottom: 2 },
-  onlineBtnSub: { fontFamily: 'Nunito_400Regular', fontSize: 11 },
+  onlineBtnText: { fontFamily: 'HankenGrotesk_600SemiBold', fontSize: 14, marginBottom: 2 },
+  onlineBtnSub: { fontFamily: 'HankenGrotesk_400Regular', fontSize: 11 },
 
   crisisClosing: {
-    fontFamily: 'CormorantGaramond_400Regular',
+    fontFamily: 'Erode_400Regular',
     fontStyle: 'italic',
     fontSize: 15,
     lineHeight: 24,
@@ -620,27 +620,27 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     alignItems: 'center',
   },
-  doneText: { fontFamily: 'Nunito_400Regular', fontSize: 15, letterSpacing: 0.5 },
+  doneText: { fontFamily: 'HankenGrotesk_400Regular', fontSize: 15, letterSpacing: 0.5 },
 
   // ── Normal reflection styles ───────────────────────────────────────────────
   header: { marginBottom: 20 },
   moodRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 8 },
   reflectionLabel: {
     fontSize: 10,
-    fontFamily: 'Nunito_600SemiBold',
+    fontFamily: 'HankenGrotesk_600SemiBold',
     letterSpacing: 1.5,
   },
-  dateLabel: { fontSize: 13, fontFamily: 'Nunito_400Regular', letterSpacing: 0.3 },
-  groundedLabel: { fontSize: 11, fontFamily: 'Nunito_400Regular', letterSpacing: 0.3, marginTop: 4, opacity: 0.8 },
+  dateLabel: { fontSize: 13, fontFamily: 'HankenGrotesk_400Regular', letterSpacing: 0.3 },
+  groundedLabel: { fontSize: 11, fontFamily: 'HankenGrotesk_400Regular', letterSpacing: 0.3, marginTop: 4, opacity: 0.8 },
 
   topicRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 28 },
   topicBadge: { borderRadius: 12, borderWidth: 1, paddingHorizontal: 12, paddingVertical: 4 },
-  topicText: { fontSize: 11, fontFamily: 'Nunito_400Regular' },
+  topicText: { fontSize: 11, fontFamily: 'HankenGrotesk_400Regular' },
 
   reflectionCard: { marginBottom: 24 },
   reflectionText: {
     fontSize: 17,
-    fontFamily: 'CormorantGaramond_300Light',
+    fontFamily: 'Erode_300Light',
     lineHeight: 30,
     marginBottom: 20,
     fontWeight: '300',
@@ -648,46 +648,46 @@ const styles = StyleSheet.create({
   toneRow: { flexDirection: 'row', gap: 24, marginTop: 8, marginBottom: 8 },
   toneItem: { alignItems: 'center', gap: 6 },
   toneDot: { width: 10, height: 10, borderRadius: 5 },
-  toneLabel: { fontSize: 11, fontFamily: 'Nunito_400Regular' },
+  toneLabel: { fontSize: 11, fontFamily: 'HankenGrotesk_400Regular' },
 
   // ── Dream Decoder ─────────────────────────────────────────────────────────
   dreamWrap: { marginBottom: 28, gap: 12 },
   dreamHeader: {
     fontSize: 10,
-    fontFamily: 'Nunito_600SemiBold',
+    fontFamily: 'HankenGrotesk_600SemiBold',
     letterSpacing: 1.5,
   },
   dreamSymbolRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   dreamSymbol: { borderRadius: 12, borderWidth: 1, paddingHorizontal: 12, paddingVertical: 4 },
-  dreamSymbolText: { fontSize: 11, fontFamily: 'Nunito_400Regular' },
+  dreamSymbolText: { fontSize: 11, fontFamily: 'HankenGrotesk_400Regular' },
   dreamType: {
     fontSize: 11,
-    fontFamily: 'Nunito_400Regular',
+    fontFamily: 'HankenGrotesk_400Regular',
     letterSpacing: 0.3,
     textTransform: 'capitalize',
     marginTop: -4,
   },
   lensCard: { borderRadius: 16, borderWidth: 1, padding: 16, gap: 8 },
-  lensTitle: { fontSize: 13, fontFamily: 'Nunito_600SemiBold', letterSpacing: 0.3 },
+  lensTitle: { fontSize: 13, fontFamily: 'HankenGrotesk_600SemiBold', letterSpacing: 0.3 },
   lensText: {
     fontSize: 14,
-    fontFamily: 'CormorantGaramond_400Regular',
+    fontFamily: 'Erode_400Regular',
     lineHeight: 23,
   },
 
   // ── Connection insight ────────────────────────────────────────────────────
   insightCard: { borderRadius: 16, borderWidth: 1, padding: 16, gap: 8, marginBottom: 24 },
-  insightLabel: { fontSize: 10, fontFamily: 'Nunito_600SemiBold', letterSpacing: 1.5 },
+  insightLabel: { fontSize: 10, fontFamily: 'HankenGrotesk_600SemiBold', letterSpacing: 1.5 },
   insightText: {
     fontSize: 15,
-    fontFamily: 'CormorantGaramond_400Regular',
+    fontFamily: 'Erode_400Regular',
     lineHeight: 24,
   },
 
   quoteCard: { borderLeftWidth: 2, paddingLeft: 16, marginBottom: 36 },
   quoteText: {
     fontSize: 14,
-    fontFamily: 'CormorantGaramond_400Regular',
+    fontFamily: 'Erode_400Regular',
     fontStyle: 'italic',
     lineHeight: 22,
   },
@@ -699,7 +699,7 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     alignItems: 'center',
   },
-  tellMoreText: { fontSize: 15, fontFamily: 'Nunito_600SemiBold', letterSpacing: 0.5 },
+  tellMoreText: { fontSize: 15, fontFamily: 'HankenGrotesk_600SemiBold', letterSpacing: 0.5 },
 
   checkinBtn: {
     borderRadius: 16,
@@ -707,7 +707,7 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     alignItems: 'center',
   },
-  checkinText: { fontSize: 14, fontFamily: 'Nunito_600SemiBold', letterSpacing: 0.3 },
+  checkinText: { fontSize: 14, fontFamily: 'HankenGrotesk_600SemiBold', letterSpacing: 0.3 },
 
   shareTherapistBtn: {
     borderRadius: 16,
@@ -715,7 +715,7 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     alignItems: 'center',
   },
-  shareTherapistText: { fontSize: 14, fontFamily: 'Nunito_400Regular', letterSpacing: 0.3 },
+  shareTherapistText: { fontSize: 14, fontFamily: 'HankenGrotesk_400Regular', letterSpacing: 0.3 },
 
   goodnightBtn: {
     borderRadius: 16,
@@ -723,5 +723,5 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     alignItems: 'center',
   },
-  goodnightText: { fontSize: 15, fontFamily: 'Nunito_400Regular', letterSpacing: 0.5 },
+  goodnightText: { fontSize: 15, fontFamily: 'HankenGrotesk_400Regular', letterSpacing: 0.5 },
 });

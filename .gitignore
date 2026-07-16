@@ -54,3 +54,7 @@ npm-debug.log*
 # Coverage
 coverage/
 coverage.out
+
+# Maestro E2E screenshots - `maestro test` writes takeScreenshot output to the
+# cwd it's run from; only /maestro/screenshots/ is the intended destination.
+/*.png

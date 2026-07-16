@@ -268,9 +268,9 @@ const styles = StyleSheet.create({
   centerFill: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24 },
   scroll: { padding: 20, paddingBottom: 60 },
   headerRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 18 },
-  title: { fontSize: 26, fontFamily: 'CormorantGaramond_500Medium' },
-  meta: { fontSize: 12.5, fontFamily: 'Nunito_400Regular', marginTop: 2 },
-  deleteText: { color: '#ef4444', fontSize: 13, fontFamily: 'Nunito_600SemiBold' },
+  title: { fontSize: 26, fontFamily: 'Erode_500Medium' },
+  meta: { fontSize: 12.5, fontFamily: 'HankenGrotesk_400Regular', marginTop: 2 },
+  deleteText: { color: '#ef4444', fontSize: 13, fontFamily: 'HankenGrotesk_600SemiBold' },
 
   extractingCard: {
     flexDirection: 'row',
@@ -280,15 +280,15 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     padding: 18,
   },
-  extractingText: { flex: 1, fontSize: 13, fontFamily: 'Nunito_400Regular', lineHeight: 19 },
+  extractingText: { flex: 1, fontSize: 13, fontFamily: 'HankenGrotesk_400Regular', lineHeight: 19 },
 
   failedCard: { borderRadius: 16, borderWidth: 1, padding: 18 },
-  failedTitle: { fontSize: 15, fontFamily: 'Nunito_700Bold', marginBottom: 6 },
-  failedText: { fontSize: 13, fontFamily: 'Nunito_400Regular', lineHeight: 19 },
+  failedTitle: { fontSize: 15, fontFamily: 'HankenGrotesk_700Bold', marginBottom: 6 },
+  failedText: { fontSize: 13, fontFamily: 'HankenGrotesk_400Regular', lineHeight: 19 },
 
   summaryCard: { borderRadius: 16, borderWidth: 1, padding: 18, marginBottom: 20 },
-  summaryLabel: { fontSize: 10.5, fontFamily: 'Nunito_700Bold', letterSpacing: 1.2, marginBottom: 8 },
-  summaryText: { fontSize: 14, fontFamily: 'Nunito_400Regular', lineHeight: 21 },
+  summaryLabel: { fontSize: 10.5, fontFamily: 'HankenGrotesk_700Bold', letterSpacing: 1.2, marginBottom: 8 },
+  summaryText: { fontSize: 14, fontFamily: 'HankenGrotesk_400Regular', lineHeight: 21 },
   summarizeBtn: {
     borderRadius: 14,
     borderWidth: 1.5,
@@ -296,9 +296,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 20,
   },
-  summarizeBtnText: { fontSize: 14.5, fontFamily: 'Nunito_600SemiBold' },
+  summarizeBtnText: { fontSize: 14.5, fontFamily: 'HankenGrotesk_600SemiBold' },
 
-  label: { fontSize: 11, fontFamily: 'Nunito_700Bold', letterSpacing: 1.5, marginBottom: 10 },
+  label: { fontSize: 11, fontFamily: 'HankenGrotesk_700Bold', letterSpacing: 1.5, marginBottom: 10 },
   bulletRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 8, marginBottom: 8 },
   bulletDot: { fontSize: 18, lineHeight: 24, marginTop: 10 },
   bulletInput: {
@@ -308,19 +308,19 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 10,
     fontSize: 14,
-    fontFamily: 'Nunito_400Regular',
+    fontFamily: 'HankenGrotesk_400Regular',
     lineHeight: 20,
   },
   bulletRemove: { padding: 10, marginTop: 2 },
   addBulletBtn: { paddingVertical: 10 },
-  addBulletText: { fontSize: 13.5, fontFamily: 'Nunito_600SemiBold' },
+  addBulletText: { fontSize: 13.5, fontFamily: 'HankenGrotesk_600SemiBold' },
 
   rawToggle: { paddingVertical: 12 },
-  rawToggleText: { fontSize: 13, fontFamily: 'Nunito_600SemiBold' },
+  rawToggleText: { fontSize: 13, fontFamily: 'HankenGrotesk_600SemiBold' },
   rawCard: { borderRadius: 12, borderWidth: 1, padding: 14 },
-  rawText: { fontSize: 12.5, fontFamily: 'Nunito_400Regular', lineHeight: 19 },
+  rawText: { fontSize: 12.5, fontFamily: 'HankenGrotesk_400Regular', lineHeight: 19 },
 
-  errorText: { fontSize: 13, color: '#ef4444', fontFamily: 'Nunito_400Regular', marginTop: 12 },
+  errorText: { fontSize: 13, color: '#ef4444', fontFamily: 'HankenGrotesk_400Regular', marginTop: 12 },
   saveBtn: {
     borderRadius: 14,
     paddingVertical: 15,
@@ -331,5 +331,5 @@ const styles = StyleSheet.create({
     shadowRadius: 12,
     elevation: 6,
   },
-  saveBtnText: { color: '#fff', fontSize: 15, fontFamily: 'Nunito_600SemiBold' },
+  saveBtnText: { color: '#fff', fontSize: 15, fontFamily: 'HankenGrotesk_600SemiBold' },
 });

@@ -474,13 +474,13 @@ const styles = StyleSheet.create({
 
   title: {
     fontSize: 32,
-    fontFamily: 'CormorantGaramond_300Light',
+    fontFamily: 'Erode_300Light',
     letterSpacing: 1,
     marginBottom: 6,
   },
   subtitle: {
     fontSize: 14,
-    fontFamily: 'Nunito_400Regular',
+    fontFamily: 'HankenGrotesk_400Regular',
     letterSpacing: 0.5,
     marginBottom: 32,
   },
@@ -500,14 +500,14 @@ const styles = StyleSheet.create({
   },
   roleText: {
     fontSize: 13,
-    fontFamily: 'Nunito_600SemiBold',
+    fontFamily: 'HankenGrotesk_600SemiBold',
   },
   roleTextActive: {
     color: '#fff',
   },
   roleHint: {
     fontSize: 12,
-    fontFamily: 'Nunito_400Regular',
+    fontFamily: 'HankenGrotesk_400Regular',
     textAlign: 'center',
     marginBottom: 12,
     marginTop: -4,
@@ -538,11 +538,11 @@ const styles = StyleSheet.create({
   consentText: {
     flex: 1,
     fontSize: 12.5,
-    fontFamily: 'Nunito_400Regular',
+    fontFamily: 'HankenGrotesk_400Regular',
     lineHeight: 18,
   },
   consentLink: {
-    fontFamily: 'Nunito_700Bold',
+    fontFamily: 'HankenGrotesk_700Bold',
     textDecorationLine: 'underline',
   },
 
@@ -562,7 +562,7 @@ const styles = StyleSheet.create({
   },
   tabText: {
     fontSize: 14,
-    fontFamily: 'Nunito_600SemiBold',
+    fontFamily: 'HankenGrotesk_600SemiBold',
   },
   tabTextActive: {
     color: '#fff',
@@ -580,7 +580,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     borderWidth: 1,
     padding: 14,
-    fontFamily: 'Nunito_400Regular',
+    fontFamily: 'HankenGrotesk_400Regular',
     fontSize: 15,
   },
 
@@ -596,7 +596,7 @@ const styles = StyleSheet.create({
   },
   googleBtnText: {
     fontSize: 15,
-    fontFamily: 'Nunito_600SemiBold',
+    fontFamily: 'HankenGrotesk_600SemiBold',
   },
   appleBtn: {
     width: '100%',
@@ -616,7 +616,7 @@ const styles = StyleSheet.create({
   },
   dividerText: {
     fontSize: 12,
-    fontFamily: 'Nunito_400Regular',
+    fontFamily: 'HankenGrotesk_400Regular',
   },
 
   button: {
@@ -658,18 +658,18 @@ const styles = StyleSheet.create({
   },
   modalTitle: {
     fontSize: 22,
-    fontFamily: 'CormorantGaramond_500Medium',
+    fontFamily: 'Erode_500Medium',
     marginBottom: 4,
   },
   modalBody: {
     fontSize: 14,
-    fontFamily: 'Nunito_400Regular',
+    fontFamily: 'HankenGrotesk_400Regular',
     textAlign: 'center',
     lineHeight: 20,
   },
   modalEmail: {
     fontSize: 14,
-    fontFamily: 'Nunito_700Bold',
+    fontFamily: 'HankenGrotesk_700Bold',
     textAlign: 'center',
   },
   modalBtn: {
@@ -686,19 +686,19 @@ const styles = StyleSheet.create({
   modalBtnText: {
     color: '#fff',
     fontSize: 16,
-    fontFamily: 'Nunito_600SemiBold',
+    fontFamily: 'HankenGrotesk_600SemiBold',
     letterSpacing: 0.5,
   },
   errorText: {
     fontSize: 13,
-    fontFamily: 'Nunito_400Regular',
+    fontFamily: 'HankenGrotesk_400Regular',
     color: '#ef4444',
     lineHeight: 18,
   },
   buttonText: {
     color: '#fff',
     fontSize: 16,
-    fontFamily: 'Nunito_600SemiBold',
+    fontFamily: 'HankenGrotesk_600SemiBold',
     letterSpacing: 0.5,
   },
 });

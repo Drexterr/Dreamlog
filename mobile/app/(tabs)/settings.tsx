@@ -402,7 +402,7 @@ export default function SettingsScreen() {
       <SafeAreaView style={[styles.container, { backgroundColor: colors.bg }]}>
         <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', gap: 16 }}>
           <ActivityIndicator color={colors.brand} />
-          <Text style={{ color: colors.textMuted, fontFamily: 'Nunito_400Regular', fontSize: 14 }}>
+          <Text style={{ color: colors.textMuted, fontFamily: 'HankenGrotesk_400Regular', fontSize: 14 }}>
             Deleting your account…
           </Text>
         </View>
@@ -1151,23 +1151,23 @@ const styles = StyleSheet.create({
     marginBottom: 3,
   },
   goalPickerLabel: {
-    fontFamily: 'Nunito_600SemiBold',
+    fontFamily: 'HankenGrotesk_600SemiBold',
     fontSize: 14,
     flex: 1,
   },
   goalPickerCheck: {
     fontSize: 15,
-    fontFamily: 'Nunito_600SemiBold',
+    fontFamily: 'HankenGrotesk_600SemiBold',
   },
   goalPickerDesc: {
-    fontFamily: 'Nunito_400Regular',
+    fontFamily: 'HankenGrotesk_400Regular',
     fontSize: 12,
     lineHeight: 17,
   },
 
   title: {
     fontSize: 26,
-    fontFamily: 'CormorantGaramond_300Light',
+    fontFamily: 'Erode_300Light',
     marginBottom: 24,
   },
 
@@ -1188,21 +1188,21 @@ const styles = StyleSheet.create({
   avatarText: {
     fontSize: 18,
     color: '#fff',
-    fontFamily: 'CormorantGaramond_500Medium',
+    fontFamily: 'Erode_500Medium',
   },
   profileName: {
     fontSize: 16,
-    fontFamily: 'Nunito_600SemiBold',
+    fontFamily: 'HankenGrotesk_600SemiBold',
     marginBottom: 2,
   },
   profileSub: {
     fontSize: 12,
-    fontFamily: 'Nunito_400Regular',
+    fontFamily: 'HankenGrotesk_400Regular',
   },
 
   sectionLabel: {
     fontSize: 10,
-    fontFamily: 'Nunito_400Regular',
+    fontFamily: 'HankenGrotesk_400Regular',
     fontWeight: '300',
     letterSpacing: 0.3,
     marginBottom: 8,
@@ -1227,11 +1227,11 @@ const styles = StyleSheet.create({
   },
   settingLabel: {
     fontSize: 15,
-    fontFamily: 'Nunito_400Regular',
+    fontFamily: 'HankenGrotesk_400Regular',
   },
   settingSub: {
     fontSize: 12,
-    fontFamily: 'Nunito_400Regular',
+    fontFamily: 'HankenGrotesk_400Regular',
     marginTop: 2,
     lineHeight: 18,
   },
@@ -1241,7 +1241,7 @@ const styles = StyleSheet.create({
   },
   valueText: {
     fontSize: 14,
-    fontFamily: 'Nunito_400Regular',
+    fontFamily: 'HankenGrotesk_400Regular',
   },
 
   planBadge: {
@@ -1252,7 +1252,7 @@ const styles = StyleSheet.create({
   },
   planBadgeText: {
     fontSize: 12,
-    fontFamily: 'Nunito_600SemiBold',
+    fontFamily: 'HankenGrotesk_600SemiBold',
   },
   upgradeRow: {
     flexDirection: 'row',
@@ -1263,7 +1263,7 @@ const styles = StyleSheet.create({
   },
   upgradeText: {
     fontSize: 14,
-    fontFamily: 'Nunito_600SemiBold',
+    fontFamily: 'HankenGrotesk_600SemiBold',
   },
 
   signOutBtn: {
@@ -1275,7 +1275,7 @@ const styles = StyleSheet.create({
   },
   signOutText: {
     fontSize: 15,
-    fontFamily: 'Nunito_600SemiBold',
+    fontFamily: 'HankenGrotesk_600SemiBold',
   },
 
   modalOverlay: {
@@ -1304,12 +1304,12 @@ const styles = StyleSheet.create({
   },
   modalTitle: {
     fontSize: 18,
-    fontFamily: 'CormorantGaramond_500Medium',
+    fontFamily: 'Erode_500Medium',
     marginBottom: 4,
   },
   modalSub: {
     fontSize: 13,
-    fontFamily: 'Nunito_400Regular',
+    fontFamily: 'HankenGrotesk_400Regular',
     marginBottom: 16,
     lineHeight: 20,
   },
@@ -1328,7 +1328,7 @@ const styles = StyleSheet.create({
   voiceOptionEmoji: { fontSize: 22 },
   voiceOptionLabel: {
     fontSize: 15,
-    fontFamily: 'Nunito_600SemiBold',
+    fontFamily: 'HankenGrotesk_600SemiBold',
     marginBottom: 2,
   },
   voiceListHeader: {
@@ -1339,7 +1339,7 @@ const styles = StyleSheet.create({
   },
   voiceBackText: {
     fontSize: 14,
-    fontFamily: 'Nunito_400Regular',
+    fontFamily: 'HankenGrotesk_400Regular',
     width: 48,
   },
   voiceSearchBox: {
@@ -1355,13 +1355,13 @@ const styles = StyleSheet.create({
   voiceSearchInput: {
     flex: 1,
     fontSize: 14,
-    fontFamily: 'Nunito_400Regular',
+    fontFamily: 'HankenGrotesk_400Regular',
     paddingVertical: 10,
   },
   voiceLangList: { flexGrow: 0 },
   voiceNativeText: {
     fontSize: 13,
-    fontFamily: 'Nunito_400Regular',
+    fontFamily: 'HankenGrotesk_400Regular',
   },
   hourRow: {
     flexDirection: 'row',
@@ -1374,11 +1374,11 @@ const styles = StyleSheet.create({
   },
   hourLabel: {
     fontSize: 16,
-    fontFamily: 'Nunito_400Regular',
+    fontFamily: 'HankenGrotesk_400Regular',
   },
   hourCheck: {
     fontSize: 16,
-    fontFamily: 'Nunito_600SemiBold',
+    fontFamily: 'HankenGrotesk_600SemiBold',
   },
 
   profileModalHeader: {
@@ -1396,11 +1396,11 @@ const styles = StyleSheet.create({
   profileModalAvatarText: {
     fontSize: 24,
     color: '#fff',
-    fontFamily: 'CormorantGaramond_500Medium',
+    fontFamily: 'Erode_500Medium',
   },
   profileModalName: {
     fontSize: 20,
-    fontFamily: 'CormorantGaramond_500Medium',
+    fontFamily: 'Erode_500Medium',
   },
   profileInfoCard: {
     borderRadius: 14,
@@ -1416,11 +1416,11 @@ const styles = StyleSheet.create({
     paddingVertical: 13,
   },
   profileInfoLabel: {
-    fontFamily: 'Nunito_400Regular',
+    fontFamily: 'HankenGrotesk_400Regular',
     fontSize: 13,
   },
   profileInfoValue: {
-    fontFamily: 'Nunito_600SemiBold',
+    fontFamily: 'HankenGrotesk_600SemiBold',
     fontSize: 14,
     maxWidth: '65%',
     textAlign: 'right',
@@ -1443,12 +1443,12 @@ const styles = StyleSheet.create({
   },
   crisisName: {
     fontSize: 15,
-    fontFamily: 'Nunito_700Bold',
+    fontFamily: 'HankenGrotesk_700Bold',
     marginBottom: 2,
   },
   crisisInfo: {
     fontSize: 13,
-    fontFamily: 'Nunito_400Regular',
+    fontFamily: 'HankenGrotesk_400Regular',
   },
   closeBtn: {
     borderWidth: 1,
@@ -1459,7 +1459,7 @@ const styles = StyleSheet.create({
   },
   closeBtnText: {
     fontSize: 14,
-    fontFamily: 'Nunito_600SemiBold',
+    fontFamily: 'HankenGrotesk_600SemiBold',
   },
   updateLogBox: {
     marginTop: 14,
@@ -1471,7 +1471,7 @@ const styles = StyleSheet.create({
   updateLogLine: {
     fontSize: 12,
     lineHeight: 17,
-    fontFamily: 'Nunito_400Regular',
+    fontFamily: 'HankenGrotesk_400Regular',
   },
   updateActionBtn: {
     borderRadius: 14,
@@ -1486,7 +1486,7 @@ const styles = StyleSheet.create({
   updateActionBtnText: {
     color: '#fff',
     fontSize: 15,
-    fontFamily: 'Nunito_600SemiBold',
+    fontFamily: 'HankenGrotesk_600SemiBold',
     letterSpacing: 0.3,
   },
 });

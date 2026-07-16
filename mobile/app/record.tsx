@@ -411,17 +411,17 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   cancelBtn: { padding: 6 },
-  cancelText: { fontSize: 14, fontFamily: 'Nunito_400Regular' },
+  cancelText: { fontSize: 14, fontFamily: 'HankenGrotesk_400Regular' },
   listeningLabel: {
     fontSize: 10,
-    fontFamily: 'Nunito_600SemiBold',
+    fontFamily: 'HankenGrotesk_600SemiBold',
     letterSpacing: 2,
     textTransform: 'lowercase',
   },
 
   tagline: {
     fontSize: 22,
-    fontFamily: 'CormorantGaramond_300Light',
+    fontFamily: 'Erode_300Light',
     textAlign: 'center',
     lineHeight: 32,
     marginBottom: 28,
@@ -443,12 +443,12 @@ const styles = StyleSheet.create({
   },
   modeName: {
     fontSize: 12.5,
-    fontFamily: 'Nunito_400Regular',
+    fontFamily: 'HankenGrotesk_400Regular',
     marginBottom: 3,
   },
   modeDesc: {
     fontSize: 10,
-    fontFamily: 'Nunito_400Regular',
+    fontFamily: 'HankenGrotesk_400Regular',
     fontWeight: '300',
     lineHeight: 14,
   },
@@ -480,16 +480,16 @@ const styles = StyleSheet.create({
   // Below orb
   belowOrb: { minHeight: 28, alignItems: 'center', justifyContent: 'center' },
   timer: {
-    fontFamily: 'Nunito_400Regular',
+    fontFamily: 'HankenGrotesk_400Regular',
     fontSize: 22,
     letterSpacing: 3,
     fontVariant: ['tabular-nums'],
   },
-  uploadLabel: { fontSize: 14, fontFamily: 'Nunito_400Regular' },
-  hint: { fontSize: 12, fontFamily: 'Nunito_400Regular', textAlign: 'center' },
+  uploadLabel: { fontSize: 14, fontFamily: 'HankenGrotesk_400Regular' },
+  hint: { fontSize: 12, fontFamily: 'HankenGrotesk_400Regular', textAlign: 'center' },
   errorText: {
     fontSize: 13,
-    fontFamily: 'Nunito_400Regular',
+    fontFamily: 'HankenGrotesk_400Regular',
     marginTop: 12,
     textAlign: 'center',
   },
@@ -498,7 +498,7 @@ const styles = StyleSheet.create({
     bottom: 48,
     alignSelf: 'center',
     fontSize: 12,
-    fontFamily: 'Nunito_400Regular',
+    fontFamily: 'HankenGrotesk_400Regular',
     textAlign: 'center',
   },
 });

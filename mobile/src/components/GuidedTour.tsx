@@ -202,18 +202,18 @@ const styles = StyleSheet.create({
   stepCount: {
     marginLeft: 4,
     fontSize: 10,
-    fontFamily: 'Nunito_400Regular',
+    fontFamily: 'HankenGrotesk_400Regular',
     letterSpacing: 0.5,
   },
   title: {
     fontSize: 20,
-    fontFamily: 'CormorantGaramond_500Medium',
+    fontFamily: 'Erode_500Medium',
     letterSpacing: 0.2,
     lineHeight: 24,
   },
   desc: {
     fontSize: 14,
-    fontFamily: 'Nunito_400Regular',
+    fontFamily: 'HankenGrotesk_400Regular',
     lineHeight: 21,
   },
   actions: {
@@ -224,7 +224,7 @@ const styles = StyleSheet.create({
   },
   skipText: {
     fontSize: 12,
-    fontFamily: 'Nunito_400Regular',
+    fontFamily: 'HankenGrotesk_400Regular',
   },
   nextBtn: {
     paddingHorizontal: 20,
@@ -233,7 +233,7 @@ const styles = StyleSheet.create({
   },
   nextText: {
     fontSize: 13,
-    fontFamily: 'Nunito_600SemiBold',
+    fontFamily: 'HankenGrotesk_600SemiBold',
     letterSpacing: 0.3,
   },
 });

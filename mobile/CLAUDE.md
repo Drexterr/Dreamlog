@@ -55,7 +55,7 @@ src/
 - ALWAYS import colors, fonts, and spacing from `src/theme.ts`
 - Never hardcode hex colors or font names inline
 - Dark purple palette - do not introduce new colors without adding them to `theme.ts` first
-- Fonts: Cormorant Garamond (serif, headings) + Nunito (sans, body)
+- Fonts: Erode (serif, headings — bundled TTFs in assets/fonts, matches the website) + Hanken Grotesk (sans, body)
 
 ### State Management
 - No Redux, Zustand, or any global state library
@@ -124,7 +124,7 @@ Both platforms require permissions before recording. The useRecorder hook handle
 expo-av           audio recording + playback
 expo-router       file-based navigation with typed routes
 expo-secure-store JWT storage
-expo-font         font loading (Cormorant Garamond + Nunito)
+expo-font         font loading (Erode from assets/fonts + @expo-google-fonts/hanken-grotesk)
 axios             HTTP client (always via src/api/client.ts)
 @react-native-async-storage/async-storage   offline queue + non-sensitive persistence
 @react-native-firebase/app + messaging      FCM push tokens (via src/services/push.ts only)

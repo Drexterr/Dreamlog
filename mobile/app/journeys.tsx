@@ -248,7 +248,7 @@ const styles = StyleSheet.create({
   backArrow: { fontSize: 22 },
   headerTitle: {
     fontSize: 18,
-    fontFamily: 'CormorantGaramond_500Medium',
+    fontFamily: 'Erode_500Medium',
     letterSpacing: 0.3,
   },
 
@@ -257,7 +257,7 @@ const styles = StyleSheet.create({
   section: { marginBottom: 28 },
   sectionLabel: {
     fontSize: 10,
-    fontFamily: 'Nunito_600SemiBold',
+    fontFamily: 'HankenGrotesk_600SemiBold',
     letterSpacing: 1.5,
     marginBottom: 12,
     marginTop: 8,
@@ -274,16 +274,16 @@ const styles = StyleSheet.create({
   cardHeader: { gap: 2 },
   cardTitle: {
     fontSize: 17,
-    fontFamily: 'CormorantGaramond_500Medium',
+    fontFamily: 'Erode_500Medium',
     letterSpacing: 0.2,
   },
   cardMeta: {
     fontSize: 12,
-    fontFamily: 'Nunito_400Regular',
+    fontFamily: 'HankenGrotesk_400Regular',
   },
   cardDesc: {
     fontSize: 13,
-    fontFamily: 'Nunito_400Regular',
+    fontFamily: 'HankenGrotesk_400Regular',
     lineHeight: 19,
   },
   cardFooter: {
@@ -299,7 +299,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 3,
   },
-  tagText: { fontSize: 10, fontFamily: 'Nunito_400Regular' },
+  tagText: { fontSize: 10, fontFamily: 'HankenGrotesk_400Regular' },
   startBtn: {
     paddingHorizontal: 18,
     paddingVertical: 9,
@@ -310,7 +310,7 @@ const styles = StyleSheet.create({
   startBtnText: {
     color: '#fff',
     fontSize: 13,
-    fontFamily: 'Nunito_600SemiBold',
+    fontFamily: 'HankenGrotesk_600SemiBold',
   },
 
   // Session card
@@ -328,13 +328,13 @@ const styles = StyleSheet.create({
   },
   sessionTitle: {
     fontSize: 15,
-    fontFamily: 'CormorantGaramond_500Medium',
+    fontFamily: 'Erode_500Medium',
     flex: 1,
     marginRight: 8,
   },
   sessionBadge: {
     fontSize: 12,
-    fontFamily: 'Nunito_600SemiBold',
+    fontFamily: 'HankenGrotesk_600SemiBold',
   },
   progressTrack: {
     height: 3,
@@ -347,19 +347,19 @@ const styles = StyleSheet.create({
   },
   sessionHint: {
     fontSize: 12,
-    fontFamily: 'Nunito_400Regular',
+    fontFamily: 'HankenGrotesk_400Regular',
     lineHeight: 17,
   },
 
   guestHint: {
     fontSize: 12,
-    fontFamily: 'Nunito_400Regular',
+    fontFamily: 'HankenGrotesk_400Regular',
     fontStyle: 'italic',
     marginBottom: 12,
     marginTop: -4,
   },
 
-  errorText: { fontSize: 14, fontFamily: 'Nunito_400Regular', textAlign: 'center' },
+  errorText: { fontSize: 14, fontFamily: 'HankenGrotesk_400Regular', textAlign: 'center' },
   retryBtn: { paddingHorizontal: 20, paddingVertical: 10, borderRadius: 20, borderWidth: 1 },
-  retryText: { fontSize: 14, fontFamily: 'Nunito_600SemiBold' },
+  retryText: { fontSize: 14, fontFamily: 'HankenGrotesk_600SemiBold' },
 });

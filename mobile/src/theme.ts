@@ -274,10 +274,10 @@ export function moodToColor(score: number, currentColors: ThemeColors = Colors):
 
 // Font families - loaded via expo-font in _layout.tsx
 export const Fonts = {
-  serif:  'CormorantGaramond_300Light',
-  sans:   'Nunito_400Regular',
-  sansSB: 'Nunito_600SemiBold',
-  sansBold:'Nunito_700Bold',
+  serif:  'Erode_300Light',
+  sans:   'HankenGrotesk_400Regular',
+  sansSB: 'HankenGrotesk_600SemiBold',
+  sansBold:'HankenGrotesk_700Bold',
   mono:   undefined as string | undefined, // falls back to system mono
 } as const;
 

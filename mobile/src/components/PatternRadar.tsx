@@ -69,7 +69,7 @@ const barStyles = StyleSheet.create({
   label: {
     width: 90,
     fontSize: 12,
-    fontFamily: 'Nunito_400Regular',
+    fontFamily: 'HankenGrotesk_400Regular',
     flexShrink: 0,
     textTransform: 'capitalize',
   },
@@ -87,7 +87,7 @@ const barStyles = StyleSheet.create({
   meta: {
     width: 60,
     fontSize: 10,
-    fontFamily: 'Nunito_400Regular',
+    fontFamily: 'HankenGrotesk_400Regular',
     textAlign: 'right',
     flexShrink: 0,
   },
@@ -167,7 +167,7 @@ const distStyles = StyleSheet.create({
   },
   segment: { height: '100%' },
   legend: { flexDirection: 'row', gap: 12 },
-  legendItem: { fontSize: 10, fontFamily: 'Nunito_400Regular' },
+  legendItem: { fontSize: 10, fontFamily: 'HankenGrotesk_400Regular' },
 });
 
 // ── Main component ────────────────────────────────────────────────────────────
@@ -294,13 +294,13 @@ const getStyles = (colors: ReturnType<typeof useTheme>['colors']) =>
     title: {
       fontSize: 10,
       color: colors.textSecondary,
-      fontFamily: 'Nunito_600SemiBold',
+      fontFamily: 'HankenGrotesk_600SemiBold',
       letterSpacing: 1.5,
     },
     subtitle: {
       fontSize: 11,
       color: colors.textMuted,
-      fontFamily: 'Nunito_400Regular',
+      fontFamily: 'HankenGrotesk_400Regular',
       marginBottom: 16,
     },
     rangeSelector: { flexDirection: 'row', gap: 4 },
@@ -313,7 +313,7 @@ const getStyles = (colors: ReturnType<typeof useTheme>['colors']) =>
     rangeBtnText: {
       fontSize: 10,
       color: colors.textMuted,
-      fontFamily: 'Nunito_600SemiBold',
+      fontFamily: 'HankenGrotesk_600SemiBold',
       letterSpacing: 0.5,
     },
     rangeBtnTextActive: { color: colors.purple300 },
@@ -321,7 +321,7 @@ const getStyles = (colors: ReturnType<typeof useTheme>['colors']) =>
     empty: {
       fontSize: 13,
       color: colors.textSecondary,
-      fontFamily: 'Nunito_400Regular',
+      fontFamily: 'HankenGrotesk_400Regular',
       textAlign: 'center',
       paddingVertical: 24,
     },
@@ -329,7 +329,7 @@ const getStyles = (colors: ReturnType<typeof useTheme>['colors']) =>
     distLabel: {
       fontSize: 9,
       color: colors.textMuted,
-      fontFamily: 'Nunito_600SemiBold',
+      fontFamily: 'HankenGrotesk_600SemiBold',
       letterSpacing: 1.5,
       marginBottom: 6,
     },

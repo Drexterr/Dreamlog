@@ -105,7 +105,7 @@ const arc = StyleSheet.create({
   bar: { width: '100%', borderRadius: 4, borderTopWidth: 2 },
   label: {
     fontSize: 9,
-    fontFamily: 'Nunito_400Regular',
+    fontFamily: 'HankenGrotesk_400Regular',
     marginTop: 4,
   },
 });
@@ -234,7 +234,7 @@ const getStyles = (colors: ThemeColors) =>
     appName: {
       fontSize: 13,
       color: colors.brand,
-      fontFamily: 'Nunito_600SemiBold',
+      fontFamily: 'HankenGrotesk_600SemiBold',
       letterSpacing: 2,
       marginBottom: 6,
       textTransform: 'lowercase',
@@ -242,7 +242,7 @@ const getStyles = (colors: ThemeColors) =>
     weekLabel: {
       fontSize: 22,
       color: colors.textPrimary,
-      fontFamily: 'CormorantGaramond_300Light',
+      fontFamily: 'Erode_300Light',
       lineHeight: 28,
     },
 
@@ -261,20 +261,20 @@ const getStyles = (colors: ThemeColors) =>
     heroLabel: {
       fontSize: 9,
       color: colors.textMuted,
-      fontFamily: 'Nunito_600SemiBold',
+      fontFamily: 'HankenGrotesk_600SemiBold',
       letterSpacing: 2,
       marginBottom: 4,
     },
     heroValueRow: { flexDirection: 'row', alignItems: 'flex-end' },
     heroValue: {
       fontSize: 46,
-      fontFamily: 'CormorantGaramond_300Light',
+      fontFamily: 'Erode_300Light',
       lineHeight: 48,
     },
     heroOutOf: {
       fontSize: 14,
       color: colors.textMuted,
-      fontFamily: 'Nunito_400Regular',
+      fontFamily: 'HankenGrotesk_400Regular',
       marginBottom: 7,
       marginLeft: 3,
     },
@@ -286,7 +286,7 @@ const getStyles = (colors: ThemeColors) =>
     },
     heroWord: {
       fontSize: 14,
-      fontFamily: 'CormorantGaramond_400Regular',
+      fontFamily: 'Erode_400Regular',
       letterSpacing: 0.5,
     },
 
@@ -296,7 +296,7 @@ const getStyles = (colors: ThemeColors) =>
     sectionTitle: {
       fontSize: 9,
       color: colors.textSecondary,
-      fontFamily: 'Nunito_600SemiBold',
+      fontFamily: 'HankenGrotesk_600SemiBold',
       letterSpacing: 2,
       marginBottom: 10,
     },
@@ -309,7 +309,7 @@ const getStyles = (colors: ThemeColors) =>
     arcEmptyText: {
       fontSize: 12,
       color: colors.textMuted,
-      fontFamily: 'Nunito_400Regular',
+      fontFamily: 'HankenGrotesk_400Regular',
     },
 
     emotionRow: {
@@ -326,7 +326,7 @@ const getStyles = (colors: ThemeColors) =>
     emotionText: {
       fontSize: 12,
       color: colors.purple300,
-      fontFamily: 'Nunito_400Regular',
+      fontFamily: 'HankenGrotesk_400Regular',
     },
 
     statsRow: {
@@ -348,7 +348,7 @@ const getStyles = (colors: ThemeColors) =>
     },
     statValue: {
       fontSize: 26,
-      fontFamily: 'CormorantGaramond_400Regular',
+      fontFamily: 'Erode_400Regular',
       color: colors.textSecondary,
       marginBottom: 2,
     },
@@ -356,7 +356,7 @@ const getStyles = (colors: ThemeColors) =>
     statLabel: {
       fontSize: 10,
       color: colors.textMuted,
-      fontFamily: 'Nunito_400Regular',
+      fontFamily: 'HankenGrotesk_400Regular',
       textAlign: 'center',
     },
 
@@ -371,13 +371,13 @@ const getStyles = (colors: ThemeColors) =>
     footerText: {
       fontSize: 10,
       color: colors.textMuted,
-      fontFamily: 'Nunito_400Regular',
+      fontFamily: 'HankenGrotesk_400Regular',
       flex: 1,
     },
     footerApp: {
       fontSize: 10,
       color: colors.brand,
-      fontFamily: 'Nunito_600SemiBold',
+      fontFamily: 'HankenGrotesk_600SemiBold',
       letterSpacing: 0.5,
     },
   });

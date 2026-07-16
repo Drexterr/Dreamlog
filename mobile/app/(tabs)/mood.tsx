@@ -640,13 +640,13 @@ const getStyles = (colors: any) => StyleSheet.create({
   title: {
     fontSize: 26,
     color: colors.textPrimary,
-    fontFamily: 'CormorantGaramond_300Light',
+    fontFamily: 'Erode_300Light',
     marginBottom: 2,
   },
   subtitle: {
     fontSize: 11,
     color: colors.textMuted,
-    fontFamily: 'Nunito_400Regular',
+    fontFamily: 'HankenGrotesk_400Regular',
     letterSpacing: 0.5,
     marginBottom: 24,
   },
@@ -666,7 +666,7 @@ const getStyles = (colors: any) => StyleSheet.create({
   },
   streakValue: {
     fontSize: 28,
-    fontFamily: 'CormorantGaramond_400Regular',
+    fontFamily: 'Erode_400Regular',
     color: colors.textMuted,
     marginBottom: 2,
   },
@@ -674,7 +674,7 @@ const getStyles = (colors: any) => StyleSheet.create({
   streakLabel: {
     fontSize: 10,
     color: colors.textMuted,
-    fontFamily: 'Nunito_400Regular',
+    fontFamily: 'HankenGrotesk_400Regular',
     textAlign: 'center',
   },
 
@@ -682,7 +682,7 @@ const getStyles = (colors: any) => StyleSheet.create({
   milestoneHint: {
     fontSize: 12,
     color: colors.purple300,
-    fontFamily: 'Nunito_400Regular',
+    fontFamily: 'HankenGrotesk_400Regular',
     textAlign: 'center',
     marginBottom: 6,
   },
@@ -695,12 +695,12 @@ const getStyles = (colors: any) => StyleSheet.create({
   freezeAvail: {
     fontSize: 11,
     color: colors.info,
-    fontFamily: 'Nunito_400Regular',
+    fontFamily: 'HankenGrotesk_400Regular',
   },
   shareLink: {
     fontSize: 11,
     color: colors.purple300,
-    fontFamily: 'Nunito_400Regular',
+    fontFamily: 'HankenGrotesk_400Regular',
     textDecorationLine: 'underline',
   },
 
@@ -715,13 +715,13 @@ const getStyles = (colors: any) => StyleSheet.create({
   comebackTitle: {
     fontSize: 16,
     color: colors.textPrimary,
-    fontFamily: 'CormorantGaramond_400Regular',
+    fontFamily: 'Erode_400Regular',
     marginBottom: 6,
   },
   comebackBody: {
     fontSize: 13,
     color: colors.textSecondary,
-    fontFamily: 'Nunito_400Regular',
+    fontFamily: 'HankenGrotesk_400Regular',
     lineHeight: 20,
     marginBottom: 14,
   },
@@ -737,7 +737,7 @@ const getStyles = (colors: any) => StyleSheet.create({
   freezeBtnText: {
     fontSize: 13,
     color: colors.info,
-    fontFamily: 'Nunito_600SemiBold',
+    fontFamily: 'HankenGrotesk_600SemiBold',
   },
 
   chartCard: {
@@ -751,14 +751,14 @@ const getStyles = (colors: any) => StyleSheet.create({
   chartTitle: {
     fontSize: 10,
     color: colors.textSecondary,
-    fontFamily: 'Nunito_600SemiBold',
+    fontFamily: 'HankenGrotesk_600SemiBold',
     letterSpacing: 1.5,
     marginBottom: 16,
   },
   chartEmpty: {
     fontSize: 13,
     color: colors.textSecondary,
-    fontFamily: 'Nunito_400Regular',
+    fontFamily: 'HankenGrotesk_400Regular',
     textAlign: 'center',
     paddingVertical: 32,
   },
@@ -784,7 +784,7 @@ const getStyles = (colors: any) => StyleSheet.create({
   barLabel: {
     fontSize: 9,
     color: colors.textMuted,
-    fontFamily: 'Nunito_400Regular',
+    fontFamily: 'HankenGrotesk_400Regular',
     marginTop: 4,
   },
 
@@ -800,12 +800,12 @@ const getStyles = (colors: any) => StyleSheet.create({
     flexShrink: 0,
   },
   emotionDot: { width: 5, height: 5, borderRadius: 2.5 },
-  emotionLabel: { fontSize: 10, fontFamily: 'Nunito_400Regular', flexShrink: 0 },
+  emotionLabel: { fontSize: 10, fontFamily: 'HankenGrotesk_400Regular', flexShrink: 0 },
 
   sectionLabel: {
     fontSize: 10,
     color: colors.textSecondary,
-    fontFamily: 'Nunito_600SemiBold',
+    fontFamily: 'HankenGrotesk_600SemiBold',
     letterSpacing: 1.5,
     marginBottom: 12,
   },
@@ -821,7 +821,7 @@ const getStyles = (colors: any) => StyleSheet.create({
   reviewWeekLabel: {
     fontSize: 10,
     color: colors.textSecondary,
-    fontFamily: 'Nunito_600SemiBold',
+    fontFamily: 'HankenGrotesk_600SemiBold',
     letterSpacing: 1.2,
     marginBottom: 10,
     textTransform: 'uppercase',
@@ -829,7 +829,7 @@ const getStyles = (colors: any) => StyleSheet.create({
   reviewNarrative: {
     fontSize: 15,
     color: colors.textPrimary,
-    fontFamily: 'CormorantGaramond_400Regular',
+    fontFamily: 'Erode_400Regular',
     lineHeight: 24,
     marginBottom: 14,
   },
@@ -843,7 +843,7 @@ const getStyles = (colors: any) => StyleSheet.create({
   reviewEmotionText: {
     fontSize: 11,
     color: colors.purple300,
-    fontFamily: 'Nunito_400Regular',
+    fontFamily: 'HankenGrotesk_400Regular',
   },
 
   // Year in review card extras
@@ -851,7 +851,7 @@ const getStyles = (colors: any) => StyleSheet.create({
   yearReviewMetaText: {
     fontSize: 11,
     color: colors.textMuted,
-    fontFamily: 'Nunito_400Regular',
+    fontFamily: 'HankenGrotesk_400Regular',
     letterSpacing: 0.4,
   },
   yearArcWrap: {
@@ -863,7 +863,7 @@ const getStyles = (colors: any) => StyleSheet.create({
   },
   yearArcCol: { flex: 1, alignItems: 'center', justifyContent: 'flex-end', gap: 3 },
   yearArcBar: { width: '100%', borderRadius: 2, minHeight: 4 },
-  yearArcLabel: { fontSize: 8, fontFamily: 'Nunito_400Regular' },
+  yearArcLabel: { fontSize: 8, fontFamily: 'HankenGrotesk_400Regular' },
 
   lifeGraphCard: {
     backgroundColor: colors.card,
@@ -890,7 +890,7 @@ const getStyles = (colors: any) => StyleSheet.create({
   rangeBtnText: {
     fontSize: 10,
     color: colors.textMuted,
-    fontFamily: 'Nunito_600SemiBold',
+    fontFamily: 'HankenGrotesk_600SemiBold',
     letterSpacing: 0.5,
   },
   rangeBtnTextActive: { color: colors.purple300 },
@@ -903,16 +903,16 @@ const getStyles = (colors: any) => StyleSheet.create({
   lifeGraphAvg: {
     fontSize: 13,
     color: colors.textSecondary,
-    fontFamily: 'Nunito_400Regular',
+    fontFamily: 'HankenGrotesk_400Regular',
   },
   lifeGraphDelta: {
     fontSize: 12,
-    fontFamily: 'Nunito_600SemiBold',
+    fontFamily: 'HankenGrotesk_600SemiBold',
   },
   lifeGraphEntries: {
     fontSize: 11,
     color: colors.textMuted,
-    fontFamily: 'Nunito_400Regular',
+    fontFamily: 'HankenGrotesk_400Regular',
   },
 
   sectionHeader: {
@@ -924,7 +924,7 @@ const getStyles = (colors: any) => StyleSheet.create({
   shareInsightLink: {
     fontSize: 11,
     color: colors.purple300,
-    fontFamily: 'Nunito_400Regular',
+    fontFamily: 'HankenGrotesk_400Regular',
     textDecorationLine: 'underline',
   },
   shareInsightBtn: {
@@ -938,7 +938,7 @@ const getStyles = (colors: any) => StyleSheet.create({
   },
   shareInsightBtnText: {
     color: colors.purple300,
-    fontFamily: 'Nunito_600SemiBold',
+    fontFamily: 'HankenGrotesk_600SemiBold',
     fontSize: 14,
   },
 
@@ -960,14 +960,14 @@ const getStyles = (colors: any) => StyleSheet.create({
   milestoneTitle: {
     fontSize: 22,
     color: colors.textPrimary,
-    fontFamily: 'CormorantGaramond_400Regular',
+    fontFamily: 'Erode_400Regular',
     marginBottom: 12,
     textAlign: 'center',
   },
   milestoneMessage: {
     fontSize: 14,
     color: colors.textSecondary,
-    fontFamily: 'Nunito_400Regular',
+    fontFamily: 'HankenGrotesk_400Regular',
     lineHeight: 22,
     textAlign: 'center',
     marginBottom: 24,
@@ -984,7 +984,7 @@ const getStyles = (colors: any) => StyleSheet.create({
   },
   shareBtnText: {
     color: colors.purple300,
-    fontFamily: 'Nunito_600SemiBold',
+    fontFamily: 'HankenGrotesk_600SemiBold',
     fontSize: 14,
   },
   closeBtn: {
@@ -996,7 +996,7 @@ const getStyles = (colors: any) => StyleSheet.create({
   },
   closeBtnText: {
     color: colors.textSecondary,
-    fontFamily: 'Nunito_400Regular',
+    fontFamily: 'HankenGrotesk_400Regular',
     fontSize: 14,
   },
 });

@@ -435,27 +435,27 @@ const styles = StyleSheet.create({
   },
   dateSub: {
     fontSize: 10,
-    fontFamily: 'Nunito_400Regular',
+    fontFamily: 'HankenGrotesk_400Regular',
     fontWeight: '300',
     marginBottom: 4,
     letterSpacing: 0.3,
   },
   greetingName: {
     fontSize: 24,
-    fontFamily: 'CormorantGaramond_300Light',
+    fontFamily: 'Erode_300Light',
     fontWeight: '300',
     lineHeight: 30,
   },
   streakBlock: { alignItems: 'flex-end' },
   streakNum: {
     fontSize: 26,
-    fontFamily: 'CormorantGaramond_300Light',
+    fontFamily: 'Erode_300Light',
     fontWeight: '300',
     lineHeight: 28,
   },
   streakLabel: {
     fontSize: 9,
-    fontFamily: 'Nunito_400Regular',
+    fontFamily: 'HankenGrotesk_400Regular',
     fontWeight: '300',
     marginTop: 2,
   },
@@ -472,12 +472,12 @@ const styles = StyleSheet.create({
   },
   lastChevron: {
     fontSize: 16,
-    fontFamily: 'Nunito_400Regular',
+    fontFamily: 'HankenGrotesk_400Regular',
     lineHeight: 16,
   },
   lastMeta: {
     fontSize: 9.5,
-    fontFamily: 'Nunito_400Regular',
+    fontFamily: 'HankenGrotesk_400Regular',
     fontWeight: '300',
     marginBottom: 5,
   },
@@ -490,19 +490,19 @@ const styles = StyleSheet.create({
   lastDot: { width: 5, height: 5, borderRadius: 3 },
   lastScore: {
     fontSize: 10.5,
-    fontFamily: 'Nunito_400Regular',
+    fontFamily: 'HankenGrotesk_400Regular',
     fontWeight: '300',
   },
   lastQuote: {
     fontSize: 13,
-    fontFamily: 'CormorantGaramond_300Light',
+    fontFamily: 'Erode_300Light',
     fontStyle: 'italic',
     fontWeight: '300',
     lineHeight: 20,
   },
   guestHint: {
     fontSize: 13,
-    fontFamily: 'Nunito_400Regular',
+    fontFamily: 'HankenGrotesk_400Regular',
     fontWeight: '300',
     fontStyle: 'italic',
   },
@@ -515,7 +515,7 @@ const styles = StyleSheet.create({
   },
   starterLabel: {
     fontSize: 9,
-    fontFamily: 'Nunito_400Regular',
+    fontFamily: 'HankenGrotesk_400Regular',
     fontWeight: '300',
     letterSpacing: 0.3,
     marginBottom: 6,
@@ -529,18 +529,18 @@ const styles = StyleSheet.create({
   starterTitle: {
     flex: 1,
     fontSize: 17,
-    fontFamily: 'CormorantGaramond_300Light',
+    fontFamily: 'Erode_300Light',
     fontWeight: '300',
     lineHeight: 23,
   },
   starterArrow: {
     fontSize: 15,
-    fontFamily: 'Nunito_400Regular',
+    fontFamily: 'HankenGrotesk_400Regular',
     lineHeight: 23,
   },
   starterWhy: {
     fontSize: 10.5,
-    fontFamily: 'Nunito_400Regular',
+    fontFamily: 'HankenGrotesk_400Regular',
     fontWeight: '300',
     lineHeight: 15,
     marginTop: 4,
@@ -565,7 +565,7 @@ const styles = StyleSheet.create({
   },
   recHint: {
     fontSize: 11,
-    fontFamily: 'Nunito_400Regular',
+    fontFamily: 'HankenGrotesk_400Regular',
     fontWeight: '300',
   },
 
@@ -576,7 +576,7 @@ const styles = StyleSheet.create({
   stripWrap: {},
   stripLabel: {
     fontSize: 9,
-    fontFamily: 'Nunito_400Regular',
+    fontFamily: 'HankenGrotesk_400Regular',
     fontWeight: '300',
     marginBottom: 8,
     letterSpacing: 0.3,
@@ -595,6 +595,6 @@ const styles = StyleSheet.create({
   },
   stripDay: {
     fontSize: 8,
-    fontFamily: 'Nunito_400Regular',
+    fontFamily: 'HankenGrotesk_400Regular',
   },
 });

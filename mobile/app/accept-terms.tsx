@@ -124,13 +124,13 @@ const styles = StyleSheet.create({
   icon: { fontSize: 32 },
   title: {
     fontSize: 28,
-    fontFamily: 'CormorantGaramond_500Medium',
+    fontFamily: 'Erode_500Medium',
     marginBottom: 12,
     textAlign: 'center',
   },
   body: {
     fontSize: 14,
-    fontFamily: 'Nunito_400Regular',
+    fontFamily: 'HankenGrotesk_400Regular',
     lineHeight: 21,
     textAlign: 'center',
     marginBottom: 28,
@@ -149,7 +149,7 @@ const styles = StyleSheet.create({
   },
   linkText: {
     fontSize: 15,
-    fontFamily: 'Nunito_600SemiBold',
+    fontFamily: 'HankenGrotesk_600SemiBold',
   },
   chevron: { fontSize: 22, lineHeight: 22 },
   separator: { height: 1, marginHorizontal: 16 },
@@ -178,12 +178,12 @@ const styles = StyleSheet.create({
   consentText: {
     flex: 1,
     fontSize: 13.5,
-    fontFamily: 'Nunito_400Regular',
+    fontFamily: 'HankenGrotesk_400Regular',
     lineHeight: 19,
   },
   errorText: {
     fontSize: 13,
-    fontFamily: 'Nunito_400Regular',
+    fontFamily: 'HankenGrotesk_400Regular',
     color: '#ef4444',
     marginBottom: 12,
     textAlign: 'center',
@@ -202,7 +202,7 @@ const styles = StyleSheet.create({
   buttonText: {
     color: '#fff',
     fontSize: 16,
-    fontFamily: 'Nunito_600SemiBold',
+    fontFamily: 'HankenGrotesk_600SemiBold',
     letterSpacing: 0.5,
   },
 });

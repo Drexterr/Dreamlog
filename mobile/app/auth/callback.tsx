@@ -41,14 +41,14 @@ export default function AuthCallback() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0f0c1e',
+    backgroundColor: '#18150f',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 16,
   },
   text: {
     color: '#a78bfa',
-    fontFamily: 'Nunito_400Regular',
+    fontFamily: 'HankenGrotesk_400Regular',
     fontSize: 15,
   },
 });

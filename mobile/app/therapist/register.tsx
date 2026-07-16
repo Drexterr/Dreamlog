@@ -159,12 +159,12 @@ const styles = StyleSheet.create({
   scroll: { padding: 24, paddingTop: 48 },
   title: {
     fontSize: 30,
-    fontFamily: 'CormorantGaramond_500Medium',
+    fontFamily: 'Erode_500Medium',
     marginBottom: 10,
   },
   subtitle: {
     fontSize: 14,
-    fontFamily: 'Nunito_400Regular',
+    fontFamily: 'HankenGrotesk_400Regular',
     lineHeight: 20,
     marginBottom: 24,
   },
@@ -179,7 +179,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     borderWidth: 1,
     padding: 14,
-    fontFamily: 'Nunito_400Regular',
+    fontFamily: 'HankenGrotesk_400Regular',
     fontSize: 15,
   },
   consentCard: {
@@ -190,12 +190,12 @@ const styles = StyleSheet.create({
   },
   consentTitle: {
     fontSize: 16,
-    fontFamily: 'Nunito_700Bold',
+    fontFamily: 'HankenGrotesk_700Bold',
     marginBottom: 10,
   },
   consentBody: {
     fontSize: 13,
-    fontFamily: 'Nunito_400Regular',
+    fontFamily: 'HankenGrotesk_400Regular',
     lineHeight: 21,
     marginBottom: 14,
   },
@@ -209,10 +209,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   checkboxTick: { color: '#fff', fontSize: 13, fontWeight: '700', lineHeight: 16 },
-  consentText: { flex: 1, fontSize: 13.5, fontFamily: 'Nunito_600SemiBold' },
+  consentText: { flex: 1, fontSize: 13.5, fontFamily: 'HankenGrotesk_600SemiBold' },
   errorText: {
     fontSize: 13,
-    fontFamily: 'Nunito_400Regular',
+    fontFamily: 'HankenGrotesk_400Regular',
     color: '#ef4444',
     marginBottom: 12,
   },
@@ -226,7 +226,7 @@ const styles = StyleSheet.create({
     elevation: 6,
   },
   buttonDisabled: { opacity: 0.5 },
-  buttonText: { color: '#fff', fontSize: 16, fontFamily: 'Nunito_600SemiBold', letterSpacing: 0.5 },
+  buttonText: { color: '#fff', fontSize: 16, fontFamily: 'HankenGrotesk_600SemiBold', letterSpacing: 0.5 },
   skipBtn: { alignItems: 'center', paddingVertical: 18 },
-  skipText: { fontSize: 13, fontFamily: 'Nunito_400Regular', textDecorationLine: 'underline' },
+  skipText: { fontSize: 13, fontFamily: 'HankenGrotesk_400Regular', textDecorationLine: 'underline' },
 });

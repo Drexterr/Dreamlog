@@ -252,25 +252,25 @@ const getStyles = (colors: ThemeColors) =>
     center: { paddingVertical: 60, alignItems: 'center', justifyContent: 'center' },
 
     backBtn: { marginBottom: 16 },
-    backText: { fontSize: 14, color: colors.textMuted, fontFamily: 'Nunito_400Regular' },
+    backText: { fontSize: 14, color: colors.textMuted, fontFamily: 'HankenGrotesk_400Regular' },
 
     title: {
       fontSize: 28,
       color: colors.textPrimary,
-      fontFamily: 'CormorantGaramond_300Light',
+      fontFamily: 'Erode_300Light',
       marginBottom: 4,
     },
     subtitle: {
       fontSize: 14,
       color: colors.textSecondary,
-      fontFamily: 'Nunito_400Regular',
+      fontFamily: 'HankenGrotesk_400Regular',
       lineHeight: 22,
       marginBottom: 24,
     },
     countLine: {
       fontSize: 10,
       color: colors.textMuted,
-      fontFamily: 'Nunito_600SemiBold',
+      fontFamily: 'HankenGrotesk_600SemiBold',
       letterSpacing: 1.2,
       textTransform: 'uppercase',
       marginBottom: 14,
@@ -289,7 +289,7 @@ const getStyles = (colors: ThemeColors) =>
     emptyText: {
       fontSize: 14,
       color: colors.textSecondary,
-      fontFamily: 'Nunito_400Regular',
+      fontFamily: 'HankenGrotesk_400Regular',
       lineHeight: 22,
       textAlign: 'center',
     },
@@ -316,22 +316,22 @@ const getStyles = (colors: ThemeColors) =>
     avatarInitial: {
       fontSize: 18,
       color: colors.brand,
-      fontFamily: 'CormorantGaramond_500Medium',
+      fontFamily: 'Erode_500Medium',
       lineHeight: 22,
     },
     name: {
       fontSize: 19,
       color: colors.textPrimary,
-      fontFamily: 'CormorantGaramond_400Regular',
+      fontFamily: 'Erode_400Regular',
       marginBottom: 2,
     },
     credentials: {
       fontSize: 12,
       color: colors.purple300,
-      fontFamily: 'Nunito_600SemiBold',
+      fontFamily: 'HankenGrotesk_600SemiBold',
       marginBottom: 2,
     },
-    meta: { fontSize: 11, color: colors.textMuted, fontFamily: 'Nunito_400Regular' },
+    meta: { fontSize: 11, color: colors.textMuted, fontFamily: 'HankenGrotesk_400Regular' },
 
     actionsRow: {
       flexDirection: 'row',
@@ -353,7 +353,7 @@ const getStyles = (colors: ThemeColors) =>
     declineText: {
       fontSize: 14,
       color: colors.textSecondary,
-      fontFamily: 'Nunito_600SemiBold',
+      fontFamily: 'HankenGrotesk_600SemiBold',
     },
     approveBtn: {
       flex: 1,
@@ -366,14 +366,14 @@ const getStyles = (colors: ThemeColors) =>
     approveText: {
       fontSize: 14,
       color: colors.bg,
-      fontFamily: 'Nunito_600SemiBold',
+      fontFamily: 'HankenGrotesk_600SemiBold',
     },
     btnDisabled: { opacity: 0.5 },
 
     footer: {
       fontSize: 11,
       color: colors.textMuted,
-      fontFamily: 'Nunito_400Regular',
+      fontFamily: 'HankenGrotesk_400Regular',
       lineHeight: 18,
       textAlign: 'center',
       marginTop: 16,

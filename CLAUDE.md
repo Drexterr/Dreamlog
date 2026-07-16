@@ -121,7 +121,7 @@ Mobile → POST /entries/:id/conversation + POST /conversations/:id/messages (ma
 - **`src/services/upload.ts`** - Orchestrates presign → PUT → POST with 3-attempt exponential backoff
 - **`src/services/offlineQueue.ts`** - AsyncStorage-based queue; auto-flushes on reconnect, max 5 retries
 - **`src/services/push.ts`** - FCM push registration (permission → token → `POST /devices`); fail-silent, called from `app/_layout.tsx` on auth
-- **`src/theme.ts`** - Design tokens (dark purple palette, CormorantGaramond + Nunito fonts)
+- **`src/theme.ts`** - Design tokens (warm espresso palette, Erode + Hanken Grotesk fonts)
 
 No Redux or global state manager - component state via React hooks, persistence via AsyncStorage or SecureStore.
 

@@ -336,13 +336,31 @@ Incremental UX improvements shipped outside phase gates.
 - "Change email address" row → Alert directing user to support@dreamlog.app
 - Consistent with existing modal patterns (BlurView + sheet)
 
-### Greeting Splash ✅
-- On every cold app open for an authenticated, post-onboarding user, a full-screen overlay fades in with "Hello, [name]"
-- Uses `preferred_name` if set, falls back to `name`
-- Animation: fade in 400ms → hold 1400ms → fade out 400ms (total ~2.2s)
-- Implemented as an `Animated.View` with `absoluteFill` and `zIndex: 999` inside `ThemeProvider` in `app/_layout.tsx`
-- Uses `CormorantGaramond_300Light` 36px matching the app's serif palette
-- Does not show during onboarding, on auth screen, or if user has no name
+### Greeting Splash ✅ → Brand Splash (Breath Line) ✅ (2026-07-16)
+- Replaced by `src/components/BrandSplash.tsx`: the Breath Line brand mark draws itself
+  (trembling line steadies, amber dot settles), "ode" rises above it, and for a returning
+  authenticated user "Hello, [name]" fades in beneath as the closing beat
+- Shown on every cold start for any user not being routed to onboarding (returning guests
+  get the mark without the greeting line); skipped entirely in E2E builds
+- Uses theme tokens (`colors.brand` line, `colors.purple400` dot) so the mark follows the
+  user's goal palette; `pointerEvents="none"` so it never blocks interaction
+- Honors reduce-motion (static lockup, short hold); total ~3.3s (~3.8s with greeting)
+- Wired in `app/_layout.tsx` where the old `GreetingOverlay` lived; still uses
+  `preferred_name` over `name`
+- Design source: "Ode — The Breath Line" artifact (logo spec, icon crops, all surfaces)
+
+### Brand rollout: icon, boot splash, typography ✅ (2026-07-16)
+- **App icon** replaced with the Breath Line icon crop (amber on espresso `#18150F`):
+  `assets/icon.png` (iOS/expo), Android mipmaps (`ic_launcher`, `ic_launcher_round`,
+  adaptive `ic_launcher_foreground`) regenerated at all densities
+- **Native boot splash** replaced: `assets/splash.png` (iOS) + Android 12
+  `splashscreen_logo` drawables now show the static mark; all `#0f0c1e` purple grounds
+  (app.json, colors.xml, styles.xml, fallback views) moved to espresso `#18150F`
+- ⚠️ Icon + native splash require a new `eas build` — they do not ship via OTA
+- **Typography aligned with the website**: Cormorant Garamond → **Erode** (Fontshare TTFs
+  bundled in `assets/fonts/`, weights 300/400/500/600) and Nunito → **Hanken Grotesk**
+  (`@expo-google-fonts/hanken-grotesk`, weights 300/400/600/700). All font identifiers
+  renamed (`Erode_*`, `HankenGrotesk_*`); old font packages removed; ships via OTA
 
 ### Therapy Session Screen - Voice-First Redesign ✅
 - Screen rebuilt to mirror the journal record screen aesthetic: pulsating mic orb as the primary UI element

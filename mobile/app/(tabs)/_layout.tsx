@@ -139,7 +139,7 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
   },
   tabLabel: {
-    fontFamily: 'Nunito_400Regular',
+    fontFamily: 'HankenGrotesk_400Regular',
     fontSize: 10,
     letterSpacing: 0.4,
   },

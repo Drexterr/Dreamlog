@@ -314,7 +314,7 @@ const styles = StyleSheet.create({
     flex: 1,
     textAlign: 'center',
     fontSize: 17,
-    fontFamily: 'CormorantGaramond_500Medium',
+    fontFamily: 'Erode_500Medium',
     letterSpacing: 0.3,
     marginHorizontal: 8,
   },
@@ -322,7 +322,7 @@ const styles = StyleSheet.create({
     width: 32,
     textAlign: 'right',
     fontSize: 12,
-    fontFamily: 'Nunito_600SemiBold',
+    fontFamily: 'HankenGrotesk_600SemiBold',
   },
 
   progressTrack: {
@@ -345,12 +345,12 @@ const styles = StyleSheet.create({
   },
   completeBannerTitle: {
     fontSize: 16,
-    fontFamily: 'CormorantGaramond_500Medium',
+    fontFamily: 'Erode_500Medium',
     letterSpacing: 0.2,
   },
   completeBannerSub: {
     fontSize: 13,
-    fontFamily: 'Nunito_400Regular',
+    fontFamily: 'HankenGrotesk_400Regular',
     lineHeight: 19,
   },
 
@@ -375,19 +375,19 @@ const styles = StyleSheet.create({
   },
   stepIndex: {
     fontSize: 10,
-    fontFamily: 'Nunito_600SemiBold',
+    fontFamily: 'HankenGrotesk_600SemiBold',
     letterSpacing: 1,
     textTransform: 'uppercase',
   },
   stepPrompt: {
     fontSize: 15,
-    fontFamily: 'CormorantGaramond_500Medium',
+    fontFamily: 'Erode_500Medium',
     lineHeight: 22,
     letterSpacing: 0.1,
   },
   viewEntryBtn: { marginTop: 4 },
-  viewEntryText: { fontSize: 12, fontFamily: 'Nunito_400Regular' },
-  completedLabel: { fontSize: 12, fontFamily: 'Nunito_600SemiBold', marginTop: 4 },
+  viewEntryText: { fontSize: 12, fontFamily: 'HankenGrotesk_400Regular' },
+  completedLabel: { fontSize: 12, fontFamily: 'HankenGrotesk_600SemiBold', marginTop: 4 },
 
   recordPanel: {
     borderRadius: 16,
@@ -398,12 +398,12 @@ const styles = StyleSheet.create({
   },
   recordLabel: {
     fontSize: 10,
-    fontFamily: 'Nunito_600SemiBold',
+    fontFamily: 'HankenGrotesk_600SemiBold',
     letterSpacing: 1.5,
   },
   recordPrompt: {
     fontSize: 16,
-    fontFamily: 'CormorantGaramond_500Medium',
+    fontFamily: 'Erode_500Medium',
     lineHeight: 24,
     letterSpacing: 0.1,
   },
@@ -420,13 +420,13 @@ const styles = StyleSheet.create({
   micDot: { width: 24, height: 24, borderRadius: 12 },
   recordTimer: {
     fontSize: 22,
-    fontFamily: 'Nunito_300Light',
+    fontFamily: 'HankenGrotesk_300Light',
     letterSpacing: 2,
   },
-  recordHint: { fontSize: 13, fontFamily: 'Nunito_400Regular', textAlign: 'center' },
-  errorHint: { fontSize: 12, fontFamily: 'Nunito_400Regular', textAlign: 'center' },
+  recordHint: { fontSize: 13, fontFamily: 'HankenGrotesk_400Regular', textAlign: 'center' },
+  errorHint: { fontSize: 12, fontFamily: 'HankenGrotesk_400Regular', textAlign: 'center' },
 
-  errorText: { fontSize: 14, fontFamily: 'Nunito_400Regular', textAlign: 'center' },
+  errorText: { fontSize: 14, fontFamily: 'HankenGrotesk_400Regular', textAlign: 'center' },
   retryBtn: { paddingHorizontal: 20, paddingVertical: 10, borderRadius: 20, borderWidth: 1 },
-  retryText: { fontSize: 14, fontFamily: 'Nunito_600SemiBold' },
+  retryText: { fontSize: 14, fontFamily: 'HankenGrotesk_600SemiBold' },
 });

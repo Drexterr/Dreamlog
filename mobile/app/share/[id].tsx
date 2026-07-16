@@ -196,16 +196,16 @@ const styles = StyleSheet.create({
   scroll: { padding: 24, paddingBottom: 60 },
 
   backBtn: { marginBottom: 20 },
-  backText: { fontSize: 14, fontFamily: 'Nunito_400Regular' },
+  backText: { fontSize: 14, fontFamily: 'HankenGrotesk_400Regular' },
 
   title: {
-    fontFamily: 'CormorantGaramond_300Light',
+    fontFamily: 'Erode_300Light',
     fontSize: 28,
     fontWeight: '300',
     marginBottom: 10,
   },
   subtitle: {
-    fontFamily: 'Nunito_400Regular',
+    fontFamily: 'HankenGrotesk_400Regular',
     fontSize: 14,
     lineHeight: 22,
     marginBottom: 24,
@@ -218,19 +218,19 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   infoTitle: {
-    fontFamily: 'Nunito_700Bold',
+    fontFamily: 'HankenGrotesk_700Bold',
     fontSize: 12,
     letterSpacing: 1,
     marginBottom: 10,
   },
   infoItem: {
-    fontFamily: 'Nunito_400Regular',
+    fontFamily: 'HankenGrotesk_400Regular',
     fontSize: 13,
     marginBottom: 5,
     lineHeight: 20,
   },
   infoExclude: {
-    fontFamily: 'Nunito_400Regular',
+    fontFamily: 'HankenGrotesk_400Regular',
     fontSize: 11,
     marginTop: 8,
     lineHeight: 18,
@@ -243,18 +243,18 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   newLinkTitle: {
-    fontFamily: 'Nunito_700Bold',
+    fontFamily: 'HankenGrotesk_700Bold',
     fontSize: 14,
     marginBottom: 14,
   },
   newLinkLabel: {
-    fontFamily: 'Nunito_600SemiBold',
+    fontFamily: 'HankenGrotesk_600SemiBold',
     fontSize: 10,
     letterSpacing: 1.2,
     marginBottom: 4,
   },
   passcode: {
-    fontFamily: 'Nunito_700Bold',
+    fontFamily: 'HankenGrotesk_700Bold',
     fontSize: 32,
     letterSpacing: 8,
     marginBottom: 12,
@@ -266,7 +266,7 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   shareBtnText: {
-    fontFamily: 'Nunito_700Bold',
+    fontFamily: 'HankenGrotesk_700Bold',
     fontSize: 15,
   },
 
@@ -277,12 +277,12 @@ const styles = StyleSheet.create({
     marginBottom: 32,
   },
   createBtnText: {
-    fontFamily: 'Nunito_700Bold',
+    fontFamily: 'HankenGrotesk_700Bold',
     fontSize: 15,
   },
 
   sectionLabel: {
-    fontFamily: 'Nunito_600SemiBold',
+    fontFamily: 'HankenGrotesk_600SemiBold',
     fontSize: 10,
     letterSpacing: 1.5,
     marginBottom: 10,
@@ -300,12 +300,12 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   divider: { height: 1, marginLeft: 14 },
-  linkToken: { fontFamily: 'Nunito_400Regular', fontSize: 13, marginBottom: 2 },
-  linkExpiry: { fontFamily: 'Nunito_400Regular', fontSize: 11 },
-  revokeText: { color: '#ef4444', fontFamily: 'Nunito_600SemiBold', fontSize: 13 },
+  linkToken: { fontFamily: 'HankenGrotesk_400Regular', fontSize: 13, marginBottom: 2 },
+  linkExpiry: { fontFamily: 'HankenGrotesk_400Regular', fontSize: 11 },
+  revokeText: { color: '#ef4444', fontFamily: 'HankenGrotesk_600SemiBold', fontSize: 13 },
 
   footer: {
-    fontFamily: 'Nunito_400Regular',
+    fontFamily: 'HankenGrotesk_400Regular',
     fontSize: 12,
     lineHeight: 18,
     textAlign: 'center',

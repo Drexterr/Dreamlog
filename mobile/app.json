@@ -14,13 +14,13 @@
     },
     "orientation": "portrait",
     "userInterfaceStyle": "dark",
-    "backgroundColor": "#0f0c1e",
+    "backgroundColor": "#18150f",
     "scheme": "dreamlog",
     "icon": "./assets/icon.png",
     "splash": {
       "image": "./assets/splash.png",
       "resizeMode": "contain",
-      "backgroundColor": "#0f0c1e"
+      "backgroundColor": "#18150f"
     },
     "web": {
       "bundler": "metro",
@@ -71,7 +71,7 @@
         {
           "url": "https://de.sentry.io/",
           "organization": "bharat-jain-i5",
-          "project": "react-native"
+          "project": "ode-mobile"
         }
       ]
     ],
@@ -89,10 +89,10 @@
       }
     },
     "android": {
-      "backgroundColor": "#0f0c1e",
+      "backgroundColor": "#18150f",
       "adaptiveIcon": {
-        "foregroundImage": "./assets/icon.png",
-        "backgroundColor": "#0f0c1e"
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#18150f"
       },
       "package": "com.dreamlog.app",
       "googleServicesFile": "./google-services.json",

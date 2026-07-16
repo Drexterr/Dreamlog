@@ -496,25 +496,25 @@ const getStyles = (colors: any) =>
     center: { paddingVertical: 60, alignItems: 'center', justifyContent: 'center' },
 
     backBtn: { marginBottom: 16 },
-    backText: { fontSize: 14, color: colors.textMuted, fontFamily: 'Nunito_400Regular' },
+    backText: { fontSize: 14, color: colors.textMuted, fontFamily: 'HankenGrotesk_400Regular' },
 
     title: {
       fontSize: 28,
       color: colors.textPrimary,
-      fontFamily: 'CormorantGaramond_300Light',
+      fontFamily: 'Erode_300Light',
       marginBottom: 4,
     },
     subtitle: {
       fontSize: 14,
       color: colors.textSecondary,
-      fontFamily: 'Nunito_400Regular',
+      fontFamily: 'HankenGrotesk_400Regular',
       lineHeight: 22,
       marginBottom: 24,
     },
     countLine: {
       fontSize: 10,
       color: colors.textMuted,
-      fontFamily: 'Nunito_600SemiBold',
+      fontFamily: 'HankenGrotesk_600SemiBold',
       letterSpacing: 1.2,
       textTransform: 'uppercase',
       marginBottom: 14,
@@ -533,7 +533,7 @@ const getStyles = (colors: any) =>
     emptyText: {
       fontSize: 14,
       color: colors.textSecondary,
-      fontFamily: 'Nunito_400Regular',
+      fontFamily: 'HankenGrotesk_400Regular',
       lineHeight: 22,
       textAlign: 'center',
     },
@@ -560,16 +560,16 @@ const getStyles = (colors: any) =>
     avatarInitial: {
       fontSize: 18,
       color: colors.brand,
-      fontFamily: 'CormorantGaramond_500Medium',
+      fontFamily: 'Erode_500Medium',
       lineHeight: 22,
     },
     name: {
       fontSize: 19,
       color: colors.textPrimary,
-      fontFamily: 'CormorantGaramond_400Regular',
+      fontFamily: 'Erode_400Regular',
       marginBottom: 2,
     },
-    meta: { fontSize: 11, color: colors.textMuted, fontFamily: 'Nunito_400Regular' },
+    meta: { fontSize: 11, color: colors.textMuted, fontFamily: 'HankenGrotesk_400Regular' },
     headRight: { alignItems: 'flex-end', gap: 5 },
     driftBadge: {
       borderWidth: 1,
@@ -581,7 +581,7 @@ const getStyles = (colors: any) =>
     driftText: {
       fontSize: 9,
       color: colors.textMuted,
-      fontFamily: 'Nunito_600SemiBold',
+      fontFamily: 'HankenGrotesk_600SemiBold',
       letterSpacing: 0.4,
     },
     roleChip: {
@@ -593,7 +593,7 @@ const getStyles = (colors: any) =>
     roleChipText: {
       fontSize: 10,
       color: colors.purple300,
-      fontFamily: 'Nunito_600SemiBold',
+      fontFamily: 'HankenGrotesk_600SemiBold',
       letterSpacing: 0.3,
     },
 
@@ -607,7 +607,7 @@ const getStyles = (colors: any) =>
       marginBottom: 7,
     },
     sentLegend: { flexDirection: 'row', gap: 12 },
-    sentCount: { fontSize: 10, fontFamily: 'Nunito_400Regular' },
+    sentCount: { fontSize: 10, fontFamily: 'HankenGrotesk_400Regular' },
 
     detailWrap: {
       marginTop: 14,
@@ -623,13 +623,13 @@ const getStyles = (colors: any) =>
       paddingHorizontal: 12,
       paddingVertical: 5,
     },
-    trendText: { fontSize: 11, fontFamily: 'Nunito_600SemiBold', letterSpacing: 0.3 },
+    trendText: { fontSize: 11, fontFamily: 'HankenGrotesk_600SemiBold', letterSpacing: 0.3 },
     mentionRow: { flexDirection: 'row', gap: 10, alignItems: 'flex-start' },
     mentionDot: { width: 7, height: 7, borderRadius: 3.5, marginTop: 6 },
     mentionContext: {
       fontSize: 14,
       color: colors.textSecondary,
-      fontFamily: 'CormorantGaramond_400Regular',
+      fontFamily: 'Erode_400Regular',
       fontStyle: 'italic',
       lineHeight: 21,
     },
@@ -642,17 +642,17 @@ const getStyles = (colors: any) =>
     mentionDate: {
       fontSize: 10,
       color: colors.textFaint,
-      fontFamily: 'Nunito_400Regular',
+      fontFamily: 'HankenGrotesk_400Regular',
     },
     mentionOpen: {
       fontSize: 10,
       color: colors.brand,
-      fontFamily: 'Nunito_600SemiBold',
+      fontFamily: 'HankenGrotesk_600SemiBold',
     },
     mentionEmpty: {
       fontSize: 12,
       color: colors.textMuted,
-      fontFamily: 'Nunito_400Regular',
+      fontFamily: 'HankenGrotesk_400Regular',
       paddingVertical: 6,
     },
 
@@ -667,7 +667,7 @@ const getStyles = (colors: any) =>
     actionBtn: {
       fontSize: 12,
       color: colors.purple300,
-      fontFamily: 'Nunito_600SemiBold',
+      fontFamily: 'HankenGrotesk_600SemiBold',
       letterSpacing: 0.3,
     },
 
@@ -688,13 +688,13 @@ const getStyles = (colors: any) =>
     modalTitle: {
       fontSize: 20,
       color: colors.textPrimary,
-      fontFamily: 'CormorantGaramond_400Regular',
+      fontFamily: 'Erode_400Regular',
       marginBottom: 6,
     },
     modalSub: {
       fontSize: 13,
       color: colors.textMuted,
-      fontFamily: 'Nunito_400Regular',
+      fontFamily: 'HankenGrotesk_400Regular',
       lineHeight: 19,
       marginBottom: 16,
     },
@@ -706,7 +706,7 @@ const getStyles = (colors: any) =>
       paddingHorizontal: 14,
       paddingVertical: 12,
       color: colors.textPrimary,
-      fontFamily: 'Nunito_400Regular',
+      fontFamily: 'HankenGrotesk_400Regular',
       fontSize: 15,
       marginBottom: 16,
     },
@@ -720,7 +720,7 @@ const getStyles = (colors: any) =>
     },
     modalCancelText: {
       color: colors.textSecondary,
-      fontFamily: 'Nunito_400Regular',
+      fontFamily: 'HankenGrotesk_400Regular',
       fontSize: 14,
     },
     modalSave: {
@@ -732,7 +732,7 @@ const getStyles = (colors: any) =>
     },
     modalSaveText: {
       color: colors.bg,
-      fontFamily: 'Nunito_600SemiBold',
+      fontFamily: 'HankenGrotesk_600SemiBold',
       fontSize: 14,
     },
     mergeRow: {
@@ -746,14 +746,14 @@ const getStyles = (colors: any) =>
     mergeName: {
       fontSize: 16,
       color: colors.textPrimary,
-      fontFamily: 'CormorantGaramond_400Regular',
+      fontFamily: 'Erode_400Regular',
     },
-    mergeMeta: { fontSize: 11, color: colors.textMuted, fontFamily: 'Nunito_400Regular' },
+    mergeMeta: { fontSize: 11, color: colors.textMuted, fontFamily: 'HankenGrotesk_400Regular' },
 
     footer: {
       fontSize: 11,
       color: colors.textMuted,
-      fontFamily: 'Nunito_400Regular',
+      fontFamily: 'HankenGrotesk_400Regular',
       lineHeight: 18,
       textAlign: 'center',
       marginTop: 16,

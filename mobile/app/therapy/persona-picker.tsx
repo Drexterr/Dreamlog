@@ -152,17 +152,17 @@ export default function PersonaPickerScreen() {
 const styles = StyleSheet.create({
   safe: { flex: 1 },
   backBtn: { paddingHorizontal: 20, paddingTop: 12, paddingBottom: 4 },
-  backBtnText: { fontSize: 13, fontFamily: 'Nunito_400Regular' },
+  backBtnText: { fontSize: 13, fontFamily: 'HankenGrotesk_400Regular' },
   container: { paddingHorizontal: 20, paddingBottom: 48, paddingTop: 8 },
 
   header: { marginBottom: 28 },
   title: {
     fontSize: 28,
-    fontFamily: 'CormorantGaramond_300Light',
+    fontFamily: 'Erode_300Light',
     lineHeight: 36,
     marginBottom: 8,
   },
-  subtitle: { fontSize: 13, fontFamily: 'Nunito_400Regular' },
+  subtitle: { fontSize: 13, fontFamily: 'HankenGrotesk_400Regular' },
 
   cards: { gap: 10, marginBottom: 32 },
   card: {
@@ -184,7 +184,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
   },
-  cardLabel: { fontSize: 15, fontFamily: 'Nunito_700Bold' },
+  cardLabel: { fontSize: 15, fontFamily: 'HankenGrotesk_700Bold' },
   checkmark: {
     width: 18,
     height: 18,
@@ -200,7 +200,7 @@ const styles = StyleSheet.create({
   },
   cardDesc: {
     fontSize: 13,
-    fontFamily: 'Nunito_400Regular',
+    fontFamily: 'HankenGrotesk_400Regular',
     lineHeight: 19,
   },
 
@@ -210,6 +210,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 12,
   },
-  startBtnText: { color: '#fff', fontSize: 16, fontFamily: 'Nunito_700Bold' },
-  note: { fontSize: 12, fontFamily: 'Nunito_400Regular', textAlign: 'center' },
+  startBtnText: { color: '#fff', fontSize: 16, fontFamily: 'HankenGrotesk_700Bold' },
+  note: { fontSize: 12, fontFamily: 'HankenGrotesk_400Regular', textAlign: 'center' },
 });

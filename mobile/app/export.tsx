@@ -162,16 +162,16 @@ const styles = StyleSheet.create({
   inner: { flex: 1, padding: 24 },
 
   backBtn: { marginBottom: 20 },
-  backText: { fontSize: 14, fontFamily: 'Nunito_400Regular' },
+  backText: { fontSize: 14, fontFamily: 'HankenGrotesk_400Regular' },
 
   title: {
-    fontFamily: 'CormorantGaramond_300Light',
+    fontFamily: 'Erode_300Light',
     fontSize: 28,
     fontWeight: '300',
     marginBottom: 10,
   },
   subtitle: {
-    fontFamily: 'Nunito_400Regular',
+    fontFamily: 'HankenGrotesk_400Regular',
     fontSize: 14,
     lineHeight: 22,
     marginBottom: 24,
@@ -184,26 +184,26 @@ const styles = StyleSheet.create({
     marginBottom: 28,
   },
   infoTitle: {
-    fontFamily: 'Nunito_700Bold',
+    fontFamily: 'HankenGrotesk_700Bold',
     fontSize: 11,
     letterSpacing: 1,
     marginBottom: 10,
   },
   infoItem: {
-    fontFamily: 'Nunito_400Regular',
+    fontFamily: 'HankenGrotesk_400Regular',
     fontSize: 13,
     marginBottom: 5,
     lineHeight: 20,
   },
   infoNote: {
-    fontFamily: 'Nunito_400Regular',
+    fontFamily: 'HankenGrotesk_400Regular',
     fontSize: 11,
     marginTop: 8,
     lineHeight: 18,
   },
 
   sectionLabel: {
-    fontFamily: 'Nunito_600SemiBold',
+    fontFamily: 'HankenGrotesk_600SemiBold',
     fontSize: 10,
     letterSpacing: 1.5,
     marginBottom: 10,
@@ -222,12 +222,12 @@ const styles = StyleSheet.create({
   },
   periodText: { flex: 1 },
   periodLabel: {
-    fontFamily: 'Nunito_600SemiBold',
+    fontFamily: 'HankenGrotesk_600SemiBold',
     fontSize: 14,
     marginBottom: 2,
   },
   periodDesc: {
-    fontFamily: 'Nunito_400Regular',
+    fontFamily: 'HankenGrotesk_400Regular',
     fontSize: 12,
     lineHeight: 18,
   },
@@ -253,12 +253,12 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   exportBtnText: {
-    fontFamily: 'Nunito_700Bold',
+    fontFamily: 'HankenGrotesk_700Bold',
     fontSize: 15,
   },
 
   footer: {
-    fontFamily: 'Nunito_400Regular',
+    fontFamily: 'HankenGrotesk_400Regular',
     fontSize: 11,
     lineHeight: 18,
     textAlign: 'center',

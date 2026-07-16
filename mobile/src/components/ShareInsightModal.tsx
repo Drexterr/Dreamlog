@@ -177,14 +177,14 @@ const getStyles = (colors: ThemeColors) =>
     sheetTitle: {
       fontSize: 20,
       color: colors.textPrimary,
-      fontFamily: 'CormorantGaramond_400Regular',
+      fontFamily: 'Erode_400Regular',
       textAlign: 'center',
       marginBottom: 4,
     },
     sheetSub: {
       fontSize: 12,
       color: colors.textMuted,
-      fontFamily: 'Nunito_400Regular',
+      fontFamily: 'HankenGrotesk_400Regular',
       textAlign: 'center',
       marginBottom: 20,
     },
@@ -214,7 +214,7 @@ const getStyles = (colors: ThemeColors) =>
     },
     cancelText: {
       color: colors.textSecondary,
-      fontFamily: 'Nunito_400Regular',
+      fontFamily: 'HankenGrotesk_400Regular',
       fontSize: 15,
     },
     shareBtn: {
@@ -229,7 +229,7 @@ const getStyles = (colors: ThemeColors) =>
     },
     shareText: {
       color: '#fff',
-      fontFamily: 'Nunito_600SemiBold',
+      fontFamily: 'HankenGrotesk_600SemiBold',
       fontSize: 15,
     },
   });

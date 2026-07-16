@@ -254,12 +254,12 @@ const styles = StyleSheet.create({
   headerText: { alignItems: 'center' },
   title: {
     fontSize: 20,
-    fontFamily: 'CormorantGaramond_300Light',
+    fontFamily: 'Erode_300Light',
     marginBottom: 1,
   },
   subtitle: {
     fontSize: 10,
-    fontFamily: 'Nunito_400Regular',
+    fontFamily: 'HankenGrotesk_400Regular',
     letterSpacing: 0.5,
   },
 
@@ -287,7 +287,7 @@ const styles = StyleSheet.create({
   searchInput: {
     flex: 1,
     fontSize: 14,
-    fontFamily: 'Nunito_400Regular',
+    fontFamily: 'HankenGrotesk_400Regular',
     padding: 0,
   },
 
@@ -308,29 +308,29 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   cardMeta: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  cardDate: { fontSize: 13, fontFamily: 'Nunito_600SemiBold' },
-  cardTime: { fontSize: 11, fontFamily: 'Nunito_400Regular' },
-  cardDuration: { fontSize: 11, fontFamily: 'Nunito_400Regular', letterSpacing: 0.5 },
+  cardDate: { fontSize: 13, fontFamily: 'HankenGrotesk_600SemiBold' },
+  cardTime: { fontSize: 11, fontFamily: 'HankenGrotesk_400Regular' },
+  cardDuration: { fontSize: 11, fontFamily: 'HankenGrotesk_400Regular', letterSpacing: 0.5 },
   cardSummary: {
     fontSize: 14,
-    fontFamily: 'Nunito_400Regular',
+    fontFamily: 'HankenGrotesk_400Regular',
     lineHeight: 22,
     marginBottom: 10,
   },
   cardPending: {
     fontSize: 13,
-    fontFamily: 'Nunito_400Regular',
+    fontFamily: 'HankenGrotesk_400Regular',
     fontStyle: 'italic',
     marginBottom: 8,
   },
   topicRow: { flexDirection: 'row', gap: 6, flexWrap: 'wrap' },
   topicBadge: { borderRadius: 8, paddingHorizontal: 8, paddingVertical: 2 },
-  topicText: { fontSize: 10, fontFamily: 'Nunito_400Regular' },
+  topicText: { fontSize: 10, fontFamily: 'HankenGrotesk_400Regular' },
 
   emptyWrap: { paddingTop: 60, alignItems: 'center' },
   emptyText: {
     fontSize: 14,
-    fontFamily: 'Nunito_400Regular',
+    fontFamily: 'HankenGrotesk_400Regular',
     textAlign: 'center',
     lineHeight: 22,
   },

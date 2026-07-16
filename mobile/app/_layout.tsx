@@ -1,6 +1,6 @@
 import 'react-native-gesture-handler';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Animated, StyleSheet, Text, View } from 'react-native';
+import { View } from 'react-native';
 import { Slot, SplashScreen, useRouter, useSegments } from 'expo-router';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import * as Sentry from '@sentry/react-native';
@@ -20,19 +20,13 @@ GoogleSignin.configure({
   webClientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID,
   scopes: ['email', 'profile'],
 });
+import { useFonts } from 'expo-font';
 import {
-  useFonts,
-  CormorantGaramond_300Light,
-  CormorantGaramond_400Regular,
-  CormorantGaramond_500Medium,
-  CormorantGaramond_600SemiBold,
-} from '@expo-google-fonts/cormorant-garamond';
-import {
-  Nunito_300Light,
-  Nunito_400Regular,
-  Nunito_600SemiBold,
-  Nunito_700Bold,
-} from '@expo-google-fonts/nunito';
+  HankenGrotesk_300Light,
+  HankenGrotesk_400Regular,
+  HankenGrotesk_600SemiBold,
+  HankenGrotesk_700Bold,
+} from '@expo-google-fonts/hanken-grotesk';
 import NetInfo from '@react-native-community/netinfo';
 import { api, storeToken, clearToken } from '../src/api/client';
 import { supabase, deepLinkReady } from '../src/lib/supabase';
@@ -55,30 +49,9 @@ import {
 } from '../src/services/guestStorage';
 import ForceUpdateScreen from '../src/components/ForceUpdateScreen';
 import AuthSheet from '../src/components/AuthSheet';
-import { useTheme } from '../src/context/ThemeContext';
+import BrandSplash from '../src/components/BrandSplash';
 import { E2E, E2E_TOKEN } from '../src/config/e2e';
 import type { VersionInfo } from '../src/types';
-
-function GreetingOverlay({ name, opacity }: { name: string; opacity: Animated.Value }) {
-  const { colors } = useTheme();
-  return (
-    <Animated.View
-      style={[
-        StyleSheet.absoluteFillObject,
-        { backgroundColor: colors.bg, alignItems: 'center', justifyContent: 'center', zIndex: 999, opacity },
-      ]}
-    >
-      <Text style={{ fontFamily: 'CormorantGaramond_300Light', fontSize: 40, color: colors.textPrimary, letterSpacing: 0.5 }}>
-        Hello, {name}
-      </Text>
-      {/* Thin hairline accent */}
-      <View style={{ width: 28, height: 1, backgroundColor: colors.brand, opacity: 0.6, marginTop: 22, marginBottom: 14 }} />
-      <Text style={{ fontFamily: 'Nunito_300Light', fontSize: 12, color: colors.textMuted, letterSpacing: 0.5 }}>
-        good to see you
-      </Text>
-    </Animated.View>
-  );
-}
 
 SplashScreen.preventAutoHideAsync();
 
@@ -87,24 +60,24 @@ function RootLayout() {
   const [hasToken, setHasToken] = useState(false);
   const [needsOnboarding, setNeedsOnboarding] = useState(false);
   const [greetingName, setGreetingName] = useState<string | null>(null);
-  const [showGreeting, setShowGreeting] = useState(false);
+  const [showSplash, setShowSplash] = useState(false);
   const [forceUpdate, setForceUpdate] = useState<VersionInfo | null>(null);
   const [showAuthSheet, setShowAuthSheet] = useState(false);
-  const greetingOpacity = useRef(new Animated.Value(0)).current;
   const afterAuthCallback = useRef<(() => void) | null>(null);
   const router = useRouter();
   const segments = useSegments();
   const redirected = useRef(false);
 
   const [fontsLoaded, fontError] = useFonts({
-    CormorantGaramond_300Light,
-    CormorantGaramond_400Regular,
-    CormorantGaramond_500Medium,
-    CormorantGaramond_600SemiBold,
-    Nunito_300Light,
-    Nunito_400Regular,
-    Nunito_600SemiBold,
-    Nunito_700Bold,
+    // Erode (Fontshare, ITF FFL) — matches the website's heading face
+    Erode_300Light: require('../assets/fonts/Erode-Light.ttf'),
+    Erode_400Regular: require('../assets/fonts/Erode-Regular.ttf'),
+    Erode_500Medium: require('../assets/fonts/Erode-Medium.ttf'),
+    Erode_600SemiBold: require('../assets/fonts/Erode-Semibold.ttf'),
+    HankenGrotesk_300Light,
+    HankenGrotesk_400Regular,
+    HankenGrotesk_600SemiBold,
+    HankenGrotesk_700Bold,
   });
 
   // requestAuth: called by protected screens when a guest user tries an action.
@@ -212,9 +185,13 @@ function RootLayout() {
         if (!onboardingDone) {
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           router.replace('/onboarding' as any);
-        } else if (inAuth || inOnboarding || atRootIndex) {
-          // Returning guest lands on tabs
-          router.replace('/(tabs)');
+        } else {
+          if (inAuth || inOnboarding || atRootIndex) {
+            // Returning guest lands on tabs
+            router.replace('/(tabs)');
+          }
+          // Returning guests get the brand splash without the greeting line
+          if (!E2E) setShowSplash(true);
         }
         // Otherwise they're already navigating freely
         return;
@@ -234,15 +211,10 @@ function RootLayout() {
         router.replace('/(tabs)');
       }
 
-      // Greeting overlay is independent of navigation — show it for any returning user
-      if (!needsOnboarding && greetingName) {
-        setShowGreeting(true);
-        Animated.sequence([
-          Animated.timing(greetingOpacity, { toValue: 1, duration: 400, useNativeDriver: true }),
-          Animated.delay(1400),
-          Animated.timing(greetingOpacity, { toValue: 0, duration: 400, useNativeDriver: true }),
-        ]).start(() => setShowGreeting(false));
-      }
+      // Brand splash — the Breath Line draws itself, "ode" rises, and for a
+      // returning user the greeting fades in beneath. Skipped when heading to
+      // onboarding (the brand means nothing yet) and in E2E runs.
+      if (!E2E && !needsOnboarding) setShowSplash(true);
     })();
   }, [ready, fontsLoaded, fontError]);
 
@@ -316,7 +288,7 @@ function RootLayout() {
   }, [ready]);
 
   if (!ready || (!fontsLoaded && !fontError)) {
-    return <View style={{ flex: 1, backgroundColor: '#0f0c1e' }} />;
+    return <View style={{ flex: 1, backgroundColor: '#18150f' }} />;
   }
 
   return (
@@ -325,8 +297,8 @@ function RootLayout() {
         <GuidedTourProvider>
           <Slot />
           <GuidedTour />
-          {showGreeting && greetingName ? (
-            <GreetingOverlay name={greetingName} opacity={greetingOpacity} />
+          {showSplash ? (
+            <BrandSplash name={greetingName} onDone={() => setShowSplash(false)} />
           ) : null}
           {forceUpdate ? <ForceUpdateScreen info={forceUpdate} /> : null}
           <AuthSheet
