@@ -1,3 +1,4 @@
+import { OdeMark } from '@/components/BreathLine';
 import Link from 'next/link';
 
 export default function AboutPage() {
@@ -5,7 +6,7 @@ export default function AboutPage() {
     <div style={{ background: '#18150f', color: '#e8ddd0', minHeight: '100vh', fontFamily: "'Hanken Grotesk', sans-serif" }}>
       <nav style={{ maxWidth: 960, margin: '0 auto', padding: '24px 40px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none', color: '#e8ddd0' }}>
-          <div style={{ width: 28, height: 28, borderRadius: 7, background: '#c8955a', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: "'Erode', serif", fontStyle: 'italic', fontWeight: 700, fontSize: '1rem', color: '#18150f' }}>O</div>
+          <OdeMark size={28} />
           <span style={{ fontFamily: "'Erode', serif", fontSize: '1.1rem', fontWeight: 600 }}>Ode</span>
         </Link>
         <Link href="/#download" style={{ background: '#c8955a', color: '#18150f', borderRadius: 100, padding: '9px 20px', fontSize: '0.84rem', fontWeight: 700, textDecoration: 'none' }}>

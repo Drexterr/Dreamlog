@@ -2,6 +2,7 @@
 
 import { usePathname, useRouter } from 'next/navigation';
 import { clearToken } from '../lib/api';
+import { OdeMark } from './BreathLine';
 
 const NAV = [
   {
@@ -94,13 +95,7 @@ export default function PortalSidebar({ therapistName, therapistCredentials }: P
       {/* Logo */}
       <div style={{ padding: '20px 20px 16px', borderBottom: '1px solid var(--border)' }}>
         <a href="/dashboard" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <div style={{
-            width: 30, height: 30, borderRadius: 8,
-            background: 'var(--gold)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontFamily: "'Erode', serif",
-            fontStyle: 'italic', fontWeight: 700, fontSize: '1.1rem', color: '#0c0b09',
-          }}>O</div>
+          <OdeMark size={30} />
           <span style={{ fontFamily: "'Erode', serif", fontSize: '1.15rem', fontWeight: 600, color: 'var(--text)', letterSpacing: 0.3 }}>
             Ode
           </span>

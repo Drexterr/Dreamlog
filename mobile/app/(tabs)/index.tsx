@@ -17,17 +17,6 @@ import { useGuidedTour } from '../../src/context/GuidedTourContext';
 import { T } from '../../src/testIDs';
 import type { DailyMood, Flashback, StreakInfo, TimelineEntry } from '../../src/types';
 
-// ── Format date label ─────────────────────────────────────────────────────────
-function formatEntryDate(iso: string): string {
-  const d = new Date(iso);
-  const now = new Date();
-  const yesterday = new Date(now);
-  yesterday.setDate(now.getDate() - 1);
-  if (d.toDateString() === now.toDateString()) return 'Today';
-  if (d.toDateString() === yesterday.toDateString()) return 'Yesterday';
-  return d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
-}
-
 // ── Starter prompt ────────────────────────────────────────────────────────────
 // A personalized "place to start" derived from the latest completed analysis.
 // No AI call - reuses morning_nudge / connection_insight the worker already
@@ -185,7 +174,7 @@ export default function HomeScreen() {
   const router = useRouter();
   const { colors, moodToColor } = useTheme();
   const { isAuthenticated, requestAuth } = useAuth();
-  const { registerRef, checkAndStartTour } = useGuidedTour();
+  const { registerRef, checkAndStartTour, tourActive } = useGuidedTour();
 
   // Refs for guided tour spotlight targets
   const recordRef    = useRef<View>(null);
@@ -196,14 +185,6 @@ export default function HomeScreen() {
   const [weekMoods, setWeekMoods] = useState<DailyMood[]>([]);
   const [flashback, setFlashback] = useState<Flashback | null>(null);
   const [starter, setStarter] = useState<Starter | null>(null);
-  const [lastEntry, setLastEntry] = useState<{
-    id: string;
-    dateLabel: string;
-    emotionLabel: string;
-    moodScore: number;
-    quote: string;
-    topic: string;
-  } | null>(null);
 
   const topAnim    = useRef(new Animated.Value(0)).current;
   const lastAnim   = useRef(new Animated.Value(0)).current;
@@ -229,19 +210,7 @@ export default function HomeScreen() {
     api.getFlashback().then(setFlashback).catch(() => setFlashback(null));
 
     api.getTimeline(1, 1).then((res) => {
-      const item = res.entries?.[0];
-      setStarter(deriveStarter(item));
-      if (item?.analysis && item.entry.status === 'completed') {
-        const a = item.analysis;
-        setLastEntry({
-          id:           item.entry.id,
-          dateLabel:    formatEntryDate(item.entry.created_at),
-          emotionLabel: a.emotional_tone?.[0]?.emotion ?? '',
-          moodScore:    a.mood_score,
-          quote:        a.key_quotes?.[0] ?? '',
-          topic:        a.topics?.[0] ?? '',
-        });
-      }
+      setStarter(deriveStarter(res.entries?.[0]));
     }).catch(() => {});
   }, [isAuthenticated]);
 
@@ -252,10 +221,6 @@ export default function HomeScreen() {
       requestAuth(() => router.push('/record'));
     }
   }, [isAuthenticated, requestAuth, router]);
-
-  const openLastReflection = useCallback(() => {
-    if (lastEntry) router.push(`/reflection/${lastEntry.id}` as any);
-  }, [lastEntry, router]);
 
   const openStarter = useCallback(() => {
     if (!starter) return;
@@ -300,68 +265,30 @@ export default function HomeScreen() {
           )}
         </Animated.View>
 
-        {/* ── Last entry snippet (authenticated users only) — taps into the reflection ── */}
-        {lastEntry && isAuthenticated && (
-          <Animated.View
-            style={[
-              styles.lastWrap,
-              { borderTopColor: colors.borderFaint, opacity: lastAnim, transform: [{ translateY: lastTranslate }] },
-            ]}
-          >
-            <TouchableOpacity testID={T.home.lastEntry} accessibilityLabel="Open last reflection" onPress={openLastReflection} activeOpacity={0.7}>
-              <View style={styles.lastHeaderRow}>
-                <Text style={[styles.lastMeta, { color: colors.textMuted }]}>
-                  {lastEntry.dateLabel}{lastEntry.emotionLabel ? ` · ${lastEntry.emotionLabel}` : ''}
-                </Text>
-                <Text style={[styles.lastChevron, { color: colors.textMuted }]}>›</Text>
-              </View>
-              {lastEntry.topic ? (
-                <View style={styles.lastRow}>
-                  <View style={[styles.lastDot, { backgroundColor: moodToColor(lastEntry.moodScore) }]} />
-                  <Text style={[styles.lastScore, { color: colors.textSecondary }]}>
-                    {lastEntry.moodScore}{lastEntry.topic ? ` · ${lastEntry.topic}` : ''}
-                  </Text>
-                </View>
-              ) : null}
-              {lastEntry.quote ? (
-                <Text style={[styles.lastQuote, { color: colors.textSecondary }]} numberOfLines={2}>
-                  "{lastEntry.quote}"
-                </Text>
-              ) : null}
-            </TouchableOpacity>
-          </Animated.View>
-        )}
-
-        {/* ── Flashback time capsule ── */}
-        {flashback && isAuthenticated && (
-          <Animated.View
-            style={[
-              styles.lastWrap,
-              { borderTopColor: colors.borderFaint, opacity: lastAnim, transform: [{ translateY: lastTranslate }] },
-            ]}
-          >
+        {/* ── One contextual card: flashback when one exists (the rarer moment),
+               otherwise the personalized starter prompt. Never both — home keeps
+               a single quiet voice above the record button. ── */}
+        {isAuthenticated && flashback ? (
+          <Animated.View style={{ opacity: lastAnim, transform: [{ translateY: lastTranslate }] }}>
             <TouchableOpacity
               testID={T.flashback.card}
               accessibilityLabel="Open flashback entry"
               onPress={() => router.push(`/reflection/${flashback.entry_id}` as any)}
-              activeOpacity={0.7}
+              activeOpacity={0.75}
+              style={[styles.starterCard, { backgroundColor: colors.card, borderColor: colors.border }]}
             >
-              <View style={styles.lastHeaderRow}>
-                <Text style={[styles.lastMeta, { color: colors.textMuted }]}>
-                  {flashback.label === 'one_year_ago' ? 'One year ago' : 'One month ago'}
-                  {' · from your past'}
-                </Text>
-                <Text style={[styles.lastChevron, { color: colors.textMuted }]}>›</Text>
-              </View>
-              <Text style={[styles.lastQuote, { color: colors.textSecondary }]} numberOfLines={2}>
-                {flashback.summary}
+              <Text style={[styles.starterLabel, { color: colors.textMuted }]}>
+                {flashback.label === 'one_year_ago' ? 'one year ago · from your past' : 'one month ago · from your past'}
               </Text>
+              <View style={styles.starterTitleRow}>
+                <Text style={[styles.flashbackSummary, { color: colors.textSecondary }]} numberOfLines={3}>
+                  {flashback.summary}
+                </Text>
+                <Text style={[styles.starterArrow, { color: colors.brand }]}>→</Text>
+              </View>
             </TouchableOpacity>
           </Animated.View>
-        )}
-
-        {/* ── Starter prompt — a personalized place to start (Ash-style) ── */}
-        {starter && isAuthenticated && (
+        ) : isAuthenticated && starter ? (
           <Animated.View style={{ opacity: lastAnim, transform: [{ translateY: lastTranslate }] }}>
             <TouchableOpacity
               testID={T.home.starterCard}
@@ -380,7 +307,7 @@ export default function HomeScreen() {
               </Text>
             </TouchableOpacity>
           </Animated.View>
-        )}
+        ) : null}
 
         {/* ── Guest hint (shown only to unauthenticated users) ── */}
         {!isAuthenticated && (
@@ -406,10 +333,14 @@ export default function HomeScreen() {
           <Text style={[styles.recHint, { color: colors.textMuted }]}>record</Text>
         </Animated.View>
 
-        {/* ── Mood strip ── */}
-        <View ref={weekStripRef} collapsable={false} style={[styles.stripSection, { borderTopColor: colors.borderFaint }]}>
-          <WeekStrip days={weekMoods} colors={colors} moodToColor={moodToColor} />
-        </View>
+        {/* ── Mood strip — hidden until it has at least one recorded day, so a new
+               user isn't greeted by empty scaffolding. Kept visible during the
+               guided tour, whose second step spotlights it. ── */}
+        {(weekMoods.some((d) => d.entry_count > 0) || tourActive) && (
+          <View ref={weekStripRef} collapsable={false} style={[styles.stripSection, { borderTopColor: colors.borderFaint }]}>
+            <WeekStrip days={weekMoods} colors={colors} moodToColor={moodToColor} />
+          </View>
+        )}
 
       </SafeAreaView>
     </View>
@@ -465,41 +396,6 @@ const styles = StyleSheet.create({
     marginBottom: 4,
     borderTopWidth: 1,
   },
-  lastHeaderRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  lastChevron: {
-    fontSize: 16,
-    fontFamily: 'HankenGrotesk_400Regular',
-    lineHeight: 16,
-  },
-  lastMeta: {
-    fontSize: 9.5,
-    fontFamily: 'HankenGrotesk_400Regular',
-    fontWeight: '300',
-    marginBottom: 5,
-  },
-  lastRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 7,
-    marginBottom: 5,
-  },
-  lastDot: { width: 5, height: 5, borderRadius: 3 },
-  lastScore: {
-    fontSize: 10.5,
-    fontFamily: 'HankenGrotesk_400Regular',
-    fontWeight: '300',
-  },
-  lastQuote: {
-    fontSize: 13,
-    fontFamily: 'Erode_300Light',
-    fontStyle: 'italic',
-    fontWeight: '300',
-    lineHeight: 20,
-  },
   guestHint: {
     fontSize: 13,
     fontFamily: 'HankenGrotesk_400Regular',
@@ -544,6 +440,14 @@ const styles = StyleSheet.create({
     fontWeight: '300',
     lineHeight: 15,
     marginTop: 4,
+  },
+  flashbackSummary: {
+    flex: 1,
+    fontSize: 14,
+    fontFamily: 'Erode_300Light',
+    fontStyle: 'italic',
+    fontWeight: '300',
+    lineHeight: 21,
   },
 
   centerWrap: {

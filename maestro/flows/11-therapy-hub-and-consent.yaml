@@ -73,7 +73,9 @@ tags:
       id: "therapy-pricing-screen"
     timeout: 10000
 - assertVisible: "Therapy Sessions"
-- assertVisible:
+# Pay-per-use single-session card is hidden for v1 launch (no store SKU yet);
+# only the Pro plan card renders.
+- assertNotVisible:
     id: "therapy-pricing-cta-single"
 - assertVisible:
     id: "therapy-pricing-cta-pro"

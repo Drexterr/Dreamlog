@@ -594,6 +594,18 @@ export default function SettingsScreen() {
             <View style={[styles.rowDivider, { backgroundColor: colors.borderFaint }]} />
             <SettingRow testID={T.settings.exportRow} label="Export my data" colors={colors} onPress={() => router.push('/export')} />
             <View style={[styles.rowDivider, { backgroundColor: colors.borderFaint }]} />
+            <SettingRow
+              label="Privacy Policy"
+              colors={colors}
+              onPress={() => Linking.openURL('https://dreamlog.app/privacy')}
+            />
+            <View style={[styles.rowDivider, { backgroundColor: colors.borderFaint }]} />
+            <SettingRow
+              label="Terms of Service"
+              colors={colors}
+              onPress={() => Linking.openURL('https://dreamlog.app/terms')}
+            />
+            <View style={[styles.rowDivider, { backgroundColor: colors.borderFaint }]} />
             <SettingRow testID={T.settings.deleteRow} label="Delete all data" danger colors={colors} onPress={handleDeleteData} />
           </View>
 

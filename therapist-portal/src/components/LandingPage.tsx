@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
+import { OdeMark, BreathRail } from './BreathLine';
 
 // three.js scene ships as its own lazy chunk — never blocks first paint,
 // renders nothing during SSR/export.
@@ -532,6 +533,10 @@ export default function LandingPage() {
 
       <a href="#main-content" className="skip-link">Skip to main content</a>
 
+      {/* Scroll rail — the Breath Line standing at the right edge, drawing
+          itself as the page is read; the dot lands at the very end */}
+      <BreathRail />
+
       {/* Paper grain — subtle noise layer reinforcing the journal/editorial feel */}
       <div aria-hidden="true" style={{
         position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 9999,
@@ -542,7 +547,7 @@ export default function LandingPage() {
       {/* Nav */}
       <nav className={`landing-nav${scrolled ? ' scrolled' : ''}`}>
         <a href="/" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <div style={{ width: 28, height: 28, borderRadius: 7, background: 'var(--gold)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: "'Erode', serif", fontStyle: 'italic', fontWeight: 700, fontSize: '1rem', color: '#18150f' }}>O</div>
+          <OdeMark size={28} />
           <span style={{ fontFamily: "'Erode', serif", fontSize: '1.1rem', fontWeight: 600 }}>Ode</span>
         </a>
         <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
@@ -981,7 +986,7 @@ export default function LandingPage() {
         {/* Top row: brand left, nav links right */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 32, flexWrap: 'wrap' }}>
           <a href="/" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <div style={{ width: 26, height: 26, borderRadius: 6, background: 'var(--gold)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: "'Erode', serif", fontStyle: 'italic', fontWeight: 700, fontSize: '0.95rem', color: '#18150f' }}>O</div>
+            <OdeMark size={26} />
             <span className="serif" style={{ fontSize: '1rem', fontWeight: 600 }}>Ode</span>
           </a>
           <div style={{ display: 'flex', gap: 28, flexWrap: 'wrap', alignItems: 'center' }}>

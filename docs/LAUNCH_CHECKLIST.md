@@ -4,6 +4,10 @@ Everything left to set up before (and right after) publishing to the App Store a
 Status as of 2026-06-10, following the full codebase audit (all tests passing, `go vet` clean,
 TypeScript clean on mobile + therapist portal).
 
+**Per-platform execution lists (added 2026-07-20, re-verified against the codebase):**
+- `docs/IOS_LAUNCH_CHECKLIST.md` — App Store, step by step
+- `docs/PLAYSTORE_LAUNCH_CHECKLIST.md` — Play Store, step by step
+
 Legend: 🔴 blocker (store rejection or broken feature) · 🟡 should-do before launch · 🟢 fast follow
 
 ---

@@ -4,6 +4,11 @@ mobile/android/local.properties
 # Firebase config - contains API keys, inject via CI/CD
 mobile/google-services.json
 mobile/android/app/google-services.json
+mobile/GoogleService-Info.plist
+
+# Therapist portal build artifacts - deploy from a local build, don't commit
+therapist-portal/out/
+therapist-portal/.firebase/
 
 # Environment variables - never commit real secrets
 .env

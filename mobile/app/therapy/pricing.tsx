@@ -13,7 +13,6 @@ import { useRouter } from 'expo-router';
 import { useTheme } from '../../src/context/ThemeContext';
 import {
   resetAndDetectRegion,
-  THERAPY_SESSION_PRICE,
   THERAPY_MEMBER_SESSION_PRICE,
   PLAN_PRICE_SHORT,
 } from '../../src/services/region';
@@ -38,24 +37,13 @@ type SessionOption = {
 
 // All prices render in the user's currency only (location asked at account
 // creation: India → INR, Europe → EUR, else USD). Canonical: docs/PRICING.md.
+// v1 launch: pay-per-use single sessions are hidden — the backend has no store
+// SKU for them yet (computeBilling returns 402 in prod). Sessions ship via the
+// free first session + Pro plan only. Re-add a 'single' option here once a
+// therapy-session consumable IAP is wired end-to-end.
 function buildSessionOptions(currency: RegionCurrency): SessionOption[] {
   const memberPrice = THERAPY_MEMBER_SESSION_PRICE[currency];
   return [
-    {
-      id: 'single',
-      title: 'Single Session',
-      subtitle: 'Pay as you go - no subscription',
-      price: THERAPY_SESSION_PRICE[currency],
-      features: [
-        'Up to 1 hour',
-        'Voice or text input',
-        'AI companion grounded in your journal',
-        'Post-session summary',
-        'Crisis detection active',
-      ],
-      cta: 'Book a Session',
-      highlight: false,
-    },
     {
       id: 'pro',
       badge: 'BEST VALUE',
@@ -267,7 +255,7 @@ export default function TherapyPricingScreen() {
     if (option.isPlan) {
       router.push('/upgrade' as any);
     } else {
-      // Navigate to persona picker to start a session
+      // Pay-per-use sessions (hidden in v1) start via the persona picker.
       router.push('/therapy/persona-picker' as any);
     }
   };

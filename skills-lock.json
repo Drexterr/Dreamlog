@@ -55,6 +55,12 @@
       "skillPath": "skills/graphify/SKILL.md",
       "computedHash": "c89eecd855b10c6c66196b2cdffe09610286b465496b44fe574826c922f68114"
     },
+    "gsap-framer-scroll-animation": {
+      "source": "github/awesome-copilot",
+      "sourceType": "github",
+      "skillPath": "skills/gsap-framer-scroll-animation/SKILL.md",
+      "computedHash": "e6a4caf23b818ffc5185d51339e941ca783944b6693da877fc1206693b2dff66"
+    },
     "high-end-visual-design": {
       "source": "leonxlnx/taste-skill",
       "sourceType": "github",

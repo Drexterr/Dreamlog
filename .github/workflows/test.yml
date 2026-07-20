@@ -1,0 +1,70 @@
+name: Test
+
+# Merge gate per docs/TESTING.md: race-detector tests must run in CI because the
+# Windows dev machine has no gcc. Crisis-detection tests are part of the backend
+# suite and therefore blocking.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  backend:
+    name: Backend (go vet + race tests)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: backend/go.mod
+          cache-dependency-path: backend/go.sum
+
+      - name: go vet
+        run: go vet ./...
+        working-directory: backend
+
+      - name: go test -race
+        run: go test -race ./...
+        working-directory: backend
+
+  mobile-typecheck:
+    name: Mobile (tsc --noEmit)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: mobile/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci --legacy-peer-deps
+        working-directory: mobile
+
+      - name: TypeScript check
+        run: npx tsc --noEmit
+        working-directory: mobile
+
+  portal-typecheck:
+    name: Therapist portal (tsc --noEmit)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: therapist-portal/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+        working-directory: therapist-portal
+
+      - name: TypeScript check
+        run: npx tsc --noEmit
+        working-directory: therapist-portal

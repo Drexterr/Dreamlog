@@ -3,6 +3,7 @@
 import { useState, FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import { api, saveToken } from '../../lib/api';
+import { OdeMark } from '../../components/BreathLine';
 
 const QUOTES = [
   { text: "Something I couldn't say to anyone, I could finally say to myself.", attr: "— A user, 31, on the third week of journaling" },
@@ -56,12 +57,7 @@ export default function LoginPage() {
       }} className="no-mobile">
         {/* Logo */}
         <a href="/" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <div style={{
-            width: 30, height: 30, borderRadius: 7, background: 'var(--gold)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontFamily: "'Erode', serif", fontStyle: 'italic',
-            fontWeight: 700, fontSize: '1.1rem', color: '#0c0b09',
-          }}>O</div>
+          <OdeMark size={30} />
           <span style={{ fontFamily: "'Erode', serif", fontSize: '1.15rem', fontWeight: 600, color: 'var(--text)' }}>
             Ode
           </span>

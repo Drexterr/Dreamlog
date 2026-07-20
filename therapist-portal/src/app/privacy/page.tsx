@@ -1,4 +1,5 @@
 'use client';
+import { OdeMark } from '@/components/BreathLine';
 
 export default function PrivacyPage() {
   return (
@@ -6,7 +7,7 @@ export default function PrivacyPage() {
       {/* Nav */}
       <nav style={{ borderBottom: '1px solid var(--border)', padding: '0 60px', height: 64, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <a href="/" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none' }}>
-          <div style={{ width: 28, height: 28, borderRadius: 7, background: 'var(--gold)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: "'Erode', serif", fontStyle: 'italic', fontWeight: 700, fontSize: '1rem', color: '#18150f' }}>O</div>
+          <OdeMark size={28} />
           <span style={{ fontFamily: "'Erode', serif", fontSize: '1.1rem', fontWeight: 600 }}>Ode</span>
         </a>
         <a href="/" style={{ fontSize: '0.84rem', color: 'var(--muted)', textDecoration: 'none' }}>← Back to home</a>

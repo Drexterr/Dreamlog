@@ -1,4 +1,4 @@
-DreamLog: Full Entrepreneurial & Strategic Analysis
+Ode: Full Entrepreneurial & Strategic Analysis
 
   Wearing the hat of someone who's built and killed startups for 10+ years across consumer, B2B SaaS, 
   and health tech.
@@ -50,7 +50,7 @@ DreamLog: Full Entrepreneurial & Strategic Analysis
   - Features: Rant Mode (free-form venting) + Structured check-in prompts
   - Platform: iOS only (Android + Apple Watch 2026)
   - Weakness: They are a therapy company first. Their journaling UX will always be secondary priority.
-  They don't have DreamLog's pipeline sophistication (crisis detection, context builder, follow-up
+  They don't have Ode's pipeline sophistication (crisis detection, context builder, follow-up
   conversations). Also - they're owned by a clinical entity, which creates HIPAA-adjacent liability and
   conservative product decisions
 
@@ -71,7 +71,7 @@ DreamLog: Full Entrepreneurial & Strategic Analysis
   journaling app in India." You need a clear wedge.
 
   ---
-  3. What DreamLog Actually Has That's Valuable (Be Honest)
+  3. What Ode Actually Has That's Valuable (Be Honest)
 
   Before building anything, recognize what's genuinely differentiated in the current architecture:
 
@@ -101,7 +101,7 @@ DreamLog: Full Entrepreneurial & Strategic Analysis
   ---
   4. The Strategic Repositioning You Need
 
-  Stop thinking of DreamLog as a "voice journaling app." That category is crowded and underfunded.
+  Stop thinking of Ode as a "voice journaling app." That category is crowded and underfunded.
   Reposition as:
 
   ▎ "Longitudinal Emotional Intelligence - the first app that understands how you feel across months and
@@ -159,7 +159,7 @@ DreamLog: Full Entrepreneurial & Strategic Analysis
   Build with react-native-view-shot, export as image. This is a weekend build.
 
   5. Hindi + Regional Language Support*
-  India has 300M+ Hindi speakers on smartphones. Rocket Journal is English-only for now. DreamLog can
+  India has 300M+ Hindi speakers on smartphones. Rocket Journal is English-only for now. Ode can
   own this wedge. The Whisper base model already handles Hindi transcription. The gap is the Claude
   reflection prompt - you need to:
   - Detect language from transcript (Whisper returns this already - language field is in your DB)
@@ -197,7 +197,7 @@ DreamLog: Full Entrepreneurial & Strategic Analysis
   - Top recurring emotional tones and topics
 
   Charge ₹99/export or include in premium tier. This is also your clinical partnership wedge - once
-  therapists are looking at DreamLog data in sessions, they become a distribution channel.
+  therapists are looking at Ode data in sessions, they become a distribution channel.
 
   8. Crisis → Care Bridge*
   Right now, when you detect a crisis, you show hotline numbers. That's the legally safe minimum. The
@@ -263,7 +263,7 @@ DreamLog: Full Entrepreneurial & Strategic Analysis
   experiencing this week
   - Therapist can add a private note after the session that gets integrated into the next week's context
 
-  This creates a B2B2C flywheel: therapists recommend DreamLog to clients → clients subscribe →
+  This creates a B2B2C flywheel: therapists recommend Ode to clients → clients subscribe →
   therapists pay for the dashboard.
 
   14. Apple Watch / Wear OS Quick Entry
@@ -283,7 +283,7 @@ DreamLog: Full Entrepreneurial & Strategic Analysis
   ├── 7-day mood chart
   └── 3-turn follow-up
 
-  DreamLog Plus - ₹199/month India | $7.99/month Global
+  Ode Plus - ₹199/month India | $7.99/month Global
   ├── Unlimited entries
   ├── Hindi + regional language
   ├── Life Graph (30/90/365 day view)
@@ -292,7 +292,7 @@ DreamLog: Full Entrepreneurial & Strategic Analysis
   ├── Streak freeze (2x/week)
   └── Therapist share link (5/month)
 
-  DreamLog Pro - ₹499/month India | $14.99/month Global
+  Ode Pro - ₹499/month India | $14.99/month Global
   ├── Everything in Plus
   ├── PDF export (monthly reports)
   ├── Apple Health / Google Fit integration
@@ -306,7 +306,7 @@ DreamLog: Full Entrepreneurial & Strategic Analysis
   ├── Monthly wellness report
   └── Dedicated support
 
-  Unit economics target: 100 paying DreamLog+ users in India = ₹19,900/month ARR. That's nothing. You
+  Unit economics target: 100 paying Ode+ users in India = ₹19,900/month ARR. That's nothing. You
   need 1,000 paying users before you have anything to talk about. At ₹199/month × 1,000 users =
   ₹24L/year (~$28K). Not VC-scale yet, but proof of monetization.
 
@@ -351,13 +351,13 @@ DreamLog: Full Entrepreneurial & Strategic Analysis
   Rocket Journal's moats: existing therapy user base, clinical credibility, first-mover in India, Rocket
    Health brand.
 
-  DreamLog's counter-strategy - don't fight on their ground:
+  Ode's counter-strategy - don't fight on their ground:
 
   1. Go deeper on AI quality - Rocket Journal's reflections are generic (I'd bet on this). Your prompt
-  engineering is sophisticated. Make DreamLog's reflections visibly, noticeably better. Show this in
-  marketing: "Read a DreamLog reflection vs. a competitor's reflection. Spot the difference."
+  engineering is sophisticated. Make Ode's reflections visibly, noticeably better. Show this in
+  marketing: "Read a Ode reflection vs. a competitor's reflection. Spot the difference."
   2. Own the non-clinical user - Rocket Journal will always feel like it's connected to therapy/mental
-  illness. Stigma is real in India. DreamLog should feel like a personal growth tool for
+  illness. Stigma is real in India. Ode should feel like a personal growth tool for
   well-functioning people who want to understand themselves. "Not because something's wrong - because
   you want to know yourself better."
   3. Win on language - Hindi, Tamil, Bengali. Rocket Journal won't move fast here because their
@@ -374,7 +374,7 @@ DreamLog: Full Entrepreneurial & Strategic Analysis
   After 10+ years of building startups, the companies that get funded aren't the ones with the best
   features - they're the ones with the clearest story about why they win at scale.
 
-  DreamLog's big bet story:
+  Ode's big bet story:
 
   ▎ "Every other mental health app knows how you feel today. We're building the first system that
   ▎ understands how you feel across years - detecting emotional patterns before you're aware of them,
@@ -403,7 +403,7 @@ DreamLog: Full Entrepreneurial & Strategic Analysis
   be an informal advisor. Even unpaid. It changes every conversation
 
   ---
-  Bottom line: DreamLog has excellent technical bones, a genuinely thoughtful AI layer, and is entering
+  Bottom line: Ode has excellent technical bones, a genuinely thoughtful AI layer, and is entering
   a real market at the right time. What it doesn't have yet is users, retention data, or a moat story
   that's compelling under VC scrutiny. The Life Graph + Hindi + B2B corporate wellness is the
   differentiation triangle that makes the story work. Build those three things, get 500 real users,

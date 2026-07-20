@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Fully transparent splash icon: the OS-drawn splash shows only the espresso
+     background, so the first visible mark is the animated Breath Line in
+     BrandSplash rather than a static duplicate of it. -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android">
+  <solid android:color="@android:color/transparent" />
+</shape>
