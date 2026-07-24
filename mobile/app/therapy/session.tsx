@@ -23,12 +23,8 @@ import { useRecorder } from '../../src/hooks/useRecorder';
 import { T } from '../../src/testIDs';
 import type { TherapySession, TherapySessionMessage, TherapySessionStatus } from '../../src/types';
 import { PERSONA_META } from '../../src/types';
-
-const CRISIS_HOTLINES = [
-  { name: 'iCall', tel: 'tel:9152987821', info: '9152987821 · India' },
-  { name: 'Vandrevala Foundation', tel: 'tel:18602662345', info: '1860-2662-345 · India · 24/7' },
-  { name: '988 Lifeline', tel: 'tel:988', info: '988 · US · 24/7' },
-];
+import { detectUserCountry } from '../../src/services/region';
+import { helplinesForCountry, helplineHref, type CountryHelplines } from '../../src/services/helplines';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -249,7 +245,7 @@ const bubbleStyles = StyleSheet.create({
 
 // ── Crisis screen ─────────────────────────────────────────────────────────────
 
-function CrisisScreen({ colors }: { colors: any }) {
+function CrisisScreen({ colors, resource }: { colors: any; resource: CountryHelplines }) {
   return (
     <View style={{ gap: 14, padding: 24 }}>
       <Text style={[{ fontSize: 26, fontFamily: 'Erode_600SemiBold', color: colors.textPrimary }]}>
@@ -258,17 +254,24 @@ function CrisisScreen({ colors }: { colors: any }) {
       <Text style={[{ fontSize: 15, fontFamily: 'HankenGrotesk_400Regular', color: colors.textSecondary, lineHeight: 22 }]}>
         This session has been paused. Please reach out to one of these resources right now.
       </Text>
-      {CRISIS_HOTLINES.map((h) => (
+      {resource.lines.map((h) => (
         <TouchableOpacity
           key={h.name}
           style={[{ borderWidth: 1, borderRadius: 12, padding: 16, backgroundColor: colors.card, borderColor: colors.danger }]}
-          onPress={() => Linking.openURL(h.tel)}
+          onPress={() => Linking.openURL(helplineHref(h.action))}
           activeOpacity={0.8}
         >
           <Text style={[{ fontSize: 16, fontFamily: 'HankenGrotesk_700Bold', color: colors.textPrimary, marginBottom: 4 }]}>{h.name}</Text>
-          <Text style={[{ fontSize: 13, fontFamily: 'HankenGrotesk_400Regular', color: colors.textSecondary }]}>{h.info}</Text>
+          <Text style={[{ fontSize: 13, fontFamily: 'HankenGrotesk_400Regular', color: colors.textSecondary }]}>
+            {h.hours ? `${h.detail} · ${h.hours}` : h.detail}
+          </Text>
         </TouchableOpacity>
       ))}
+      {resource.emergency ? (
+        <Text style={[{ fontSize: 13, fontFamily: 'HankenGrotesk_400Regular', color: colors.textMuted, lineHeight: 20 }]}>
+          In immediate danger? Call emergency services: {resource.emergency}
+        </Text>
+      ) : null}
     </View>
   );
 }
@@ -285,6 +288,7 @@ export default function TherapySessionScreen() {
   const [status, setStatus] = useState<TherapySessionStatus>('active');
   const [timeRemaining, setTimeRemaining] = useState(3600);
   const [crisisWarnings, setCrisisWarnings] = useState(0);
+  const [country, setCountry] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const [uploadingVoice, setUploadingVoice] = useState(false);
@@ -313,6 +317,13 @@ export default function TherapySessionScreen() {
     } catch {
       // TTS playback failures are silent - text is always visible as fallback.
     }
+  }, []);
+
+  // Resolve the user's country so crisis helplines are localised - fail-silent.
+  useEffect(() => {
+    detectUserCountry()
+      .then(setCountry)
+      .catch(() => setCountry(null));
   }, []);
 
   // Load session on mount
@@ -445,7 +456,7 @@ export default function TherapySessionScreen() {
   if (isCrisis) {
     return (
       <SafeAreaView style={[styles.safe, { backgroundColor: colors.bg }]}>
-        <ScrollView><CrisisScreen colors={colors} /></ScrollView>
+        <ScrollView><CrisisScreen colors={colors} resource={helplinesForCountry(country)} /></ScrollView>
       </SafeAreaView>
     );
   }

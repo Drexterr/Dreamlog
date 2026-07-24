@@ -119,6 +119,7 @@ var countryHelplines = map[string]string{
 	"IN": `India:
   iCall: 9152987821 (Mon–Sat, 8 AM–10 PM)
   Vandrevala Foundation: 1860-2662-345 (24/7)
+  Tele-MANAS (Govt. of India): 14416 (24/7)
   iCall Chat: icallhelpline.org
 
 Emergency: 112`,
@@ -185,7 +186,7 @@ Emergency: 995`,
 
 	"PK": `Pakistan:
   Umang: 0317 4288665
-  Rozan Counselling: 051 2890505
+  Rozan Counselling: 0304 111 1741
 
 Emergency: 115`,
 
@@ -196,10 +197,105 @@ Emergency: 115`,
 Emergency: 112`,
 
 	"ZA": `South Africa:
-  SADAG: 0800 456 789 (24/7)
+  SADAG Suicide Crisis Line: 0800 567 567 (24/7)
   Lifeline SA: 0861 322 322
 
 Emergency: 10111`,
+
+	"NL": `Netherlands:
+  113 Zelfmoordpreventie: 0800-0113 (free, 24/7) or 113
+  Chat: 113.nl
+
+Emergency: 112`,
+
+	"BE": `Belgium:
+  Centre de Prévention du Suicide: 0800 32 123 (24/7)
+  Zelfmoordlijn 1813: 1813 (24/7)
+
+Emergency: 112`,
+
+	"CH": `Switzerland:
+  Die Dargebotene Hand: 143 (24/7)
+  Pro Juventute (under 25): 147 (24/7)
+
+Emergency: 112`,
+
+	"AT": `Austria:
+  Telefonseelsorge: 142 (free, 24/7)
+  Rat auf Draht (youth): 147 (24/7)
+
+Emergency: 112`,
+
+	"ES": `Spain:
+  Línea de Atención a la Conducta Suicida: 024 (24/7)
+  Teléfono de la Esperanza: 717 003 717 (24/7)
+
+Emergency: 112`,
+
+	"IT": `Italy:
+  Telefono Amico Italia: 02 2327 2327
+  Samaritans Onlus: 06 77208977
+
+Emergency: 112`,
+
+	"PT": `Portugal:
+  SOS Voz Amiga: 213 544 545
+  Conversa Amiga: 808 237 327
+
+Emergency: 112`,
+
+	"SE": `Sweden:
+  Mind Självmordslinjen: 90101 (24/7)
+  Bris (under 18): 116 111
+
+Emergency: 112`,
+
+	"NO": `Norway:
+  Mental Helse Hjelpetelefonen: 116 123 (24/7)
+  Kirkens SOS: 22 40 00 40 (24/7)
+
+Emergency: 113`,
+
+	"DK": `Denmark:
+  Livslinien: 70 201 201
+
+Emergency: 112`,
+
+	"BD": `Bangladesh:
+  Kaan Pete Roi: 09612 119 911
+  Moner Bondhu: 01776 632 344
+
+Emergency: 999`,
+
+	"BR": `Brazil:
+  CVV — Centro de Valorização da Vida: 188 (24/7)
+  CVV Chat: cvv.org.br
+
+Emergency: 192`,
+
+	"MX": `Mexico:
+  SAPTEL: 55 5259 8121 (24/7)
+  Línea de la Vida: 800 911 2000 (24/7)
+
+Emergency: 911`,
+
+	"JP": `Japan:
+  TELL Lifeline (English): 03-5774-0992
+  Yorisoi Hotline: 0120-279-338 (24/7)
+
+Emergency: 119`,
+
+	"KR": `South Korea:
+  Suicide Prevention Hotline: 1393 (24/7)
+  LifeLine Korea: 1588-9191 (24/7)
+
+Emergency: 119`,
+
+	"AE": `United Arab Emirates:
+  Estijaba (Dept. of Health): 800 1717
+  Mental Support Line: 920 033 360
+
+Emergency: 999`,
 }
 
 // CrisisResponse returns the empathetic crisis response with country-specific

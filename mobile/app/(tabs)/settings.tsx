@@ -28,6 +28,8 @@ import {
 } from '../../src/services/updates';
 import { T } from '../../src/testIDs';
 import type { AgeRange, Plan, User, UserGoal, VoiceLanguage } from '../../src/types';
+import { cacheUserCountry } from '../../src/services/region';
+import { helplinesForCountry, helplineHref } from '../../src/services/helplines';
 
 const GOAL_META: Record<UserGoal, { label: string; emoji: string }> = {
   anxiety:       { label: 'Working through anxiety',     emoji: '🌱' },
@@ -101,12 +103,6 @@ function voiceLanguageLabel(lang: VoiceLanguage): string {
   if (lang === 'auto') return 'Auto';
   return VOICE_LANGUAGE_OPTIONS.find((o) => o.key === lang)?.label ?? lang;
 }
-
-const CRISIS_HOTLINES = [
-  { name: 'iCall', tel: 'tel:9152987821', info: '9152987821 · India' },
-  { name: 'Vandrevala Foundation', tel: 'tel:18602662345', info: '1860-2662-345 · India · 24/7' },
-  { name: '988 Lifeline', tel: 'tel:988', info: '988 · US · 24/7' },
-];
 
 function SettingRow({
   label,
@@ -217,6 +213,9 @@ export default function SettingsScreen() {
         setNudgeHour(u.fcm_nudge_hour ?? 8);
         setNudgeAutoTime(u.nudge_auto_time ?? true);
         setVoiceLanguage(u.voice_language ?? 'auto');
+        // Keep the cached country fresh for the crisis surfaces (reflection /
+        // therapy) that resolve it offline - fail-silent.
+        cacheUserCountry(u.country).catch(() => {});
       })
       .catch(() => setLoadError(true));
     api.getBillingPlan()
@@ -877,17 +876,33 @@ export default function SettingsScreen() {
             <Text style={[styles.modalSub, { color: colors.textMuted }]}>
               If you're in crisis or need to talk to someone right now, please reach out.
             </Text>
-            {CRISIS_HOTLINES.map((h) => (
-              <TouchableOpacity
-                key={h.name}
-                style={[styles.crisisCard, { backgroundColor: colors.bg, borderColor: colors.danger }]}
-                onPress={() => Linking.openURL(h.tel)}
-                activeOpacity={0.8}
-              >
-                <Text style={[styles.crisisName, { color: colors.textPrimary }]}>{h.name}</Text>
-                <Text style={[styles.crisisInfo, { color: colors.textMuted }]}>{h.info}</Text>
-              </TouchableOpacity>
-            ))}
+            {(() => {
+              const resource = helplinesForCountry(user?.country);
+              return (
+                <>
+                  {resource.lines.map((h) => (
+                    <TouchableOpacity
+                      key={h.name}
+                      style={[styles.crisisCard, { backgroundColor: colors.bg, borderColor: colors.danger }]}
+                      onPress={() => Linking.openURL(helplineHref(h.action))}
+                      activeOpacity={0.8}
+                    >
+                      <Text style={[styles.crisisName, { color: colors.textPrimary }]}>{h.name}</Text>
+                      <Text style={[styles.crisisInfo, { color: colors.textMuted }]}>
+                        {[h.detail, h.hours, resource.code !== 'INTL' ? resource.countryName : null]
+                          .filter(Boolean)
+                          .join(' · ')}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                  {resource.emergency ? (
+                    <Text style={[styles.modalSub, { color: colors.textMuted, marginTop: 4 }]}>
+                      In immediate danger? Call emergency services: {resource.emergency}
+                    </Text>
+                  ) : null}
+                </>
+              );
+            })()}
             <TouchableOpacity
               style={[styles.closeBtn, { borderColor: colors.borderFaint }]}
               onPress={() => setShowCrisisModal(false)}

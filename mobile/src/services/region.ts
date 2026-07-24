@@ -5,6 +5,7 @@ import { api } from '../api/client';
 export type RegionCurrency = 'inr' | 'usd' | 'eur';
 
 const STORAGE_KEY = 'dreamlog_region_currency';
+const COUNTRY_KEY = 'dreamlog_region_country';
 
 // European countries (EU + EEA + UK + others) - all shown EUR pricing.
 const EUROPE_COUNTRY_CODES = new Set([
@@ -29,10 +30,56 @@ export function currencyForCountry(code: string | undefined | null): RegionCurre
 
 // Caches the currency derived from the country the user picked at account
 // creation (onboarding "Where are you based?" step). Call after PUT /me.
+// Also caches the raw country code so crisis helplines can be localised (see
+// ./helplines).
 export async function setRegionFromCountry(code: string | undefined | null): Promise<RegionCurrency> {
   const currency = currencyForCountry(code);
   await AsyncStorage.setItem(STORAGE_KEY, currency);
+  await cacheUserCountry(code);
   return currency;
+}
+
+// ── Country (for crisis helplines) ────────────────────────────────────────────
+// Independent of currency: helplines are localised per-country, not per-currency.
+
+// Stores the user's chosen ISO 3166-1 alpha-2 country. Pass null/"OTHER" to
+// clear it (falls back to international helplines).
+export async function cacheUserCountry(code: string | undefined | null): Promise<void> {
+  const c = (code ?? '').toUpperCase();
+  if (c && c !== 'OTHER') {
+    await AsyncStorage.setItem(COUNTRY_KEY, c);
+  } else {
+    await AsyncStorage.removeItem(COUNTRY_KEY);
+  }
+}
+
+export async function getCachedCountry(): Promise<string | null> {
+  return AsyncStorage.getItem(COUNTRY_KEY);
+}
+
+// Resolves the user's country (ISO alpha-2) for helpline localisation.
+// Precedence: cached (chosen at onboarding) → profile → device locale.
+// Returns null when nothing is known, so callers show international resources.
+export async function detectUserCountry(): Promise<string | null> {
+  const cached = await AsyncStorage.getItem(COUNTRY_KEY);
+  if (cached) return cached;
+
+  // Profile country is authoritative (asked at account creation).
+  try {
+    const user = await api.me();
+    if (user.country) {
+      await cacheUserCountry(user.country);
+      return user.country.toUpperCase();
+    }
+  } catch { /* not signed in yet, or network error - fall back to locale */ }
+
+  // Device locale as a last resort; not cached (it's only a guess).
+  try {
+    const region = getLocales()[0]?.regionCode;
+    if (region) return region.toUpperCase();
+  } catch { /* ignore */ }
+
+  return null;
 }
 
 // Resolves the user's display currency. Precedence:

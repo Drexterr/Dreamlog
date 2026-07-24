@@ -18,13 +18,8 @@ import { api, isApiError } from '../../src/api/client';
 import { useTheme } from '../../src/context/ThemeContext';
 import { T } from '../../src/testIDs';
 import type { Entry, EntryAnalysis } from '../../src/types';
-
-// ── Crisis hotlines shown in the care card ────────────────────────────────────
-const CRISIS_HOTLINES = [
-  { name: 'iCall', number: '9152987821', hours: 'Mon–Sat, 8 AM–10 PM', country: 'India', tel: 'tel:9152987821' },
-  { name: 'Vandrevala Foundation', number: '1860-2662-345', hours: '24 / 7', country: 'India', tel: 'tel:18602662345' },
-  { name: '988 Lifeline', number: '988', hours: '24 / 7', country: 'US', tel: 'tel:988' },
-];
+import { detectUserCountry } from '../../src/services/region';
+import { helplinesForCountry, helplineHref, type CountryHelplines } from '../../src/services/helplines';
 
 // ── Crisis Care Card ──────────────────────────────────────────────────────────
 function CrisisCareView({
@@ -32,17 +27,21 @@ function CrisisCareView({
   slideAnim,
   colors,
   onDone,
+  resource,
 }: {
   fadeAnim: Animated.Value;
   slideAnim: Animated.Value;
   colors: any;
   onDone: () => void;
+  resource: CountryHelplines;
 }) {
   const openURL = (url: string) => {
     Linking.canOpenURL(url).then((ok) => {
       if (ok) Linking.openURL(url);
     });
   };
+
+  const isIndia = resource.code === 'IN';
 
   return (
     <Animated.View style={{ opacity: fadeAnim, transform: [{ translateY: slideAnim }] }}>
@@ -55,54 +54,70 @@ function CrisisCareView({
         Please reach out to someone who can help.
       </Text>
 
-      {/* Hotline cards */}
-      <Text style={[styles.resourceSectionLabel, { color: colors.textMuted }]}>CRISIS HELPLINES</Text>
+      {/* Hotline cards - localised to the user's country */}
+      <Text style={[styles.resourceSectionLabel, { color: colors.textMuted }]}>
+        CRISIS HELPLINES{resource.code !== 'INTL' ? ` · ${resource.countryName.toUpperCase()}` : ''}
+      </Text>
       <View style={styles.hotlineList}>
-        {CRISIS_HOTLINES.map((h) => (
+        {resource.lines.map((h) => (
           <TouchableOpacity
             key={h.name}
             style={[styles.hotlineCard, { backgroundColor: colors.card, borderColor: colors.borderFaint }]}
-            onPress={() => openURL(h.tel)}
+            onPress={() => openURL(helplineHref(h.action))}
             activeOpacity={0.75}
           >
             <View style={{ flex: 1 }}>
               <Text style={[styles.hotlineName, { color: colors.textPrimary }]}>{h.name}</Text>
-              <Text style={[styles.hotlineHours, { color: colors.textMuted }]}>{h.country} · {h.hours}</Text>
+              <Text style={[styles.hotlineHours, { color: colors.textMuted }]}>
+                {h.hours ? `${h.detail} · ${h.hours}` : h.detail}
+              </Text>
             </View>
             <View style={[styles.callPill, { backgroundColor: `${colors.brand}22`, borderColor: `${colors.brand}55` }]}>
-              <Text style={[styles.callPillText, { color: colors.brand }]}>📞 {h.number}</Text>
+              <Text style={[styles.callPillText, { color: colors.brand }]}>
+                {h.action.kind === 'link' ? '🔗 Open' : h.action.kind === 'text' ? '💬 Text' : '📞 Call'}
+              </Text>
             </View>
           </TouchableOpacity>
         ))}
       </View>
 
+      {resource.emergency ? (
+        <Text style={[styles.crisisSubtext, { color: colors.textMuted, marginTop: -14, marginBottom: 24 }]}>
+          In immediate danger? Call emergency services: {resource.emergency}
+        </Text>
+      ) : null}
+
       {/* Professional help */}
       <Text style={[styles.resourceSectionLabel, { color: colors.textMuted }]}>TALK TO A PROFESSIONAL</Text>
 
-      <TouchableOpacity
-        style={[styles.therapistBtn, { backgroundColor: colors.brand }]}
-        onPress={() => openURL('https://www.practo.com/therapist?utm_source=dreamlog&utm_medium=crisis&utm_campaign=care-bridge')}
-        activeOpacity={0.85}
-      >
-        <Text style={[styles.therapistBtnText, { color: colors.bg }]}>Find a therapist near you</Text>
-        <Text style={[styles.therapistBtnSub, { color: colors.bg, opacity: 0.7 }]}>via Practo</Text>
-      </TouchableOpacity>
+      {isIndia ? (
+        <>
+          <TouchableOpacity
+            style={[styles.therapistBtn, { backgroundColor: colors.brand }]}
+            onPress={() => openURL('https://www.practo.com/therapist?utm_source=dreamlog&utm_medium=crisis&utm_campaign=care-bridge')}
+            activeOpacity={0.85}
+          >
+            <Text style={[styles.therapistBtnText, { color: colors.bg }]}>Find a therapist near you</Text>
+            <Text style={[styles.therapistBtnSub, { color: colors.bg, opacity: 0.7 }]}>via Practo</Text>
+          </TouchableOpacity>
 
-      <TouchableOpacity
-        style={[styles.onlineBtn, { backgroundColor: colors.card, borderColor: colors.border }]}
-        onPress={() => openURL('https://yourdost.com/?utm_source=dreamlog&utm_medium=crisis')}
-        activeOpacity={0.8}
-      >
-        <Text style={[styles.onlineBtnText, { color: colors.textPrimary }]}>Talk online - YourDOST</Text>
-        <Text style={[styles.onlineBtnSub, { color: colors.textMuted }]}>Anonymous · Available now</Text>
-      </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.onlineBtn, { backgroundColor: colors.card, borderColor: colors.border }]}
+            onPress={() => openURL('https://yourdost.com/?utm_source=dreamlog&utm_medium=crisis')}
+            activeOpacity={0.8}
+          >
+            <Text style={[styles.onlineBtnText, { color: colors.textPrimary }]}>Talk online - YourDOST</Text>
+            <Text style={[styles.onlineBtnSub, { color: colors.textMuted }]}>Anonymous · Available now</Text>
+          </TouchableOpacity>
+        </>
+      ) : null}
 
       <TouchableOpacity
         style={[styles.onlineBtn, { backgroundColor: colors.card, borderColor: colors.border }]}
         onPress={() => openURL('https://findahelpline.com/?utm_source=dreamlog')}
         activeOpacity={0.8}
       >
-        <Text style={[styles.onlineBtnText, { color: colors.textPrimary }]}>Find resources by country</Text>
+        <Text style={[styles.onlineBtnText, { color: colors.textPrimary }]}>Find more resources near you</Text>
         <Text style={[styles.onlineBtnSub, { color: colors.textMuted }]}>findahelpline.com · 200+ countries</Text>
       </TouchableOpacity>
 
@@ -142,6 +157,7 @@ export default function ReflectionScreen() {
   const [reloadKey, setReloadKey] = useState(0);
   const [entryTotal, setEntryTotal] = useState<number | null>(null);
   const [checkinState, setCheckinState] = useState<'idle' | 'saving' | 'scheduled'>('idle');
+  const [country, setCountry] = useState<string | null>(null);
 
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(20)).current;
@@ -174,6 +190,13 @@ export default function ReflectionScreen() {
       .listEntries(1, 1)
       .then((r) => setEntryTotal(r.total))
       .catch(() => setEntryTotal(null));
+  }, []);
+
+  // Resolve the user's country so crisis helplines are localised - fail-silent.
+  useEffect(() => {
+    detectUserCountry()
+      .then(setCountry)
+      .catch(() => setCountry(null));
   }, []);
 
   const handleDone = () => router.replace('/(tabs)');
@@ -322,6 +345,7 @@ export default function ReflectionScreen() {
               slideAnim={slideAnim}
               colors={colors}
               onDone={handleDone}
+              resource={helplinesForCountry(country)}
             />
           ) : (
             /* ── Normal reflection path ─────────────────────────────────── */
