@@ -6,7 +6,7 @@
 #
 # `setAirplaneMode` is Android-only in Maestro — that block is platform-guarded.
 # ═══════════════════════════════════════════════════════════════════════════
-appId: com.dreamlog.app
+appId: com.ode.app
 env:
   ENTRY_MODE_KEY: "rant"
 tags:

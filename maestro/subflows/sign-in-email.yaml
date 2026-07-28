@@ -7,7 +7,7 @@
 # All selectors are stable testIDs (mobile/src/testIDs.ts). The AuthSheet
 # defaults to the social view, so we switch to email first (guarded — the full
 # /auth screen already shows the fields).
-appId: com.dreamlog.app
+appId: com.ode.app
 ---
 # Dismiss React Native's dev-only "Open debugger to view warnings" LogBox
 # toast if it has reappeared (a fresh __DEV__ warning re-triggers it even

@@ -3,7 +3,7 @@
 # First-time launch, splash → onboarding routing, warm-restart behaviour.
 # Root routing lives in app/_layout.tsx (guest → /onboarding, returning → /(tabs)).
 # ═══════════════════════════════════════════════════════════════════════════
-appId: com.dreamlog.app
+appId: com.ode.app
 tags:
   - launch
   - smoke

@@ -1,7 +1,7 @@
 # Ode — Maestro E2E Test Suite
 
 End-to-end UI automation for the Ode mobile app (React Native / Expo,
-`com.dreamlog.app`) using [Maestro](https://maestro.mobile.dev).
+`com.ode.app`) using [Maestro](https://maestro.mobile.dev).
 
 ```
 maestro/
@@ -79,7 +79,7 @@ that build's `EXPO_PUBLIC_API_URL` at a backend running `STUB_AI_ANALYSIS=true`.
 3. **A build of the app installed** on that device. Maestro drives an installed
    binary — it does not build. Produce one with EAS or a local dev client:
    - Android: `eas build --profile preview --platform android` then `adb install`.
-   - The bundle id must be `com.dreamlog.app` (matches `config.yaml`).
+   - The bundle id must be `com.ode.app` (matches `config.yaml`).
 4. **Backend reachable** for `05-core-features.yaml` (entry processing, therapy,
    mood). Point the installed app at your backend via `EXPO_PUBLIC_API_URL`
    baked into the build (see `mobile/CLAUDE.md`). UI-only flows (01–04, 06) do

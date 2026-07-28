@@ -76,7 +76,7 @@ export default function PrivacyPage() {
           </Section>
 
           <Section title="Children">
-            <P>Ode isn&apos;t for anyone under 13. If you think a child has made an account, email us at <a href="mailto:support@dreamlog.app" style={{ color: 'var(--gold)' }}>support@dreamlog.app</a> and we&apos;ll delete it straight away.</P>
+            <P>Ode isn&apos;t for anyone under 13. If you think a child has made an account, email us at <a href="mailto:talktoode.dev@gmail.com" style={{ color: 'var(--gold)' }}>talktoode.dev@gmail.com</a> and we&apos;ll delete it straight away.</P>
           </Section>
 
           <Section title="Your Rights">
@@ -88,12 +88,12 @@ export default function PrivacyPage() {
               <li><strong style={{ color: 'var(--text)' }}>Turn off notifications</strong> - Settings → Notifications, or through your phone&apos;s system settings.</li>
               <li><strong style={{ color: 'var(--text)' }}>Revoke therapist access</strong> - Share links expire on their own after 72 hours, or contact us to kill one early.</li>
             </ul>
-            <P>For a full copy of everything we hold about you, or for any GDPR requests, email <a href="mailto:support@dreamlog.app" style={{ color: 'var(--gold)' }}>support@dreamlog.app</a>.</P>
+            <P>For a full copy of everything we hold about you, or for any GDPR requests, email <a href="mailto:talktoode.dev@gmail.com" style={{ color: 'var(--gold)' }}>talktoode.dev@gmail.com</a>.</P>
           </Section>
 
           <Section title="Security">
             <P>All data moves over HTTPS. Passwords are hashed, never stored as plain text. Tokens expire. Audio is stored in private buckets with time-limited access only. Database access is locked down to our application servers only.</P>
-            <P>No system is completely airtight. If you find something, please let us know at <a href="mailto:support@dreamlog.app" style={{ color: 'var(--gold)' }}>support@dreamlog.app</a> before making it public.</P>
+            <P>No system is completely airtight. If you find something, please let us know at <a href="mailto:talktoode.dev@gmail.com" style={{ color: 'var(--gold)' }}>talktoode.dev@gmail.com</a> before making it public.</P>
           </Section>
 
           <Section title="If This Policy Changes">
@@ -101,7 +101,7 @@ export default function PrivacyPage() {
           </Section>
 
           <Section title="Contact">
-            <P>Questions, requests, or concerns: <a href="mailto:support@dreamlog.app" style={{ color: 'var(--gold)' }}>support@dreamlog.app</a></P>
+            <P>Questions, requests, or concerns: <a href="mailto:talktoode.dev@gmail.com" style={{ color: 'var(--gold)' }}>talktoode.dev@gmail.com</a></P>
           </Section>
 
         </div>
@@ -112,7 +112,7 @@ export default function PrivacyPage() {
         <div style={{ display: 'flex', gap: 24 }}>
           <a href="/privacy" style={{ fontSize: '0.78rem', color: 'var(--muted)', textDecoration: 'none' }}>Privacy Policy</a>
           <a href="/terms" style={{ fontSize: '0.78rem', color: 'var(--muted)', textDecoration: 'none' }}>Terms</a>
-          <a href="mailto:support@dreamlog.app" style={{ fontSize: '0.78rem', color: 'var(--muted)', textDecoration: 'none' }}>Support</a>
+          <a href="mailto:talktoode.dev@gmail.com" style={{ fontSize: '0.78rem', color: 'var(--muted)', textDecoration: 'none' }}>Support</a>
         </div>
       </footer>
     </div>

@@ -30,7 +30,7 @@ store content drafted (`docs/STORE_SUBMISSION.md`) · confirmed **Railway is pro
 
 ## 1. Code readiness — ✅ done (verified in repo)
 
-- [x] Package `com.dreamlog.app` set in `app.json` → `android.package`
+- [x] Package `com.ode.app` set in `app.json` → `android.package`
 - [x] `google-services.json` present (gitignored, injected at build) — Android Firebase config works
 - [x] Permissions declared: `RECORD_AUDIO`, `MODIFY_AUDIO_SETTINGS`, `POST_NOTIFICATIONS` (Android 13 runtime prompt handled in `src/services/push.ts`)
 - [x] Push client code done: FCM token fetch + `POST /devices` + token-rotation re-registration, fail-silent
@@ -46,7 +46,7 @@ store content drafted (`docs/STORE_SUBMISSION.md`) · confirmed **Railway is pro
 
 ## 2. Play Console setup 🔴
 
-- [ ] 🔴 **Play Console developer account** ($25 one-time) + create the app (package `com.dreamlog.app`)
+- [ ] 🔴 **Play Console developer account** ($25 one-time) + create the app (package `com.ode.app`)
 - [ ] 🔴 **Upload signing**: let EAS manage the upload keystore; opt in to Play App Signing on first upload
 - [ ] 🟡 Set up an **internal testing track** first — required anyway for IAP license testers
 
@@ -54,11 +54,11 @@ store content drafted (`docs/STORE_SUBMISSION.md`) · confirmed **Railway is pro
 
 - [ ] 🔴 **Create the 4 consumable products in Play Console** with these exact IDs
       (must match `backend/internal/services/iap.go` + `mobile/src/services/iap.ts`):
-      `com.dreamlog.app.plus.monthly`, `com.dreamlog.app.plus.annual`,
-      `com.dreamlog.app.pro.monthly`, `com.dreamlog.app.pro.annual` — prices per docs/PRICING.md
+      `com.ode.app.plus.monthly`, `com.ode.app.plus.annual`,
+      `com.ode.app.pro.monthly`, `com.ode.app.pro.annual` — prices per docs/PRICING.md
 - [ ] 🔴 **Set `GOOGLE_PLAY_CREDENTIALS_JSON` on the backend** — service account with Play Console
       "View financial data" permission (can reuse the FCM service account if granted).
-      Optional `GOOGLE_PLAY_PACKAGE_NAME` (defaults to `com.dreamlog.app`).
+      Optional `GOOGLE_PLAY_PACKAGE_NAME` (defaults to `com.ode.app`).
       While unset, `/billing/upgrade` grants plans WITHOUT verification — do not launch without it
 - [x] ✅ **Therapy pay-per-use gap defused for v1 (2026-07-20)**: unbuyable "Single Session" card hidden;
       therapy ships free-first-session + Pro-only. 🟢 Fast follow: wire a session consumable SKU through IAP
@@ -87,7 +87,7 @@ store content drafted (`docs/STORE_SUBMISSION.md`) · confirmed **Railway is pro
       health/mental-health data; declare accurately
 - [ ] 🟡 Content rating questionnaire (IARC)
 - [ ] 🟡 Store listing assets: phone + 7"/10" tablet screenshots, **feature graphic (1024×500 — Play-only)**,
-      short + full description, support email (support@dreamlog.app inbox must exist)
+      short + full description, support email (talktoode.dev@gmail.com inbox must exist)
 - [ ] 🟡 Seed the demo account with 3–5 entries for Play pre-launch report / reviewers
 - [ ] 🟡 Target API level: verify the Expo SDK's compile/target SDK meets Google's current requirement at submission time
 

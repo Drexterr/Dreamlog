@@ -24,9 +24,15 @@ import type { EntryMode } from '../src/types';
 const WAVEFORM_BARS = 9;
 
 // ── Waveform ──────────────────────────────────────────────────────────────────
+// Bars are animated via `transform: scaleY` (not `height`) so this can run on
+// the native UI thread (useNativeDriver: true). A JS-thread-driven `height`
+// animation here previously ran continuously for the whole recording and
+// could starve the JS thread badly enough to drop the stop-button's tap.
+const WAVEFORM_BAR_HEIGHT = 22;
+
 function Waveform({ colors }: { colors: any }) {
   const anims = useRef(
-    Array.from({ length: WAVEFORM_BARS }, () => new Animated.Value(4)),
+    Array.from({ length: WAVEFORM_BARS }, () => new Animated.Value(0.18)),
   ).current;
 
   useEffect(() => {
@@ -34,8 +40,8 @@ function Waveform({ colors }: { colors: any }) {
       const loop = Animated.loop(
         Animated.sequence([
           Animated.delay(i * 70),
-          Animated.timing(anim, { toValue: 4 + Math.random() * 18, duration: 380 + i * 35, useNativeDriver: false }),
-          Animated.timing(anim, { toValue: 4, duration: 380 + i * 35, useNativeDriver: false }),
+          Animated.timing(anim, { toValue: 0.18 + Math.random() * 0.82, duration: 380 + i * 35, useNativeDriver: true }),
+          Animated.timing(anim, { toValue: 0.18, duration: 380 + i * 35, useNativeDriver: true }),
         ]),
       );
       loop.start();
@@ -45,9 +51,12 @@ function Waveform({ colors }: { colors: any }) {
   }, []);
 
   return (
-    <View style={wvStyles.wrap}>
+    <View style={wvStyles.wrap} pointerEvents="none">
       {anims.map((anim, i) => (
-        <Animated.View key={i} style={[wvStyles.bar, { height: anim, backgroundColor: colors.brandCore }]} />
+        <Animated.View
+          key={i}
+          style={[wvStyles.bar, { backgroundColor: colors.brandCore, transform: [{ scaleY: anim }] }]}
+        />
       ))}
     </View>
   );
@@ -55,7 +64,7 @@ function Waveform({ colors }: { colors: any }) {
 
 const wvStyles = StyleSheet.create({
   wrap: { flexDirection: 'row', alignItems: 'center', gap: 3.5, height: 32 },
-  bar:  { width: 2.5, borderRadius: 2 },
+  bar:  { width: 2.5, height: WAVEFORM_BAR_HEIGHT, borderRadius: 2 },
 });
 
 // ── Ripple rings ──────────────────────────────────────────────────────────────
@@ -90,10 +99,13 @@ function RippleRings({ colors }: { colors: any }) {
   });
 
   return (
-    <>
+    <View
+      style={[StyleSheet.absoluteFill, { alignItems: 'center', justifyContent: 'center' }]}
+      pointerEvents="none"
+    >
       <Animated.View style={ringStyle(ring1)} />
       <Animated.View style={ringStyle(ring2)} />
-    </>
+    </View>
   );
 }
 

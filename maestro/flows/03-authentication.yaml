@@ -12,7 +12,7 @@
 # Google/Apple open native OS dialogs Maestro can't script in CI; we assert the
 # buttons render and stop. Email is the fully-automatable path.
 # ═══════════════════════════════════════════════════════════════════════════
-appId: com.dreamlog.app
+appId: com.ode.app
 env:
   EMAIL_EXISTING: "bharatbanthia2207+tester@gmail.com"
   PASSWORD: "DreamTest!2026"

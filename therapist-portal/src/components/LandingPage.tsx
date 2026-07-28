@@ -973,7 +973,7 @@ export default function LandingPage() {
             {version.ios_store_url === '#' && (
               <p style={{ margin: 0, fontSize: '0.78rem', color: 'var(--muted-2)', textAlign: 'right' }}>
                 Store listings coming soon.{' '}
-                <a href="mailto:support@dreamlog.app" style={{ color: 'var(--muted)' }}>Get notified</a>
+                <a href="mailto:talktoode.dev@gmail.com" style={{ color: 'var(--muted)' }}>Get notified</a>
               </p>
             )}
             <p style={{ margin: 0, fontSize: '0.82rem', color: 'var(--muted-2)' }}>Available on iOS and Android. Free to start.</p>
@@ -998,7 +998,7 @@ export default function LandingPage() {
               { label: 'About', href: '/about' },
               { label: 'Privacy', href: '/privacy' },
               { label: 'Terms', href: '/terms' },
-              { label: 'Support', href: 'mailto:support@dreamlog.app' },
+              { label: 'Support', href: 'mailto:talktoode.dev@gmail.com' },
             ].map(l => (
               <a key={l.label} href={l.href} style={{ fontSize: '0.82rem', color: 'var(--muted)', transition: 'color 0.15s ease' }}
                 onMouseEnter={e => (e.currentTarget.style.color = 'var(--text)')}

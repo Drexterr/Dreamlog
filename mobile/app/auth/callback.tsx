@@ -5,8 +5,8 @@ import { supabase } from '../../src/lib/supabase';
 import { api, storeToken } from '../../src/api/client';
 
 // Landing screen for Supabase email confirmation deep links.
-// URL format: dreamlog://auth/callback#access_token=...  (implicit flow)
-//          or dreamlog://auth/callback?code=...          (PKCE flow)
+// URL format: ode://auth/callback#access_token=...  (implicit flow)
+//          or ode://auth/callback?code=...          (PKCE flow)
 //
 // src/lib/supabase.ts already handles the token exchange via Linking listeners.
 // This screen just waits for onAuthStateChange to fire and then navigates away.

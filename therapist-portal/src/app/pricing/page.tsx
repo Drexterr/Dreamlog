@@ -232,7 +232,7 @@ export default function PricingPage() {
       <footer style={{ borderTop: '1px solid rgba(255,255,255,0.07)', padding: '28px 40px', maxWidth: 1100, margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 16 }}>
         <span style={{ fontSize: '0.74rem', color: 'rgba(232,221,208,0.3)' }}>© 2026 Ode</span>
         <div style={{ display: 'flex', gap: 24 }}>
-          {[['Home', '/'], ['Privacy', '/privacy'], ['Terms', '/terms'], ['Support', 'mailto:support@dreamlog.app']].map(([label, href]) => (
+          {[['Home', '/'], ['Privacy', '/privacy'], ['Terms', '/terms'], ['Support', 'mailto:talktoode.dev@gmail.com']].map(([label, href]) => (
             <a key={label} href={href} style={{ fontSize: '0.8rem', color: 'rgba(232,221,208,0.4)', textDecoration: 'none' }}>{label}</a>
           ))}
         </div>

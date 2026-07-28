@@ -13,7 +13,7 @@
 #     data-dependent — assertions are `optional: true`.
 #   • A verified account (EMAIL_EXISTING / PASSWORD).
 # ═══════════════════════════════════════════════════════════════════════════
-appId: com.dreamlog.app
+appId: com.ode.app
 env:
   EMAIL_EXISTING: "bharatbanthia2207+tester@gmail.com"
   PASSWORD: "DreamTest!2026"

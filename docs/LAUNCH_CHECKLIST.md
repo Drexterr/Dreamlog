@@ -25,15 +25,15 @@ Left to do (needs your store accounts):
 - [ ] **Create the 4 IAP products** in App Store Connect and the Play Console, as
       *consumable* products with these exact IDs (they must match
       `backend/internal/services/iap.go` and `mobile/src/services/iap.ts`):
-      `com.dreamlog.app.plus.monthly`, `com.dreamlog.app.plus.annual`,
-      `com.dreamlog.app.pro.monthly`, `com.dreamlog.app.pro.annual`.
+      `com.ode.app.plus.monthly`, `com.ode.app.plus.annual`,
+      `com.ode.app.pro.monthly`, `com.ode.app.pro.annual`.
       List prices per docs/PRICING.md.
 - [ ] **Set backend env on Railway (API process):** `APPLE_SHARED_SECRET` (App Store
       Connect → App → App Information → App-Specific Shared Secret) and
       `GOOGLE_PLAY_CREDENTIALS_JSON` (service account with Play Console access —
       Monetization → "View financial data" permission; can reuse the FCM service
       account if granted). Optional: `GOOGLE_PLAY_PACKAGE_NAME` (defaults to
-      `com.dreamlog.app`). While unset, `/billing/upgrade` grants plans WITHOUT
+      `com.ode.app`). While unset, `/billing/upgrade` grants plans WITHOUT
       verification (dev stub) — do not launch without these.
 - [ ] **Rebuild both apps** (`eas build`) — `expo-iap` is a native module; purchases do
       not work in Expo Go or via OTA update.
@@ -84,7 +84,7 @@ Left to do (needs your store accounts):
       detection, the "AI-assisted reflection, not therapy" positioning, in-app crisis resources
       (Settings → Get help now), and provide a demo account with seeded data.
 - [ ] Store listing assets: screenshots (6.7" + 5.5" iOS, phone + tablet Android), feature
-      graphic, app description, keywords, support URL/email (support@dreamlog.app is already
+      graphic, app description, keywords, support URL/email (talktoode.dev@gmail.com is already
       referenced in-app — make sure the inbox exists).
 
 ## 2b. iOS launch readiness 🔴 (added 2026-06-11)
@@ -110,8 +110,8 @@ produces the iOS binary from the same code. The items below are the iOS-only set
 - [ ] **Enroll in the Apple Developer Program** ($99/year) — do this first, approval can take
       1–2 days. Everything below needs it.
 - [ ] **Supabase: enable the Apple provider** (Dashboard → Authentication → Providers → Apple,
-      bundle ID `com.dreamlog.app`). Without this, the new Apple button returns an error.
-- [ ] **Firebase: add an iOS app** (bundle `com.dreamlog.app`) and download
+      bundle ID `com.ode.app`). Without this, the new Apple button returns an error.
+- [ ] **Firebase: add an iOS app** (bundle `com.ode.app`) and download
       `GoogleService-Info.plist` → save as `mobile/GoogleService-Info.plist` and add
       `"googleServicesFile": "./GoogleService-Info.plist"` under `ios` in `app.json`.
       ⚠️ iOS EAS builds will FAIL until this file exists (the RN Firebase plugin requires it).

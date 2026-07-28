@@ -18,7 +18,7 @@
 #   sign-in below). See mobile/src/config/e2e.ts. When using that build, delete
 #   the onboarding + sign-in runFlow lines and start at FEATURE 1.
 # ═══════════════════════════════════════════════════════════════════════════
-appId: com.dreamlog.app
+appId: com.ode.app
 env:
   EMAIL_EXISTING: "bharatbanthia2207+tester@gmail.com"
   PASSWORD: "DreamTest!2026"

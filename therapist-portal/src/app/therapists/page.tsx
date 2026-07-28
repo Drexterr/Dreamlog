@@ -29,7 +29,7 @@ export default function TherapistsPage() {
             <Link href="/login" style={{ background: '#c8955a', color: '#18150f', borderRadius: 12, padding: '13px 26px', fontWeight: 700, fontSize: '0.9rem', textDecoration: 'none' }}>
               Register as a therapist — free
             </Link>
-            <a href="mailto:support@dreamlog.app" style={{ border: '1px solid rgba(255,255,255,0.15)', color: '#e8ddd0', borderRadius: 12, padding: '13px 26px', fontSize: '0.9rem', textDecoration: 'none' }}>
+            <a href="mailto:talktoode.dev@gmail.com" style={{ border: '1px solid rgba(255,255,255,0.15)', color: '#e8ddd0', borderRadius: 12, padding: '13px 26px', fontSize: '0.9rem', textDecoration: 'none' }}>
               Talk to us →
             </a>
           </div>
@@ -117,7 +117,7 @@ export default function TherapistsPage() {
             <Link href="/login" style={{ background: '#c8955a', color: '#18150f', borderRadius: 12, padding: '13px 26px', fontWeight: 700, fontSize: '0.9rem', textDecoration: 'none' }}>
               Register your practice
             </Link>
-            <a href="mailto:support@dreamlog.app?subject=Therapist Beta Interest" style={{ border: '1px solid rgba(200,149,90,0.25)', color: '#c8955a', borderRadius: 12, padding: '13px 26px', fontSize: '0.9rem', textDecoration: 'none' }}>
+            <a href="mailto:talktoode.dev@gmail.com?subject=Therapist Beta Interest" style={{ border: '1px solid rgba(200,149,90,0.25)', color: '#c8955a', borderRadius: 12, padding: '13px 26px', fontSize: '0.9rem', textDecoration: 'none' }}>
               Email us first →
             </a>
           </div>
@@ -128,7 +128,7 @@ export default function TherapistsPage() {
           <h2 style={{ fontFamily: "'Erode', serif", fontSize: 'clamp(1.4rem, 2.5vw, 2rem)', fontWeight: 300, margin: '0 0 36px' }}>Questions therapists ask</h2>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
             {[
-              { q: 'Is it HIPAA-compliant?', a: 'Ode uses encrypted transit (HTTPS) and encrypted storage. Audio is never retained. We are building toward full HIPAA compliance — reach us at support@dreamlog.app for a current data-processing assessment.' },
+              { q: 'Is it HIPAA-compliant?', a: 'Ode uses encrypted transit (HTTPS) and encrypted storage. Audio is never retained. We are building toward full HIPAA compliance — reach us at talktoode.dev@gmail.com for a current data-processing assessment.' },
               { q: 'Does it claim to be therapy?', a: 'No. Every session and Therapy Mode interaction includes a clear disclaimer. Ode is an AI-assisted reflection tool, not a licensed therapeutic service. We are explicit about this in the product and in our Terms.' },
               { q: 'What happens if a client discloses crisis content?', a: 'Two-stage automated detection runs on every journal entry and every Therapy Mode message. If crisis content is flagged, the user immediately sees hotline resources: iCall, Vandrevala Foundation, and 988. Entries flagged as crisis are excluded from mood analytics and handled separately. You are not a first responder in this system — the system handles it.' },
               { q: 'Can I recommend this to all my clients?', a: 'Ode is suitable for adults who want a private journaling tool. It is not designed for clients in acute psychiatric crisis, active psychosis, or who require clinical monitoring. Use your professional judgement — the same way you would recommend a book or a journaling prompt.' },

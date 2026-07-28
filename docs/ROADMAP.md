@@ -333,7 +333,7 @@ Incremental UX improvements shipped outside phase gates.
 - Profile card in Settings now shows `"N entries · Plan name"` instead of email address
 - Card is a `TouchableOpacity` with a `›` chevron; tapping opens a bottom-sheet profile modal
 - Modal displays: avatar with initials, display name, email, full name, and age range ("Not set" in muted text if absent)
-- "Change email address" row → Alert directing user to support@dreamlog.app
+- "Change email address" row → Alert directing user to talktoode.dev@gmail.com
 - Consistent with existing modal patterns (BlurView + sheet)
 
 ### Greeting Splash ✅ → Brand Splash (Breath Line) ✅ (2026-07-16)

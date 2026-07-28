@@ -8,12 +8,12 @@ import type { BillingPeriod } from '../types';
 // not auto-renewing subscriptions.
 export const IAP_PRODUCT_IDS: Record<'plus' | 'pro', Record<BillingPeriod, string>> = {
   plus: {
-    monthly: 'com.dreamlog.app.plus.monthly',
-    annual: 'com.dreamlog.app.plus.annual',
+    monthly: 'com.ode.app.plus.monthly',
+    annual: 'com.ode.app.plus.annual',
   },
   pro: {
-    monthly: 'com.dreamlog.app.pro.monthly',
-    annual: 'com.dreamlog.app.pro.annual',
+    monthly: 'com.ode.app.pro.monthly',
+    annual: 'com.ode.app.pro.annual',
   },
 };
 

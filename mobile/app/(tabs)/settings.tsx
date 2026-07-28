@@ -1031,7 +1031,7 @@ export default function SettingsScreen() {
                 setShowProfileModal(false);
                 Alert.alert(
                   'Change email address',
-                  'To change your email, contact us at support@dreamlog.app and we\'ll update it for you.',
+                  'To change your email, contact us at talktoode.dev@gmail.com and we\'ll update it for you.',
                   [{ text: 'OK' }],
                 );
               }}

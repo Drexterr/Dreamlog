@@ -27,9 +27,9 @@ supabase.auth.onAuthStateChange(async (_event, session) => {
 
 // Parse auth tokens from a Supabase deep link callback URL and establish the session.
 // Supabase sends tokens in the URL fragment for implicit flow:
-//   dreamlog://#access_token=...&refresh_token=...&type=signup
+//   ode://#access_token=...&refresh_token=...&type=signup
 // or a code param for PKCE flow:
-//   dreamlog://?code=...
+//   ode://?code=...
 async function handleDeepLink(url: string) {
   const fragment = url.split('#')[1] ?? url.split('?')[1] ?? '';
   if (!fragment) return;

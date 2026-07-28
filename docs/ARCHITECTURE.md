@@ -315,7 +315,7 @@ payments                        -- purchase records for plan upgrades; one row p
   amount BIGINT                 -- 0 for IAP rows (price is store-managed); legacy Stripe rows kept their amount
   currency TEXT                 -- '' for IAP rows; legacy Stripe rows: 'inr' | 'usd'
   store TEXT                    -- 'apple' | 'google' ('stripe' on legacy rows)
-  product_id TEXT               -- IAP product identifier, e.g. "com.dreamlog.app.plus.monthly"
+  product_id TEXT               -- IAP product identifier, e.g. "com.ode.app.plus.monthly"
   country CHAR(2)               -- ISO 3166-1 alpha-2, e.g. "IN" | "US" (migration 000029)
   created_at TIMESTAMPTZ
 

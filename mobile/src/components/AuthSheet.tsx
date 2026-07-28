@@ -131,7 +131,7 @@ export default function AuthSheet({ visible, prompt, onClose }: AuthSheetProps) 
       if (emailMode === 'register') {
         const { data, error: err } = await supabase.auth.signUp({
           email: e, password: p,
-          options: { data: { full_name: n }, emailRedirectTo: 'dreamlog://auth/callback' },
+          options: { data: { full_name: n }, emailRedirectTo: 'ode://auth/callback' },
         });
         if (err) throw err;
         if (!data.session) {

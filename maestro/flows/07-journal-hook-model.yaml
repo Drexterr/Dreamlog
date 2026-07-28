@@ -17,7 +17,7 @@
 #     completed entry for the check-in feature — flow 05-core-features
 #     records one; run that first, or point this at a pre-seeded account.
 # ═══════════════════════════════════════════════════════════════════════════
-appId: com.dreamlog.app
+appId: com.ode.app
 env:
   EMAIL_EXISTING: "bharatbanthia2207+tester@gmail.com"
   PASSWORD: "DreamTest!2026"

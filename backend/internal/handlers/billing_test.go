@@ -475,7 +475,7 @@ func TestBillingHandler_UpgradeVerified_MissingPlatform_Returns400(t *testing.T)
 
 func TestBillingHandler_UpgradeVerified_UnknownProduct_Returns400(t *testing.T) {
 	r := newVerifiedBillingRouter(t, &fakePlanManager{}, &fakePaymentRecorder{}, &fakeIAPVerifier{}, billingTestUser(models.PlanFree))
-	w := postUpgrade(t, r, iapBody(map[string]string{"product_id": "com.dreamlog.app.mystery.box"}))
+	w := postUpgrade(t, r, iapBody(map[string]string{"product_id": "com.ode.app.mystery.box"}))
 	if w.Code != http.StatusBadRequest {
 		t.Fatalf("expected 400 for unknown product, got %d: %s", w.Code, w.Body.String())
 	}

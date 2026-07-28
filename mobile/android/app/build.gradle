@@ -87,10 +87,10 @@ android {
     ndkVersion = rootProject.ext.ndkVersion
     buildToolsVersion = rootProject.ext.buildToolsVersion
     compileSdk = rootProject.ext.compileSdkVersion
-    namespace = 'com.dreamlog.app'
+    namespace = 'com.ode.app'
     defaultConfig {
         missingDimensionStrategy "platform", "play"
-        applicationId = 'com.dreamlog.app'
+        applicationId = 'com.ode.app'
         minSdk = rootProject.ext.minSdkVersion
         targetSdk = rootProject.ext.targetSdkVersion
         versionCode 1

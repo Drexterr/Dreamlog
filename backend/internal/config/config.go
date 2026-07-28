@@ -122,7 +122,7 @@ type AppConfig struct {
 type IAPConfig struct {
 	AppleSharedSecret         string // App Store Connect shared secret for /verifyReceipt
 	GooglePlayCredentialsJSON string // service-account JSON with androidpublisher access
-	GooglePlayPackageName     string // Android application ID, e.g. com.dreamlog.app
+	GooglePlayPackageName     string // Android application ID, e.g. com.ode.app
 }
 
 type WorkerConfig struct {
@@ -194,13 +194,13 @@ func Load() (*Config, error) {
 		App: AppConfig{
 			BaseURL:           getEnv("APP_BASE_URL", "https://dreamlog.app"),
 			MinimumAppVersion: getEnv("MINIMUM_APP_VERSION", "1.0.0"),
-			AndroidStoreURL:   getEnv("ANDROID_STORE_URL", "https://play.google.com/store/apps/details?id=com.dreamlog.app"),
+			AndroidStoreURL:   getEnv("ANDROID_STORE_URL", "https://play.google.com/store/apps/details?id=com.ode.app"),
 			IOSStoreURL:       getEnv("IOS_STORE_URL", ""),
 		},
 		IAP: IAPConfig{
 			AppleSharedSecret:         getEnv("APPLE_SHARED_SECRET", ""),
 			GooglePlayCredentialsJSON: getEnv("GOOGLE_PLAY_CREDENTIALS_JSON", ""),
-			GooglePlayPackageName:     getEnv("GOOGLE_PLAY_PACKAGE_NAME", "com.dreamlog.app"),
+			GooglePlayPackageName:     getEnv("GOOGLE_PLAY_PACKAGE_NAME", "com.ode.app"),
 		},
 		Worker: WorkerConfig{
 			Concurrency:   parseInt("WORKER_CONCURRENCY", 4),

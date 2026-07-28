@@ -1,0 +1,12 @@
+# EAS Build's cloud archiver falls back to .gitignore rules when this file is
+# absent. The root .gitignore excludes google-services.json / GoogleService-Info.plist
+# from git (they're not committed - contain Firebase API keys), but EAS Build still
+# needs them present in the uploaded project archive to wire them into the generated
+# native project. This file overrides that fallback: everything listed below is
+# excluded from the upload, and the Firebase config files are deliberately NOT listed,
+# so they get included even though git never sees them.
+
+node_modules/
+.expo/
+android/local.properties
+*.log

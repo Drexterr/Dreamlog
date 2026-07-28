@@ -279,7 +279,7 @@ Code/doc changes to land the new pricing:
 - [x] IAP migration: 4 consumable plan-pass SKUs, both stores; `expo-iap` client +
       server-side receipt verification (`services/iap.go`); Stripe removed ✅ 2026-07-13
 - [ ] Create the 4 products in App Store Connect + Play Console
-      (`com.dreamlog.app.{plus,pro}.{monthly,annual}`) at the list prices above
+      (`com.ode.app.{plus,pro}.{monthly,annual}`) at the list prices above
 - [ ] Enroll: App Store Small Business Program + Play 15% tier
 - [ ] Therapy pay-per-use charge server-side (`computeBilling` still returns 402 in
       prod for non-included sessions - wire a therapy-session consumable SKU through

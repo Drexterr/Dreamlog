@@ -7,7 +7,7 @@
 #
 # Selectors use the stable testIDs registered in mobile/src/testIDs.ts, so
 # marketing copy changes never break this flow.
-appId: com.dreamlog.app
+appId: com.ode.app
 ---
 - tapOn:
     id: "home-record-button"            # T.home.recordBtn

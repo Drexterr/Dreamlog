@@ -140,7 +140,7 @@ func newGoogleTestService(t *testing.T, baseURL string) *IAPService {
 	t.Helper()
 	s := NewIAPService(&appconfig.IAPConfig{
 		GooglePlayCredentialsJSON: `{"type":"service_account"}`,
-		GooglePlayPackageName:     "com.dreamlog.app",
+		GooglePlayPackageName:     "com.ode.app",
 	})
 	s.googleBaseURL = baseURL
 	s.googleTokenOverride = func() (string, error) { return "test-access-token", nil }

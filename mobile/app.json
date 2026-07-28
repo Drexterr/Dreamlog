@@ -15,7 +15,7 @@
     "orientation": "portrait",
     "userInterfaceStyle": "dark",
     "backgroundColor": "#18150f",
-    "scheme": "dreamlog",
+    "scheme": "ode",
     "icon": "./assets/icon.png",
     "splash": {
       "backgroundColor": "#18150f"
@@ -47,7 +47,7 @@
       [
         "@react-native-google-signin/google-signin",
         {
-          "iosUrlScheme": "com.googleusercontent.apps.REPLACE_WITH_IOS_OAUTH_CLIENT_ID"
+          "iosUrlScheme": "com.googleusercontent.apps.302666329017-hn90suhcrsvftliko5shh1botmd0ghar"
         }
       ],
       "@react-native-firebase/app",
@@ -80,7 +80,7 @@
     ],
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "com.dreamlog.app",
+      "bundleIdentifier": "com.talktoode.app",
       "usesAppleSignIn": true,
       "googleServicesFile": "./GoogleService-Info.plist",
       "infoPlist": {
@@ -98,7 +98,7 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#18150f"
       },
-      "package": "com.dreamlog.app",
+      "package": "com.ode.app",
       "googleServicesFile": "./google-services.json",
       "permissions": [
         "RECORD_AUDIO",

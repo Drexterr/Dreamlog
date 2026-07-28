@@ -20,7 +20,7 @@ func newVersionTestRouter(minimumVersion, androidURL, iosURL string) *gin.Engine
 func TestVersion_ReturnsConfiguredValues(t *testing.T) {
 	r := newVersionTestRouter(
 		"1.2.0",
-		"https://play.google.com/store/apps/details?id=com.dreamlog.app",
+		"https://play.google.com/store/apps/details?id=com.ode.app",
 		"https://apps.apple.com/app/id1234567890",
 	)
 
@@ -43,7 +43,7 @@ func TestVersion_ReturnsConfiguredValues(t *testing.T) {
 	if body.MinimumVersion != "1.2.0" {
 		t.Errorf("minimum_version = %q, want %q", body.MinimumVersion, "1.2.0")
 	}
-	if body.AndroidStoreURL != "https://play.google.com/store/apps/details?id=com.dreamlog.app" {
+	if body.AndroidStoreURL != "https://play.google.com/store/apps/details?id=com.ode.app" {
 		t.Errorf("android_store_url = %q", body.AndroidStoreURL)
 	}
 	if body.IOSStoreURL != "https://apps.apple.com/app/id1234567890" {
@@ -64,7 +64,7 @@ func TestVersion_NoAuthRequired(t *testing.T) {
 }
 
 func TestVersion_EmptyIOSStoreURL(t *testing.T) {
-	r := newVersionTestRouter("1.0.0", "https://play.google.com/store/apps/details?id=com.dreamlog.app", "")
+	r := newVersionTestRouter("1.0.0", "https://play.google.com/store/apps/details?id=com.ode.app", "")
 
 	w := httptest.NewRecorder()
 	req := httptest.NewRequest(http.MethodGet, "/version", nil)

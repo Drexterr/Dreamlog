@@ -24,7 +24,7 @@
 #     and note text are encrypted at rest (ADR-017); without it these
 #     endpoints error and this whole flow fails closed.
 # ═══════════════════════════════════════════════════════════════════════════
-appId: com.dreamlog.app
+appId: com.ode.app
 env:
   EMAIL_THERAPIST: "bharatbanthia2207+maestro-therapist@gmail.com"
   PASSWORD_THERAPIST: "DreamTest!2026"

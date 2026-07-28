@@ -195,7 +195,7 @@ export default function AuthScreen() {
           password: passwordTrimmed,
           options: {
             data: { full_name: nameTrimmed },
-            emailRedirectTo: 'dreamlog://auth/callback',
+            emailRedirectTo: 'ode://auth/callback',
           },
         });
 

@@ -66,7 +66,7 @@ export default function AboutPage() {
             </p>
             <p style={{ fontSize: '0.95rem', color: 'rgba(232,221,208,0.55)', lineHeight: 1.85, margin: '16px 0 0' }}>
               If you&apos;re a therapist interested in recommending Ode to clients, or a company looking at team wellness, we&apos;d like to talk. Reach us at{' '}
-              <a href="mailto:support@dreamlog.app" style={{ color: '#c8955a', textDecoration: 'none' }}>support@dreamlog.app</a>.
+              <a href="mailto:talktoode.dev@gmail.com" style={{ color: '#c8955a', textDecoration: 'none' }}>talktoode.dev@gmail.com</a>.
             </p>
           </div>
         </div>

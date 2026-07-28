@@ -123,7 +123,7 @@ func (h *BillingHandler) Upgrade(c *gin.Context) {
 		Plan          models.Plan `json:"plan" binding:"required"`
 		Period        string      `json:"period"`
 		Platform      string      `json:"platform"`       // "ios" | "android"
-		ProductID     string      `json:"product_id"`     // store SKU, e.g. com.dreamlog.app.plus.monthly
+		ProductID     string      `json:"product_id"`     // store SKU, e.g. com.ode.app.plus.monthly
 		PurchaseToken string      `json:"purchase_token"` // iOS: base64 receipt; Android: Play purchase token
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {

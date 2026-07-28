@@ -8,7 +8,7 @@
 # Selectors: stable testIDs (mobile/src/testIDs.ts). Each screen transition is
 # gated by an extendedWaitUntil on the next screen's element, because the step
 # machine animates between steps and some transitions run async work first.
-appId: com.dreamlog.app
+appId: com.ode.app
 env:
   ONBOARDING_GOAL_KEY: "stress"
   ONBOARDING_AGE_KEY: "25_34"

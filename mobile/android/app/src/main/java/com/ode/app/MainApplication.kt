@@ -1,4 +1,4 @@
-package com.dreamlog.app
+package com.ode.app
 
 import android.app.Application
 import android.content.res.Configuration

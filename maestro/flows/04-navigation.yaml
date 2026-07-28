@@ -4,7 +4,7 @@
 # navigation (Settings sheets) opens/closes. Tabs carry stable testIDs
 # (tabBarButtonTestID in app/(tabs)/_layout.tsx).
 # ═══════════════════════════════════════════════════════════════════════════
-appId: com.dreamlog.app
+appId: com.ode.app
 tags:
   - navigation
 ---

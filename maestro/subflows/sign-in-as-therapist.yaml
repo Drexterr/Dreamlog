@@ -19,7 +19,7 @@
 # Required env: EMAIL_THERAPIST, PASSWORD_THERAPIST, THERAPIST_NAME,
 #               THERAPIST_CREDENTIALS
 # Postcondition: on the therapist dashboard (therapist-dashboard-screen).
-appId: com.dreamlog.app
+appId: com.ode.app
 ---
 # Step 1 — first sign-in via the sheet (role defaults to 'user').
 - tapOn:

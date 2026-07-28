@@ -9,7 +9,7 @@ export default function TeamsPage() {
           <OdeMark size={28} />
           <span style={{ fontFamily: "'Erode', serif", fontSize: '1.1rem', fontWeight: 600 }}>Ode</span>
         </Link>
-        <a href="mailto:support@dreamlog.app?subject=Team Wellness Enquiry" style={{ background: '#c8955a', color: '#18150f', borderRadius: 100, padding: '9px 20px', fontSize: '0.84rem', fontWeight: 700, textDecoration: 'none' }}>
+        <a href="mailto:talktoode.dev@gmail.com?subject=Team Wellness Enquiry" style={{ background: '#c8955a', color: '#18150f', borderRadius: 100, padding: '9px 20px', fontSize: '0.84rem', fontWeight: 700, textDecoration: 'none' }}>
           Talk to us →
         </a>
       </nav>
@@ -26,7 +26,7 @@ export default function TeamsPage() {
             Aggregate, anonymized emotional wellbeing insights across your team. Individual journals stay private — always. HR sees patterns, never people.
           </p>
           <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap' }}>
-            <a href="mailto:support@dreamlog.app?subject=Team Wellness Enquiry" style={{ background: '#c8955a', color: '#18150f', borderRadius: 12, padding: '13px 26px', fontWeight: 700, fontSize: '0.9rem', textDecoration: 'none' }}>
+            <a href="mailto:talktoode.dev@gmail.com?subject=Team Wellness Enquiry" style={{ background: '#c8955a', color: '#18150f', borderRadius: 12, padding: '13px 26px', fontWeight: 700, fontSize: '0.9rem', textDecoration: 'none' }}>
               Start a conversation
             </a>
             <Link href="/pricing" style={{ border: '1px solid rgba(255,255,255,0.15)', color: '#e8ddd0', borderRadius: 12, padding: '13px 26px', fontSize: '0.9rem', textDecoration: 'none' }}>
@@ -127,7 +127,7 @@ export default function TeamsPage() {
           <p style={{ fontSize: '0.95rem', color: 'rgba(232,221,208,0.5)', margin: '0 0 32px', lineHeight: 1.75, maxWidth: 480, marginLeft: 'auto', marginRight: 'auto' }}>
             We offer a free 30-day pilot for teams of 25–100 employees. No contract, no commitment. See the dashboard. Hear from your employees.
           </p>
-          <a href="mailto:support@dreamlog.app?subject=Team Pilot Request" style={{ display: 'inline-block', background: '#c8955a', color: '#18150f', borderRadius: 12, padding: '14px 32px', fontWeight: 700, fontSize: '0.95rem', textDecoration: 'none' }}>
+          <a href="mailto:talktoode.dev@gmail.com?subject=Team Pilot Request" style={{ display: 'inline-block', background: '#c8955a', color: '#18150f', borderRadius: 12, padding: '14px 32px', fontWeight: 700, fontSize: '0.95rem', textDecoration: 'none' }}>
             Request a pilot →
           </a>
           <p style={{ margin: '16px 0 0', fontSize: '0.78rem', color: 'rgba(232,221,208,0.3)' }}>We&apos;ll get back to you within 48 hours.</p>

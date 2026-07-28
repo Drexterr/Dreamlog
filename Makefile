@@ -15,7 +15,7 @@
         mobile-build-dev-ios mobile-build-preview-ios mobile-build-prod-ios \
         mobile-submit-android mobile-submit-ios mobile-device-ios mobile-versions \
         mobile-update mobile-update-preview \
-        apk apk-debug apk-ci apk-download \
+        apk apk-debug apk-ci apk-download fix-prebuild-splash \
         portal-install portal-dev portal-build portal-start portal-lint
 
 ifeq ($(OS),Windows_NT)
@@ -376,6 +376,7 @@ JAVA_HOME = C:\Program Files\Android\Android Studio\jbr
 # First run takes ~3 min (Gradle download); subsequent runs ~1 min.
 apk:
 	cd mobile && npx expo prebuild --platform android --clean
+	$(MAKE) fix-prebuild-splash
 	powershell -ExecutionPolicy Bypass -File scripts\write-local-props.ps1
 	powershell -ExecutionPolicy Bypass -File scripts\run-gradle.ps1 -Task assembleRelease
 	@echo ""
@@ -384,10 +385,30 @@ apk:
 # Debug APK (faster build, no signing needed - good for quick device testing).
 apk-debug:
 	cd mobile && npx expo prebuild --platform android --clean
+	$(MAKE) fix-prebuild-splash
 	powershell -ExecutionPolicy Bypass -File scripts\write-local-props.ps1
 	powershell -ExecutionPolicy Bypass -File scripts\run-gradle.ps1 -Task assembleDebug
 	@echo ""
 	@echo "APK ready: mobile\android\app\build\outputs\apk\debug\app-debug.apk"
+
+# expo prebuild --clean reliably regenerates a broken native splash screen:
+# it rewrites styles.xml/ic_launcher_background.xml to reference
+# drawable/splashscreen_logo and deletes splashscreen_blank.xml, but never
+# generates the splashscreen_logo asset itself, so the release/debug resource
+# link step fails with "resource drawable/splashscreen_logo not found".
+# The committed splashscreen_blank.xml (a transparent drawable - the real
+# splash mark is drawn by BrandSplash.tsx, not a native static image) is
+# correct, so just restore the prebuild-generated files it clobbers.
+fix-prebuild-splash:
+	git checkout -- \
+		mobile/android/app/src/main/res/drawable-hdpi/splashscreen_logo.png \
+		mobile/android/app/src/main/res/drawable-mdpi/splashscreen_logo.png \
+		mobile/android/app/src/main/res/drawable-xhdpi/splashscreen_logo.png \
+		mobile/android/app/src/main/res/drawable-xxhdpi/splashscreen_logo.png \
+		mobile/android/app/src/main/res/drawable-xxxhdpi/splashscreen_logo.png \
+		mobile/android/app/src/main/res/drawable/splashscreen_blank.xml \
+		mobile/android/app/src/main/res/drawable/ic_launcher_background.xml \
+		mobile/android/app/src/main/res/values/styles.xml
 
 # Trigger build on GitHub Actions (fallback if Android Studio is not installed).
 apk-ci:

@@ -7,7 +7,7 @@ import { api } from '../api/client';
 import { VersionInfo } from '../types';
 
 // Play Store deep link; falls back to the https listing if the store app is missing.
-const PLAY_MARKET_URL = 'market://details?id=com.dreamlog.app';
+const PLAY_MARKET_URL = 'market://details?id=com.ode.app';
 
 /** Returns true when `current` is strictly below `minimum`. Tolerates uneven
  *  segment counts ("1.2" vs "1.2.0") and non-numeric input (treated as 0). */

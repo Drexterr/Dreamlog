@@ -1,4 +1,4 @@
-package com.dreamlog.app
+package com.ode.app
 import expo.modules.splashscreen.SplashScreenManager
 
 import android.os.Build

@@ -34,7 +34,7 @@ Legend: ✅ done · 🔴 blocker (build fails or store rejects) · 🟡 required
    `FCM_CREDENTIALS_JSON`/`FCM_PROJECT_ID`, `SENTRY_DSN`, real `ANTHROPIC_API_KEY`, etc. (§7)
 7. Point https://dreamlog.app at the Firebase Hosting portal site (project `dreamlog-48f94`) so the
    /privacy and /terms URLs used in-app actually resolve
-8. Confirm demo-account email + seed 3–5 entries; create support@dreamlog.app inbox
+8. Confirm demo-account email + seed 3–5 entries; create talktoode.dev@gmail.com inbox
 9. `SENTRY_AUTH_TOKEN` in EAS env; device testing; sandbox IAP testing; TestFlight; submit
 
 ---
@@ -42,7 +42,7 @@ Legend: ✅ done · 🔴 blocker (build fails or store rejects) · 🟡 required
 ## 1. Code readiness — ✅ done (verified in repo)
 
 - [x] Single codebase ships to iOS via EAS (`make mobile-build-prod-ios`, cloud macOS worker — no Mac needed)
-- [x] Bundle ID `com.dreamlog.app` set in `app.json` → `ios.bundleIdentifier`
+- [x] Bundle ID `com.ode.app` set in `app.json` → `ios.bundleIdentifier`
 - [x] Sign in with Apple implemented (`expo-apple-authentication`, native button iOS-only, Supabase `signInWithIdToken`); `ios.usesAppleSignIn: true` — required by Guideline 4.8 since Google Sign-In is offered
 - [x] `ITSAppUsesNonExemptEncryption: false` in `app.json` (skips export-compliance question)
 - [x] iOS static frameworks via `expo-build-properties` (required by RN Firebase)
@@ -58,12 +58,12 @@ Legend: ✅ done · 🔴 blocker (build fails or store rejects) · 🟡 required
 ## 2. Apple accounts & signing 🔴 (nothing below works without these)
 
 - [ ] 🔴 **Enroll in the Apple Developer Program** ($99/year) — do FIRST, approval takes 1–2 days
-- [ ] 🔴 **Create the App Store Connect app record** (bundle `com.dreamlog.app`, name "Ode")
+- [ ] 🔴 **Create the App Store Connect app record** (bundle `com.ode.app`, name "Ode")
 - [ ] 🔴 Let EAS manage certificates/profiles on first `eas build --platform ios` (interactive login)
 
 ## 3. Firebase / push (iOS build FAILS without the plist) 🔴
 
-- [ ] 🔴 **Firebase: add an iOS app** (bundle `com.dreamlog.app`) → download `GoogleService-Info.plist` → save as `mobile/GoogleService-Info.plist`
+- [ ] 🔴 **Firebase: add an iOS app** (bundle `com.ode.app`) → download `GoogleService-Info.plist` → save as `mobile/GoogleService-Info.plist`
       — verified missing from the repo today
 - [ ] 🔴 **Add `"googleServicesFile": "./GoogleService-Info.plist"` under `ios` in `app.json`**
       — verified absent today; the RN Firebase plugin makes iOS EAS builds fail until both exist
@@ -72,7 +72,7 @@ Legend: ✅ done · 🔴 blocker (build fails or store rejects) · 🟡 required
 
 ## 4. Auth providers 🔴
 
-- [ ] 🔴 **Supabase: enable the Apple provider** (Dashboard → Authentication → Providers → Apple, bundle `com.dreamlog.app`) — the Apple button errors until this is on
+- [ ] 🔴 **Supabase: enable the Apple provider** (Dashboard → Authentication → Providers → Apple, bundle `com.ode.app`) — the Apple button errors until this is on
 - [ ] 🔴 **Google Sign-In on iOS**: create an iOS OAuth client in Google Cloud Console, then replace the
       `iosUrlScheme` **placeholder** (`REPLACE_WITH_IOS_OAUTH_CLIENT_ID`) in `app.json` with the real value —
       plugin config scaffolded 2026-07-20; Google sign-in **crashes on iOS** until the real client ID is in
@@ -81,8 +81,8 @@ Legend: ✅ done · 🔴 blocker (build fails or store rejects) · 🟡 required
 
 - [ ] 🔴 **Create the 4 consumable products in App Store Connect** with these exact IDs
       (must match `backend/internal/services/iap.go` + `mobile/src/services/iap.ts`):
-      `com.dreamlog.app.plus.monthly`, `com.dreamlog.app.plus.annual`,
-      `com.dreamlog.app.pro.monthly`, `com.dreamlog.app.pro.annual` — prices per docs/PRICING.md
+      `com.ode.app.plus.monthly`, `com.ode.app.plus.annual`,
+      `com.ode.app.pro.monthly`, `com.ode.app.pro.annual` — prices per docs/PRICING.md
 - [ ] 🔴 **Set `APPLE_SHARED_SECRET` on the backend** (App Store Connect → App Information → App-Specific Shared Secret).
       While unset, `/billing/upgrade` grants plans WITHOUT verification — do not launch without it
 - [x] ✅ **Therapy pay-per-use gap defused for v1 (2026-07-20):** the unbuyable "Single Session" card is
@@ -104,7 +104,7 @@ Legend: ✅ done · 🔴 blocker (build fails or store rejects) · 🟡 required
       positioning, in-app crisis resources (Settings → Get help now), demo account credentials (LAUNCH_CHECKLIST §2d)
 - [ ] 🟡 **Activate + seed the demo account**: confirm the email, then record 3–5 entries so reviewers see reflections/mood/timeline
 - [ ] 🟡 Store listing assets: 6.7" + 5.5" screenshots, description, keywords, support URL/email
-      (support@dreamlog.app is referenced in-app — make sure the inbox exists)
+      (talktoode.dev@gmail.com is referenced in-app — make sure the inbox exists)
 - [ ] 🟡 Age rating questionnaire (mental-health content → likely 12+/17+; answer the "medical" questions carefully)
 - [ ] 🟢 After approval: set `IOS_STORE_URL` on the backend (verified default is `""` today) so the
       force-update gate can deep-link iOS users to the store

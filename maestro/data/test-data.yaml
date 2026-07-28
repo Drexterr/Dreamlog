@@ -9,7 +9,7 @@
 # ─────────────────────────────────────────────────────────────────────────────
 
 # App identity (mirrors mobile/app.json). Kept here so flows never hardcode it.
-APP_ID: "com.dreamlog.app"
+APP_ID: "com.ode.app"
 APP_SCHEME: "dreamlog"          # deep-link scheme from app.json ("scheme": "dreamlog")
 
 # ── Existing, already-verified account (seed this in Supabase before running) ──

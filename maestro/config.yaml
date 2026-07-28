@@ -8,8 +8,8 @@ flows:
   - flows/*.yaml
 
 # App under test. Both platforms share this identifier (see mobile/app.json:
-# ios.bundleIdentifier and android.package are both "com.dreamlog.app").
-appId: com.dreamlog.app
+# ios.bundleIdentifier and android.package are both "com.ode.app").
+appId: com.ode.app
 
 # Executed before EVERY flow. Guarantees each scenario starts from a cold,
 # deterministic launch rather than inheriting navigation state from the previous

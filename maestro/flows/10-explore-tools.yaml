@@ -13,7 +13,7 @@
 #     screen — if the account has no completed entries yet, that block is
 #     skipped (optional). Run 05-core-features first to seed one entry.
 # ═══════════════════════════════════════════════════════════════════════════
-appId: com.dreamlog.app
+appId: com.ode.app
 env:
   EMAIL_EXISTING: "bharatbanthia2207+tester@gmail.com"
   PASSWORD: "DreamTest!2026"

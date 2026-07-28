@@ -114,7 +114,7 @@ store-managed per product, so there is no amount check server-side.
   "plan":           "free | plus | pro",
   "period":         "monthly | annual",      // optional, defaults to "monthly"
   "platform":       "ios | android",
-  "product_id":     "com.dreamlog.app.plus.monthly",
+  "product_id":     "com.ode.app.plus.monthly",
   "purchase_token": "..."   // iOS: base64 app receipt · Android: Play purchase token
 }
 
@@ -135,10 +135,10 @@ store-managed per product, so there is no amount check server-side.
 `backend/internal/services/iap.go`; display prices in `docs/PRICING.md`):
 | Product ID | Grants |
 |---|---|
-| `com.dreamlog.app.plus.monthly` | Plus, 30-day pass |
-| `com.dreamlog.app.plus.annual`  | Plus, 365-day pass |
-| `com.dreamlog.app.pro.monthly`  | Pro, 30-day pass |
-| `com.dreamlog.app.pro.annual`   | Pro, 365-day pass |
+| `com.ode.app.plus.monthly` | Plus, 30-day pass |
+| `com.ode.app.plus.annual`  | Plus, 365-day pass |
+| `com.ode.app.pro.monthly`  | Pro, 30-day pass |
+| `com.ode.app.pro.annual`   | Pro, 365-day pass |
 
 Rules:
 - `plan: "free"` (self-downgrade) needs no purchase and clears the expiry.

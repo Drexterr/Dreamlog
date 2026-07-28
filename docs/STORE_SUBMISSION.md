@@ -12,9 +12,9 @@ Drafted 2026-07-20 — review the wording before pasting; anything in [brackets]
 | Name | Ode — Voice Journal |
 | Subtitle (iOS, 30 chars) | Speak. Reflect. Understand. |
 | Short description (Play, 80 chars) | Voice journaling with AI reflections that understand your emotional patterns. |
-| Bundle / package | com.dreamlog.app |
+| Bundle / package | com.ode.app |
 | Category | Health & Fitness (primary) · Lifestyle (secondary) |
-| Support email | support@dreamlog.app (inbox must exist before submission) |
+| Support email | talktoode.dev@gmail.com (inbox must exist before submission) |
 | Privacy policy URL | https://dreamlog.app/privacy |
 | Terms URL | https://dreamlog.app/terms |
 | Marketing URL | https://dreamlog.app |
@@ -162,6 +162,6 @@ Sizes: iOS 6.7" (1290×2796) + 5.5" (1242×2208); Play phone + 7" & 10" tablet, 
 ## 8. Things to verify before pasting
 
 - [ ] https://dreamlog.app/privacy and /terms actually resolve on the production domain (pages exist in `therapist-portal/src/app/`; the domain must point at the Firebase Hosting site, project `dreamlog-48f94`)
-- [ ] support@dreamlog.app inbox exists
+- [ ] talktoode.dev@gmail.com inbox exists
 - [ ] Demo account email confirmed + 3–5 entries recorded
 - [ ] Privacy policy text actually covers: audio processing, AI processors (Anthropic/OpenAI/Azure), health data, retention, deletion, children's policy

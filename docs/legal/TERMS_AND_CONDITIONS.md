@@ -70,7 +70,7 @@ You must provide accurate information when creating your account. You are respon
 
 ### 4.2 Account Security
 
-Notify us immediately at support@dreamlog.app if you believe your account has been compromised. We are not liable for losses caused by unauthorised access that results from your failure to protect your credentials.
+Notify us immediately at talktoode.dev@gmail.com if you believe your account has been compromised. We are not liable for losses caused by unauthorised access that results from your failure to protect your credentials.
 
 ### 4.3 Account Termination by You
 
@@ -85,7 +85,7 @@ We may suspend or terminate your account if you:
 - Engage in fraudulent activity
 - Fail to pay subscription fees
 
-We will give you reasonable notice before suspension unless the violation is severe (e.g. illegal activity). You may appeal a suspension by contacting support@dreamlog.app.
+We will give you reasonable notice before suspension unless the violation is severe (e.g. illegal activity). You may appeal a suspension by contacting talktoode.dev@gmail.com.
 
 ---
 
@@ -292,7 +292,7 @@ If you do not agree with a change, you may delete your account before the change
 
 ## 18. Contact
 
-**General:** support@dreamlog.app
+**General:** talktoode.dev@gmail.com
 **Privacy:** privacy@dreamlog.app
 **Billing:** billing@dreamlog.app
 **Legal:** legal@dreamlog.app

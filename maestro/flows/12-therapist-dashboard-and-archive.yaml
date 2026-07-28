@@ -27,7 +27,7 @@
 #     recommended for deterministic behavior.
 #   • A seeded Supabase account for EMAIL_THERAPIST (see flow 08 header).
 # ═══════════════════════════════════════════════════════════════════════════
-appId: com.dreamlog.app
+appId: com.ode.app
 env:
   EMAIL_THERAPIST: "bharatbanthia2207+maestro-therapist@gmail.com"
   PASSWORD_THERAPIST: "DreamTest!2026"

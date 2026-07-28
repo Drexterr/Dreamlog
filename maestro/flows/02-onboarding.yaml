@@ -8,7 +8,7 @@
 # metachar) or newlines are asserted via testIDs, not text. Exact single-line
 # button labels ("Skip", "Continue", "Journal") are matched as text.
 # ═══════════════════════════════════════════════════════════════════════════
-appId: com.dreamlog.app
+appId: com.ode.app
 env:
   ONBOARDING_GOAL_KEY: "stress"
   ONBOARDING_AGE_KEY: "25_34"
