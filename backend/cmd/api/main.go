@@ -144,7 +144,7 @@ func main() {
 
 	therapySvc := services.NewTherapyService(
 		therapyRepo, analysisRepo, relationshipRepo, claudeSvc, transcriptionSvc, storageSvc,
-		crisisDetector, ttsSvc, cfg.Anthropic.StubAnalysis,
+		crisisDetector, ttsSvc, cfg.Anthropic.StubAnalysis, log,
 	)
 
 	// ── HTTP Server ───────────────────────────────────────────────────────────

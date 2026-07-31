@@ -186,7 +186,7 @@ func newStubTherapyService(repo *fakeTherapyRepo, crisisDetector *CrisisDetector
 	if crisisDetector == nil {
 		crisisDetector = NewCrisisDetector(nil)
 	}
-	return NewTherapyService(repo, &fakeTherapyAnalysisRepo{}, nil, claude, transcription, &fakeTherapyStorage{}, crisisDetector, nil, true)
+	return NewTherapyService(repo, &fakeTherapyAnalysisRepo{}, nil, claude, transcription, &fakeTherapyStorage{}, crisisDetector, nil, true, nil)
 }
 
 func claudeBlockingTherapyServer(t *testing.T) *httptest.Server {
@@ -458,7 +458,7 @@ func TestTherapy_AudioDeletedAfterTranscription(t *testing.T) {
 	transcription := NewTranscriptionService(&appconfig.OpenAIConfig{
 		BaseURL: "http://localhost:0", APIKey: "test",
 	})
-	svc := NewTherapyService(repo, &fakeTherapyAnalysisRepo{}, nil, claude, transcription, storage, NewCrisisDetector(nil), nil, true)
+	svc := NewTherapyService(repo, &fakeTherapyAnalysisRepo{}, nil, claude, transcription, storage, NewCrisisDetector(nil), nil, true, nil)
 
 	userID := uuid.New()
 	session := startSession(t, svc, userID)
@@ -485,7 +485,7 @@ func TestTherapy_PaymentRequired_NonStubbedMode(t *testing.T) {
 
 	claude := NewClaudeService(&appconfig.AnthropicConfig{StubAnalysis: true, Model: "stub"})
 	transcription := NewTranscriptionService(&appconfig.OpenAIConfig{BaseURL: "http://localhost:9999"})
-	svc := NewTherapyService(repo, &fakeTherapyAnalysisRepo{}, nil, claude, transcription, &fakeTherapyStorage{}, NewCrisisDetector(nil), nil, false)
+	svc := NewTherapyService(repo, &fakeTherapyAnalysisRepo{}, nil, claude, transcription, &fakeTherapyStorage{}, NewCrisisDetector(nil), nil, false, nil)
 
 	_, err := svc.StartSession(context.Background(), uuid.New(), models.PlanFree, models.PersonaComforting, "", "auto")
 	if err == nil {
@@ -607,7 +607,7 @@ func TestTherapy_LayeredCrisis_FailSafe_ClaudeUnreachableOnFirst(t *testing.T) {
 	claude := newClaudeWithServer(errSrv) // de-escalation call will also fail
 
 	transcription := NewTranscriptionService(&appconfig.OpenAIConfig{BaseURL: "http://localhost:9999"})
-	svc := NewTherapyService(repo, &fakeTherapyAnalysisRepo{}, nil, claude, transcription, &fakeTherapyStorage{}, crisis, nil, true)
+	svc := NewTherapyService(repo, &fakeTherapyAnalysisRepo{}, nil, claude, transcription, &fakeTherapyStorage{}, crisis, nil, true, nil)
 
 	userID := uuid.New()
 	session := startSession(t, svc, userID)
@@ -632,7 +632,7 @@ func TestTherapy_LayeredCrisis_FailSafe_TimeoutOnFirst(t *testing.T) {
 	crisis := NewCrisisDetector(newClaudeWithServer(blockSrv))
 	claude := newClaudeWithServer(blockSrv)
 	transcription := NewTranscriptionService(&appconfig.OpenAIConfig{BaseURL: "http://localhost:9999"})
-	svc := NewTherapyService(repo, &fakeTherapyAnalysisRepo{}, nil, claude, transcription, &fakeTherapyStorage{}, crisis, nil, true)
+	svc := NewTherapyService(repo, &fakeTherapyAnalysisRepo{}, nil, claude, transcription, &fakeTherapyStorage{}, crisis, nil, true, nil)
 
 	userID := uuid.New()
 	session := startSession(t, svc, userID)

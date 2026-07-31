@@ -9,7 +9,9 @@ import (
 	"time"
 
 	"github.com/dreamlog/backend/internal/models"
+	"github.com/dreamlog/backend/pkg/monitoring"
 	"github.com/google/uuid"
+	"go.uber.org/zap"
 )
 
 // therapyRepo is the minimal repository interface TherapyService needs.
@@ -60,6 +62,7 @@ type TherapyService struct {
 	crisis        *CrisisDetector
 	tts           *TTSService
 	stubBilling   bool // when true (dev), billing checks always pass
+	log           *zap.Logger
 }
 
 func NewTherapyService(
@@ -72,7 +75,11 @@ func NewTherapyService(
 	crisis *CrisisDetector,
 	tts *TTSService,
 	stubBilling bool,
+	log *zap.Logger,
 ) *TherapyService {
+	if log == nil {
+		log = zap.NewNop()
+	}
 	return &TherapyService{
 		repo:          repo,
 		analysisRepo:  analysisRepo,
@@ -83,6 +90,7 @@ func NewTherapyService(
 		crisis:        crisis,
 		tts:           tts,
 		stubBilling:   stubBilling,
+		log:           log,
 	}
 }
 
@@ -222,7 +230,22 @@ func (s *TherapyService) SendMessage(ctx context.Context, sessionID, userID uuid
 		ttsCtx, cancel := context.WithTimeout(ctx, 20*time.Second)
 		ttsURL, ttsErr := s.tts.Synthesize(ttsCtx, session.ID.String(), assistantMsg.ID.String(), aiReply, session.Persona, userLanguage)
 		cancel()
-		if ttsErr == nil && ttsURL != "" {
+		if ttsErr != nil {
+			s.log.Warn("therapy: tts synthesis failed, falling back to text-only reply",
+				zap.Error(ttsErr),
+				zap.String("session_id", session.ID.String()),
+				zap.String("message_id", assistantMsg.ID.String()),
+				zap.String("persona", string(session.Persona)),
+			)
+			monitoring.CaptureErr(ttsErr, map[string]string{
+				"session_id": session.ID.String(),
+				"component":  "therapy_tts",
+			})
+		} else if ttsURL == "" {
+			s.log.Info("therapy: tts disabled (no provider configured), text-only reply",
+				zap.String("session_id", session.ID.String()),
+			)
+		} else {
 			assistantMsg.TTSUrl = &ttsURL
 		}
 	}
