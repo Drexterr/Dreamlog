@@ -8,7 +8,6 @@ import {
   StatusBar,
   Alert,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import NetInfo from '@react-native-community/netinfo';
@@ -20,52 +19,7 @@ import { useTheme } from '../src/context/ThemeContext';
 import { useAuth } from '../src/context/AuthContext';
 import { T, recordModeID } from '../src/testIDs';
 import type { EntryMode } from '../src/types';
-
-const WAVEFORM_BARS = 9;
-
-// ── Waveform ──────────────────────────────────────────────────────────────────
-// Bars are animated via `transform: scaleY` (not `height`) so this can run on
-// the native UI thread (useNativeDriver: true). A JS-thread-driven `height`
-// animation here previously ran continuously for the whole recording and
-// could starve the JS thread badly enough to drop the stop-button's tap.
-const WAVEFORM_BAR_HEIGHT = 22;
-
-function Waveform({ colors }: { colors: any }) {
-  const anims = useRef(
-    Array.from({ length: WAVEFORM_BARS }, () => new Animated.Value(0.18)),
-  ).current;
-
-  useEffect(() => {
-    const loops = anims.map((anim, i) => {
-      const loop = Animated.loop(
-        Animated.sequence([
-          Animated.delay(i * 70),
-          Animated.timing(anim, { toValue: 0.18 + Math.random() * 0.82, duration: 380 + i * 35, useNativeDriver: true }),
-          Animated.timing(anim, { toValue: 0.18, duration: 380 + i * 35, useNativeDriver: true }),
-        ]),
-      );
-      loop.start();
-      return loop;
-    });
-    return () => loops.forEach((l) => l.stop());
-  }, []);
-
-  return (
-    <View style={wvStyles.wrap} pointerEvents="none">
-      {anims.map((anim, i) => (
-        <Animated.View
-          key={i}
-          style={[wvStyles.bar, { backgroundColor: colors.brandCore, transform: [{ scaleY: anim }] }]}
-        />
-      ))}
-    </View>
-  );
-}
-
-const wvStyles = StyleSheet.create({
-  wrap: { flexDirection: 'row', alignItems: 'center', gap: 3.5, height: 32 },
-  bar:  { width: 2.5, height: WAVEFORM_BAR_HEIGHT, borderRadius: 2 },
-});
+import BrandOrbGlyph from '../src/components/BrandOrbGlyph';
 
 // ── Ripple rings ──────────────────────────────────────────────────────────────
 function RippleRings({ colors }: { colors: any }) {
@@ -156,11 +110,7 @@ function RecordingOrb({
             },
           ]}
         >
-          {recording ? (
-            <Waveform colors={colors} />
-          ) : (
-            <Ionicons name="mic" size={48} color={colors.brandCore} />
-          )}
+          <BrandOrbGlyph listening={recording} color={colors.brandCore} size={90} />
         </Animated.View>
       </View>
     </TouchableOpacity>

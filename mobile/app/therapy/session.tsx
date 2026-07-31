@@ -25,6 +25,7 @@ import type { TherapySession, TherapySessionMessage, TherapySessionStatus } from
 import { PERSONA_META } from '../../src/types';
 import { detectUserCountry } from '../../src/services/region';
 import { helplinesForCountry, helplineHref, type CountryHelplines } from '../../src/services/helplines';
+import BrandOrbGlyph from '../../src/components/BrandOrbGlyph';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -40,45 +41,6 @@ function formatDuration(ms: number): string {
   const m = Math.floor(s / 60);
   return `${m}:${(s % 60).toString().padStart(2, '0')}`;
 }
-
-// ── Animated waveform (reuses record.tsx pattern) ─────────────────────────────
-
-const WAVEFORM_BARS = 9;
-
-function Waveform() {
-  const anims = useRef(
-    Array.from({ length: WAVEFORM_BARS }, () => new Animated.Value(6)),
-  ).current;
-
-  useEffect(() => {
-    const loops = anims.map((anim, i) => {
-      const targetH = 8 + Math.random() * 20;
-      const loop = Animated.loop(
-        Animated.sequence([
-          Animated.delay(i * 80),
-          Animated.timing(anim, { toValue: targetH, duration: 400 + i * 40, useNativeDriver: false }),
-          Animated.timing(anim, { toValue: 6, duration: 400 + i * 40, useNativeDriver: false }),
-        ]),
-      );
-      loop.start();
-      return loop;
-    });
-    return () => loops.forEach((l) => l.stop());
-  }, []);
-
-  return (
-    <View style={wvStyles.wrap}>
-      {anims.map((anim, i) => (
-        <Animated.View key={i} style={[wvStyles.bar, { height: anim }]} />
-      ))}
-    </View>
-  );
-}
-
-const wvStyles = StyleSheet.create({
-  wrap: { flexDirection: 'row', alignItems: 'center', gap: 4, height: 36 },
-  bar: { width: 3, borderRadius: 2, backgroundColor: 'rgba(255,255,255,0.85)' },
-});
 
 // ── Pulsating orb ─────────────────────────────────────────────────────────────
 
@@ -158,10 +120,8 @@ function SessionOrb({
         >
           {thinking ? (
             <ActivityIndicator color="rgba(255,255,255,0.9)" size="large" />
-          ) : recording ? (
-            <Waveform />
           ) : (
-            <Text style={orbStyles.micIcon}>🎙</Text>
+            <BrandOrbGlyph listening={recording} color="rgba(255,255,255,0.92)" size={100} />
           )}
         </Animated.View>
       </View>
@@ -193,7 +153,6 @@ const orbStyles = StyleSheet.create({
     shadowRadius: 32,
     elevation: 16,
   },
-  micIcon: { fontSize: 36 },
 });
 
 // ── Message bubble ────────────────────────────────────────────────────────────
