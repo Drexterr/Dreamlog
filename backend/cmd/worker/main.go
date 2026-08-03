@@ -15,6 +15,7 @@ import (
 	"github.com/dreamlog/backend/pkg/monitoring"
 	"github.com/dreamlog/backend/pkg/queue"
 	pkgstorage "github.com/dreamlog/backend/pkg/storage"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/joho/godotenv"
 	"github.com/redis/go-redis/v9"
@@ -46,6 +47,10 @@ func main() {
 	poolCfg.MaxConns = 5
 	poolCfg.MinConns = 1
 	poolCfg.MaxConnLifetime = cfg.Database.ConnMaxLifetime
+	// Supabase's pooler doesn't reliably preserve pgx's server-side prepared
+	// statement cache across pooled connections - use the simple protocol
+	// (Supabase's documented recommendation for pgx behind their pooler).
+	poolCfg.ConnConfig.DefaultQueryExecMode = pgx.QueryExecModeSimpleProtocol
 
 	db, err := pgxpool.NewWithConfig(context.Background(), poolCfg)
 	if err != nil {

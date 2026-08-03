@@ -23,6 +23,7 @@ import (
 	"github.com/golang-migrate/migrate/v4"
 	_ "github.com/golang-migrate/migrate/v4/database/postgres"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/joho/godotenv"
 	"github.com/redis/go-redis/v9"
@@ -51,6 +52,10 @@ func main() {
 	poolCfg.MaxConns = int32(cfg.Database.MaxOpenConns)
 	poolCfg.MinConns = int32(cfg.Database.MaxIdleConns)
 	poolCfg.MaxConnLifetime = cfg.Database.ConnMaxLifetime
+	// Supabase's pooler doesn't reliably preserve pgx's server-side prepared
+	// statement cache across pooled connections - use the simple protocol
+	// (Supabase's documented recommendation for pgx behind their pooler).
+	poolCfg.ConnConfig.DefaultQueryExecMode = pgx.QueryExecModeSimpleProtocol
 
 	db, err := pgxpool.NewWithConfig(context.Background(), poolCfg)
 	if err != nil {
