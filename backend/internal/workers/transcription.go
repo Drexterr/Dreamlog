@@ -218,6 +218,8 @@ func (w *TranscriptionWorker) handle(ctx context.Context, job *models.Transcript
 			Reflection: crisis.Response,
 			Summary:    "Entry flagged for immediate support.",
 			MoodScore:  10,
+			Topics:     []string{},
+			KeyQuotes:  []string{},
 		}
 		if _, err := w.analysisRepo.Upsert(ctx, job.EntryID, analysis); err != nil {
 			log.Error("worker: store crisis analysis", zap.Error(err))
