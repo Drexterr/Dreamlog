@@ -312,8 +312,8 @@ type chapterScanner interface {
 
 func scanChapter(row chapterScanner) (*models.LifeChapter, error) {
 	ch := &models.LifeChapter{}
-	var startDate, summary string
-	var endDate *string
+	var startDate string
+	var endDate, summary *string
 	var updatedAt time.Time
 
 	err := row.Scan(
@@ -327,7 +327,9 @@ func scanChapter(row chapterScanner) (*models.LifeChapter, error) {
 	}
 	ch.StartDate = startDate
 	ch.EndDate = endDate
-	ch.Summary = summary
+	if summary != nil {
+		ch.Summary = *summary
+	}
 	ch.UpdatedAt = updatedAt
 	return ch, nil
 }
