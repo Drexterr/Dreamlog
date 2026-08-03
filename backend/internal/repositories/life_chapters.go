@@ -30,7 +30,7 @@ func (r *LifeChapterRepository) Create(ctx context.Context, userID uuid.UUID, in
 
 	const q = `
 		INSERT INTO life_chapters (user_id, title, description, start_date, end_date, emoji, color)
-		VALUES ($1, $2, $3, $4, $5, $6, $7)
+		VALUES ($1, $2, $3, $4::date, $5::date, $6, $7)
 		RETURNING id, user_id, title, description, start_date, end_date, emoji, color, summary, created_at, updated_at`
 
 	row := r.db.QueryRow(ctx, q,
@@ -120,7 +120,7 @@ func (r *LifeChapterRepository) Update(ctx context.Context, id, userID uuid.UUID
 
 	const q = `
 		UPDATE life_chapters
-		SET title = $3, description = $4, end_date = $5, emoji = $6, color = $7, updated_at = NOW()
+		SET title = $3, description = $4, end_date = $5::date, emoji = $6, color = $7, updated_at = NOW()
 		WHERE id = $1 AND user_id = $2
 		RETURNING id, user_id, title, description, start_date, end_date, emoji, color, summary, created_at, updated_at`
 
