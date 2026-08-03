@@ -61,7 +61,7 @@ func (h *LifeChapterHandler) Create(c *gin.Context) {
 	}
 	ch, err := h.repo.Create(c.Request.Context(), user.ID, input)
 	if err != nil {
-		c.Error(apierr.Internal("create chapter"))
+		c.Error(apierr.InternalErr("create chapter", err))
 		return
 	}
 	c.JSON(http.StatusCreated, ch)
