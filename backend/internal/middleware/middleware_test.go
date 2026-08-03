@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -10,6 +11,7 @@ import (
 	"github.com/dreamlog/backend/pkg/apierr"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
+	"go.uber.org/zap/zaptest/observer"
 )
 
 // ── ErrorHandler ──────────────────────────────────────────────────────────────
@@ -57,6 +59,71 @@ func TestErrorHandler_UnknownError_Returns500WithoutLeaking(t *testing.T) {
 	}
 	if !strings.Contains(w.Body.String(), "unexpected error") {
 		t.Errorf("expected generic message, got %s", w.Body.String())
+	}
+}
+
+func TestErrorHandler_5xxAPIError_IsLogged(t *testing.T) {
+	core, logs := observer.New(zap.WarnLevel)
+	gin.SetMode(gin.TestMode)
+	r := gin.New()
+	r.Use(ErrorHandler(zap.New(core)))
+	r.GET("/x", func(c *gin.Context) {
+		_ = c.Error(apierr.InternalErr("purchase verification unavailable", errors.New("apple: 503 service unavailable")))
+	})
+
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest(http.MethodGet, "/x", nil)
+	r.ServeHTTP(w, req)
+
+	if w.Code != http.StatusInternalServerError {
+		t.Fatalf("expected 500, got %d", w.Code)
+	}
+	if strings.Contains(w.Body.String(), "apple: 503") {
+		t.Error("the underlying cause must never leak into the client response")
+	}
+
+	entries := logs.All()
+	if len(entries) != 1 {
+		t.Fatalf("want exactly 1 log entry for a 5xx apierr, got %d", len(entries))
+	}
+	if !strings.Contains(entries[0].ContextMap()["error"].(string), "apple: 503") {
+		t.Errorf("logged error must contain the real cause, got %v", entries[0].ContextMap())
+	}
+}
+
+func TestErrorHandler_5xxAPIError_WithoutCause_StillLogged(t *testing.T) {
+	core, logs := observer.New(zap.WarnLevel)
+	gin.SetMode(gin.TestMode)
+	r := gin.New()
+	r.Use(ErrorHandler(zap.New(core)))
+	r.GET("/x", func(c *gin.Context) {
+		_ = c.Error(apierr.Internal("something broke"))
+	})
+
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest(http.MethodGet, "/x", nil)
+	r.ServeHTTP(w, req)
+
+	if logs.Len() != 1 {
+		t.Fatalf("a 5xx apierr with no explicit Cause must still be logged (at minimum with its message), got %d entries", logs.Len())
+	}
+}
+
+func TestErrorHandler_4xxAPIError_NotLogged(t *testing.T) {
+	core, logs := observer.New(zap.WarnLevel)
+	gin.SetMode(gin.TestMode)
+	r := gin.New()
+	r.Use(ErrorHandler(zap.New(core)))
+	r.GET("/x", func(c *gin.Context) {
+		_ = c.Error(apierr.NotFound("widget"))
+	})
+
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest(http.MethodGet, "/x", nil)
+	r.ServeHTTP(w, req)
+
+	if logs.Len() != 0 {
+		t.Errorf("client errors (4xx) must not be logged as failures, got %d entries", logs.Len())
 	}
 }
 

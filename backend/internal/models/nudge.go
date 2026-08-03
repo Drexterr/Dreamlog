@@ -16,11 +16,17 @@ const (
 
 // Nudge type values stored in nudges.nudge_type.
 const (
-	NudgeTypeMorning      = "morning"      // post-entry morning reflection nudge
-	NudgeTypeReengagement = "reengagement" // gentle push after a lapse
-	NudgeTypeStreakRisk   = "streak_risk"  // evening push when an active streak has no entry today
-	NudgeTypeCheckin      = "checkin"      // user-requested "check in on this tomorrow"
+	NudgeTypeMorning          = "morning"            // post-entry morning reflection nudge
+	NudgeTypeReengagement     = "reengagement"       // gentle push after a lapse
+	NudgeTypeStreakRisk       = "streak_risk"        // evening push when an active streak has no entry today
+	NudgeTypeCheckin          = "checkin"            // user-requested "check in on this tomorrow"
+	NudgeTypePlanExpiringSoon = "plan_expiring_soon" // paid plan expires within PlanExpiryWarnDays
+	NudgeTypePlanExpired      = "plan_expired"       // paid plan has just lapsed (plan_expires_at passed)
 )
+
+// PlanExpiryWarnDays is how many days before plan_expires_at the
+// "expiring soon" nudge fires.
+const PlanExpiryWarnDays = 3
 
 type Nudge struct {
 	ID          uuid.UUID   `json:"id"`

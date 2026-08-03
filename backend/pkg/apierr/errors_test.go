@@ -41,6 +41,21 @@ func TestNew_WithDetail(t *testing.T) {
 	}
 }
 
+func TestInternalErr_CarriesCauseWithoutLeakingIt(t *testing.T) {
+	cause := errors.New("store api returned 503")
+	e := InternalErr("purchase verification unavailable", cause)
+
+	if e.Code != http.StatusInternalServerError {
+		t.Errorf("want 500, got %d", e.Code)
+	}
+	if e.Error() != "purchase verification unavailable" {
+		t.Errorf("client-facing message must stay generic, got %q", e.Error())
+	}
+	if !errors.Is(e, cause) {
+		t.Error("errors.Is must see through to Cause via Unwrap")
+	}
+}
+
 func TestAs_UnwrapsFromChain(t *testing.T) {
 	base := NotFound("user")
 	wrapped := fmt.Errorf("handler: %w", base)

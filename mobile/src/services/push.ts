@@ -6,11 +6,18 @@ import { api } from '../api/client';
 // the shortest possible path from impulse to speaking.
 const RECORD_NUDGE_TYPES = new Set(['morning_nudge', 'reengagement', 'streak_risk', 'checkin']);
 
+// Plan-expiry nudges should land on the upgrade screen, not the recorder -
+// the whole point of the push is to prompt a renewal.
+const UPGRADE_NUDGE_TYPES = new Set(['plan_expiring_soon', 'plan_expired']);
+
 function handleNotificationOpen(data?: Record<string, unknown>): void {
   const type = typeof data?.type === 'string' ? (data.type as string) : '';
-  if (!RECORD_NUDGE_TYPES.has(type)) return;
   try {
-    router.push('/record');
+    if (RECORD_NUDGE_TYPES.has(type)) {
+      router.push('/record');
+    } else if (UPGRADE_NUDGE_TYPES.has(type)) {
+      router.push('/upgrade');
+    }
   } catch {
     // Router not mounted yet (cold start) - the auth guard will land the user
     // on home; losing the deep link is acceptable, crashing is not.

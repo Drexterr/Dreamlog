@@ -9,6 +9,8 @@ import (
 	"testing"
 
 	appconfig "github.com/dreamlog/backend/internal/config"
+	"go.uber.org/zap"
+	"go.uber.org/zap/zaptest/observer"
 )
 
 // claudeYesServer returns a chat completion that says "yes".
@@ -73,7 +75,7 @@ func newClaudeWithServer(srv *httptest.Server) *ClaudeService {
 
 func TestCrisisStage1_AllHighCertaintyPhrases(t *testing.T) {
 	// No Claude server needed - Stage 1 never calls the API.
-	detector := NewCrisisDetector(nil)
+	detector := NewCrisisDetector(nil, nil)
 	ctx := context.Background()
 
 	for _, phrase := range highCertaintyPhrases {
@@ -93,7 +95,7 @@ func TestCrisisStage1_AllHighCertaintyPhrases(t *testing.T) {
 }
 
 func TestCrisisStage1_CaseInsensitive(t *testing.T) {
-	detector := NewCrisisDetector(nil)
+	detector := NewCrisisDetector(nil, nil)
 	ctx := context.Background()
 
 	phrases := []string{
@@ -114,7 +116,7 @@ func TestCrisisStage1_CaseInsensitive(t *testing.T) {
 }
 
 func TestCrisisStage1_NormalText_NoMatch(t *testing.T) {
-	detector := NewCrisisDetector(nil)
+	detector := NewCrisisDetector(nil, nil)
 	ctx := context.Background()
 
 	benign := []string{
@@ -139,7 +141,7 @@ func TestCrisisStage1_NormalText_NoMatch(t *testing.T) {
 }
 
 func TestCrisisStage1_EmbeddedPhrase(t *testing.T) {
-	detector := NewCrisisDetector(nil)
+	detector := NewCrisisDetector(nil, nil)
 	ctx := context.Background()
 
 	// Phrase buried in a longer transcript
@@ -162,7 +164,7 @@ func TestCrisisStage2_ClaudeConfirmsYes(t *testing.T) {
 	srv := claudeYesServer(t)
 	defer srv.Close()
 
-	detector := NewCrisisDetector(newClaudeWithServer(srv))
+	detector := NewCrisisDetector(newClaudeWithServer(srv), nil)
 	ctx := context.Background()
 
 	// ambiguous phrase triggers Stage 2
@@ -183,7 +185,7 @@ func TestCrisisStage2_ClaudeConfirmsNo(t *testing.T) {
 	srv := claudeNoServer(t)
 	defer srv.Close()
 
-	detector := NewCrisisDetector(newClaudeWithServer(srv))
+	detector := NewCrisisDetector(newClaudeWithServer(srv), nil)
 	ctx := context.Background()
 
 	// ambiguous phrase, but Claude says no
@@ -201,7 +203,7 @@ func TestCrisisStage2_ClaudeUnreachable_DefaultsToCrisis(t *testing.T) {
 	srv := claudeErrorServer(t)
 	defer srv.Close()
 
-	detector := NewCrisisDetector(newClaudeWithServer(srv))
+	detector := NewCrisisDetector(newClaudeWithServer(srv), nil)
 	ctx := context.Background()
 
 	transcript := "I feel like nobody cares if I live or die."
@@ -215,6 +217,29 @@ func TestCrisisStage2_ClaudeUnreachable_DefaultsToCrisis(t *testing.T) {
 	}
 }
 
+func TestCrisisStage2_ClaudeUnreachable_FailSafeIsLogged(t *testing.T) {
+	srv := claudeErrorServer(t)
+	defer srv.Close()
+
+	core, logs := observer.New(zap.WarnLevel)
+	detector := NewCrisisDetector(newClaudeWithServer(srv), zap.New(core))
+	ctx := context.Background()
+
+	result, err := detector.Screen(ctx, "I feel like nobody cares if I live or die.", "IN")
+	if err != nil {
+		t.Fatalf("Screen must not surface Claude errors: %v", err)
+	}
+	if !result.Detected {
+		t.Fatal("must still fail safe to crisis regardless of logging")
+	}
+	if logs.Len() != 1 {
+		t.Fatalf("the fail-safe branch must be logged exactly once so an outage is operator-visible, got %d entries", logs.Len())
+	}
+	if !strings.Contains(logs.All()[0].Message, "failing safe to crisis") {
+		t.Errorf("log message must explain the fail-safe, got %q", logs.All()[0].Message)
+	}
+}
+
 func TestCrisisStage2_ContextCancelled_DefaultsToCrisis(t *testing.T) {
 	// Server that never responds (simulates timeout)
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -222,7 +247,7 @@ func TestCrisisStage2_ContextCancelled_DefaultsToCrisis(t *testing.T) {
 	}))
 	defer srv.Close()
 
-	detector := NewCrisisDetector(newClaudeWithServer(srv))
+	detector := NewCrisisDetector(newClaudeWithServer(srv), nil)
 	ctx, cancel := context.WithCancel(context.Background())
 	cancel() // cancel immediately
 
@@ -256,7 +281,7 @@ func TestCrisisStage2_OnlyCallsClaudeOnce(t *testing.T) {
 	}))
 	defer srv.Close()
 
-	detector := NewCrisisDetector(newClaudeWithServer(srv))
+	detector := NewCrisisDetector(newClaudeWithServer(srv), nil)
 	ctx := context.Background()
 
 	// Multiple ambiguous phrases - Claude should only be called once.

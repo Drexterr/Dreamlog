@@ -3,6 +3,9 @@ package services
 import (
 	"context"
 	"strings"
+
+	"github.com/dreamlog/backend/pkg/monitoring"
+	"go.uber.org/zap"
 )
 
 // CrisisResult is returned by the crisis screener.
@@ -19,10 +22,14 @@ type CrisisResult struct {
 // ambiguous language that might be metaphorical vs. literal.
 type CrisisDetector struct {
 	claude *ClaudeService
+	log    *zap.Logger
 }
 
-func NewCrisisDetector(claude *ClaudeService) *CrisisDetector {
-	return &CrisisDetector{claude: claude}
+func NewCrisisDetector(claude *ClaudeService, log *zap.Logger) *CrisisDetector {
+	if log == nil {
+		log = zap.NewNop()
+	}
+	return &CrisisDetector{claude: claude, log: log}
 }
 
 // highCertaintyPhrases trigger crisis response immediately - no ambiguity.
@@ -74,7 +81,14 @@ func (d *CrisisDetector) Screen(ctx context.Context, transcript, country string)
 		if strings.Contains(lower, phrase) {
 			confirmed, err := d.confirmWithClaude(ctx, transcript)
 			if err != nil {
-				// Fail safe: treat as crisis if Claude is unavailable.
+				// Fail safe: treat as crisis if Claude is unavailable (ADR-002).
+				// This must never be silent - a broad Claude outage would
+				// otherwise flood every ambiguous entry as a false-positive
+				// crisis with zero operator visibility to explain why.
+				d.log.Warn("crisis: stage 2 claude confirmation unavailable, failing safe to crisis (ADR-002)",
+					zap.Error(err),
+				)
+				monitoring.CaptureErr(err, map[string]string{"component": "crisis_stage2_failsafe"})
 				return &CrisisResult{Detected: true, Response: buildCrisisResponse(country)}, nil
 			}
 			if confirmed {

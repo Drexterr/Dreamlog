@@ -90,7 +90,7 @@ func main() {
 	jobQueue := queue.New(rdb, cfg.Worker.QueueKey, cfg.Worker.DLQKey, cfg.Worker.PollTimeout)
 	transcriber := services.NewTranscriptionService(&cfg.OpenAI)
 	claudeSvc := services.NewClaudeService(&cfg.Anthropic)
-	crisisDetector := services.NewCrisisDetector(claudeSvc)
+	crisisDetector := services.NewCrisisDetector(claudeSvc, log)
 	contextBuilder := services.NewContextBuilder(entryRepo, userRepo, analysisRepo)
 	nudgeSvc := services.NewNudgeService(nudgeRepo, userRepo)
 	fcmSvc := services.NewFCMService(&cfg.FCM)
@@ -138,6 +138,7 @@ func main() {
 	nudgeScheduler := workers.NewNudgeScheduler(nudgeRepo, fcmSvc, log)
 	reengagementScheduler := workers.NewReengagementScheduler(nudgeRepo, fcmSvc, log)
 	streakRiskScheduler := workers.NewStreakRiskScheduler(nudgeRepo, analysisRepo, fcmSvc, log)
+	planExpiryScheduler := workers.NewPlanExpiryScheduler(nudgeRepo, fcmSvc, log)
 
 	weeklyReviewScheduler := workers.NewWeeklyReviewScheduler(workers.WeeklyReviewSchedulerDeps{
 		ReviewRepo:    weeklyReviewRepo,
@@ -183,6 +184,7 @@ func main() {
 	runReported(nudgeScheduler.Run)
 	runReported(reengagementScheduler.Run)
 	runReported(streakRiskScheduler.Run)
+	runReported(planExpiryScheduler.Run)
 	runReported(weeklyReviewScheduler.Run)
 	runReported(yearInReviewScheduler.Run)
 	runReported(noteOCRWorker.Run)

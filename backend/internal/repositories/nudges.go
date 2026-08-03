@@ -269,6 +269,100 @@ func (r *NudgeRepository) StreakRiskUsersAtLocalHour(ctx context.Context, localH
 	return users, rows.Err()
 }
 
+// PlanExpiryUser is a candidate for the plan-expiring-soon or plan-expired nudge.
+type PlanExpiryUser struct {
+	UserID      uuid.UUID
+	Timezone    string
+	Plan        string
+	PlanExpires time.Time
+}
+
+// PlanExpiringSoonUsersAtLocalHour returns users whose paid plan expires within
+// warnDays days (but hasn't expired yet), at their local nudge hour, who:
+//   - have nudge_enabled = true and at least one FCM device token
+//   - have NOT received a plan_expiring_soon nudge in the last (warnDays+1) days
+//     (dedup: once per expiry cycle, not once per day of the warning window)
+func (r *NudgeRepository) PlanExpiringSoonUsersAtLocalHour(ctx context.Context, localHour, warnDays int) ([]PlanExpiryUser, error) {
+	const q = `
+		SELECT DISTINCT u.id, COALESCE(NULLIF(u.timezone, ''), 'UTC'), u.plan, u.plan_expires_at
+		FROM users u
+		JOIN user_devices ud ON ud.user_id = u.id
+		WHERE u.nudge_enabled = true
+		  AND u.deleted_at IS NULL
+		  AND u.plan <> 'free'
+		  AND u.plan_expires_at IS NOT NULL
+		  AND u.plan_expires_at > NOW()
+		  AND u.plan_expires_at <= NOW() + ($2 || ' days')::INTERVAL
+		  AND EXTRACT(HOUR FROM NOW() AT TIME ZONE COALESCE(NULLIF(u.timezone, ''), 'UTC'))::int = $1
+		  -- dedup: no plan_expiring_soon nudge sent for this expiry cycle yet
+		  AND NOT EXISTS (
+		      SELECT 1 FROM nudges n
+		      WHERE n.user_id = u.id
+		        AND n.nudge_type = 'plan_expiring_soon'
+		        AND n.created_at > NOW() - (($2 + 1) || ' days')::INTERVAL
+		  )`
+
+	rows, err := r.db.Query(ctx, q, localHour, warnDays)
+	if err != nil {
+		return nil, fmt.Errorf("nudges.PlanExpiringSoonUsersAtLocalHour: %w", err)
+	}
+	defer rows.Close()
+
+	var users []PlanExpiryUser
+	for rows.Next() {
+		var u PlanExpiryUser
+		if err := rows.Scan(&u.UserID, &u.Timezone, &u.Plan, &u.PlanExpires); err != nil {
+			return nil, fmt.Errorf("nudges.PlanExpiringSoonUsersAtLocalHour scan: %w", err)
+		}
+		users = append(users, u)
+	}
+	return users, rows.Err()
+}
+
+// PlanExpiredUsersAtLocalHour returns users whose paid plan has lapsed within
+// the last 3 days (users.plan itself is never reset to 'free' on expiry - see
+// User.EffectivePlan - so this window, not the plan column, bounds the match),
+// at their local nudge hour, who:
+//   - have nudge_enabled = true and at least one FCM device token
+//   - have NOT received a plan_expired nudge in the last 25 days (dedup: passes
+//     are a minimum of 30 days, so this only fires once per lapsed purchase)
+func (r *NudgeRepository) PlanExpiredUsersAtLocalHour(ctx context.Context, localHour int) ([]PlanExpiryUser, error) {
+	const q = `
+		SELECT DISTINCT u.id, COALESCE(NULLIF(u.timezone, ''), 'UTC'), u.plan, u.plan_expires_at
+		FROM users u
+		JOIN user_devices ud ON ud.user_id = u.id
+		WHERE u.nudge_enabled = true
+		  AND u.deleted_at IS NULL
+		  AND u.plan <> 'free'
+		  AND u.plan_expires_at IS NOT NULL
+		  AND u.plan_expires_at <= NOW()
+		  AND u.plan_expires_at > NOW() - INTERVAL '3 days'
+		  AND EXTRACT(HOUR FROM NOW() AT TIME ZONE COALESCE(NULLIF(u.timezone, ''), 'UTC'))::int = $1
+		  -- dedup: no plan_expired nudge sent for this lapsed purchase yet
+		  AND NOT EXISTS (
+		      SELECT 1 FROM nudges n
+		      WHERE n.user_id = u.id
+		        AND n.nudge_type = 'plan_expired'
+		        AND n.created_at > NOW() - INTERVAL '25 days'
+		  )`
+
+	rows, err := r.db.Query(ctx, q, localHour)
+	if err != nil {
+		return nil, fmt.Errorf("nudges.PlanExpiredUsersAtLocalHour: %w", err)
+	}
+	defer rows.Close()
+
+	var users []PlanExpiryUser
+	for rows.Next() {
+		var u PlanExpiryUser
+		if err := rows.Scan(&u.UserID, &u.Timezone, &u.Plan, &u.PlanExpires); err != nil {
+			return nil, fmt.Errorf("nudges.PlanExpiredUsersAtLocalHour scan: %w", err)
+		}
+		users = append(users, u)
+	}
+	return users, rows.Err()
+}
+
 // GetDeviceTokens returns all FCM tokens for a user.
 func (r *NudgeRepository) GetDeviceTokens(ctx context.Context, userID uuid.UUID) ([]string, error) {
 	const q = `SELECT fcm_token FROM user_devices WHERE user_id = $1`

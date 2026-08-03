@@ -124,7 +124,7 @@ func main() {
 	transcriptionSvc := services.NewTranscriptionService(&cfg.OpenAI)
 	analyticsSvc := services.NewAnalyticsService(analyticsRepo)
 	ttsSvc := services.NewTTSService(&cfg.OpenAI, &cfg.AzureTTS, storageClient)
-	crisisDetector := services.NewCrisisDetector(claudeSvc)
+	crisisDetector := services.NewCrisisDetector(claudeSvc, log)
 	iapSvc := services.NewIAPService(&cfg.IAP)
 
 	// Therapist notes: per-therapist envelope encryption + OCR job queue.

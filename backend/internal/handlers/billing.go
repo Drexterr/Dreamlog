@@ -188,7 +188,10 @@ func (h *BillingHandler) Upgrade(c *gin.Context) {
 				_ = c.Error(apierr.New(http.StatusPaymentRequired, "purchase could not be verified"))
 				return
 			}
-			_ = c.Error(apierr.Internal("purchase verification unavailable"))
+			// Store-side outage/misconfig, not a rejected purchase - keep the
+			// cause out of the client response but make sure it's not lost
+			// entirely: without it, a payment provider going down is invisible.
+			_ = c.Error(apierr.InternalErr("purchase verification unavailable", err))
 			return
 		}
 
@@ -198,7 +201,9 @@ func (h *BillingHandler) Upgrade(c *gin.Context) {
 		}
 		inserted, err := h.payments.Record(c.Request.Context(), userID, transactionID, req.Plan, store, req.ProductID)
 		if err != nil {
-			_ = c.Error(apierr.Internal("failed to record purchase"))
+			// A store transaction was just verified as paid but failed to
+			// record - this is the one case where silence is unacceptable.
+			_ = c.Error(apierr.InternalErr("failed to record purchase", err))
 			return
 		}
 		if !inserted {
@@ -212,7 +217,10 @@ func (h *BillingHandler) Upgrade(c *gin.Context) {
 
 	user, err := h.svc.UpgradePlan(c.Request.Context(), userID, req.Plan, expiresAt)
 	if err != nil {
-		_ = c.Error(apierr.Internal("failed to update plan"))
+		// For a paid upgrade, the payment is already verified and recorded
+		// by this point - a failure here means a charged user whose plan
+		// silently didn't change. Must not be untraceable.
+		_ = c.Error(apierr.InternalErr("failed to update plan", err))
 		return
 	}
 	if user == nil {

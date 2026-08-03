@@ -10,6 +10,7 @@ import (
 	"github.com/dreamlog/backend/internal/services"
 	"github.com/google/uuid"
 	"go.uber.org/zap"
+	"go.uber.org/zap/zaptest/observer"
 )
 
 var _ = zap.NewNop // suppress unused import if needed
@@ -321,6 +322,40 @@ func TestSendPush_NoTokensIsNoop(t *testing.T) {
 
 	if len(fcm.calls) != 0 {
 		t.Errorf("expected 0 FCM calls, got %d", len(fcm.calls))
+	}
+}
+
+func TestSendPush_GetTokensError_IsLogged(t *testing.T) {
+	nudgeRepo := &fakeNudgeRepo{err: errors.New("db down")}
+	fcm := &fakeWeeklyFCMSender{}
+	core, logs := observer.New(zap.WarnLevel)
+
+	s := NewWeeklyReviewScheduler(WeeklyReviewSchedulerDeps{
+		ReviewRepo: &fakeWeeklyReviewRepo{}, UserRepo: &fakeWeeklyUserRepo{},
+		AnalysisRepo: &fakeWeeklyAnalysisRepo{}, Claude: &fakeWeeklyAI{},
+		NudgeRepo: nudgeRepo, FCM: fcm, Log: zap.New(core),
+	})
+	s.sendPush(context.Background(), uuid.New(), uuid.New(), "narrative")
+
+	if logs.Len() != 1 {
+		t.Errorf("a device-token lookup failure must be logged, got %d entries", logs.Len())
+	}
+}
+
+func TestSendPush_FCMSendError_IsLogged(t *testing.T) {
+	nudgeRepo := &fakeNudgeRepo{tokens: []string{"tok-1"}}
+	fcm := &fakeWeeklyFCMSender{err: errors.New("fcm unavailable")}
+	core, logs := observer.New(zap.WarnLevel)
+
+	s := NewWeeklyReviewScheduler(WeeklyReviewSchedulerDeps{
+		ReviewRepo: &fakeWeeklyReviewRepo{}, UserRepo: &fakeWeeklyUserRepo{},
+		AnalysisRepo: &fakeWeeklyAnalysisRepo{}, Claude: &fakeWeeklyAI{},
+		NudgeRepo: nudgeRepo, FCM: fcm, Log: zap.New(core),
+	})
+	s.sendPush(context.Background(), uuid.New(), uuid.New(), "narrative")
+
+	if logs.Len() != 1 {
+		t.Errorf("an FCM send failure must be logged, got %d entries", logs.Len())
 	}
 }
 

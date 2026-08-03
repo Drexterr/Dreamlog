@@ -23,6 +23,28 @@ func ErrorHandler(log *zap.Logger) gin.HandlerFunc {
 		err := c.Errors.Last().Err
 
 		if apiErr, ok := apierr.As(err); ok {
+			// 5xx means the failure is ours, not the client's - log and
+			// report it even though it's a "known" apierr type. Without
+			// this, every apierr.Internal(...) call site was invisible in
+			// logs and Sentry: only truly unrecognized errors reached the
+			// logging below. Client-facing message stays generic; the real
+			// cause (when the call site provided one via InternalErr) goes
+			// to the log/Sentry side only.
+			if apiErr.Code >= http.StatusInternalServerError {
+				logErr := error(apiErr)
+				if apiErr.Cause != nil {
+					logErr = apiErr.Cause
+				}
+				if hub := sentrygin.GetHubFromContext(c); hub != nil {
+					hub.CaptureException(logErr)
+				}
+				log.Error("internal error",
+					zap.Error(logErr),
+					zap.String("message", apiErr.Message),
+					zap.String("path", c.Request.URL.Path),
+					zap.String("method", c.Request.Method),
+				)
+			}
 			c.JSON(apiErr.Code, apiErr)
 			return
 		}

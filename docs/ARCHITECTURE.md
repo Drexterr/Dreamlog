@@ -183,15 +183,15 @@ user_devices                    -- FCM tokens per device
   platform TEXT                 -- 'ios' | 'android' | 'unknown'
   created_at, updated_at TIMESTAMPTZ
 
-nudges                          -- push notifications (morning, re-engagement, streak risk, check-in)
+nudges                          -- push notifications (morning, re-engagement, streak risk, check-in, plan expiry)
   id UUID PK
   user_id UUID FK → users
-  entry_id UUID FK → entries    -- the entry that generated this nudge (NULL for reengagement/streak_risk)
+  entry_id UUID FK → entries    -- the entry that generated this nudge (NULL for reengagement/streak_risk/plan expiry)
   message TEXT
   scheduled_at TIMESTAMPTZ      -- user's nudge hour (learned or configured)
   timezone TEXT
   status nudge_status           -- ENUM: pending | sent | failed
-  nudge_type TEXT DEFAULT 'morning' -- morning | reengagement | streak_risk | checkin (migrations 000030, 000033)
+  nudge_type TEXT DEFAULT 'morning' -- morning | reengagement | streak_risk | checkin | plan_expiring_soon | plan_expired (migrations 000030, 000033)
   sent_at TIMESTAMPTZ
   error_msg TEXT
   created_at TIMESTAMPTZ
@@ -500,9 +500,22 @@ Other nudge types (each with its own dedup window):
   user-requested "check in on this tomorrow" self-set trigger, delivered
   tomorrow at the nudge hour; message reuses the entry's `morning_nudge`.
   One pending check-in per entry.
+- **Plan expiry** (`workers/plan_expiry_scheduler.go`): Ode's paid plans are
+  one-time 30/365-day IAP passes, not auto-renewing subscriptions (see
+  `POST /billing/upgrade`), so there is no OS-level renewal reminder - this is
+  the only place a lapsing plan is surfaced to the user. Two pushes, both sent
+  at 10:00 local time: `plan_expiring_soon` when `plan_expires_at` is within
+  `models.PlanExpiryWarnDays` (3) days (deduped so it fires once per expiry
+  cycle, not once per day of the window), and `plan_expired` once shortly
+  after it lapses (deduped for 25 days, since passes run 30+ days). Note
+  `users.plan` itself is never reset to `'free'` on expiry - `User.EffectivePlan()`
+  is checked at read time everywhere gating happens - so these queries key off
+  `plan_expires_at`, not the `plan` column.
 
-Mobile deep link: tapping any nudge notification lands directly on the record
-screen (`src/services/push.ts` maps FCM data `type` → `/record`).
+Mobile deep link: tapping a nudge notification routes by FCM data `type` -
+`morning_nudge`/`reengagement`/`streak_risk`/`checkin` land on the record
+screen, `plan_expiring_soon`/`plan_expired` land on the upgrade screen
+(`src/services/push.ts`).
 
 Device token registration (mobile side of the push pipeline, added 2026-06-11):
 - `mobile/src/services/push.ts` runs on auth (wired in `app/_layout.tsx`): requests notification

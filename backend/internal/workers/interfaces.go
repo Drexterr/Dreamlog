@@ -153,3 +153,13 @@ type streakRiskRepo interface {
 type streakLookup interface {
 	StreakInfo(ctx context.Context, userID uuid.UUID) (*models.StreakInfo, error)
 }
+
+// planExpiryRepo is the subset of NudgeRepository used by PlanExpiryScheduler.
+type planExpiryRepo interface {
+	PlanExpiringSoonUsersAtLocalHour(ctx context.Context, localHour, warnDays int) ([]repositories.PlanExpiryUser, error)
+	PlanExpiredUsersAtLocalHour(ctx context.Context, localHour int) ([]repositories.PlanExpiryUser, error)
+	CreateWithType(ctx context.Context, userID uuid.UUID, entryID *uuid.UUID, message string, scheduledAt time.Time, timezone, nudgeType string) (*models.Nudge, error)
+	GetDeviceTokens(ctx context.Context, userID uuid.UUID) ([]string, error)
+	MarkSent(ctx context.Context, id uuid.UUID) error
+	MarkFailed(ctx context.Context, id uuid.UUID, errMsg string) error
+}

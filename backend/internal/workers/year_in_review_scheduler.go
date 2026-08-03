@@ -168,19 +168,26 @@ func (s *YearInReviewScheduler) processOne(ctx context.Context, rv *models.Annua
 
 func (s *YearInReviewScheduler) sendPush(ctx context.Context, userID, reviewID uuid.UUID, narrative string, year int) {
 	tokens, err := s.nudgeRepo.GetDeviceTokens(ctx, userID)
-	if err != nil || len(tokens) == 0 {
+	if err != nil {
+		s.log.Warn("year in review scheduler: get device tokens", zap.String("user_id", userID.String()), zap.Error(err))
+		return
+	}
+	if len(tokens) == 0 {
 		return
 	}
 	preview := truncate(narrative, 120)
 	for _, token := range tokens {
-		_ = s.fcm.SendToToken(ctx, token,
+		if err := s.fcm.SendToToken(ctx, token,
 			fmt.Sprintf("Your %d in review", year),
 			preview,
 			map[string]string{
 				"type":      "annual_review",
 				"review_id": reviewID.String(),
 			},
-		)
+		); err != nil {
+			s.log.Warn("year in review scheduler: send failed",
+				zap.String("review_id", reviewID.String()), zap.Error(err))
+		}
 	}
 }
 

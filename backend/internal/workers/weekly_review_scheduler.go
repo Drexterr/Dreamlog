@@ -185,15 +185,22 @@ func (s *WeeklyReviewScheduler) processOne(ctx context.Context, rv *models.Weekl
 
 func (s *WeeklyReviewScheduler) sendPush(ctx context.Context, userID, reviewID uuid.UUID, narrative string) {
 	tokens, err := s.nudgeRepo.GetDeviceTokens(ctx, userID)
-	if err != nil || len(tokens) == 0 {
+	if err != nil {
+		s.log.Warn("weekly review scheduler: get device tokens", zap.String("user_id", userID.String()), zap.Error(err))
+		return
+	}
+	if len(tokens) == 0 {
 		return
 	}
 	preview := truncate(narrative, 120)
 	for _, token := range tokens {
-		_ = s.fcm.SendToToken(ctx, token, "Your week in review", preview, map[string]string{
+		if err := s.fcm.SendToToken(ctx, token, "Your week in review", preview, map[string]string{
 			"type":      "weekly_review",
 			"review_id": reviewID.String(),
-		})
+		}); err != nil {
+			s.log.Warn("weekly review scheduler: send failed",
+				zap.String("review_id", reviewID.String()), zap.Error(err))
+		}
 	}
 }
 
