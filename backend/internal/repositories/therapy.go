@@ -74,7 +74,7 @@ func (r *TherapyRepository) Create(ctx context.Context, userID uuid.UUID, person
 		VALUES ($1, $2, NOW() + INTERVAL '1 hour', $3, $4)
 		RETURNING ` + therapySessionColumns
 
-	s, err := scanSession(r.db.QueryRow(ctx, q, userID, persona, snapshotJSON, billingPaise))
+	s, err := scanSession(r.db.QueryRow(ctx, q, userID, persona, string(snapshotJSON), billingPaise))
 	if err != nil {
 		return nil, fmt.Errorf("therapy.Create: %w", err)
 	}
@@ -206,7 +206,7 @@ func (r *TherapyRepository) SetSessionAnalysis(ctx context.Context, id uuid.UUID
 		    session_topics          = $5,
 		    session_key_insights    = $6
 		WHERE id = $1`
-	_, err = r.db.Exec(ctx, q, id, a.SessionNarrative, a.MoodScore, toneJSON, a.Topics, a.KeyInsights)
+	_, err = r.db.Exec(ctx, q, id, a.SessionNarrative, a.MoodScore, string(toneJSON), a.Topics, a.KeyInsights)
 	if err != nil {
 		return fmt.Errorf("therapy.SetSessionAnalysis: %w", err)
 	}

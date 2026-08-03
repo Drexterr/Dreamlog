@@ -87,7 +87,7 @@ func (r *WeeklyReviewRepository) MarkCompleted(
 		    generated_at = NOW()
 		WHERE id = $1`
 
-	_, err = r.db.Exec(ctx, q, id, narrative, topEmotions, arcJSON, entryCount)
+	_, err = r.db.Exec(ctx, q, id, narrative, topEmotions, string(arcJSON), entryCount)
 	if err != nil {
 		return fmt.Errorf("weeklyReviews.MarkCompleted: %w", err)
 	}

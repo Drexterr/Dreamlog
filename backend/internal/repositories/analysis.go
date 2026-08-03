@@ -73,7 +73,7 @@ func (r *AnalysisRepository) Upsert(ctx context.Context, entryID uuid.UUID, a *m
 	row := r.db.QueryRow(ctx, q,
 		entryID,
 		a.MoodScore,
-		toneJSON,
+		string(toneJSON),
 		a.Topics,
 		a.KeyQuotes,
 		a.Summary,
