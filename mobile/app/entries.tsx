@@ -85,7 +85,7 @@ function EntryCard({ item, index, onPress }: { item: TimelineEntry; index: numbe
       ) : (
         <Text style={[styles.cardPending, { color: colors.textFaint }]}>
           {entry.status === 'failed'
-            ? entry.error_msg ?? 'Transcription failed'
+            ? 'This entry could not be processed'
             : entry.status === 'completed'
             ? 'No analysis yet'
             : 'Processing…'}

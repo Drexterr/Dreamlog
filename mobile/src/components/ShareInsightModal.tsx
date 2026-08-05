@@ -33,7 +33,7 @@ function buildShareMessage(weekLabel: string, streak: number, entryCount: number
   return [
     `My week in reflection — ${weekLabel}.`,
     `${entryBit}${streakBit}.`,
-    'Voice journaling for emotional clarity · dreamlog.app',
+    'Voice journaling for emotional clarity · ode.app',
   ].join(' ');
 }
 

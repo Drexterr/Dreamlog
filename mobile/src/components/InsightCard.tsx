@@ -126,7 +126,7 @@ const InsightCard = forwardRef<View, InsightCardProps>(
 
         {/* Header */}
         <View style={styles.header}>
-          <Text style={styles.appName}>dreamlog</Text>
+          <Text style={styles.appName}>ode</Text>
           <Text style={styles.weekLabel}>{weekLabel}</Text>
         </View>
 
@@ -195,7 +195,7 @@ const InsightCard = forwardRef<View, InsightCardProps>(
         {/* Footer */}
         <View style={styles.footer}>
           <Text style={styles.footerText}>Voice journaling for emotional clarity</Text>
-          <Text style={styles.footerApp}>dreamlog.app</Text>
+          <Text style={styles.footerApp}>ode.app</Text>
         </View>
       </View>
     );

@@ -322,6 +322,140 @@ function AppMockup() {
   );
 }
 
+/* ── Goal themes ──────────────────────────────────────────────────────────
+   Same 8 palettes the app switches between per emotional goal
+   (mobile/src/theme.ts) — the "why" lines are adapted from the actual
+   design-rationale comments already sitting next to each palette in that
+   file (grief/depression/career/trauma had them written out; anxiety/
+   stress/relationships follow the same reasoning, just not yet in a
+   comment). The colors themselves live in globals.css under
+   html[data-theme='...']. */
+const GOAL_THEMES = [
+  { key: 'curious', label: 'Curious', swatch: '#c8955a',
+    why: "The default. Warm and unhurried — for whenever you're not here for any one thing, just paying attention." },
+  { key: 'anxiety', label: 'Anxiety', swatch: '#7B9E87',
+    why: "Green is the colour of things that regulate themselves — leaves, tides, breath. It's the palette least likely to add to what's already racing." },
+  { key: 'stress', label: 'Stress', swatch: '#5B8DB8',
+    why: "Blue slows things down — the colour most consistently linked to a lower heart rate and a calmer field of attention. Useful when everything feels urgent." },
+  { key: 'grief', label: 'Grief', swatch: '#9B8AB8',
+    why: "Soft lavender, for mourning and the space around it — quiet, a little spiritual, built for the slowness grief actually moves at." },
+  { key: 'depression', label: 'Low mood', swatch: '#C49E34',
+    why: "Warm gold, deliberately — the colour of light returning, not forced cheer. For finding a little warmth without pretending everything's fine." },
+  { key: 'relationships', label: 'Relationships', swatch: '#C87F7F',
+    why: "A warmth without the intensity of red — closer to affection than romance. For the people who take up the most room in your head." },
+  { key: 'career', label: 'Career', swatch: '#409494',
+    why: "Teal reads as focus without coldness — clear water, not a boardroom. For untangling what you're actually building toward." },
+  { key: 'trauma', label: 'Trauma', swatch: '#B86C48',
+    why: "Earth tones, on purpose. Terracotta is grounding and a little worn-in — built for going slowly through difficult memories, not rushing past them." },
+] as const;
+
+function useGoalTheme() {
+  const [theme, setThemeState] = useState<string>('curious');
+  // Leave no trace on other pages (e.g. navigating to /login mid-demo).
+  useEffect(() => () => { document.documentElement.removeAttribute('data-theme'); }, []);
+  function setTheme(key: string) {
+    setThemeState(key);
+    if (key === 'curious') document.documentElement.removeAttribute('data-theme');
+    else document.documentElement.dataset.theme = key;
+  }
+  return { theme, setTheme };
+}
+
+/* Floating swatch + slide-in card. Auto-opens once, the first time a
+   first-time visitor scrolls past the hero (never on load — arriving on a
+   page and immediately being asked a question is the popup pattern this is
+   deliberately avoiding). After that first reveal, or once dismissed, it
+   never auto-opens again — only the floating swatch button brings it back. */
+function ThemePicker({ theme, setTheme, open, setOpen }: {
+  theme: string; setTheme: (key: string) => void; open: boolean; setOpen: (v: boolean | ((o: boolean) => boolean)) => void;
+}) {
+  const active = GOAL_THEMES.find(t => t.key === theme) ?? GOAL_THEMES[0];
+
+  useEffect(() => {
+    let seen = false;
+    try { seen = localStorage.getItem('ode-theme-picker-seen') === '1'; } catch { /* private mode etc. */ }
+    if (seen) return;
+    const hero = document.getElementById('main-content');
+    if (!hero) return;
+    const io = new IntersectionObserver(([entry]) => {
+      if (!entry.isIntersecting) {
+        setOpen(true);
+        try { localStorage.setItem('ode-theme-picker-seen', '1'); } catch { /* private mode etc. */ }
+        io.disconnect();
+      }
+    }, { threshold: 0 });
+    io.observe(hero);
+    return () => io.disconnect();
+  }, []);
+
+  return (
+    <>
+      <button type="button" className="theme-fab" onClick={() => setOpen(o => !o)}
+        aria-label="Change site colour theme" aria-expanded={open} title="Change how this looks">
+        <span className="theme-fab-dot" style={{ background: active.swatch }} />
+      </button>
+
+      <div className={`theme-popover${open ? ' open' : ''}`} role="dialog" aria-label="Choose what brings you here" aria-hidden={!open}>
+        <div className="theme-popover-head">
+          <div>
+            <div className="eyebrow-gold" style={{ marginBottom: 6 }}>What brings you here?</div>
+            <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--muted)', lineHeight: 1.6, maxWidth: 250 }}>
+              Pick one — it changes how this whole page looks, the same way the app changes for you.
+            </p>
+          </div>
+          <button type="button" className="theme-popover-close" onClick={() => setOpen(false)} aria-label="Close">✕</button>
+        </div>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 7, margin: '18px 0 16px' }}>
+          {GOAL_THEMES.map(t => (
+            <button key={t.key} type="button" onClick={() => setTheme(t.key)}
+              className={`theme-pill${theme === t.key ? ' active' : ''}`}>
+              <span className="theme-pill-swatch" style={{ background: t.swatch }} aria-hidden="true" />
+              {t.label}
+            </button>
+          ))}
+        </div>
+        <p className="quote-serif theme-popover-why">{active.why}</p>
+      </div>
+    </>
+  );
+}
+
+/* ── App showcase — four real screens, one theme, no fabricated mockups ──── */
+const SHOWCASE_SCREENS = [
+  { id: 'reflection', title: 'AI reflection', sub: 'Topics, emotion tags, a real reflection — not advice.', alt: "Ode's AI reflection screen, showing topics, emotion tags, and a written reflection on the entry" },
+  { id: 'followup', title: 'Follow-up conversation', sub: "Go deeper on what came up. Three turns, then it's done.", alt: "Ode's follow-up conversation screen, continuing the discussion from a journal entry" },
+  { id: 'moodmap', title: 'Mood & streaks', sub: 'Patterns over time. No guilt if you miss a day.', alt: "Ode's mood map screen, showing a weekly streak and mood trend chart" },
+  { id: 'patterns', title: 'Emotion patterns', sub: 'Which feelings recur, and how strongly.', alt: "Ode's emotion patterns screen, showing recurring feelings ranked by frequency" },
+] as const;
+
+function AppShowcase() {
+  const [active, setActive] = useState(0);
+  useEffect(() => {
+    const id = setInterval(() => setActive(a => (a + 1) % SHOWCASE_SCREENS.length), 4200);
+    return () => clearInterval(id);
+  }, [active]);
+
+  return (
+    <div className="app-showcase" style={{ display: 'grid', gridTemplateColumns: '1fr 1.3fr', gap: 28, alignItems: 'center' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+        {SHOWCASE_SCREENS.map((s, i) => (
+          <div key={s.id} className={`showcase-tab${active === i ? ' active' : ''}`} onClick={() => setActive(i)}>
+            <div className="showcase-tab-title">{s.title}</div>
+            <div className="showcase-tab-sub">{s.sub}</div>
+          </div>
+        ))}
+      </div>
+      <div style={{ display: 'flex', justifyContent: 'center' }}>
+        <div className="showcase-phone">
+          {SHOWCASE_SCREENS.map((s, i) => (
+            <img key={s.id} src={`/screenshots/${s.id}.jpg`} alt={s.alt} className={active === i ? 'active' : ''} loading={i === 0 ? 'eager' : 'lazy'} />
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 /* ── Store badges ─────────────────────────────────────────────────────────── */
 function AppStoreBadge({ href, disabled }: { href: string; disabled: boolean }) {
   return (
@@ -517,6 +651,8 @@ export default function LandingPage() {
   const scrolled = useScrolled();
   const version = useVersionInfo();
   const { currency, ready } = useCurrency();
+  const { theme, setTheme } = useGoalTheme();
+  const [themePickerOpen, setThemePickerOpen] = useState(false);
   useReveal();
   const dlHref = '#download';
   const p = (key: string) => PRICES[key][currency];
@@ -536,6 +672,10 @@ export default function LandingPage() {
       {/* Scroll rail — the Breath Line standing at the right edge, drawing
           itself as the page is read; the dot lands at the very end */}
       <BreathRail />
+
+      {/* Floating goal-theme picker — auto-reveals once past the hero on a
+          first visit, otherwise reachable any time via its swatch button */}
+      <ThemePicker theme={theme} setTheme={setTheme} open={themePickerOpen} setOpen={setThemePickerOpen} />
 
       {/* Paper grain — subtle noise layer reinforcing the journal/editorial feel */}
       <div aria-hidden="true" style={{
@@ -622,6 +762,22 @@ export default function LandingPage() {
       </section>
 
 
+      {/* ── What brings you here — points at the floating picker rather
+          than duplicating it inline ─────────────────────────────────── */}
+      <section className="landing-section-sm reveal" id="adapts">
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 24, flexWrap: 'wrap', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 16, padding: '22px 28px' }}>
+          <div>
+            <div style={{ fontSize: '0.95rem', fontWeight: 600, color: 'var(--text)', marginBottom: 5 }}>What brings you here?</div>
+            <p style={{ fontSize: '0.84rem', color: 'var(--muted)', margin: 0, lineHeight: 1.6 }}>
+              Right now this page is styled for <strong style={{ color: 'var(--gold)' }}>{GOAL_THEMES.find(t => t.key === theme)?.label}</strong> — the same palette the app would show you. Change it any time from the swatch in the corner.
+            </p>
+          </div>
+          <button type="button" onClick={() => setThemePickerOpen(o => !o)} className="btn-ghost" style={{ padding: '11px 22px', whiteSpace: 'nowrap', fontSize: '0.84rem' }}>
+            Change how this looks
+          </button>
+        </div>
+      </section>
+
       {/* ── Journal as mirror ─────────────────────────────────────────── */}
       <section className="landing-section reveal" style={{ paddingTop: 0 }}>
         <div className="journal-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 64, alignItems: 'center' }}>
@@ -633,35 +789,11 @@ export default function LandingPage() {
               No scores. No streaks. No productivity guilt. Just a summary of what you actually said this week — the names, the feelings, the question worth sitting with.
             </p>
             <p style={{ fontSize: '0.95rem', color: 'var(--muted)', lineHeight: 1.8, margin: '16px 0 0' }}>
-              The card on the right shows what a Tuesday reflection looks like. Ode picked up the morning walk, a quiet worry about <span style={{ color: 'var(--text)' }}>family</span>, and left one question worth carrying into Wednesday.
+              What you see on the right is the real thing, not a mockup — an actual reflection, an actual follow-up conversation, the actual patterns Ode surfaces over time.
             </p>
           </div>
 
-          {/* Reflection card — bigger */}
-          <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-mid)', borderRadius: 20, padding: '36px 40px' }}>
-            <div style={{ fontSize: 9, letterSpacing: 2, color: 'var(--muted-2)', textTransform: 'uppercase', marginBottom: 16 }}>
-              TUESDAY · REFLECTION
-            </div>
-            <div className="quote-serif" style={{ fontSize: '1.15rem', color: 'var(--text)', lineHeight: 1.75, marginBottom: 28 }}>
-              &ldquo;You sounded lighter on the morning you walked. The evenings, you mentioned a worry about your father, gently, without realising it.&rdquo;
-            </div>
-            <div style={{ fontSize: 9, letterSpacing: 2, color: 'var(--muted-2)', textTransform: 'uppercase', marginBottom: 12 }}>
-              THIS WEEK, YOUR REFLECTIONS CIRCLED BACK TO
-            </div>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 7 }}>
-              {['Family', 'Rest', 'Morning Walks', 'Old Friends'].map(t => (
-                <span key={t} className="chip" style={{ fontSize: '0.78rem', padding: '5px 13px' }}>{t}</span>
-              ))}
-            </div>
-            <div style={{ marginTop: 24, paddingTop: 24, borderTop: '1px solid var(--border)' }}>
-              <div style={{ fontSize: 9, letterSpacing: 2, color: 'var(--muted-2)', textTransform: 'uppercase', marginBottom: 10 }}>
-                A SOFT QUESTION TO CARRY
-              </div>
-              <p className="quote-serif" style={{ fontSize: '0.98rem', color: 'var(--muted)', margin: 0, lineHeight: 1.7 }}>
-                What would it feel like to say what you meant, without the pause before it?
-              </p>
-            </div>
-          </div>
+          <AppShowcase />
         </div>
       </section>
 
@@ -1036,6 +1168,8 @@ export default function LandingPage() {
           .dream-grid            { grid-template-columns: 1fr !important; }
           .features-hero-grid    { grid-template-columns: repeat(2, 1fr) !important; }
           .pricing-grid          { grid-template-columns: 1fr !important; }
+          .app-showcase           { grid-template-columns: 1fr !important; }
+          .app-showcase .showcase-phone { margin: 8px auto 0; }
         }
 
         /* ── Mobile (640px) ── */

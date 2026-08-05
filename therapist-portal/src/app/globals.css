@@ -25,6 +25,66 @@
 * { box-sizing: border-box; }
 html { scroll-behavior: smooth; }
 
+/* ── Goal themes ─────────────────────────────────────────────────────────
+   Same 8 palettes the app itself switches between per emotional goal
+   (mobile/src/theme.ts). Toggled via [data-theme] on <html> from
+   ThemeSwitcher. The low-specificity element rule below gives every
+   var(--bg)/var(--text)/var(--border) consumer a smooth crossfade without
+   fighting the faster, explicit transitions already set on buttons/cards. */
+html[data-theme='anxiety'] {
+  --bg: #1A2B20; --bg-card: #233428; --bg-card-2: #2b3e30;
+  --border: rgba(123,158,135,0.14); --border-mid: rgba(123,158,135,0.22); --border-strong: rgba(123,158,135,0.3);
+  --gold: #7B9E87; --gold-dark: #63846f; --gold-light: rgba(123,158,135,0.1);
+  --text: #F0EDEA; --muted: rgba(240,237,234,0.62); --muted-2: rgba(240,237,234,0.4);
+}
+html[data-theme='stress'] {
+  --bg: #0F1E2E; --bg-card: #1A2D40; --bg-card-2: #203548;
+  --border: rgba(91,141,184,0.14); --border-mid: rgba(91,141,184,0.22); --border-strong: rgba(91,141,184,0.3);
+  --gold: #5B8DB8; --gold-dark: #4a749a; --gold-light: rgba(91,141,184,0.1);
+  --text: #E8F0F5; --muted: rgba(232,240,245,0.62); --muted-2: rgba(232,240,245,0.4);
+}
+html[data-theme='grief'] {
+  --bg: #1C1820; --bg-card: #2A2434; --bg-card-2: #322b3e;
+  --border: rgba(155,138,184,0.14); --border-mid: rgba(155,138,184,0.22); --border-strong: rgba(155,138,184,0.3);
+  --gold: #9B8AB8; --gold-dark: #7f6f9b; --gold-light: rgba(155,138,184,0.1);
+  --text: #EDE8F5; --muted: rgba(237,232,245,0.62); --muted-2: rgba(237,232,245,0.4);
+}
+html[data-theme='depression'] {
+  --bg: #1A160A; --bg-card: #28200F; --bg-card-2: #302713;
+  --border: rgba(196,158,52,0.14); --border-mid: rgba(196,158,52,0.22); --border-strong: rgba(196,158,52,0.3);
+  --gold: #C49E34; --gold-dark: #a1812a; --gold-light: rgba(196,158,52,0.1);
+  --text: #F5EDD0; --muted: rgba(245,237,208,0.62); --muted-2: rgba(245,237,208,0.4);
+}
+html[data-theme='relationships'] {
+  --bg: #221518; --bg-card: #32201E; --bg-card-2: #3c2725;
+  --border: rgba(200,127,127,0.14); --border-mid: rgba(200,127,127,0.22); --border-strong: rgba(200,127,127,0.3);
+  --gold: #C87F7F; --gold-dark: #a66767; --gold-light: rgba(200,127,127,0.1);
+  --text: #F5EAE8; --muted: rgba(245,234,232,0.62); --muted-2: rgba(245,234,232,0.4);
+}
+html[data-theme='career'] {
+  --bg: #0C1A1A; --bg-card: #182C2C; --bg-card-2: #1e3636;
+  --border: rgba(64,148,148,0.14); --border-mid: rgba(64,148,148,0.22); --border-strong: rgba(64,148,148,0.3);
+  --gold: #409494; --gold-dark: #347878; --gold-light: rgba(64,148,148,0.1);
+  --text: #E0EEF0; --muted: rgba(224,238,240,0.62); --muted-2: rgba(224,238,240,0.4);
+}
+html[data-theme='trauma'] {
+  --bg: #1C1410; --bg-card: #2E1E16; --bg-card-2: #38251b;
+  --border: rgba(184,108,72,0.14); --border-mid: rgba(184,108,72,0.22); --border-strong: rgba(184,108,72,0.3);
+  --gold: #B86C48; --gold-dark: #96583b; --gold-light: rgba(184,108,72,0.1);
+  --text: #F0E4D8; --muted: rgba(240,228,216,0.62); --muted-2: rgba(240,228,216,0.4);
+}
+/* 'curious' is the site's own default palette — the :root values above
+   already are it, so no override block is needed; it's also the reset
+   target when the switcher's first pill is selected. */
+
+html, body, div, section, nav, footer, header, main, article, aside,
+a, p, span, h1, h2, h3, h4, button, input, textarea, select, hr {
+  transition: background-color .6s ease, border-color .6s ease, color .6s ease, box-shadow .6s ease;
+}
+/* Reduced-motion is already handled globally further down (kills every
+   animation/transition to 0.01ms), so the rule above is neutralized there
+   too — no separate override needed here. */
+
 body {
   background: var(--bg);
   color: var(--text);
@@ -520,6 +580,160 @@ input::placeholder { color: var(--muted-2); }
   margin-bottom: 0 !important;
   flex-shrink: 0;
 }
+
+/* ── Theme switcher pills ─────────────────────────────── */
+.theme-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 100px;
+  padding: 9px 16px 9px 11px;
+  font-family: inherit;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--muted);
+  cursor: pointer;
+  transition: border-color 0.2s ease, color 0.2s ease, background 0.2s ease;
+}
+.theme-pill:hover { color: var(--text); border-color: var(--border-mid); }
+.theme-pill.active { color: var(--text); border-color: var(--gold); background: var(--gold-light); }
+.theme-pill-swatch {
+  width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0;
+  box-shadow: inset 0 0 0 1px rgba(0,0,0,0.3);
+}
+
+/* ── Theme picker: floating swatch + slide-in card ────────────────────
+   Deliberately not a blocking modal: no overlay, page stays scrollable,
+   dismissible, and never auto-reveals more than once (see ThemePicker's
+   localStorage check). */
+.theme-fab {
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  z-index: 90;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: var(--bg-card);
+  border: 1px solid var(--border-strong);
+  box-shadow: var(--shadow-md);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+}
+.theme-fab:hover { border-color: var(--gold); transform: scale(1.06); }
+.theme-fab:active { transform: scale(0.97); }
+.theme-fab-dot {
+  width: 24px; height: 24px; border-radius: 50%;
+  box-shadow: inset 0 0 0 1px rgba(0,0,0,0.25);
+  transition: background-color 0.4s ease;
+}
+
+.theme-popover {
+  position: fixed;
+  right: 24px;
+  bottom: 88px;
+  z-index: 90;
+  width: 320px;
+  max-width: calc(100vw - 48px);
+  background: var(--bg-card-2);
+  border: 1px solid var(--border-strong);
+  border-radius: 20px;
+  padding: 22px 22px 20px;
+  box-shadow: var(--shadow-lg);
+  opacity: 0;
+  transform: translateY(12px) scale(0.98);
+  pointer-events: none;
+  transition: opacity 0.28s ease, transform 0.28s cubic-bezier(0.16,1,0.3,1), background-color 0.6s ease, border-color 0.6s ease;
+}
+.theme-popover.open {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  pointer-events: auto;
+}
+.theme-popover-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+}
+.theme-popover-close {
+  background: none;
+  border: none;
+  color: var(--muted-2);
+  font-size: 0.8rem;
+  cursor: pointer;
+  padding: 2px;
+  line-height: 1;
+  flex-shrink: 0;
+  transition: color 0.15s ease;
+}
+.theme-popover-close:hover { color: var(--text); }
+.theme-popover-why {
+  font-size: 0.86rem;
+  color: var(--text);
+  line-height: 1.6;
+  margin: 0;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+  min-height: 3.2em;
+}
+
+@media (max-width: 640px) {
+  .theme-fab { right: 16px; bottom: 16px; width: 48px; height: 48px; }
+  .theme-popover { right: 16px; left: 16px; bottom: 76px; width: auto; max-width: none; }
+}
+
+/* ── Showcase (real-app screen tabs) ──────────────────── */
+.showcase-tab {
+  border-radius: 12px;
+  padding: 15px 18px;
+  cursor: pointer;
+  border: 1px solid transparent;
+}
+.showcase-tab-title {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--muted);
+  transition: color 0.25s ease;
+}
+.showcase-tab-sub {
+  font-size: 0.78rem;
+  color: var(--muted-2);
+  margin-top: 3px;
+  max-height: 0;
+  opacity: 0;
+  overflow: hidden;
+  transition: max-height 0.25s ease, opacity 0.25s ease;
+}
+.showcase-tab.active { background: var(--bg-card); border-color: var(--border); }
+.showcase-tab.active .showcase-tab-title { color: var(--gold); }
+.showcase-tab.active .showcase-tab-sub { max-height: 40px; opacity: 1; }
+.showcase-phone {
+  width: 100%;
+  max-width: 300px;
+  aspect-ratio: 1080 / 2400;
+  border-radius: 32px;
+  overflow: hidden;
+  position: relative;
+  background: #1a1710;
+  border: 1.5px solid rgba(255,255,255,0.1);
+  box-shadow: 0 48px 96px rgba(0,0,0,0.55), 0 0 0 1px rgba(255,255,255,0.04);
+}
+.showcase-phone img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0;
+  transition: opacity 0.9s ease-in-out;
+}
+.showcase-phone img.active { opacity: 1; }
 
 /* ── FAQ flat items ──────────────────────────────────── */
 .faq-col .faq-item {

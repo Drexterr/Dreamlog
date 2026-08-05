@@ -2,6 +2,7 @@ package config
 
 import (
 	"fmt"
+	"net/url"
 	"os"
 	"strconv"
 	"strings"
@@ -156,7 +157,7 @@ func Load() (*Config, error) {
 			TLS:      parseBool("REDIS_TLS", false),
 		},
 		Storage: StorageConfig{
-			Endpoint:        requireEnv("STORAGE_ENDPOINT"),
+			Endpoint:        mustBeValidURL("STORAGE_ENDPOINT", requireEnv("STORAGE_ENDPOINT")),
 			AccessKeyID:     requireEnv("STORAGE_ACCESS_KEY_ID"),
 			SecretAccessKey: requireEnv("STORAGE_SECRET_ACCESS_KEY"),
 			Bucket:          requireEnv("STORAGE_BUCKET"),
@@ -219,6 +220,18 @@ func Load() (*Config, error) {
 		},
 	}
 	return cfg, nil
+}
+
+// mustBeValidURL parses value as a URL and panics with a clear diagnostic if
+// it's malformed - e.g. a stray space pasted into the middle of a hosting
+// dashboard field, which TrimSpace alone can't catch since it only trims the
+// ends. Fails loudly at startup instead of every request that depends on
+// this URL failing silently and surfacing a raw SDK error deep in a worker.
+func mustBeValidURL(key, value string) string {
+	if _, err := url.Parse(value); err != nil {
+		panic(fmt.Sprintf("environment variable %q is not a valid URL: %v", key, err))
+	}
+	return value
 }
 
 // env reads an environment variable with surrounding whitespace stripped.
