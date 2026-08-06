@@ -7,12 +7,17 @@
  * Colors come from the live ThemeContext so the card always matches the user's
  * currently chosen theme (espresso, blue, green, rose, etc.).
  *
+ * Design: the Breath Line mark (see BrandOrbGlyph.tsx, BrandSplash.tsx) sits as
+ * a quiet watermark and the mood arc is rendered in that same flowing-line
+ * language, instead of a bordered stats-dashboard look.
+ *
  * NOTE: react-native-view-shot requires a dev build (not Expo Go).
  * Run `npx expo prebuild && npx expo run:android` or use EAS Build.
  */
 
 import { forwardRef } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
+import Svg, { Path, Circle, Polyline } from 'react-native-svg';
 import { useTheme } from '../context/ThemeContext';
 import type { ThemeColors } from '../theme';
 import type { MoodArcDay } from '../types';
@@ -27,6 +32,12 @@ export interface InsightCardProps {
 
 const CARD_WIDTH = 375;
 const CARD_HEIGHT = 560;
+const CONTENT_WIDTH = CARD_WIDTH - 28 * 2; // matches card padding
+
+// Icon crop of the Breath Line mark - same path as the web nav's OdeMark
+// (docs/brand/ode-breath-line.html). Kept local to this file, matching how
+// BrandSplash.tsx / BrandOrbGlyph.tsx each hold their own copy.
+const MARK_D = 'M 8 48 C 17 24, 27 72, 37 48 C 45 30, 54 64, 62 48 C 67 42, 72 52, 76 48';
 
 type MoodFn = (score: number) => string;
 
@@ -51,62 +62,90 @@ function moodWord(avg: number): string {
   return 'Heavy';
 }
 
-// ── Mini bar chart inside the card ───────────────────────────────────────────
+// ── Watermark: the Breath Line mark, quiet, top-right ────────────────────────
 
-function MiniMoodArc({
+function BreathWatermark({ color }: { color: string }) {
+  return (
+    <Svg width={84} height={28} viewBox="0 24 96 48" style={watermarkStyle.svg} pointerEvents="none">
+      <Path d={MARK_D} fill="none" stroke={color} strokeWidth={5.5} strokeLinecap="round" opacity={0.4} />
+      <Circle cx={86} cy={48} r={4.5} fill={color} opacity={0.55} />
+    </Svg>
+  );
+}
+
+const watermarkStyle = StyleSheet.create({
+  svg: {
+    position: 'absolute',
+    top: 24,
+    right: 24,
+  },
+});
+
+// ── Mood arc, rendered as one flowing line (the Breath Line's own language)
+//    instead of bars - a lightly-smoothed curve through each day's score. ────
+
+function MoodArcLine({
   days,
   colors,
-  moodToColor,
+  lineColor,
 }: {
   days: MoodArcDay[];
   colors: ThemeColors;
-  moodToColor: MoodFn;
+  lineColor: string;
 }) {
   if (days.length === 0) return null;
-  const maxScore = 100;
-  const chartH = 80;
+  const w = CONTENT_WIDTH;
+  const h = 56;
+  const pad = 6;
+  const n = days.length;
+
+  const pts = days.map((d, i) => {
+    const x = n === 1 ? w / 2 : (i / (n - 1)) * (w - pad * 2) + pad;
+    const y = h - pad - (Math.max(0, Math.min(100, d.avg_mood)) / 100) * (h - pad * 2);
+    return { x, y };
+  });
+
+  // Quadratic midpoint smoothing - same technique as BrandOrbGlyph's morph line,
+  // so the arc reads as the same signature curve used elsewhere in the app.
+  let d = `M ${pts[0].x.toFixed(1)} ${pts[0].y.toFixed(1)} `;
+  for (let i = 1; i < pts.length; i++) {
+    const midX = (pts[i - 1].x + pts[i].x) / 2;
+    const midY = (pts[i - 1].y + pts[i].y) / 2;
+    d += `Q ${pts[i - 1].x.toFixed(1)} ${pts[i - 1].y.toFixed(1)}, ${midX.toFixed(1)} ${midY.toFixed(1)} `;
+  }
+  d += `L ${pts[pts.length - 1].x.toFixed(1)} ${pts[pts.length - 1].y.toFixed(1)}`;
+
+  const dayLabels = days.map((day) =>
+    new Date(day.date + 'T00:00:00Z').toLocaleDateString('en-US', { weekday: 'narrow', timeZone: 'UTC' })
+  );
 
   return (
-    <View style={arc.wrap}>
-      {days.map((d) => {
-        const h = Math.max(6, (d.avg_mood / maxScore) * chartH);
-        const color = moodToColor(d.avg_mood);
-        const label = new Date(d.date + 'T00:00:00Z').toLocaleDateString('en-US', {
-          weekday: 'narrow',
-          timeZone: 'UTC',
-        });
-        return (
-          <View key={d.date} style={arc.col}>
-            <View style={arc.track}>
-              <View
-                style={[
-                  arc.bar,
-                  { height: h, backgroundColor: color + '55', borderTopColor: color },
-                ]}
-              />
-            </View>
-            <Text style={[arc.label, { color: colors.textMuted }]}>{label}</Text>
-          </View>
-        );
-      })}
+    <View>
+      <Svg width={w} height={h}>
+        <Path d={d} fill="none" stroke={lineColor} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+        <Circle cx={pts[pts.length - 1].x} cy={pts[pts.length - 1].y} r={3} fill={lineColor} />
+      </Svg>
+      <View style={arc.labelRow}>
+        {dayLabels.map((label, i) => (
+          <Text key={i} style={[arc.label, { color: colors.textMuted }]}>
+            {label}
+          </Text>
+        ))}
+      </View>
     </View>
   );
 }
 
 const arc = StyleSheet.create({
-  wrap: {
+  labelRow: {
     flexDirection: 'row',
-    alignItems: 'flex-end',
-    height: 100,
-    gap: 6,
+    justifyContent: 'space-between',
+    marginTop: 4,
   },
-  col: { flex: 1, alignItems: 'center', height: '100%', justifyContent: 'flex-end' },
-  track: { width: '100%', flex: 1, justifyContent: 'flex-end' },
-  bar: { width: '100%', borderRadius: 4, borderTopWidth: 2 },
   label: {
     fontSize: 9,
     fontFamily: 'HankenGrotesk_400Regular',
-    marginTop: 4,
+    opacity: 0.6,
   },
 });
 
@@ -117,40 +156,26 @@ const InsightCard = forwardRef<View, InsightCardProps>(
     const { colors, moodToColor } = useTheme();
     const styles = getStyles(colors);
     const { avg, bestDay } = weekStats(moodArc);
-    const avgColor = avg != null ? moodToColor(avg) : colors.textMuted;
+    const moodColor = avg != null ? moodToColor(avg) : colors.textMuted;
 
     return (
       <View ref={ref} style={styles.card}>
-        {/* Top accent bar */}
-        <View style={styles.accentBar} />
+        <BreathWatermark color={colors.brand} />
 
         {/* Header */}
-        <View style={styles.header}>
-          <Text style={styles.appName}>ode</Text>
-          <Text style={styles.weekLabel}>{weekLabel}</Text>
-        </View>
+        <Text style={styles.weekLabel}>{weekLabel}</Text>
 
         {/* Hero: average mood */}
         <View style={styles.heroRow}>
-          <View>
-            <Text style={styles.heroLabel}>AVG MOOD</Text>
-            <View style={styles.heroValueRow}>
-              <Text style={[styles.heroValue, { color: avgColor }]}>{avg != null ? avg : '—'}</Text>
-              {avg != null && <Text style={styles.heroOutOf}>/100</Text>}
-            </View>
-          </View>
-          {avg != null && (
-            <View style={[styles.heroWordPill, { borderColor: avgColor + '55' }]}>
-              <Text style={[styles.heroWord, { color: avgColor }]}>{moodWord(avg)}</Text>
-            </View>
-          )}
+          <Text style={[styles.heroValue, { color: moodColor }]}>{avg != null ? avg : '—'}</Text>
+          {avg != null && <Text style={styles.heroOutOf}>/100</Text>}
         </View>
+        {avg != null && <Text style={[styles.moodWordLine, { color: moodColor }]}>{moodWord(avg)} this week</Text>}
 
         {/* Mood arc */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>MOOD ARC</Text>
+        <View style={styles.arcSection}>
           {moodArc.length > 0 ? (
-            <MiniMoodArc days={moodArc} colors={colors} moodToColor={moodToColor} />
+            <MoodArcLine days={moodArc} colors={colors} lineColor={moodColor} />
           ) : (
             <View style={styles.arcEmpty}>
               <Text style={styles.arcEmptyText}>No mood data</Text>
@@ -160,42 +185,19 @@ const InsightCard = forwardRef<View, InsightCardProps>(
 
         {/* Top emotions */}
         {topEmotions.length > 0 && (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>THIS WEEK&apos;S EMOTIONS</Text>
-            <View style={styles.emotionRow}>
-              {topEmotions.slice(0, 3).map((e) => (
-                <View key={e} style={styles.emotionPill}>
-                  <Text style={styles.emotionText}>{e}</Text>
-                </View>
-              ))}
-            </View>
-          </View>
+          <Text style={styles.emotionsLine}>{topEmotions.slice(0, 3).join('  ·  ')}</Text>
         )}
 
-        {/* Stats row */}
-        <View style={styles.statsRow}>
-          <View style={styles.statBox}>
-            <Text style={styles.statValue}>{entryCount}</Text>
-            <Text style={styles.statLabel}>entries</Text>
-          </View>
-          {bestDay && (
-            <View style={styles.statBox}>
-              <Text style={styles.statValue}>{bestDay}</Text>
-              <Text style={styles.statLabel}>best day</Text>
-            </View>
-          )}
-          {streak > 0 && (
-            <View style={[styles.statBox, styles.statBoxHL]}>
-              <Text style={[styles.statValue, styles.statValueHL]}>{streak}</Text>
-              <Text style={styles.statLabel}>day streak</Text>
-            </View>
-          )}
+        {/* Stats */}
+        <View style={styles.statsLine}>
+          <Text style={styles.statText}>{entryCount} {entryCount === 1 ? 'entry' : 'entries'}</Text>
+          {bestDay && <Text style={styles.statText}>best {bestDay}</Text>}
+          {streak > 0 && <Text style={styles.statText}>{streak}-day streak</Text>}
         </View>
 
         {/* Footer */}
         <View style={styles.footer}>
-          <Text style={styles.footerText}>Voice journaling for emotional clarity</Text>
-          <Text style={styles.footerApp}>ode.app</Text>
+          <Text style={styles.footerApp}>ode</Text>
         </View>
       </View>
     );
@@ -213,96 +215,50 @@ const getStyles = (colors: ThemeColors) =>
       width: CARD_WIDTH,
       height: CARD_HEIGHT,
       backgroundColor: colors.bg,
-      borderRadius: 0,
       padding: 28,
-      justifyContent: 'space-between',
+      justifyContent: 'flex-start',
     },
 
-    accentBar: {
-      position: 'absolute',
-      top: 0,
-      left: 0,
-      right: 0,
-      height: 3,
-      backgroundColor: colors.brand,
-    },
-
-    header: {
-      marginTop: 10,
-      marginBottom: 4,
-    },
-    appName: {
-      fontSize: 13,
-      color: colors.brand,
+    weekLabel: {
+      fontSize: 11,
+      color: colors.textMuted,
       fontFamily: 'HankenGrotesk_600SemiBold',
       letterSpacing: 2,
-      marginBottom: 6,
-      textTransform: 'lowercase',
-    },
-    weekLabel: {
-      fontSize: 22,
-      color: colors.textPrimary,
-      fontFamily: 'Erode_300Light',
-      lineHeight: 28,
+      textTransform: 'uppercase',
+      marginTop: 10,
+      marginBottom: 28,
     },
 
     // Hero average-mood block
     heroRow: {
       flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      backgroundColor: colors.card,
-      borderRadius: 16,
-      borderWidth: 1,
-      borderColor: colors.borderFaint,
-      paddingVertical: 16,
-      paddingHorizontal: 20,
+      alignItems: 'flex-end',
+      gap: 6,
+      marginBottom: 6,
     },
-    heroLabel: {
-      fontSize: 9,
-      color: colors.textMuted,
-      fontFamily: 'HankenGrotesk_600SemiBold',
-      letterSpacing: 2,
-      marginBottom: 4,
-    },
-    heroValueRow: { flexDirection: 'row', alignItems: 'flex-end' },
     heroValue: {
-      fontSize: 46,
+      fontSize: 52,
       fontFamily: 'Erode_300Light',
-      lineHeight: 48,
+      lineHeight: 54,
     },
     heroOutOf: {
-      fontSize: 14,
+      fontSize: 13,
       color: colors.textMuted,
       fontFamily: 'HankenGrotesk_400Regular',
-      marginBottom: 7,
-      marginLeft: 3,
+      marginBottom: 9,
     },
-    heroWordPill: {
-      borderWidth: 1,
-      borderRadius: 100,
-      paddingHorizontal: 16,
-      paddingVertical: 7,
-    },
-    heroWord: {
-      fontSize: 14,
+    moodWordLine: {
+      fontSize: 15,
       fontFamily: 'Erode_400Regular',
-      letterSpacing: 0.5,
+      fontStyle: 'italic',
+      marginBottom: 26,
     },
 
-    section: {
-      marginBottom: 2,
+    arcSection: {
+      marginBottom: 24,
     },
-    sectionTitle: {
-      fontSize: 9,
-      color: colors.textSecondary,
-      fontFamily: 'HankenGrotesk_600SemiBold',
-      letterSpacing: 2,
-      marginBottom: 10,
-    },
-
     arcEmpty: {
-      height: 80,
+      height: 60,
       justifyContent: 'center',
       alignItems: 'center',
     },
@@ -312,72 +268,32 @@ const getStyles = (colors: ThemeColors) =>
       fontFamily: 'HankenGrotesk_400Regular',
     },
 
-    emotionRow: {
-      flexDirection: 'row',
-      gap: 8,
-      flexWrap: 'wrap',
-    },
-    emotionPill: {
-      backgroundColor: colors.brandGlow,
-      borderRadius: 20,
-      paddingHorizontal: 14,
-      paddingVertical: 5,
-    },
-    emotionText: {
-      fontSize: 12,
-      color: colors.purple300,
+    emotionsLine: {
+      fontSize: 13,
+      color: colors.textSecondary,
       fontFamily: 'HankenGrotesk_400Regular',
+      marginBottom: 22,
     },
 
-    statsRow: {
+    statsLine: {
       flexDirection: 'row',
-      gap: 10,
+      justifyContent: 'space-between',
+      marginBottom: 20,
     },
-    statBox: {
-      flex: 1,
-      backgroundColor: colors.card,
-      borderRadius: 12,
-      borderWidth: 1,
-      borderColor: colors.borderFaint,
-      padding: 14,
-      alignItems: 'center',
-    },
-    statBoxHL: {
-      backgroundColor: colors.brandGlow,
-      borderColor: colors.border,
-    },
-    statValue: {
-      fontSize: 26,
-      fontFamily: 'Erode_400Regular',
-      color: colors.textSecondary,
-      marginBottom: 2,
-    },
-    statValueHL: { color: colors.brand },
-    statLabel: {
-      fontSize: 10,
+    statText: {
+      fontSize: 11,
       color: colors.textMuted,
       fontFamily: 'HankenGrotesk_400Regular',
-      textAlign: 'center',
     },
 
     footer: {
-      borderTopWidth: 1,
-      borderTopColor: colors.borderFaint,
-      paddingTop: 14,
       flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-    },
-    footerText: {
-      fontSize: 10,
-      color: colors.textMuted,
-      fontFamily: 'HankenGrotesk_400Regular',
-      flex: 1,
+      justifyContent: 'flex-end',
     },
     footerApp: {
-      fontSize: 10,
+      fontSize: 11,
       color: colors.brand,
-      fontFamily: 'HankenGrotesk_600SemiBold',
+      fontFamily: 'HankenGrotesk_700Bold',
       letterSpacing: 0.5,
     },
   });
