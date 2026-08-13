@@ -133,9 +133,13 @@ export function useRecorder(): UseRecorderReturn {
     clearTimeout(maxTimerRef.current ?? undefined);
 
     try {
+      // Read duration BEFORE unloading: after stopAndUnloadAsync the status no
+      // longer reports a valid durationMillis (returns 0), and `0 ?? durationMs`
+      // keeps the 0 (?? only catches null/undefined). The backend requires a
+      // non-zero duration_sec (Go's `required` tag treats 0 as unset) → 400.
+      const status = await recordingRef.current.getStatusAsync();
       await recordingRef.current.stopAndUnloadAsync();
       const uri = recordingRef.current.getURI();
-      const status = await recordingRef.current.getStatusAsync();
 
       recordingRef.current = null;
       setState('stopped');
@@ -149,7 +153,9 @@ export function useRecorder(): UseRecorderReturn {
       // Reset audio mode.
       await Audio.setAudioModeAsync({ allowsRecordingIOS: false });
 
-      const durationSec = (status.durationMillis ?? durationMs) / 1000;
+      // Prefer the native-reported duration; fall back to the JS timer. Use `||`
+      // (not `??`) so a 0 from either source falls through to the next.
+      const durationSec = (status.durationMillis || durationMs || 0) / 1000;
       return { uri, durationSec, sizeBytes: 0 }; // sizeBytes filled by upload service
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Failed to stop recording';
