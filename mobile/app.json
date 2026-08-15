@@ -76,7 +76,8 @@
           "organization": "bharat-jain-i5",
           "project": "ode-mobile"
         }
-      ]
+      ],
+      "expo-web-browser"
     ],
     "ios": {
       "supportsTablet": false,
