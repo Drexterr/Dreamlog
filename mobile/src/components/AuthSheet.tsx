@@ -12,9 +12,10 @@ import {
   ScrollView,
 } from 'react-native';
 import * as AppleAuthentication from 'expo-apple-authentication';
-import { GoogleSignin, statusCodes, isErrorWithCode } from '@react-native-google-signin/google-signin';
+import * as WebBrowser from 'expo-web-browser';
+import * as ExpoLinking from 'expo-linking';
 import Svg, { Path } from 'react-native-svg';
-import { supabase } from '../lib/supabase';
+import { supabase, handleDeepLink } from '../lib/supabase';
 import { useTheme } from '../context/ThemeContext';
 import { T } from '../testIDs';
 
@@ -76,22 +77,26 @@ export default function AuthSheet({ visible, prompt, onClose }: AuthSheetProps) 
   }
 
   async function handleGoogle() {
+    // Browser-based OAuth (not native @react-native-google-signin): iOS's Google
+    // SDK injects a nonce Supabase can't verify. The browser flow lets Supabase
+    // own the PKCE nonce, so it works on both platforms. See app/auth.tsx.
     setError('');
     setLoading(true);
     try {
-      await GoogleSignin.hasPlayServices();
-      const response = await GoogleSignin.signIn();
-      if (response.type === 'cancelled') { setLoading(false); return; }
-      const idToken = response.data?.idToken;
-      if (!idToken) throw new Error('No ID token from Google');
-      const { error: err } = await supabase.auth.signInWithIdToken({ provider: 'google', token: idToken });
-      if (err) throw err;
+      const redirectTo = ExpoLinking.createURL('/auth/callback');
+      const { data, error: oauthError } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: { redirectTo, skipBrowserRedirect: true },
+      });
+      if (oauthError) throw oauthError;
+      if (!data?.url) throw new Error('Could not start Google sign-in');
+
+      const result = await WebBrowser.openAuthSessionAsync(data.url, redirectTo);
+      if (result.type !== 'success' || !result.url) { setLoading(false); return; }
+
+      await handleDeepLink(result.url);
       // onAuthStateChange in _layout.tsx handles the rest
     } catch (err: unknown) {
-      if (isErrorWithCode(err) && (err as any).code === statusCodes.SIGN_IN_CANCELLED) {
-        setLoading(false);
-        return;
-      }
       setError((err as any)?.message ?? 'Google sign-in failed');
       setLoading(false);
     }
