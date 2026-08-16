@@ -31,6 +31,11 @@ import type { AgeRange, Plan, User, UserGoal, VoiceLanguage } from '../../src/ty
 import { cacheUserCountry } from '../../src/services/region';
 import { helplinesForCountry, helplineHref } from '../../src/services/helplines';
 
+// dreamlog.app is not yet DNS-pointed at the Firebase Hosting site - use the
+// working *.web.app URL until that's done (see docs/LAUNCH_CHECKLIST.md).
+const TERMS_URL = 'https://dreamlog-48f94.web.app/terms';
+const PRIVACY_URL = 'https://dreamlog-48f94.web.app/privacy';
+
 const GOAL_META: Record<UserGoal, { label: string; emoji: string }> = {
   anxiety:       { label: 'Working through anxiety',     emoji: '🌱' },
   stress:        { label: 'Managing stress',             emoji: '🌊' },
@@ -596,13 +601,13 @@ export default function SettingsScreen() {
             <SettingRow
               label="Privacy Policy"
               colors={colors}
-              onPress={() => Linking.openURL('https://dreamlog.app/privacy')}
+              onPress={() => Linking.openURL(PRIVACY_URL)}
             />
             <View style={[styles.rowDivider, { backgroundColor: colors.borderFaint }]} />
             <SettingRow
               label="Terms of Service"
               colors={colors}
-              onPress={() => Linking.openURL('https://dreamlog.app/terms')}
+              onPress={() => Linking.openURL(TERMS_URL)}
             />
             <View style={[styles.rowDivider, { backgroundColor: colors.borderFaint }]} />
             <SettingRow testID={T.settings.deleteRow} label="Delete all data" danger colors={colors} onPress={handleDeleteData} />
@@ -629,16 +634,18 @@ export default function SettingsScreen() {
             />
           </View>
 
-          {/* Sign out */}
-          <TouchableOpacity
-            testID={T.settings.signOut}
-            accessibilityLabel="Sign out"
-            onPress={handleSignOut}
-            style={[styles.signOutBtn, { borderColor: `${colors.danger}33`, backgroundColor: `${colors.danger}11` }]}
-            activeOpacity={0.8}
-          >
-            <Text style={[styles.signOutText, { color: colors.danger }]}>Sign out</Text>
-          </TouchableOpacity>
+          {/* Sign out - only meaningful once actually signed in */}
+          {isAuthenticated && (
+            <TouchableOpacity
+              testID={T.settings.signOut}
+              accessibilityLabel="Sign out"
+              onPress={handleSignOut}
+              style={[styles.signOutBtn, { borderColor: `${colors.danger}33`, backgroundColor: `${colors.danger}11` }]}
+              activeOpacity={0.8}
+            >
+              <Text style={[styles.signOutText, { color: colors.danger }]}>Sign out</Text>
+            </TouchableOpacity>
+          )}
         </ScrollView>
       </SafeAreaView>
 

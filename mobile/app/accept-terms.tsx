@@ -15,8 +15,10 @@ import { useTheme } from '../src/context/ThemeContext';
 import { resolvePostAuthRoute } from '../src/services/postAuthRoute';
 import { T } from '../src/testIDs';
 
-const TERMS_URL = 'https://dreamlog.app/terms';
-const PRIVACY_URL = 'https://dreamlog.app/privacy';
+// dreamlog.app is not yet DNS-pointed at the Firebase Hosting site - use the
+// working *.web.app URL until that's done (see docs/LAUNCH_CHECKLIST.md).
+const TERMS_URL = 'https://dreamlog-48f94.web.app/terms';
+const PRIVACY_URL = 'https://dreamlog-48f94.web.app/privacy';
 
 // One-time terms acceptance gate. Shown after sign-in when the user has not
 // accepted the current Terms of Service version - covers Google/Apple sign-in

@@ -16,64 +16,53 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { GoogleSignin, statusCodes, isErrorWithCode } from '@react-native-google-signin/google-signin';
 import * as AppleAuthentication from 'expo-apple-authentication';
+import Svg, { Path } from 'react-native-svg';
 import { supabase } from '../src/lib/supabase';
 import { api } from '../src/api/client';
 import { useTheme } from '../src/context/ThemeContext';
+import type { ThemeColors } from '../src/theme';
 import { setAppRole, resolvePostAuthRoute, type AppRole } from '../src/services/postAuthRoute';
 import { T } from '../src/testIDs';
 
 type Mode = 'login' | 'register';
 
-const TERMS_URL = 'https://dreamlog.app/terms';
-const PRIVACY_URL = 'https://dreamlog.app/privacy';
+// dreamlog.app is not yet DNS-pointed at the Firebase Hosting site - use the
+// working *.web.app URL until that's done (see docs/LAUNCH_CHECKLIST.md).
+const TERMS_URL = 'https://dreamlog-48f94.web.app/terms';
+const PRIVACY_URL = 'https://dreamlog-48f94.web.app/privacy';
 
-// TODO: replace with react-native-svg version on next native build
+// Official Google "G" mark (18x18 viewBox), four brand colors.
 function GoogleLogo() {
   return (
-    <View style={googleLogoStyles.container}>
-      <View style={googleLogoStyles.ring} />
-      <View style={googleLogoStyles.bar} />
-      <Text style={googleLogoStyles.letter}>G</Text>
-    </View>
+    <Svg width={20} height={20} viewBox="0 0 18 18">
+      <Path fill="#4285F4" d="M17.64 9.2045c0-.6381-.0573-1.2518-.1636-1.8409H9v3.4814h4.8436c-.2086 1.125-.8427 2.0782-1.7959 2.7164v2.2581h2.9087c1.7018-1.5668 2.6836-3.874 2.6836-6.615z" />
+      <Path fill="#34A853" d="M9 18c2.43 0 4.4673-.806 5.9564-2.1805l-2.9087-2.2581c-.8059.5401-1.8368.8591-3.0477.8591-2.344 0-4.3282-1.5831-5.036-3.7104H.9573v2.3318C2.4382 15.9832 5.4818 18 9 18z" />
+      <Path fill="#FBBC05" d="M3.964 10.71c-.18-.5401-.2822-1.1168-.2822-1.71s.1023-1.1699.2822-1.71V4.9582H.9573C.3477 6.1732 0 7.5477 0 9s.3477 2.8268.9573 4.0418L3.964 10.71z" />
+      <Path fill="#EA4335" d="M9 3.5795c1.3214 0 2.5077.4541 3.4405 1.346l2.5813-2.5814C13.4632.8918 11.426 0 9 0 5.4818 0 2.4382 2.0168.9573 4.9582L3.964 7.29C4.6718 5.1627 6.656 3.5795 9 3.5795z" />
+    </Svg>
   );
 }
 
-const googleLogoStyles = StyleSheet.create({
-  container: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  ring: {
-    position: 'absolute',
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    borderWidth: 3,
-    borderColor: '#4285F4',
-    borderRightColor: '#34A853',
-    borderBottomColor: '#FBBC05',
-    transform: [{ rotate: '-45deg' }],
-  },
-  bar: {
-    position: 'absolute',
-    right: 0,
-    top: '50%',
-    width: 8,
-    height: 3,
-    backgroundColor: '#4285F4',
-    marginTop: -1.5,
-  },
-  letter: {
-    fontSize: 11,
-    fontWeight: '700',
-    color: '#4285F4',
-    lineHeight: 20,
-  },
-});
+// The Breath Line brand mark (static) - matches src/components/BrandSplash.tsx.
+function BreathLineLogo({ colors }: { colors: ThemeColors }) {
+  return (
+    <View style={[styles.logoWrap, { shadowColor: colors.brandGlow }]}>
+      <Svg width={140} height={47} viewBox="0 0 192 64">
+        <Path
+          d="M 8 32 C 18 10, 28 54, 38 32 C 47 15, 56 49, 65 32 C 73 20, 81 44, 89 32 C 96 25, 103 39, 110 32 C 117 28.5, 124 35.5, 131 32 C 141 30, 153 34, 164 32"
+          stroke={colors.brand}
+          strokeWidth={5}
+          strokeLinecap="round"
+          fill="none"
+        />
+        <Path
+          d={`M ${179 - 5} 32 a 5 5 0 1 0 10 0 a 5 5 0 1 0 -10 0`}
+          fill={colors.purple400}
+        />
+      </Svg>
+    </View>
+  );
+}
 
 export default function AuthScreen() {
   const [mode, setMode] = useState<Mode>('login');
@@ -229,36 +218,42 @@ export default function AuthScreen() {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.bg }]}>
+      {/* Role toggle: user vs therapist - small link, top right */}
+      <View style={styles.topBar}>
+        {role === 'user' ? (
+          <TouchableOpacity
+            testID={T.authRole.therapist}
+            style={styles.roleLink}
+            onPress={() => pickRole('therapist')}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+            activeOpacity={0.7}
+          >
+            <Text style={[styles.roleLinkText, { color: colors.textMuted }]}>I'm a therapist</Text>
+            <Text style={[styles.roleLinkArrow, { color: colors.textMuted }]}>›</Text>
+          </TouchableOpacity>
+        ) : (
+          <TouchableOpacity
+            testID={T.authRole.me}
+            style={styles.roleLink}
+            onPress={() => pickRole('user')}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+            activeOpacity={0.7}
+          >
+            <Text style={[styles.roleLinkArrow, { color: colors.textMuted }]}>‹</Text>
+            <Text style={[styles.roleLinkText, { color: colors.textMuted }]}>For me</Text>
+          </TouchableOpacity>
+        )}
+      </View>
+
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.kav}
       >
         <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
-          <View style={[styles.orb, { backgroundColor: colors.purple600, shadowColor: colors.purple500 }]} />
+          <BreathLineLogo colors={colors} />
           <Text style={[styles.title, { color: colors.textPrimary }]}>Ode</Text>
           <Text style={[styles.subtitle, { color: colors.textSecondary }]}>Your AI listener that remembers</Text>
 
-          {/* Role pill: user vs therapist */}
-          <View style={[styles.rolePill, { backgroundColor: colors.card, borderColor: colors.border }]}>
-            <TouchableOpacity
-              testID={T.authRole.me}
-              style={[styles.roleOption, role === 'user' && { backgroundColor: colors.purple600 }]}
-              onPress={() => pickRole('user')}
-            >
-              <Text style={[styles.roleText, { color: colors.textMuted }, role === 'user' && styles.roleTextActive]}>
-                For me
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              testID={T.authRole.therapist}
-              style={[styles.roleOption, role === 'therapist' && { backgroundColor: colors.purple600 }]}
-              onPress={() => pickRole('therapist')}
-            >
-              <Text style={[styles.roleText, { color: colors.textMuted }, role === 'therapist' && styles.roleTextActive]}>
-                I'm a therapist
-              </Text>
-            </TouchableOpacity>
-          </View>
           {role === 'therapist' && (
             <Text testID={T.authRole.therapistHint} style={[styles.roleHint, { color: colors.textMuted }]}>
               Manage your clients' session notes, get AI summaries, and use the journal yourself.
@@ -457,19 +452,39 @@ const styles = StyleSheet.create({
   scroll: {
     alignItems: 'center',
     padding: 28,
-    paddingTop: 60,
+    paddingTop: 24,
   },
 
-  orb: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    marginBottom: 24,
+  logoWrap: {
+    marginBottom: 20,
     shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.6,
-    shadowRadius: 24,
-    elevation: 12,
-    opacity: 0.85,
+    shadowOpacity: 0.7,
+    shadowRadius: 20,
+    elevation: 6,
+  },
+
+  topBar: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    paddingHorizontal: 20,
+    paddingTop: 8,
+  },
+  roleLink: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+    paddingVertical: 8,
+    paddingHorizontal: 4,
+  },
+  roleLinkText: {
+    fontSize: 12,
+    fontFamily: 'HankenGrotesk_600SemiBold',
+    letterSpacing: 0.2,
+  },
+  roleLinkArrow: {
+    fontSize: 15,
+    fontFamily: 'HankenGrotesk_600SemiBold',
+    lineHeight: 15,
   },
 
   title: {
@@ -485,32 +500,12 @@ const styles = StyleSheet.create({
     marginBottom: 32,
   },
 
-  rolePill: {
-    flexDirection: 'row',
-    borderRadius: 999,
-    borderWidth: 1,
-    padding: 3,
-    marginBottom: 14,
-  },
-  roleOption: {
-    paddingVertical: 8,
-    paddingHorizontal: 18,
-    borderRadius: 999,
-    alignItems: 'center',
-  },
-  roleText: {
-    fontSize: 13,
-    fontFamily: 'HankenGrotesk_600SemiBold',
-  },
-  roleTextActive: {
-    color: '#fff',
-  },
   roleHint: {
     fontSize: 12,
     fontFamily: 'HankenGrotesk_400Regular',
     textAlign: 'center',
-    marginBottom: 12,
-    marginTop: -4,
+    marginBottom: 20,
+    marginTop: -8,
     paddingHorizontal: 12,
     lineHeight: 17,
   },

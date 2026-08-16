@@ -535,20 +535,6 @@ function PricingCard({ name, price, period, badge, sub, features, cta, featured,
   );
 }
 
-/* ── FAQ ──────────────────────────────────────────────────────────────────── */
-function FAQ({ q, a }: { q: string; a: string }) {
-  const [open, setOpen] = useState(false);
-  return (
-    <div style={{ borderBottom: '1px solid var(--border)', padding: '20px 0', cursor: 'pointer' }} onClick={() => setOpen(o => !o)}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 16 }}>
-        <span style={{ fontSize: '0.95rem', fontWeight: 500, color: 'var(--text)', lineHeight: 1.4 }}>{q}</span>
-        <span style={{ color: 'var(--muted)', fontSize: '1.2rem', flexShrink: 0, transform: open ? 'rotate(45deg)' : 'none', transition: 'transform 0.2s ease', display: 'inline-block' }}>+</span>
-      </div>
-      {open && <p style={{ margin: '12px 0 0', fontSize: '0.88rem', color: 'var(--muted)', lineHeight: 1.7 }}>{a}</p>}
-    </div>
-  );
-}
-
 /* ── Breathing orb ────────────────────────────────────────────────────────── */
 function BreathingOrb({ ambient }: { ambient?: boolean }) {
   const [phase, setPhase] = useState<'idle' | 'inhale' | 'hold' | 'exhale'>('idle');
