@@ -13,11 +13,12 @@ import {
   Linking,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
-import { GoogleSignin, statusCodes, isErrorWithCode } from '@react-native-google-signin/google-signin';
-import * as AppleAuthentication from 'expo-apple-authentication';
 import Svg, { Path } from 'react-native-svg';
-import { supabase } from '../src/lib/supabase';
+import { useRouter } from 'expo-router';
+import * as AppleAuthentication from 'expo-apple-authentication';
+import * as WebBrowser from 'expo-web-browser';
+import * as ExpoLinking from 'expo-linking';
+import { supabase, handleDeepLink } from '../src/lib/supabase';
 import { api } from '../src/api/client';
 import { useTheme } from '../src/context/ThemeContext';
 import type { ThemeColors } from '../src/theme';
@@ -31,14 +32,26 @@ type Mode = 'login' | 'register';
 const TERMS_URL = 'https://dreamlog-48f94.web.app/terms';
 const PRIVACY_URL = 'https://dreamlog-48f94.web.app/privacy';
 
-// Official Google "G" mark (18x18 viewBox), four brand colors.
+// Official Google "G" mark (4-colour), rendered from the canonical SVG paths.
 function GoogleLogo() {
   return (
-    <Svg width={20} height={20} viewBox="0 0 18 18">
-      <Path fill="#4285F4" d="M17.64 9.2045c0-.6381-.0573-1.2518-.1636-1.8409H9v3.4814h4.8436c-.2086 1.125-.8427 2.0782-1.7959 2.7164v2.2581h2.9087c1.7018-1.5668 2.6836-3.874 2.6836-6.615z" />
-      <Path fill="#34A853" d="M9 18c2.43 0 4.4673-.806 5.9564-2.1805l-2.9087-2.2581c-.8059.5401-1.8368.8591-3.0477.8591-2.344 0-4.3282-1.5831-5.036-3.7104H.9573v2.3318C2.4382 15.9832 5.4818 18 9 18z" />
-      <Path fill="#FBBC05" d="M3.964 10.71c-.18-.5401-.2822-1.1168-.2822-1.71s.1023-1.1699.2822-1.71V4.9582H.9573C.3477 6.1732 0 7.5477 0 9s.3477 2.8268.9573 4.0418L3.964 10.71z" />
-      <Path fill="#EA4335" d="M9 3.5795c1.3214 0 2.5077.4541 3.4405 1.346l2.5813-2.5814C13.4632.8918 11.426 0 9 0 5.4818 0 2.4382 2.0168.9573 4.9582L3.964 7.29C4.6718 5.1627 6.656 3.5795 9 3.5795z" />
+    <Svg width={18} height={18} viewBox="0 0 48 48">
+      <Path
+        fill="#EA4335"
+        d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"
+      />
+      <Path
+        fill="#4285F4"
+        d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"
+      />
+      <Path
+        fill="#FBBC05"
+        d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"
+      />
+      <Path
+        fill="#34A853"
+        d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"
+      />
     </Svg>
   );
 }
@@ -100,25 +113,27 @@ export default function AuthScreen() {
   };
 
   const handleGoogleSignIn = async () => {
+    // Browser-based OAuth (not native @react-native-google-signin): on iOS the
+    // Google SDK injects a nonce into the ID token that Supabase can't verify
+    // ("nonce mismatch"). The browser flow lets Supabase own the PKCE nonce, so
+    // it works identically on iOS and Android.
     setError('');
     setLoading(true);
     try {
-      await GoogleSignin.hasPlayServices();
-      const response = await GoogleSignin.signIn();
-      if (response.type === 'cancelled') return;
-
-      const idToken = response.data?.idToken;
-      if (!idToken) throw new Error('No ID token from Google');
-
-      const { error: signInError } = await supabase.auth.signInWithIdToken({
+      const redirectTo = ExpoLinking.createURL('/auth/callback');
+      const { data, error: oauthError } = await supabase.auth.signInWithOAuth({
         provider: 'google',
-        token: idToken,
+        options: { redirectTo, skipBrowserRedirect: true },
       });
-      if (signInError) throw signInError;
+      if (oauthError) throw oauthError;
+      if (!data?.url) throw new Error('Could not start Google sign-in');
 
+      const result = await WebBrowser.openAuthSessionAsync(data.url, redirectTo);
+      if (result.type !== 'success' || !result.url) return; // cancelled / dismissed
+
+      await handleDeepLink(result.url);
       await routeAfterAuth();
     } catch (err: any) {
-      if (isErrorWithCode(err) && err.code === statusCodes.SIGN_IN_CANCELLED) return;
       setError(err?.message ?? 'Google sign-in failed. Please try again.');
     } finally {
       setLoading(false);

@@ -30,7 +30,7 @@ supabase.auth.onAuthStateChange(async (_event, session) => {
 //   ode://#access_token=...&refresh_token=...&type=signup
 // or a code param for PKCE flow:
 //   ode://?code=...
-async function handleDeepLink(url: string) {
+export async function handleDeepLink(url: string) {
   const fragment = url.split('#')[1] ?? url.split('?')[1] ?? '';
   if (!fragment) return;
   // Split at the FIRST '=' only so base64-padded tokens are preserved.
