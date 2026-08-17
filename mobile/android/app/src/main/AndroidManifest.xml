@@ -32,6 +32,7 @@
         <category android:name="android.intent.category.DEFAULT"/>
         <category android:name="android.intent.category.BROWSABLE"/>
         <data android:scheme="ode"/>
+        <data android:scheme="exp+dreamlog"/>
       </intent-filter>
     </activity>
   </application>

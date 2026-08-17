@@ -16,6 +16,9 @@ therapist-portal/.firebase/
 .env.*.local
 .env.production
 
+# Cached Sentry auth token for local release builds (scripts/run-gradle.ps1) - machine-specific secret
+scripts/.sentry-token.local
+
 # Keep the example file
 !.env.example
 
