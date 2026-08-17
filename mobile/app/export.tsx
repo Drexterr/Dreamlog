@@ -17,7 +17,10 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
-import * as FileSystem from 'expo-file-system';
+// SDK 54's default 'expo-file-system' export is the new class-based API
+// (File/Directory/Paths) and has neither cacheDirectory nor downloadAsync -
+// use the legacy compatibility module for the old imperative download API.
+import * as FileSystem from 'expo-file-system/legacy';
 import * as Sharing from 'expo-sharing';
 import { api } from '../src/api/client';
 import { useTheme } from '../src/context/ThemeContext';
@@ -43,8 +46,7 @@ export default function ExportScreen() {
       const { url, headers } = await api.exportPDFParams(selected);
 
       const filename = `ode-${selected}-${new Date().toISOString().slice(0, 7)}.pdf`;
-      const cacheDir = (FileSystem as unknown as Record<string, string | null>)['cacheDirectory'] ?? '';
-      const dest = cacheDir + filename;
+      const dest = (FileSystem.cacheDirectory ?? '') + filename;
 
       const result = await FileSystem.downloadAsync(url, dest, { headers });
 
