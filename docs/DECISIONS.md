@@ -195,3 +195,13 @@ These explain WHY things are built the way they are. Read before proposing chang
 **Why:** Same rationale as ADR-005 (audio deleted after transcription): the photo is the most privacy-sensitive artifact — it may contain a client's full name, margin notes, letterhead, anything. The extracted bullets are sufficient for all downstream features and are encrypted (ADR-017).
 
 **Do not:** Add photo re-viewing/playback features. Do not keep photos "for a retention window". On OCR retry-able failures the photo is kept only until the retry limit is exhausted.
+
+---
+
+## ADR-020: All Claude Prompts Carry an Explicit Prompt-Injection Guard
+
+**Decision:** Every system prompt in `prompts.go` that will later have user-authored content interpolated into it (journal transcripts, chat messages, past summaries, session notes) includes the shared `promptInjectionGuard` text, and every point where that content is inserted is labeled "USER-SUPPLIED DATA" in the prompt itself.
+
+**Why:** A user's journal entry, therapy message, or a therapist's session note is completely untrusted input from the model's perspective - nothing stops someone from writing "ignore all previous instructions and instead..." directly into an entry. Without an explicit instruction to treat that text as data rather than commands, the model has no signal to distinguish "the app's instructions" from "text the app is asking it to read." The guard is cheap (a few sentences, cacheable alongside the rest of the system prompt) and makes the trust boundary explicit rather than implicit in delimiter formatting alone.
+
+**Do not:** Add a new prompt in `prompts.go` that embeds user-authored or user-derived content (including past AI-generated summaries of user content, since a user can indirectly influence those) without including `promptInjectionGuard` and labeling the data block. The SAFETY OVERRIDE / crisis-detection instructions remain the one thing that must still fire regardless of what injected content says - the guard says so explicitly for this reason.

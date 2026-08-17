@@ -2,7 +2,9 @@ package services
 
 import (
 	"context"
+	"errors"
 	"testing"
+	"time"
 
 	"github.com/dreamlog/backend/internal/models"
 	"github.com/google/uuid"
@@ -10,16 +12,20 @@ import (
 
 // fakeUserStore is an in-memory UserStore used by auth flow tests.
 type fakeUserStore struct {
-	users     map[string]*models.User // keyed by email
-	hashes    map[string]string       // email → bcrypt hash
-	createErr error
-	getErr    error
+	users       map[string]*models.User // keyed by email
+	hashes      map[string]string       // email → bcrypt hash
+	lockedUntil map[string]time.Time    // email → lockout expiry
+	attempts    map[string]int          // email → failed-login counter
+	createErr   error
+	getErr      error
 }
 
 func newFakeUserStore() *fakeUserStore {
 	return &fakeUserStore{
-		users:  make(map[string]*models.User),
-		hashes: make(map[string]string),
+		users:       make(map[string]*models.User),
+		hashes:      make(map[string]string),
+		lockedUntil: make(map[string]time.Time),
+		attempts:    make(map[string]int),
 	}
 }
 
@@ -78,11 +84,38 @@ func (s *fakeUserStore) GetPasswordHash(_ context.Context, email string) (string
 	return s.hashes[email], nil
 }
 
+func (s *fakeUserStore) GetLoginLockedUntil(_ context.Context, email string) (*time.Time, error) {
+	if lu, ok := s.lockedUntil[email]; ok {
+		return &lu, nil
+	}
+	return nil, nil
+}
+
+func (s *fakeUserStore) RecordFailedLogin(_ context.Context, email string, maxAttempts int, lockDuration time.Duration) (*time.Time, error) {
+	if _, ok := s.users[email]; !ok {
+		return nil, nil
+	}
+	s.attempts[email]++
+	if s.attempts[email] >= maxAttempts {
+		s.attempts[email] = 0
+		lu := time.Now().Add(lockDuration)
+		s.lockedUntil[email] = lu
+		return &lu, nil
+	}
+	return nil, nil
+}
+
+func (s *fakeUserStore) ResetLoginAttempts(_ context.Context, email string) error {
+	delete(s.attempts, email)
+	delete(s.lockedUntil, email)
+	return nil
+}
+
 // ── Register ──────────────────────────────────────────────────────────────────
 
 func TestRegister_CreatesUserAndReturnsToken(t *testing.T) {
 	store := newFakeUserStore()
-	svc := NewAuthService(store, "test-secret-32-bytes-minimum!!!!")
+	svc := NewAuthService(store, "test-secret-32-bytes-minimum!!!!", nil)
 
 	user, token, err := svc.Register(context.Background(), "alice@test.com", "Alice", "password123")
 	if err != nil {
@@ -104,7 +137,7 @@ func TestRegister_CreatesUserAndReturnsToken(t *testing.T) {
 
 func TestRegister_HashesPassword(t *testing.T) {
 	store := newFakeUserStore()
-	svc := NewAuthService(store, "test-secret")
+	svc := NewAuthService(store, "test-secret", nil)
 
 	_, _, err := svc.Register(context.Background(), "bob@test.com", "Bob", "mypassword")
 	if err != nil {
@@ -122,7 +155,7 @@ func TestRegister_HashesPassword(t *testing.T) {
 
 func TestRegister_DuplicateEmail_ReturnsError(t *testing.T) {
 	store := newFakeUserStore()
-	svc := NewAuthService(store, "test-secret")
+	svc := NewAuthService(store, "test-secret", nil)
 
 	_, _, err := svc.Register(context.Background(), "dup@test.com", "First", "pass1234")
 	if err != nil {
@@ -137,7 +170,7 @@ func TestRegister_DuplicateEmail_ReturnsError(t *testing.T) {
 
 func TestRegister_StoresUserInStore(t *testing.T) {
 	store := newFakeUserStore()
-	svc := NewAuthService(store, "test-secret")
+	svc := NewAuthService(store, "test-secret", nil)
 
 	_, _, err := svc.Register(context.Background(), "stored@test.com", "Stored User", "pass1234")
 	if err != nil {
@@ -152,7 +185,7 @@ func TestRegister_StoresUserInStore(t *testing.T) {
 func TestRegister_ReturnsValidJWT(t *testing.T) {
 	const secret = "test-secret-32-bytes-minimum!!!!"
 	store := newFakeUserStore()
-	svc := NewAuthService(store, secret)
+	svc := NewAuthService(store, secret, nil)
 
 	_, token, err := svc.Register(context.Background(), "jwt@test.com", "JWT User", "pass1234")
 	if err != nil {
@@ -176,7 +209,7 @@ func TestRegister_ReturnsValidJWT(t *testing.T) {
 
 func TestLogin_CorrectPassword_ReturnsUserAndToken(t *testing.T) {
 	store := newFakeUserStore()
-	svc := NewAuthService(store, "test-secret-32-bytes-minimum!!!!")
+	svc := NewAuthService(store, "test-secret-32-bytes-minimum!!!!", nil)
 
 	_, _, err := svc.Register(context.Background(), "login@test.com", "Login User", "correctpass")
 	if err != nil {
@@ -200,7 +233,7 @@ func TestLogin_CorrectPassword_ReturnsUserAndToken(t *testing.T) {
 
 func TestLogin_WrongPassword_ReturnsError(t *testing.T) {
 	store := newFakeUserStore()
-	svc := NewAuthService(store, "test-secret")
+	svc := NewAuthService(store, "test-secret", nil)
 
 	_, _, _ = svc.Register(context.Background(), "user@test.com", "User", "correctpass")
 
@@ -212,7 +245,7 @@ func TestLogin_WrongPassword_ReturnsError(t *testing.T) {
 
 func TestLogin_UnknownEmail_ReturnsError(t *testing.T) {
 	store := newFakeUserStore()
-	svc := NewAuthService(store, "test-secret")
+	svc := NewAuthService(store, "test-secret", nil)
 
 	_, _, err := svc.Login(context.Background(), "nobody@test.com", "anypassword")
 	if err == nil {
@@ -222,7 +255,7 @@ func TestLogin_UnknownEmail_ReturnsError(t *testing.T) {
 
 func TestLogin_EmptyPassword_ReturnsError(t *testing.T) {
 	store := newFakeUserStore()
-	svc := NewAuthService(store, "test-secret")
+	svc := NewAuthService(store, "test-secret", nil)
 
 	_, _, _ = svc.Register(context.Background(), "user@test.com", "User", "realpassword")
 
@@ -241,7 +274,7 @@ func TestLogin_NoPasswordHash_ReturnsError(t *testing.T) {
 	}
 	// No hash - GetPasswordHash returns ""
 
-	svc := NewAuthService(store, "test-secret")
+	svc := NewAuthService(store, "test-secret", nil)
 	_, _, err := svc.Login(context.Background(), "supaonly@test.com", "anypassword")
 	if err == nil {
 		t.Error("user without password hash must not log in via local auth")
@@ -251,7 +284,7 @@ func TestLogin_NoPasswordHash_ReturnsError(t *testing.T) {
 func TestLogin_SameErrorMessageForWrongPasswordAndUnknownEmail(t *testing.T) {
 	// Prevents email enumeration: both cases must return the same error text.
 	store := newFakeUserStore()
-	svc := NewAuthService(store, "test-secret")
+	svc := NewAuthService(store, "test-secret", nil)
 
 	_, _, _ = svc.Register(context.Background(), "known@test.com", "Known", "realpass")
 
@@ -263,5 +296,70 @@ func TestLogin_SameErrorMessageForWrongPasswordAndUnknownEmail(t *testing.T) {
 	}
 	if wrongPassErr.Error() != unknownErr.Error() {
 		t.Errorf("error messages differ (enumeration risk): %q vs %q", wrongPassErr.Error(), unknownErr.Error())
+	}
+}
+
+// ── Login lockout ────────────────────────────────────────────────────────────
+
+func TestLogin_LocksAccountAfterRepeatedFailures(t *testing.T) {
+	store := newFakeUserStore()
+	svc := NewAuthService(store, "test-secret", nil)
+
+	_, _, _ = svc.Register(context.Background(), "brute@test.com", "Brute Target", "correctpass")
+
+	// loginLockoutMaxAttempts (5) wrong passwords should trip the lock.
+	for i := 0; i < loginLockoutMaxAttempts; i++ {
+		_, _, err := svc.Login(context.Background(), "brute@test.com", "wrongpass")
+		if err == nil {
+			t.Fatalf("attempt %d: expected an error", i+1)
+		}
+	}
+
+	if _, ok := store.lockedUntil["brute@test.com"]; !ok {
+		t.Fatal("account should be locked after reaching the attempt threshold")
+	}
+
+	// Even the correct password must now be rejected while locked.
+	_, _, err := svc.Login(context.Background(), "brute@test.com", "correctpass")
+	if !errors.Is(err, ErrAccountLocked) {
+		t.Errorf("want ErrAccountLocked, got %v", err)
+	}
+}
+
+func TestLogin_SuccessResetsFailedAttemptCounter(t *testing.T) {
+	store := newFakeUserStore()
+	svc := NewAuthService(store, "test-secret", nil)
+
+	_, _, _ = svc.Register(context.Background(), "reset@test.com", "Reset User", "correctpass")
+
+	_, _, _ = svc.Login(context.Background(), "reset@test.com", "wrongpass")
+	_, _, _ = svc.Login(context.Background(), "reset@test.com", "wrongpass")
+
+	if store.attempts["reset@test.com"] == 0 {
+		t.Fatal("failed attempts should have accumulated")
+	}
+
+	_, _, err := svc.Login(context.Background(), "reset@test.com", "correctpass")
+	if err != nil {
+		t.Fatalf("correct password should still succeed below the lockout threshold: %v", err)
+	}
+	if _, ok := store.attempts["reset@test.com"]; ok && store.attempts["reset@test.com"] != 0 {
+		t.Errorf("successful login should reset the failed-attempt counter, got %d", store.attempts["reset@test.com"])
+	}
+}
+
+func TestLogin_UnknownEmailNeverAccumulatesLockout(t *testing.T) {
+	// Guards against using lockout state as an email-enumeration side channel:
+	// an unknown email must never end up with a lock, no matter how many
+	// times it's guessed.
+	store := newFakeUserStore()
+	svc := NewAuthService(store, "test-secret", nil)
+
+	for i := 0; i < loginLockoutMaxAttempts+2; i++ {
+		_, _, _ = svc.Login(context.Background(), "ghost@test.com", "whatever")
+	}
+
+	if _, ok := store.lockedUntil["ghost@test.com"]; ok {
+		t.Error("an unknown email must never accumulate a lockout")
 	}
 }

@@ -56,6 +56,8 @@ func NewRouter(deps Deps) http.Handler {
 	gin.SetMode(gin.ReleaseMode)
 	r := gin.New()
 
+	r.Use(middleware.SecurityHeaders())
+	r.Use(middleware.MaxBodySize(middleware.MaxRequestBodyBytes))
 	r.Use(middleware.CORSMiddleware())
 	r.Use(middleware.RecoveryHandler(deps.Log))
 	// Registered after RecoveryHandler so it sees a panic first (deferred
@@ -78,8 +80,8 @@ func NewRouter(deps Deps) http.Handler {
 	// credential endpoints (login/register) to blunt credential stuffing;
 	// a looser bucket on the public share-view passcode path (the per-link
 	// DB lockout is the cross-instance backstop there).
-	authLimiter := middleware.NewRateLimiter(0.2, 5)   // ~1 req / 5s, burst 5
-	shareLimiter := middleware.NewRateLimiter(0.5, 10) // ~1 req / 2s, burst 10
+	authLimiter := middleware.NewRateLimiter(0.2, 5, deps.Log)   // ~1 req / 5s, burst 5
+	shareLimiter := middleware.NewRateLimiter(0.5, 10, deps.Log) // ~1 req / 2s, burst 10
 
 	// Auth (public - no JWT required)
 	authHandler := NewAuthHandler(deps.AuthSvc)

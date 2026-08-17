@@ -121,7 +121,7 @@ func main() {
 	jobQueue := queue.New(rdb, cfg.Worker.QueueKey, cfg.Worker.DLQKey, cfg.Worker.PollTimeout)
 	storageSvc := services.NewStorageService(storageClient, &cfg.Storage)
 	userSvc := services.NewUserService(userRepo)
-	authSvc := services.NewAuthService(userRepo, cfg.Supabase.JWTSecret)
+	authSvc := services.NewAuthService(userRepo, cfg.Supabase.JWTSecret, log)
 	entrySvc := services.NewEntryService(entryRepo, storageSvc, jobQueue)
 	claudeSvc := services.NewClaudeService(&cfg.Anthropic)
 	convSvc := services.NewConversationService(convRepo, entryRepo, analysisRepo, claudeSvc)

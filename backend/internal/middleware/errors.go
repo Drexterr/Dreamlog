@@ -45,6 +45,24 @@ func ErrorHandler(log *zap.Logger) gin.HandlerFunc {
 					zap.String("method", c.Request.Method),
 				)
 			}
+
+			// Security-relevant client errors get a dedicated audit-style
+			// log line distinct from ordinary 4xx noise (400 validation, 404
+			// not found, 409 conflict aren't security events and are skipped)
+			// - unauthenticated/unauthorized access attempts and rate-limit/
+			// lockout trips are exactly the kind of thing worth being able to
+			// grep for during an incident.
+			if isSecurityRelevantStatus(apiErr.Code) {
+				log.Warn("security event",
+					zap.Int("status", apiErr.Code),
+					zap.String("message", apiErr.Message),
+					zap.String("path", c.Request.URL.Path),
+					zap.String("method", c.Request.Method),
+					zap.String("ip", c.ClientIP()),
+					zap.String("user_agent", c.Request.UserAgent()),
+				)
+			}
+
 			c.JSON(apiErr.Code, apiErr)
 			return
 		}
@@ -59,6 +77,19 @@ func ErrorHandler(log *zap.Logger) gin.HandlerFunc {
 			zap.String("method", c.Request.Method),
 		)
 		c.JSON(http.StatusInternalServerError, apierr.Internal("an unexpected error occurred"))
+	}
+}
+
+// isSecurityRelevantStatus reports whether an API error status code
+// represents a security-relevant outcome worth a dedicated audit log line:
+// failed/missing auth, forbidden access to another user's resource, and
+// rate-limit/lockout trips (share-link and login brute-force protection).
+func isSecurityRelevantStatus(code int) bool {
+	switch code {
+	case http.StatusUnauthorized, http.StatusForbidden, http.StatusTooManyRequests:
+		return true
+	default:
+		return false
 	}
 }
 

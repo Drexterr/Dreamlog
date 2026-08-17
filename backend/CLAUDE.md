@@ -74,9 +74,10 @@ ALL wiring happens in `internal/handlers/router.go`. This is the only place wher
 ## Adding a New Claude Prompt
 
 1. Add a new build function in `internal/services/prompts.go` (e.g. `buildWeeklyReviewPrompt()`)
-2. Add a new method to the Claude service in `internal/services/claude.go`
-3. Define the expected JSON output struct in `internal/models/`
-4. Write a unit test in `internal/services/claude_test.go` with a mock response
+2. If the prompt embeds any user-authored or user-derived content (transcripts, chat messages, past summaries, notes) - include `promptInjectionGuard` and label the data block "USER-SUPPLIED DATA" (ADR-020). This is nearly every prompt; the exceptions are the few that take no user content at all.
+3. Add a new method to the Claude service in `internal/services/claude.go`
+4. Define the expected JSON output struct in `internal/models/`
+5. Write a unit test in `internal/services/claude_test.go` with a mock response
 
 ---
 

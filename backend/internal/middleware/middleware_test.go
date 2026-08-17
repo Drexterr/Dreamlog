@@ -127,6 +127,48 @@ func TestErrorHandler_4xxAPIError_NotLogged(t *testing.T) {
 	}
 }
 
+func TestErrorHandler_SecurityRelevantStatuses_LoggedAsSecurityEvent(t *testing.T) {
+	cases := []struct {
+		name string
+		code int
+		err  error
+	}{
+		{"401 unauthorized", http.StatusUnauthorized, apierr.Unauthorized("user not found")},
+		{"403 forbidden", http.StatusForbidden, apierr.Forbidden("admin access required")},
+		{"429 too many requests", http.StatusTooManyRequests, apierr.New(http.StatusTooManyRequests, "too many incorrect passcode attempts")},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			core, logs := observer.New(zap.WarnLevel)
+			gin.SetMode(gin.TestMode)
+			r := gin.New()
+			r.Use(ErrorHandler(zap.New(core)))
+			r.GET("/x", func(c *gin.Context) {
+				_ = c.Error(tc.err)
+			})
+
+			w := httptest.NewRecorder()
+			req, _ := http.NewRequest(http.MethodGet, "/x", nil)
+			r.ServeHTTP(w, req)
+
+			if w.Code != tc.code {
+				t.Fatalf("want status %d, got %d", tc.code, w.Code)
+			}
+
+			found := false
+			for _, e := range logs.All() {
+				if e.Message == "security event" {
+					found = true
+				}
+			}
+			if !found {
+				t.Errorf("expected a %q log entry for status %d, got %v", "security event", tc.code, logs.All())
+			}
+		})
+	}
+}
+
 func TestErrorHandler_NoError_PassesThrough(t *testing.T) {
 	r := newErrorTestRouter()
 	r.GET("/x", func(c *gin.Context) { c.JSON(http.StatusOK, gin.H{"ok": true}) })

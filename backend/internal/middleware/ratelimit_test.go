@@ -10,7 +10,7 @@ import (
 )
 
 func TestRateLimiter_AllowsBurstThenBlocks(t *testing.T) {
-	rl := NewRateLimiter(0, 3) // no refill, burst of 3
+	rl := NewRateLimiter(0, 3, nil) // no refill, burst of 3
 	now := time.Now()
 
 	for i := 0; i < 3; i++ {
@@ -24,7 +24,7 @@ func TestRateLimiter_AllowsBurstThenBlocks(t *testing.T) {
 }
 
 func TestRateLimiter_RefillsOverTime(t *testing.T) {
-	rl := NewRateLimiter(1, 1) // 1 token/sec, burst 1
+	rl := NewRateLimiter(1, 1, nil) // 1 token/sec, burst 1
 	now := time.Now()
 
 	if !rl.allow("5.6.7.8", now) {
@@ -40,7 +40,7 @@ func TestRateLimiter_RefillsOverTime(t *testing.T) {
 }
 
 func TestRateLimiter_PerIPIsolation(t *testing.T) {
-	rl := NewRateLimiter(0, 1)
+	rl := NewRateLimiter(0, 1, nil)
 	now := time.Now()
 
 	if !rl.allow("10.0.0.1", now) {
@@ -53,7 +53,7 @@ func TestRateLimiter_PerIPIsolation(t *testing.T) {
 
 func TestRateLimiter_Middleware_Returns429(t *testing.T) {
 	gin.SetMode(gin.TestMode)
-	rl := NewRateLimiter(0, 1)
+	rl := NewRateLimiter(0, 1, nil)
 	r := gin.New()
 	r.GET("/x", rl.Middleware(), func(c *gin.Context) { c.Status(http.StatusOK) })
 

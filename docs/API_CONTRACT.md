@@ -41,7 +41,12 @@ Response `200`:
 > `GET /share/:token` are rate-limited per client IP (HTTP `429` with a
 > `Retry-After` header when exceeded). Additionally, a share link locks itself
 > for 15 minutes after 5 consecutive incorrect passcodes (`429`), independent of
-> source IP.
+> source IP. Local-auth accounts (`POST /auth/login`) get the same protection:
+> after 5 consecutive wrong passwords for the same email, that account is
+> locked for 15 minutes (`429` with `Retry-After`), independent of source IP -
+> mirrors the share-link lockout. Unknown emails never accumulate a lockout
+> (only a real account's counter is touched), so this can't be used to probe
+> whether an email is registered.
 
 ### POST /auth/register
 ```json
@@ -67,6 +72,7 @@ Response `200`:
 // Errors
 400 - missing fields
 401 - invalid credentials
+429 - account temporarily locked after 5 consecutive failed attempts (Retry-After header set)
 ```
 
 ---

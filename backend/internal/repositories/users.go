@@ -277,6 +277,65 @@ func (r *UserRepository) GetPasswordHash(ctx context.Context, email string) (str
 	return hash, nil
 }
 
+// GetLoginLockedUntil returns the current login lockout expiry for the local
+// auth account with this email, or nil if the account isn't locked (or the
+// email doesn't match any account - unknown emails are simply never locked,
+// which keeps this check enumeration-safe).
+func (r *UserRepository) GetLoginLockedUntil(ctx context.Context, email string) (*time.Time, error) {
+	var lockedUntil *time.Time
+	err := r.db.QueryRow(ctx, `SELECT login_locked_until FROM users WHERE email = $1`, email).Scan(&lockedUntil)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, fmt.Errorf("users.GetLoginLockedUntil: %w", err)
+	}
+	return lockedUntil, nil
+}
+
+// RecordFailedLogin increments the failed-login counter for the local auth
+// account with this email and, once maxAttempts is reached, sets
+// login_locked_until to now + lockDuration (resetting the counter so each
+// lock window requires a fresh maxAttempts failures). Mirrors
+// ShareRepository.RecordFailedPasscode. A WHERE clause matching zero rows
+// (unknown email) is a silent no-op - only real accounts accumulate a lockout,
+// so this never leaks whether an email is registered.
+func (r *UserRepository) RecordFailedLogin(ctx context.Context, email string, maxAttempts int, lockDuration time.Duration) (*time.Time, error) {
+	const q = `
+		UPDATE users
+		SET failed_login_attempts = CASE
+		        WHEN failed_login_attempts + 1 >= $2 THEN 0
+		        ELSE failed_login_attempts + 1
+		    END,
+		    login_locked_until = CASE
+		        WHEN failed_login_attempts + 1 >= $2 THEN NOW() + make_interval(secs => $3)
+		        ELSE login_locked_until
+		    END
+		WHERE email = $1
+		RETURNING login_locked_until`
+
+	var lockedUntil *time.Time
+	err := r.db.QueryRow(ctx, q, email, maxAttempts, lockDuration.Seconds()).Scan(&lockedUntil)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, fmt.Errorf("users.RecordFailedLogin: %w", err)
+	}
+	return lockedUntil, nil
+}
+
+// ResetLoginAttempts clears the failed-login counter and any lock after a
+// successful password check.
+func (r *UserRepository) ResetLoginAttempts(ctx context.Context, email string) error {
+	_, err := r.db.Exec(ctx,
+		`UPDATE users SET failed_login_attempts = 0, login_locked_until = NULL WHERE email = $1`, email)
+	if err != nil {
+		return fmt.Errorf("users.ResetLoginAttempts: %w", err)
+	}
+	return nil
+}
+
 // ListWithRecentEntries returns distinct users who have had at least one completed entry
 // since the given time. Used by the weekly review scheduler.
 func (r *UserRepository) ListWithRecentEntries(ctx context.Context, since time.Time) ([]*models.User, error) {

@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"time"
 
 	"github.com/dreamlog/backend/internal/models"
 	"github.com/google/uuid"
@@ -15,6 +16,9 @@ type UserStore interface {
 	CreateLocal(ctx context.Context, email, name, passwordHash string) (*models.User, error)
 	GetPasswordHash(ctx context.Context, email string) (string, error)
 	Reactivate(ctx context.Context, id uuid.UUID, name, passwordHash string) (*models.User, error)
+	GetLoginLockedUntil(ctx context.Context, email string) (*time.Time, error)
+	RecordFailedLogin(ctx context.Context, email string, maxAttempts int, lockDuration time.Duration) (*time.Time, error)
+	ResetLoginAttempts(ctx context.Context, email string) error
 }
 
 // ConvRepository is the minimal conversation-repository interface required by ConversationService.
