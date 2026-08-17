@@ -56,6 +56,11 @@ func (h *AuthHandler) Login(c *gin.Context) {
 
 	user, token, err := h.authSvc.Login(c.Request.Context(), req.Email, req.Password)
 	if err != nil {
+		if errors.Is(err, services.ErrAccountLocked) {
+			c.Header("Retry-After", "900")
+			c.JSON(http.StatusTooManyRequests, gin.H{"message": err.Error()})
+			return
+		}
 		c.JSON(http.StatusUnauthorized, gin.H{"message": err.Error()})
 		return
 	}

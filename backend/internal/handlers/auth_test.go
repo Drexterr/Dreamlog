@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 
 	"github.com/dreamlog/backend/internal/middleware"
 	"github.com/dreamlog/backend/internal/models"
@@ -19,15 +20,19 @@ import (
 // ── Fake user store for handler tests ────────────────────────────────────────
 
 type handlerFakeUserStore struct {
-	users     map[string]*models.User
-	hashes    map[string]string
-	createErr error
+	users       map[string]*models.User
+	hashes      map[string]string
+	lockedUntil map[string]time.Time
+	attempts    map[string]int
+	createErr   error
 }
 
 func newHandlerFakeStore() *handlerFakeUserStore {
 	return &handlerFakeUserStore{
-		users:  make(map[string]*models.User),
-		hashes: make(map[string]string),
+		users:       make(map[string]*models.User),
+		hashes:      make(map[string]string),
+		lockedUntil: make(map[string]time.Time),
+		attempts:    make(map[string]int),
 	}
 }
 
@@ -57,6 +62,33 @@ func (s *handlerFakeUserStore) GetPasswordHash(_ context.Context, email string) 
 	return s.hashes[email], nil
 }
 
+func (s *handlerFakeUserStore) GetLoginLockedUntil(_ context.Context, email string) (*time.Time, error) {
+	if lu, ok := s.lockedUntil[email]; ok {
+		return &lu, nil
+	}
+	return nil, nil
+}
+
+func (s *handlerFakeUserStore) RecordFailedLogin(_ context.Context, email string, maxAttempts int, lockDuration time.Duration) (*time.Time, error) {
+	if _, ok := s.users[email]; !ok {
+		return nil, nil
+	}
+	s.attempts[email]++
+	if s.attempts[email] >= maxAttempts {
+		s.attempts[email] = 0
+		lu := time.Now().Add(lockDuration)
+		s.lockedUntil[email] = lu
+		return &lu, nil
+	}
+	return nil, nil
+}
+
+func (s *handlerFakeUserStore) ResetLoginAttempts(_ context.Context, email string) error {
+	delete(s.attempts, email)
+	delete(s.lockedUntil, email)
+	return nil
+}
+
 func (s *handlerFakeUserStore) Reactivate(_ context.Context, id uuid.UUID, name, hash string) (*models.User, error) {
 	if s.createErr != nil {
 		return nil, s.createErr
@@ -77,7 +109,7 @@ func (s *handlerFakeUserStore) Reactivate(_ context.Context, id uuid.UUID, name,
 func newAuthTestRouter(store services.UserStore) *gin.Engine {
 	gin.SetMode(gin.TestMode)
 	log := zap.NewNop()
-	svc := services.NewAuthService(store, "test-secret-32-bytes-minimum!!!!")
+	svc := services.NewAuthService(store, "test-secret-32-bytes-minimum!!!!", log)
 	h := NewAuthHandler(svc)
 
 	r := gin.New()

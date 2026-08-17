@@ -7,6 +7,7 @@ import (
 
 	"github.com/dreamlog/backend/pkg/apierr"
 	"github.com/gin-gonic/gin"
+	"go.uber.org/zap"
 )
 
 // RateLimiter is a lightweight per-IP token-bucket limiter for abuse-sensitive
@@ -21,6 +22,7 @@ type RateLimiter struct {
 	rate     float64 // tokens added per second
 	burst    float64 // max tokens (also the initial allowance)
 	lastSeen map[string]time.Time
+	log      *zap.Logger
 }
 
 type bucket struct {
@@ -30,13 +32,18 @@ type bucket struct {
 
 // NewRateLimiter builds a limiter allowing `burst` requests immediately and
 // refilling at `rate` requests per second per client IP. It starts a background
-// sweeper that evicts idle IPs so the map cannot grow unbounded.
-func NewRateLimiter(rate, burst float64) *RateLimiter {
+// sweeper that evicts idle IPs so the map cannot grow unbounded. log may be
+// nil (defaults to a no-op logger) - trips are logged as a security event.
+func NewRateLimiter(rate, burst float64, log *zap.Logger) *RateLimiter {
+	if log == nil {
+		log = zap.NewNop()
+	}
 	rl := &RateLimiter{
 		buckets:  make(map[string]*bucket),
 		rate:     rate,
 		burst:    burst,
 		lastSeen: make(map[string]time.Time),
+		log:      log,
 	}
 	go rl.sweep()
 	return rl
@@ -90,6 +97,11 @@ func (rl *RateLimiter) sweep() {
 func (rl *RateLimiter) Middleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		if !rl.allow(c.ClientIP(), time.Now()) {
+			rl.log.Warn("security event: rate limit exceeded",
+				zap.String("ip", c.ClientIP()),
+				zap.String("path", c.Request.URL.Path),
+				zap.String("method", c.Request.Method),
+			)
 			c.Header("Retry-After", "60")
 			c.AbortWithStatusJSON(http.StatusTooManyRequests,
 				apierr.New(http.StatusTooManyRequests, "too many requests, please slow down"))
