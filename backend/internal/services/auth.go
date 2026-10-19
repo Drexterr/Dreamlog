@@ -42,8 +42,12 @@ func NewAuthService(users UserStore, jwtSecret string, log *zap.Logger) *AuthSer
 }
 
 // Register creates a new local user and returns the user + signed JWT.
-// If the email belongs to a soft-deleted account, the account is reactivated
-// with the new name and password while preserving first_joined_at and history.
+//
+// A soft-deleted account (legacy rows from before hard delete) is NEVER
+// reactivated: registering only proves knowledge of an email address, not
+// ownership, so reviving the old row would hand its journal history to whoever
+// registers first. The leftover row and all its data are purged and a fresh
+// account is created.
 func (s *AuthService) Register(ctx context.Context, email, name, password string) (*models.User, string, error) {
 	existing, err := s.users.GetByEmailIncDeleted(ctx, email)
 	if err != nil {
@@ -58,13 +62,12 @@ func (s *AuthService) Register(ctx context.Context, email, name, password string
 		return nil, "", err
 	}
 
-	var user *models.User
 	if existing != nil && existing.IsDeleted {
-		// Reactivate the soft-deleted account.
-		user, err = s.users.Reactivate(ctx, existing.ID, name, string(hash))
-	} else {
-		user, err = s.users.CreateLocal(ctx, email, name, string(hash))
+		if err := s.users.PurgeDeleted(ctx, existing.ID); err != nil {
+			return nil, "", err
+		}
 	}
+	user, err := s.users.CreateLocal(ctx, email, name, string(hash))
 	if err != nil {
 		return nil, "", err
 	}

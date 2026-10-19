@@ -89,19 +89,14 @@ func (s *handlerFakeUserStore) ResetLoginAttempts(_ context.Context, email strin
 	return nil
 }
 
-func (s *handlerFakeUserStore) Reactivate(_ context.Context, id uuid.UUID, name, hash string) (*models.User, error) {
-	if s.createErr != nil {
-		return nil, s.createErr
-	}
+func (s *handlerFakeUserStore) PurgeDeleted(_ context.Context, id uuid.UUID) error {
 	for email, u := range s.users {
-		if u.ID == id {
-			u.IsDeleted = false
-			u.Name = name
-			s.hashes[email] = hash
-			return u, nil
+		if u.ID == id && u.IsDeleted {
+			delete(s.users, email)
+			delete(s.hashes, email)
 		}
 	}
-	return nil, nil
+	return nil
 }
 
 // ── Router builder ────────────────────────────────────────────────────────────

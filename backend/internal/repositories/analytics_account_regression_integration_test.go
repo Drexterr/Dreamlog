@@ -309,25 +309,17 @@ func TestIntegration_AnalyticsAccountIdentityAndLifecycle(t *testing.T) {
 	if got, err := r.GetByEmail(ctx, user.Email); err != nil || got != nil {
 		t.Fatalf("deleted account is active: %+v %v", got, err)
 	}
-	deleted, err := r.GetByEmailIncDeleted(ctx, user.Email)
-	if err != nil || !deleted.IsDeleted || deleted.DeletedAt == nil || deleted.ID != user.ID {
-		t.Fatalf("retained deletion: %+v %v", deleted, err)
+	// Account deletion is a hard delete: nothing is retained to be revived.
+	if deleted, err := r.GetByEmailIncDeleted(ctx, user.Email); err != nil || deleted != nil {
+		t.Fatalf("deleted account retained: %+v %v", deleted, err)
 	}
 	if err := r.Delete(ctx, user.ID); err == nil {
 		t.Fatal("duplicate deletion succeeded")
 	}
-	restored, err := r.Reactivate(ctx, user.ID, "Restored", "replacement-hash")
-	if err != nil || restored.IsDeleted || restored.DeletedAt != nil || restored.ReregisteredAt == nil || restored.ReregistrationCount != 1 || restored.Name != "Restored" || !reflect.DeepEqual(restored.FirstJoinedAt, user.FirstJoinedAt) {
-		t.Fatalf("reactivation: %+v %v", restored, err)
-	}
-	if hash, err := r.GetPasswordHash(ctx, user.Email); err != nil || hash != "replacement-hash" {
-		t.Fatalf("replacement hash: %q %v", hash, err)
-	}
-	if err := r.Delete(ctx, user.ID); err != nil {
-		t.Fatal(err)
-	}
-	if got, err := r.Reactivate(ctx, user.ID, "Again", "next-hash"); err != nil || got.ReregistrationCount != 2 {
-		t.Fatalf("second registration: %+v %v", got, err)
+	// Signing back in with the same identity yields a fresh, empty account.
+	fresh, err := r.Upsert(ctx, user.SupabaseID, user.Email, "Fresh")
+	if err != nil || fresh.ID == user.ID || fresh.IsDeleted {
+		t.Fatalf("fresh account after deletion: %+v %v", fresh, err)
 	}
 	missing := uuid.New()
 	for name, call := range map[string]func() (*models.User, error){
@@ -336,7 +328,6 @@ func TestIntegration_AnalyticsAccountIdentityAndLifecycle(t *testing.T) {
 		"email":         func() (*models.User, error) { return r.GetByEmail(ctx, "absent@example.test") },
 		"email deleted": func() (*models.User, error) { return r.GetByEmailIncDeleted(ctx, "absent@example.test") },
 		"rename":        func() (*models.User, error) { return r.UpdateName(ctx, missing, "Missing") },
-		"reactivate":    func() (*models.User, error) { return r.Reactivate(ctx, missing, "Missing", "hash") },
 	} {
 		t.Run("missing "+name, func(t *testing.T) {
 			got, err := call()
@@ -570,7 +561,7 @@ func TestIntegration_AnalyticsAccountCancellation(t *testing.T) {
 		},
 		"preferences":   func() error { _, err := r.UpdatePreferences(ctx, user, "UTC", 8); return err },
 		"plan":          func() error { _, err := r.UpdatePlan(ctx, user, models.PlanPlus, nil); return err },
-		"reactivate":    func() error { _, err := r.Reactivate(ctx, user, "X", "hash"); return err },
+		"purge deleted": func() error { return r.PurgeDeleted(ctx, user) },
 		"hash":          func() error { _, err := r.GetPasswordHash(ctx, "x"); return err },
 		"login lock":    func() error { _, err := r.GetLoginLockedUntil(ctx, "x"); return err },
 		"failed login":  func() error { _, err := r.RecordFailedLogin(ctx, "x", 3, time.Minute); return err },

@@ -47,19 +47,14 @@ func (s *fakeUserStore) GetByEmailIncDeleted(_ context.Context, email string) (*
 	return s.users[email], nil
 }
 
-func (s *fakeUserStore) Reactivate(_ context.Context, id uuid.UUID, name, passwordHash string) (*models.User, error) {
-	if s.createErr != nil {
-		return nil, s.createErr
-	}
+func (s *fakeUserStore) PurgeDeleted(_ context.Context, id uuid.UUID) error {
 	for email, u := range s.users {
-		if u.ID == id {
-			u.IsDeleted = false
-			u.Name = name
-			s.hashes[email] = passwordHash
-			return u, nil
+		if u.ID == id && u.IsDeleted {
+			delete(s.users, email)
+			delete(s.hashes, email)
 		}
 	}
-	return nil, nil
+	return nil
 }
 
 func (s *fakeUserStore) CreateLocal(_ context.Context, email, name, passwordHash string) (*models.User, error) {
@@ -361,5 +356,23 @@ func TestLogin_UnknownEmailNeverAccumulatesLockout(t *testing.T) {
 
 	if _, ok := store.lockedUntil["ghost@test.com"]; ok {
 		t.Error("an unknown email must never accumulate a lockout")
+	}
+}
+
+// C2: registering a soft-deleted account's email must never hand back the old
+// account (its ID, supabase_id and therefore its journal data).
+func TestRegister_SoftDeletedEmail_CreatesFreshAccount(t *testing.T) {
+	store := newFakeUserStore()
+	old := &models.User{ID: uuid.New(), SupabaseID: "supabase-victim", Email: "victim@test.com", Name: "Victim", IsDeleted: true}
+	store.users[old.Email] = old
+	store.hashes[old.Email] = "old-hash"
+	svc := NewAuthService(store, "test-secret-32-bytes-minimum!!!!", nil)
+
+	user, _, err := svc.Register(context.Background(), old.Email, "Attacker", "password123")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if user.ID == old.ID || user.SupabaseID == old.SupabaseID {
+		t.Fatal("register reactivated the deleted account - takeover of its data")
 	}
 }

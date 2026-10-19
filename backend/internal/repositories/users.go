@@ -165,7 +165,28 @@ func (r *UserRepository) GetByID(ctx context.Context, id uuid.UUID) (*models.Use
 }
 
 // Upsert creates or updates a user record (idempotent on supabase_id).
+//
+// A legacy soft-deleted row for this identity is purged first, so a user who
+// deleted their account signs back in to a fresh, empty account - never to
+// their old data.
+//
+// Called on every authenticated request, so the common path is a single read:
+// it only writes when the user is new or their email changed.
 func (r *UserRepository) Upsert(ctx context.Context, supabaseID, email, name string) (*models.User, error) {
+	existing, err := scanUser(r.db.QueryRow(ctx, `SELECT `+userColumns+` FROM users WHERE supabase_id = $1`, supabaseID))
+	switch {
+	case errors.Is(err, pgx.ErrNoRows):
+		// New user - fall through to the insert.
+	case err != nil:
+		return nil, fmt.Errorf("users.Upsert lookup: %w", err)
+	case existing.IsDeleted:
+		if _, err := r.db.Exec(ctx, `DELETE FROM users WHERE id = $1 AND is_deleted = true`, existing.ID); err != nil {
+			return nil, fmt.Errorf("users.Upsert purge deleted: %w", err)
+		}
+	case email == "" || existing.Email == email:
+		return existing, nil
+	}
+
 	q := `
 		INSERT INTO users (supabase_id, email, name)
 		VALUES ($1, $2, $3)
@@ -212,7 +233,7 @@ func (r *UserRepository) GetByEmail(ctx context.Context, email string) (*models.
 }
 
 // GetByEmailIncDeleted fetches a user by email regardless of deletion status.
-// Used during re-registration to detect and reactivate soft-deleted accounts.
+// Used during registration to find (and purge) legacy soft-deleted rows.
 func (r *UserRepository) GetByEmailIncDeleted(ctx context.Context, email string) (*models.User, error) {
 	q := `SELECT ` + userColumns + ` FROM users WHERE email = $1`
 	u, err := scanUser(r.db.QueryRow(ctx, q, email))
@@ -221,30 +242,6 @@ func (r *UserRepository) GetByEmailIncDeleted(ctx context.Context, email string)
 	}
 	if err != nil {
 		return nil, fmt.Errorf("users.GetByEmailIncDeleted: %w", err)
-	}
-	return u, nil
-}
-
-// Reactivate restores a soft-deleted account for the given user ID and updates credentials.
-func (r *UserRepository) Reactivate(ctx context.Context, id uuid.UUID, name, passwordHash string) (*models.User, error) {
-	q := `
-		UPDATE users
-		SET is_deleted           = false,
-		    deleted_at           = NULL,
-		    name                 = $2,
-		    password_hash        = $3,
-		    reregistered_at      = NOW(),
-		    reregistration_count = reregistration_count + 1,
-		    updated_at           = NOW()
-		WHERE id = $1
-		RETURNING ` + userColumns
-
-	u, err := scanUser(r.db.QueryRow(ctx, q, id, name, passwordHash))
-	if errors.Is(err, pgx.ErrNoRows) {
-		return nil, nil
-	}
-	if err != nil {
-		return nil, fmt.Errorf("users.Reactivate: %w", err)
 	}
 	return u, nil
 }
@@ -445,18 +442,28 @@ func (r *UserRepository) UpdatePlan(ctx context.Context, id uuid.UUID, plan mode
 	return u, nil
 }
 
-// Delete soft-deletes the user by setting is_deleted=true and recording deleted_at.
-// Data is retained for audit and re-registration purposes.
+// Delete permanently removes the user. Every user-owned table (entries,
+// analyses, conversations, therapy sessions/messages, people, nudges, devices,
+// share links, therapist links, …) is ON DELETE CASCADE, so one statement
+// erases all journal and therapy content (App Store 5.1.1(v)). Payment rows are
+// kept with user_id NULL (migration 000037) so a store transaction can never be
+// redeemed twice.
 func (r *UserRepository) Delete(ctx context.Context, id uuid.UUID) error {
-	tag, err := r.db.Exec(ctx,
-		`UPDATE users SET is_deleted = true, deleted_at = NOW(), updated_at = NOW() WHERE id = $1 AND is_deleted = false`,
-		id,
-	)
+	tag, err := r.db.Exec(ctx, `DELETE FROM users WHERE id = $1`, id)
 	if err != nil {
 		return fmt.Errorf("users.Delete: %w", err)
 	}
 	if tag.RowsAffected() == 0 {
 		return fmt.Errorf("users.Delete: not found or already deleted")
+	}
+	return nil
+}
+
+// PurgeDeleted hard-deletes a legacy soft-deleted user row (and, via cascade,
+// all of its data). It never touches an active account.
+func (r *UserRepository) PurgeDeleted(ctx context.Context, id uuid.UUID) error {
+	if _, err := r.db.Exec(ctx, `DELETE FROM users WHERE id = $1 AND is_deleted = true`, id); err != nil {
+		return fmt.Errorf("users.PurgeDeleted: %w", err)
 	}
 	return nil
 }

@@ -15,7 +15,7 @@ type UserStore interface {
 	GetByEmailIncDeleted(ctx context.Context, email string) (*models.User, error)
 	CreateLocal(ctx context.Context, email, name, passwordHash string) (*models.User, error)
 	GetPasswordHash(ctx context.Context, email string) (string, error)
-	Reactivate(ctx context.Context, id uuid.UUID, name, passwordHash string) (*models.User, error)
+	PurgeDeleted(ctx context.Context, id uuid.UUID) error
 	GetLoginLockedUntil(ctx context.Context, email string) (*time.Time, error)
 	RecordFailedLogin(ctx context.Context, email string, maxAttempts int, lockDuration time.Duration) (*time.Time, error)
 	ResetLoginAttempts(ctx context.Context, email string) error
