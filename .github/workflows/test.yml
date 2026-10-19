@@ -51,6 +51,14 @@ jobs:
         run: go test -race -tags=integration -coverprofile=coverage.out ./...
         working-directory: backend
 
+      - name: Crisis detection coverage gate (>= 90%, docs/TESTING.md)
+        working-directory: backend
+        run: |
+          pct=$(awk -F'[ :]' '$1 ~ /internal\/services\/crisis\.go$/ { total += $(NF-1); if ($NF > 0) covered += $(NF-1) }
+                END { if (total == 0) print 0; else printf "%.1f", covered * 100 / total }' coverage.out)
+          echo "services/crisis.go statement coverage: ${pct}%"
+          awk -v p="$pct" 'BEGIN { exit !(p >= 90) }' || { echo "::error::crisis.go coverage ${pct}% is below the 90% merge gate"; exit 1; }
+
       - name: Upload backend coverage
         if: always()
         uses: actions/upload-artifact@v4

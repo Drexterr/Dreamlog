@@ -1,17 +1,44 @@
 name: Deploy
 
+# Deploys only run after the Test workflow has PASSED for the same commit on
+# main (workflow_run), never in parallel with it - a red build must not ship.
+#
+# Production runs on Railway (see docs/LAUNCH_CHECKLIST.md), which deploys from
+# GitHub itself. The Fly.io jobs below are kept for an optional Fly target and
+# only run when the repository variable ENABLE_FLY_DEPLOY is 'true'.
+#
+# OTA updates are NOT published automatically on every push: mobile/app.json
+# uses a static runtimeVersion, so an OTA built after a native-module change
+# would reach older binaries that lack the module and crash them. Publish
+# manually (Actions → Deploy → Run workflow → publish_ota) after confirming no
+# native dependency changed since the installed builds - or bump runtimeVersion
+# (app.json + android/app/src/main/res/values/strings.xml) and ship a new build.
+
 on:
-  push:
+  workflow_run:
+    workflows: [Test]
+    types: [completed]
     branches: [main]
+  workflow_dispatch:
+    inputs:
+      publish_ota:
+        description: "Publish an EAS OTA update to the production channel"
+        type: boolean
+        default: false
 
 jobs:
   deploy-api:
     name: Deploy API to Fly.io
+    if: >-
+      vars.ENABLE_FLY_DEPLOY == 'true' &&
+      (github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
 
-      - uses: superfly/flyctl-actions/setup-flyctl@master
+      - uses: superfly/flyctl-actions/setup-flyctl@1.6
 
       - name: Deploy API
         run: flyctl deploy --config fly.api.toml --remote-only
@@ -20,11 +47,16 @@ jobs:
 
   deploy-worker:
     name: Deploy Worker to Fly.io
+    if: >-
+      vars.ENABLE_FLY_DEPLOY == 'true' &&
+      (github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
 
-      - uses: superfly/flyctl-actions/setup-flyctl@master
+      - uses: superfly/flyctl-actions/setup-flyctl@1.6
 
       - name: Deploy Worker
         run: flyctl deploy --config fly.worker.toml --remote-only
@@ -33,6 +65,7 @@ jobs:
 
   update-mobile:
     name: OTA Update Mobile
+    if: github.event_name == 'workflow_dispatch' && inputs.publish_ota
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -44,14 +77,19 @@ jobs:
           cache-dependency-path: mobile/package-lock.json
 
       - name: Install dependencies
-        run: npm ci
+        # --legacy-peer-deps is required (see mobile/CLAUDE.md).
+        run: npm ci --legacy-peer-deps
         working-directory: mobile
 
       - uses: expo/expo-github-action@v8
         with:
-          eas-version: latest
+          eas-version: 25.2.0
           token: ${{ secrets.EXPO_TOKEN }}
 
       - name: Publish OTA update
-        run: eas update --branch production --message "${{ github.event.head_commit.message }}" --non-interactive
+        # The message comes from the commit and is attacker-influenced: pass it
+        # through an env var, never interpolate ${{ }} into the shell script.
+        env:
+          UPDATE_MESSAGE: ${{ github.event.head_commit.message || github.sha }}
+        run: eas update --branch production --message "$UPDATE_MESSAGE" --non-interactive
         working-directory: mobile
