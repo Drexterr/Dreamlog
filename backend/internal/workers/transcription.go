@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"math"
+	"sync"
 	"time"
 
 	"github.com/dreamlog/backend/internal/models"
@@ -13,6 +14,9 @@ import (
 	"github.com/dreamlog/backend/pkg/monitoring"
 	"go.uber.org/zap"
 )
+
+// shutdownGrace bounds how long Run waits for in-flight jobs on shutdown.
+const shutdownGrace = 25 * time.Second
 
 // TranscriptionWorker is the main pipeline worker.
 // Phase 2 pipeline:
@@ -82,10 +86,22 @@ func (w *TranscriptionWorker) Run(ctx context.Context) {
 	)
 
 	sem := make(chan struct{}, w.concurrency)
+	var inflight sync.WaitGroup
 	for {
 		select {
 		case <-ctx.Done():
-			w.log.Info("transcription worker shutting down")
+			w.log.Info("transcription worker shutting down, waiting for in-flight jobs")
+			// In-flight jobs see the cancelled ctx, fail fast and write their
+			// retry/failure status with a detached ctx. Give them a bounded
+			// grace period; anything still stranded is requeued by the
+			// EntryReconciler once it goes stale.
+			done := make(chan struct{})
+			go func() { inflight.Wait(); close(done) }()
+			select {
+			case <-done:
+			case <-time.After(shutdownGrace):
+				w.log.Warn("transcription worker: shutdown grace period elapsed with jobs still running")
+			}
 			return
 		default:
 		}
@@ -101,7 +117,9 @@ func (w *TranscriptionWorker) Run(ctx context.Context) {
 		}
 
 		sem <- struct{}{}
+		inflight.Add(1)
 		go func(p []byte) {
+			defer inflight.Done()
 			defer func() { <-sem }()
 			// Report a job panic to Sentry before it crashes the process.
 			defer monitoring.RecoverRepanic()
@@ -176,6 +194,13 @@ func (w *TranscriptionWorker) handle(ctx context.Context, job *models.Transcript
 		entry, _ := w.entryRepo.GetByIDInternal(ctx, job.EntryID)
 		if entry != nil && entry.Status == models.EntryStatusCompleted {
 			log.Info("worker: entry already completed, skipping")
+			return nil
+		}
+		if entry != nil && entry.Status == models.EntryStatusProcessing {
+			// Another worker owns it (e.g. a duplicate job from the reconciler).
+			// Dropping the duplicate is safe: if that worker dies, the
+			// reconciler requeues the entry once it goes stale.
+			log.Info("worker: entry is being processed by another worker, dropping duplicate job")
 			return nil
 		}
 		return fmt.Errorf("entry not in processable state")

@@ -9,11 +9,13 @@ import (
 	"github.com/redis/go-redis/v9"
 )
 
-// Queue is a reliable job queue backed by two Redis lists:
-//   - main list  (LPUSH / BRPOP)
-//   - processing list (atomic move via BRPOPLPUSH for at-least-once delivery)
+// Queue is a Redis list job queue (LPUSH / BRPOP).
 //
-// On crash recovery, jobs stranded in the processing list can be re-queued.
+// BRPOP removes a job before it is processed, so a job in flight when a worker
+// crashes is lost from Redis. Delivery is made at-least-once by the database
+// instead: workers.EntryReconciler requeues any entry left in pending /
+// processing past a staleness threshold, and the worker drops duplicate jobs
+// for entries another worker already holds.
 type Queue struct {
 	rdb         *redis.Client
 	mainKey     string

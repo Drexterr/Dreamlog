@@ -7,6 +7,8 @@ import (
 
 	"github.com/dreamlog/backend/internal/models"
 	"github.com/dreamlog/backend/internal/repositories"
+	"github.com/dreamlog/backend/pkg/apierr"
+	"github.com/dreamlog/backend/pkg/monitoring"
 	"github.com/dreamlog/backend/pkg/queue"
 	"github.com/google/uuid"
 )
@@ -43,7 +45,7 @@ func (s *EntryService) PresignUpload(ctx context.Context, userID uuid.UUID) (*mo
 func (s *EntryService) Create(ctx context.Context, userID uuid.UUID, input *models.CreateEntryInput, userCountry string) (*models.Entry, error) {
 	// Validate max duration.
 	if input.DurationSec > models.MaxRecordingSeconds {
-		return nil, fmt.Errorf("entryService.Create: recording exceeds 30-minute limit")
+		return nil, apierr.BadRequest("recording exceeds 30-minute limit")
 	}
 
 	// Enforce audio_key ownership: the key must live under this user's prefix
@@ -51,7 +53,7 @@ func (s *EntryService) Create(ctx context.Context, userID uuid.UUID, input *mode
 	// this check a client could point an entry at another user's audio key and
 	// have its transcript stored under their account.
 	if !strings.HasPrefix(input.AudioKey, fmt.Sprintf("audio/%s/", userID)) {
-		return nil, fmt.Errorf("entryService.Create: audio_key does not belong to user")
+		return nil, apierr.BadRequest("audio_key does not belong to user")
 	}
 
 	// Verify the client actually uploaded before we create a DB row.
@@ -60,7 +62,7 @@ func (s *EntryService) Create(ctx context.Context, userID uuid.UUID, input *mode
 		return nil, fmt.Errorf("entryService.Create: storage check: %w", err)
 	}
 	if !exists {
-		return nil, fmt.Errorf("entryService.Create: audio file not found in storage: %s", input.AudioKey)
+		return nil, apierr.BadRequest("audio file not found in storage - upload it before creating the entry")
 	}
 
 	// Persist the entry.
@@ -78,10 +80,12 @@ func (s *EntryService) Create(ctx context.Context, userID uuid.UUID, input *mode
 		Attempt:     0,
 	}
 	if err := s.queue.Enqueue(ctx, job); err != nil {
-		// Entry is created but not queued - the worker can recover these via a reconciler (Phase 2).
-		// Log the error and return the entry so the client knows the upload succeeded.
-		// Do not roll back: the entry row is the source of truth.
-		return entry, fmt.Errorf("entryService.Create: enqueue (entry created, will retry): %w", err)
+		// The entry row is the source of truth and the upload succeeded, so
+		// this is still a success for the client: workers.EntryReconciler
+		// requeues entries left pending. Returning an error here made clients
+		// re-record and created duplicate entries.
+		monitoring.CaptureErr(err, map[string]string{"component": "entry_enqueue", "entry_id": entry.ID.String()})
+		return entry, nil
 	}
 
 	return entry, nil

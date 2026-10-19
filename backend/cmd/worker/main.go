@@ -193,6 +193,7 @@ func main() {
 	runReported(weeklyReviewScheduler.Run)
 	runReported(yearInReviewScheduler.Run)
 	runReported(noteOCRWorker.Run)
+	runReported(workers.NewEntryReconciler(entryRepo, jobQueue, cfg.Worker.MaxRetries, log).Run)
 
 	log.Info("starting transcription worker")
 	worker.Run(ctx)

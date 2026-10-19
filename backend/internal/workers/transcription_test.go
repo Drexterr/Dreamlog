@@ -66,7 +66,8 @@ func (s *fakeEntryStore) SetProcessing(_ context.Context, id uuid.UUID) (bool, e
 	if s.entry == nil || s.entry.ID != id {
 		return false, nil
 	}
-	if s.entry.Status == models.EntryStatusCompleted {
+	// Mirrors the real query: only 'pending' or 'failed' entries can be claimed.
+	if s.entry.Status != models.EntryStatusPending && s.entry.Status != models.EntryStatusFailed {
 		return false, nil
 	}
 	s.entry.Status = models.EntryStatusProcessing
