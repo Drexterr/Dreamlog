@@ -1,5 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { enqueue, flush, getQueue, removeItem } from '../offlineQueue';
+import { discardItem, enqueue, flush, getFailedItems, getQueue, removeItem, retryItem } from '../offlineQueue';
 import { uploadRecording } from '../upload';
 
 jest.mock('../upload', () => ({ uploadRecording: jest.fn() }));
@@ -74,5 +74,29 @@ describe('offline recordings', () => {
     await enqueue(item());
     upload.mockImplementationOnce(async () => { await removeItem('a'); throw new Error('offline'); });
     await flush(); expect(await getQueue()).toEqual([]);
+  });
+  // M7: recordings are never dropped silently.
+  it('keeps an item as failed after max attempts instead of dropping it', async () => {
+    await enqueue(item()); upload.mockRejectedValue(new Error('offline'));
+    for (let i = 0; i < 5; i++) await flush();
+    const [q] = await getQueue();
+    expect(q).toEqual(expect.objectContaining({ id: 'a', failed: true, attempts: 5 }));
+    expect(await getFailedItems()).toHaveLength(1);
+    upload.mockClear(); await flush();
+    expect(upload).not.toHaveBeenCalled();
+  });
+  it('marks a permanent 4xx failure (quota) as failed immediately', async () => {
+    await enqueue(item());
+    upload.mockRejectedValue(Object.assign(new Error('quota'), { response: { status: 409 } }));
+    await flush();
+    expect((await getQueue())[0]).toEqual(expect.objectContaining({ failed: true, attempts: 1, lastError: 'quota' }));
+  });
+  it('retries a failed item when the user asks, and discards on request', async () => {
+    await enqueue(item('a')); await enqueue(item('b'));
+    upload.mockRejectedValue(Object.assign(new Error('quota'), { response: { status: 409 } }));
+    await flush();
+    upload.mockResolvedValue({ entry: { id: 'entry' } });
+    await retryItem('a'); await discardItem('b'); await flush();
+    expect(await getQueue()).toEqual([]);
   });
 });

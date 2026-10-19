@@ -348,6 +348,10 @@ export interface OfflineQueueItem {
   createdAt: string;
   attempts: number;
   mode?: EntryMode; // entry mode at record time; defaults to 'processing' when absent
+  // Stopped auto-retrying (permanent error or too many attempts) - kept until
+  // the user retries or discards it, never dropped silently.
+  failed?: boolean;
+  lastError?: string;
 }
 
 // ── Phase 6 + 8: Therapy Mode ─────────────────────────────────────────────────

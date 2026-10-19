@@ -1,6 +1,6 @@
 import 'react-native-gesture-handler';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { View } from 'react-native';
+import { Alert, View } from 'react-native';
 import { Stack, SplashScreen, useRouter, useSegments } from 'expo-router';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import * as Sentry from '@sentry/react-native';
@@ -37,7 +37,12 @@ import { GuidedTourProvider } from '../src/context/GuidedTourContext';
 import GuidedTour from '../src/components/GuidedTour';
 import { detectAndCacheRegion, setRegionFromCountry } from '../src/services/region';
 import { resolvePostAuthRoute } from '../src/services/postAuthRoute';
-import { flush as flushOfflineQueue } from '../src/services/offlineQueue';
+import {
+  flush as flushOfflineQueue,
+  getFailedItems as getFailedRecordings,
+  retryItem as retryRecording,
+  discardItem as discardRecording,
+} from '../src/services/offlineQueue';
 import { registerForPushNotifications } from '../src/services/push';
 import { recoverUnfinishedPurchases } from '../src/services/iap';
 import { setupQuickActions } from '../src/services/quickActions';
@@ -252,8 +257,28 @@ function RootLayout() {
   // Flush offline queue on reconnect
   useEffect(() => {
     if (!ready || !hasToken) return;
+    // Recordings that stopped auto-retrying are surfaced (once per app run per
+    // recording) so the user decides - they are never dropped silently.
+    const prompted = new Set<string>();
     const unsubscribe = NetInfo.addEventListener((state) => {
-      if (state.isConnected) flushOfflineQueue();
+      if (!state.isConnected) return;
+      flushOfflineQueue()
+        .then(() => getFailedRecordings())
+        .then((failed) => {
+          const item = failed.find((i) => !prompted.has(i.id));
+          if (!item) return;
+          prompted.add(item.id);
+          Alert.alert(
+            'A recording could not be saved',
+            `Your recording from ${new Date(item.createdAt).toLocaleString()} hasn't been uploaded${item.lastError ? ` (${item.lastError})` : ''}. It's still on this device.`,
+            [
+              { text: 'Later', style: 'cancel' },
+              { text: 'Discard', style: 'destructive', onPress: () => { discardRecording(item.id); } },
+              { text: 'Try again', onPress: () => { retryRecording(item.id).then(() => flushOfflineQueue()); } },
+            ],
+          );
+        })
+        .catch(() => {});
     });
     return () => unsubscribe();
   }, [ready, hasToken]);
