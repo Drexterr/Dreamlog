@@ -39,6 +39,11 @@ export async function uploadRecording(
   const sizeBytes = file.size ?? 0;
 
   let lastError: Error | null = null;
+  // Set once the audio is safely in storage. Retries then only re-run the step
+  // that failed, with the SAME key: re-presigning would orphan the first object
+  // (never deleted - ADR-005) and could create a duplicate entry. The backend
+  // treats POST /entries as idempotent per audio_key.
+  let uploadedKey: string | null = null;
 
   for (let attempt = 0; attempt < MAX_UPLOAD_ATTEMPTS; attempt++) {
     if (attempt > 0) {
@@ -47,30 +52,33 @@ export async function uploadRecording(
     }
 
     try {
-      // Step 1: Get upload URL from backend.
-      onProgress?.({ phase: 'presigning' });
-      const { upload_url, audio_key } = await api.presign();
+      if (!uploadedKey) {
+        // Step 1: Get upload URL from backend.
+        onProgress?.({ phase: 'presigning' });
+        const { upload_url, audio_key } = await api.presign();
 
-      // Step 2: Upload via native HTTP (bypasses whatwg-fetch polyfill which
-      // doesn't handle binary bodies correctly in React Native).
-      onProgress?.({ phase: 'uploading', uploadedBytes: 0, totalBytes: sizeBytes });
+        // Step 2: Upload via native HTTP (bypasses whatwg-fetch polyfill which
+        // doesn't handle binary bodies correctly in React Native).
+        onProgress?.({ phase: 'uploading', uploadedBytes: 0, totalBytes: sizeBytes });
 
-      const uploadResult = await FileSystem.uploadAsync(upload_url, localUri, {
-        httpMethod: 'PUT',
-        uploadType: FileSystem.FileSystemUploadType.BINARY_CONTENT,
-        headers: { 'Content-Type': 'audio/mp4' },
-      });
+        const uploadResult = await FileSystem.uploadAsync(upload_url, localUri, {
+          httpMethod: 'PUT',
+          uploadType: FileSystem.FileSystemUploadType.BINARY_CONTENT,
+          headers: { 'Content-Type': 'audio/mp4' },
+        });
 
-      if (uploadResult.status < 200 || uploadResult.status >= 300) {
-        throw new Error(`Storage upload failed with status ${uploadResult.status}: ${uploadResult.body}`);
+        if (uploadResult.status < 200 || uploadResult.status >= 300) {
+          throw new Error(`Storage upload failed with status ${uploadResult.status}: ${uploadResult.body}`);
+        }
+
+        onProgress?.({ phase: 'uploading', uploadedBytes: sizeBytes, totalBytes: sizeBytes });
+        uploadedKey = audio_key;
       }
-
-      onProgress?.({ phase: 'uploading', uploadedBytes: sizeBytes, totalBytes: sizeBytes });
 
       // Step 3: Notify backend - creates DB row + queues transcription job.
       onProgress?.({ phase: 'registering' });
       const entry = await api.createEntry({
-        audio_key,
+        audio_key: uploadedKey,
         audio_size_bytes: sizeBytes,
         duration_sec: durationSec,
         mode,

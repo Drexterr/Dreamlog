@@ -56,6 +56,14 @@ func (s *EntryService) Create(ctx context.Context, userID uuid.UUID, input *mode
 		return nil, apierr.BadRequest("audio_key does not belong to user")
 	}
 
+	// Idempotent per audio_key: a client retrying registration after a
+	// timeout gets the entry it already created, never a duplicate.
+	if existing, err := s.repo.GetByAudioKey(ctx, userID, input.AudioKey); err != nil {
+		return nil, fmt.Errorf("entryService.Create: lookup: %w", err)
+	} else if existing != nil {
+		return existing, nil
+	}
+
 	// Verify the client actually uploaded before we create a DB row.
 	exists, err := s.storage.Exists(ctx, input.AudioKey)
 	if err != nil {

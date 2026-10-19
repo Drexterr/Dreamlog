@@ -38,6 +38,14 @@ describe('recording upload', () => {
     await jest.runAllTimersAsync(); await expect(result).resolves.toEqual({ entry: { id: 'entry' } });
     expect(put).toHaveBeenCalledTimes(2); expect(register).toHaveBeenCalledTimes(1);
   });
+  it('retries only registration, with the same key, once the audio is uploaded', async () => {
+    register.mockRejectedValueOnce(Object.assign(new Error('timeout'), { response: { status: 503 } }));
+    const result = uploadRecording('clip.m4a', 3);
+    await jest.runAllTimersAsync(); await expect(result).resolves.toEqual({ entry: { id: 'entry' } });
+    expect(presign).toHaveBeenCalledTimes(1); expect(put).toHaveBeenCalledTimes(1);
+    expect(register).toHaveBeenCalledTimes(2);
+    expect(register.mock.calls.every(([body]) => body.audio_key === 'owned/clip')).toBe(true);
+  });
   it('does not retry API validation failure', async () => {
     presign.mockRejectedValue(Object.assign(new Error('invalid request'), { response: { status: 400 } }));
     await expect(uploadRecording('clip.m4a', 3)).rejects.toThrow('invalid request'); expect(presign).toHaveBeenCalledTimes(1);

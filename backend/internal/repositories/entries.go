@@ -66,6 +66,32 @@ func (r *EntryRepository) GetByID(ctx context.Context, id, userID uuid.UUID) (*m
 	return e, nil
 }
 
+// GetByAudioKey returns the user's entry for an audio key, or nil. Used to make
+// POST /entries idempotent when a client retries registration.
+func (r *EntryRepository) GetByAudioKey(ctx context.Context, userID uuid.UUID, audioKey string) (*models.Entry, error) {
+	const q = `
+		SELECT id, user_id, audio_key, audio_size_bytes, duration_sec,
+		       status, mode, transcript, language, error_msg, retry_count, created_at, updated_at
+		FROM entries
+		WHERE user_id = $1 AND audio_key = $2
+		ORDER BY created_at
+		LIMIT 1`
+
+	e := &models.Entry{}
+	err := r.db.QueryRow(ctx, q, userID, audioKey).Scan(
+		&e.ID, &e.UserID, &e.AudioKey, &e.AudioSizeBytes, &e.DurationSec,
+		&e.Status, &e.Mode, &e.Transcript, &e.Language, &e.ErrorMsg, &e.RetryCount,
+		&e.CreatedAt, &e.UpdatedAt,
+	)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, fmt.Errorf("entries.GetByAudioKey: %w", err)
+	}
+	return e, nil
+}
+
 // GetByIDInternal bypasses user ownership - used by background worker.
 func (r *EntryRepository) GetByIDInternal(ctx context.Context, id uuid.UUID) (*models.Entry, error) {
 	const q = `
