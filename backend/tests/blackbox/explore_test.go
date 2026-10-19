@@ -301,22 +301,28 @@ func TestBlackboxExploreB2B(t *testing.T) {
 	exploreEqual(t, joined, "role", "member")
 	h.request(t, "b2b_member_dashboard_denied", "GET", path+"/mood", "", h.other, 403)
 	at := time.Now().UTC().AddDate(0, 0, -1)
+	// Only entries made after joining count (C3): backdate membership so the
+	// fixtures from yesterday are in scope.
+	exploreSeed(t, h, `UPDATE company_members SET joined_at = NOW() - INTERVAL '7 days' WHERE company_id = $1`, company)
 	exploreEntry(t, h, h.ownerID, at, 60, false)
 	exploreEntry(t, h, h.otherID, at, 80, false)
 	exploreEntry(t, h, h.ownerID, at, 1, true)
 	summary := h.request(t, "b2b_admin_dashboard_aggregate", "GET", path+"/mood?range=30d", "", h.owner, 200)
 	exploreEqual(t, summary, "total_members", float64(2))
-	exploreEqual(t, summary, "avg_mood", float64(70))
+	// k-anonymity (C3): a 2-person day is below the 5-member floor, so no mood
+	// is exposed - per day or in the window aggregates - and no alert fires.
+	exploreEqual(t, summary, "avg_mood", nil)
 	exploreEqual(t, summary, "is_alerted", false)
 	days := exploreRows(t, summary, "days", 1)
 	exploreEqual(t, days[0], "active_members", float64(2))
-	exploreEqual(t, days[0], "entry_count", float64(2))
+	exploreEqual(t, days[0], "avg_mood", nil)
+	exploreEqual(t, days[0], "entry_count", float64(0))
 	for _, key := range []string{"user_id", "email", "name", "transcript", "summary"} {
 		if _, ok := days[0][key]; ok {
 			t.Errorf("anonymized team day leaked %s", key)
 		}
 	}
-	exploreEqual(t, h.request(t, "b2b_admin_dashboard_90d", "GET", path+"/mood?range=90d", "", h.owner, 200), "avg_mood", float64(70))
+	exploreEqual(t, h.request(t, "b2b_admin_dashboard_90d", "GET", path+"/mood?range=90d", "", h.owner, 200), "avg_mood", nil)
 	h.request(t, "b2b_join_full_company", "POST", "/b2b/companies/explore-foreign/join", `{}`, h.owner, 409)
 	h.request(t, "b2b_unknown_company", "POST", "/b2b/companies/explore-missing/join", `{}`, h.other, 404)
 	h.request(t, "b2b_other_company_admin_denied", "GET", "/b2b/companies/explore-foreign/mood", "", h.owner, 403)

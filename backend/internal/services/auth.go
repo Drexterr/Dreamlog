@@ -139,6 +139,7 @@ func (s *AuthService) Login(ctx context.Context, email, password string) (*model
 func (s *AuthService) mintJWT(user *models.User) (string, error) {
 	claims := jwt.MapClaims{
 		"sub":   user.SupabaseID,
+		"aud":   "authenticated", // same audience as Supabase tokens; required by the auth middleware
 		"email": user.Email,
 		// Short-lived: the therapist portal keeps this in a JS-readable cookie
 		// (static export, no HttpOnly), so an XSS-stolen token must expire fast.

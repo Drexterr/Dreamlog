@@ -173,3 +173,19 @@ func TestBcrypt_EmptyPasswordFails(t *testing.T) {
 		t.Error("empty password must fail bcrypt comparison")
 	}
 }
+
+// Locally minted tokens must satisfy the auth middleware's claim rules
+// (exp + aud=authenticated) - otherwise every portal login is rejected.
+func TestMintJWT_HasAudienceAndExpiry(t *testing.T) {
+	svc := &AuthService{jwtSecret: "test-secret-32-bytes-minimum!!!"}
+	tokenStr, err := svc.mintJWT(&models.User{SupabaseID: "sub", Email: "e@e.com"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, err = jwt.Parse(tokenStr, func(*jwt.Token) (interface{}, error) {
+		return []byte("test-secret-32-bytes-minimum!!!"), nil
+	}, jwt.WithValidMethods([]string{"HS256"}), jwt.WithExpirationRequired(), jwt.WithAudience("authenticated"))
+	if err != nil {
+		t.Fatalf("minted token must pass exp+aud validation: %v", err)
+	}
+}

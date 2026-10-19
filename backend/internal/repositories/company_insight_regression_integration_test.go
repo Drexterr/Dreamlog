@@ -28,12 +28,21 @@ func TestIntegration_CompanyMembershipAndAggregates(t *testing.T) {
 		t.Fatalf("missing: %+v %v", got, err)
 	}
 	for _, user := range []uuid.UUID{owner, other, owner} {
-		if err := r.JoinCompany(ctx, company, user); err != nil {
+		if joined, err := r.JoinCompany(ctx, company, user, 50); err != nil || !joined {
 			t.Fatal(err)
 		}
 	}
 	if count, err := r.TotalMembers(ctx, company); err != nil || count != 2 {
 		t.Fatalf("idempotent membership: %d %v", count, err)
+	}
+	// M12: the seat limit is enforced inside the join.
+	if joined, err := r.JoinCompany(ctx, company, outsider, 2); err != nil || joined {
+		t.Fatalf("join over seat limit: joined=%v err=%v", joined, err)
+	}
+	// C3: only entries made after joining count - backdate membership so the
+	// April fixtures below are in scope.
+	if _, err := db.Exec(ctx, `UPDATE company_members SET joined_at = '2026-01-01' WHERE company_id = $1`, company); err != nil {
+		t.Fatal(err)
 	}
 	member, err := r.IsMember(ctx, company, owner)
 	if err != nil || member == nil || member.UserID != owner || member.CompanyID != company || member.Role != "member" {
@@ -49,13 +58,13 @@ func TestIntegration_CompanyMembershipAndAggregates(t *testing.T) {
 	exportRegressionEntry(t, db, owner, since.Add(2*time.Hour), 100, true, "crisis", `[]`, []string{})
 	exportRegressionEntry(t, db, owner, since.Add(24*time.Hour), 100, false, "end excluded", `[]`, []string{})
 	days, err := r.TeamMoodHistory(ctx, company, since, since.Add(24*time.Hour))
-	if err != nil || len(days) != 1 || days[0].Day != "2026-04-10" || days[0].AvgMood != 60 || days[0].ActiveMembers != 2 || days[0].EntryCount != 2 {
+	if err != nil || len(days) != 1 || days[0].Day != "2026-04-10" || days[0].AvgMood == nil || *days[0].AvgMood != 60 || days[0].ActiveMembers != 2 || days[0].EntryCount != 2 {
 		t.Fatalf("team aggregate: %+v %v", days, err)
 	}
 	if days, err := r.TeamMoodHistory(ctx, uuid.New(), since, since.Add(24*time.Hour)); err != nil || len(days) != 0 {
 		t.Fatalf("other company: %+v %v", days, err)
 	}
-	if err := r.JoinCompany(ctx, uuid.New(), owner); err == nil {
+	if _, err := r.JoinCompany(ctx, uuid.New(), owner, 50); err == nil {
 		t.Fatal("missing company accepted")
 	}
 	canceled, cancel := context.WithCancel(ctx)
@@ -72,7 +81,7 @@ func TestIntegration_CompanyMembershipAndAggregates(t *testing.T) {
 	if _, err := r.TeamMoodHistory(canceled, company, since, since.Add(time.Hour)); !errors.Is(err, context.Canceled) {
 		t.Fatalf("history cancel: %v", err)
 	}
-	if err := r.JoinCompany(canceled, company, owner); !errors.Is(err, context.Canceled) {
+	if _, err := r.JoinCompany(canceled, company, owner, 50); !errors.Is(err, context.Canceled) {
 		t.Fatalf("join cancel: %v", err)
 	}
 }
