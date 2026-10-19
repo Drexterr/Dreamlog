@@ -73,11 +73,12 @@ func (f *fakeTherapyServicer) ListSessions(_ context.Context, _ uuid.UUID) (*mod
 
 type fakeTherapyPresigner struct{ err error }
 
-func (f *fakeTherapyPresigner) PresignPut(_ context.Context, key, _ string, _ time.Duration) (string, string, error) {
+func (f *fakeTherapyPresigner) PresignTherapyPut(_ context.Context, userID, sessionID uuid.UUID, key, _ string, _ time.Duration) (string, string, error) {
 	if f.err != nil {
 		return "", "", f.err
 	}
-	return "https://storage.test/upload/" + key, "therapy/" + key, nil
+	full := services.TherapyAudioPrefix(userID, sessionID) + key
+	return "https://storage.test/upload/" + full, full, nil
 }
 
 type fakeTherapyUserGetter struct{ user *models.User }

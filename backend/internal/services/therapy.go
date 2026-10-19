@@ -151,7 +151,9 @@ func (s *TherapyService) SendMessage(ctx context.Context, sessionID, userID uuid
 		// generates. Prevents a client from pointing a turn at another user's
 		// audio object (e.g. an audio/{victim}/... journal key) to have it
 		// transcribed and echoed back inside their own session.
-		if !strings.HasPrefix(req.AudioKey, "therapy/") {
+		// The key must also belong to THIS user and session: a leaked key from
+		// another account is neither transcribed nor deleted.
+		if !strings.HasPrefix(req.AudioKey, TherapyAudioPrefix(userID, session.ID)) {
 			return nil, errTherapyInvalidAudioKey
 		}
 		transcribed, language, transcribeErr := s.transcribeAudio(ctx, req.AudioKey)

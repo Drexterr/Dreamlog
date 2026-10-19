@@ -262,3 +262,21 @@ func TestHook_Checkin_ServiceError_Returns500(t *testing.T) {
 		t.Errorf("service error: want 500, got %d", w.Code)
 	}
 }
+
+// L3: no scheduled "check in" push for a crisis entry.
+func TestHook_Checkin_CrisisEntry_Returns409(t *testing.T) {
+	user := hookTestUser()
+	entry := completedEntry(user.ID)
+	analysis := &models.EntryAnalysis{EntryID: entry.ID, IsCrisis: true}
+	nudger := &fakeCheckinNudger{scheduledAt: time.Now().Add(20 * time.Hour)}
+	h := NewHookHandler(&fakeEntryGetter{entry: entry}, &fakeAnalysisGetter{analysis: analysis}, &fakeFlashbackQuerier{}, nudger)
+	r := newHookTestRouter(t, h, user)
+
+	w := doHookRequest(t, r, http.MethodPost, "/entries/"+entry.ID.String()+"/checkin")
+	if w.Code != http.StatusConflict {
+		t.Fatalf("crisis entry check-in: want 409, got %d", w.Code)
+	}
+	if nudger.gotMessage != "" {
+		t.Error("no nudge may be scheduled for a crisis entry")
+	}
+}

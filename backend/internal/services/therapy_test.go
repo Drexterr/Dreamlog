@@ -467,15 +467,16 @@ func TestTherapy_AudioDeletedAfterTranscription(t *testing.T) {
 	userID := uuid.New()
 	session := startSession(t, svc, userID)
 
+	key := TherapyAudioPrefix(userID, session.ID) + "voice.aac"
 	_, _ = svc.SendMessage(context.Background(), session.ID, userID, models.SendTherapyMessageRequest{
-		AudioKey:  "therapy/abc/voice.aac",
+		AudioKey:  key,
 		InputMode: "voice",
 	})
 
 	if len(storage.deleteCalledWith) == 0 {
 		t.Fatal("audio must be deleted from storage even when transcription fails")
 	}
-	if storage.deleteCalledWith[0] != "therapy/abc/voice.aac" {
+	if storage.deleteCalledWith[0] != key {
 		t.Errorf("wrong key deleted: %s", storage.deleteCalledWith[0])
 	}
 }
@@ -1042,5 +1043,29 @@ func TestTherapy_StartSession_SnapshotsUserName(t *testing.T) {
 	}
 	if repo.sessions[s.ID].ContextSnapshot.UserName != "Asha" {
 		t.Errorf("snapshot user name: want Asha, got %q", repo.sessions[s.ID].ContextSnapshot.UserName)
+	}
+}
+
+// M13: another user's (or another session's) therapy key is refused and never
+// transcribed or deleted.
+func TestTherapy_ForeignAudioKey_Rejected(t *testing.T) {
+	repo := newFakeTherapyRepo()
+	storage := &fakeTherapyStorage{}
+	svc := NewTherapyService(repo, &fakeTherapyAnalysisRepo{}, nil,
+		NewClaudeService(&appconfig.AnthropicConfig{StubAnalysis: true, Model: "stub"}),
+		NewTranscriptionService(&appconfig.OpenAIConfig{BaseURL: "http://localhost:0", APIKey: "test"}),
+		storage, NewCrisisDetector(nil, nil), nil, true, nil)
+	userID := uuid.New()
+	session := startSession(t, svc, userID)
+
+	foreign := TherapyAudioPrefix(uuid.New(), session.ID) + "voice.aac"
+	_, err := svc.SendMessage(context.Background(), session.ID, userID, models.SendTherapyMessageRequest{
+		AudioKey: foreign, InputMode: "voice",
+	})
+	if !errors.Is(err, errTherapyInvalidAudioKey) {
+		t.Fatalf("want errTherapyInvalidAudioKey, got %v", err)
+	}
+	if len(storage.deleteCalledWith) != 0 {
+		t.Error("a foreign key must never be deleted")
 	}
 }

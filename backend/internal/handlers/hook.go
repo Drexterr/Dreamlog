@@ -106,6 +106,13 @@ func (h *HookHandler) CreateCheckin(c *gin.Context) {
 		c.Error(err)
 		return
 	}
+	// A generic "checking in" push about an entry whose reflection was a
+	// crisis-resource message is not appropriate - crisis follow-up is the
+	// in-app resources path, not a scheduled nudge.
+	if analysis != nil && analysis.IsCrisis {
+		c.Error(apierr.Conflict("check-ins are not available for this entry"))
+		return
+	}
 
 	scheduledAt, err := h.nudges.ScheduleCheckinNudge(c.Request.Context(), userID, entryID, services.CheckinMessage(analysis))
 	if err != nil {

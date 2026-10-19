@@ -112,7 +112,9 @@ func (h *EntryHandler) Get(c *gin.Context) {
 // directly to MinIO. Used when MinIO isn't reachable from the device (e.g. Windows dev).
 func (h *EntryHandler) UploadProxy(c *gin.Context) {
 	key := c.Query("key")
-	if key == "" || !strings.HasPrefix(key, "audio/") {
+	// Dev-only proxy (refused in production): accepts the same prefixes our
+	// presigns generate, so voice therapy works in this setup too.
+	if key == "" || (!strings.HasPrefix(key, "audio/") && !strings.HasPrefix(key, "therapy/")) || strings.Contains(key, "..") {
 		c.JSON(http.StatusBadRequest, gin.H{"message": "invalid key"})
 		return
 	}

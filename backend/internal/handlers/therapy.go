@@ -26,7 +26,7 @@ type therapyServicer interface {
 // therapyPresigner generates pre-signed PUT URLs for voice turns.
 // Satisfied by *services.StorageService in production.
 type therapyPresigner interface {
-	PresignPut(ctx context.Context, key string, contentType string, expiry time.Duration) (string, string, error)
+	PresignTherapyPut(ctx context.Context, userID, sessionID uuid.UUID, filename, contentType string, expiry time.Duration) (string, string, error)
 }
 
 type TherapyHandler struct {
@@ -122,7 +122,7 @@ func (h *TherapyHandler) PresignAudio(c *gin.Context) {
 		return
 	}
 
-	uploadURL, audioKey, err := h.storage.PresignPut(c.Request.Context(), req.Filename, req.ContentType, 15*time.Minute)
+	uploadURL, audioKey, err := h.storage.PresignTherapyPut(c.Request.Context(), userID, sessionID, req.Filename, req.ContentType, 15*time.Minute)
 	if err != nil {
 		c.Error(apierr.Internal("could not generate upload URL"))
 		return

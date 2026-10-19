@@ -121,6 +121,29 @@ func (s *StorageService) PresignPut(ctx context.Context, filename, contentType s
 	return uploadURL, audioKey, nil
 }
 
+// PresignTherapyPut presigns a therapy voice upload under
+// therapy/{userID}/{sessionID}/{uuid}-{filename}. Binding the key to the
+// user and session lets SendMessage refuse (and never transcribe or delete)
+// a key that belongs to someone else.
+func (s *StorageService) PresignTherapyPut(ctx context.Context, userID, sessionID uuid.UUID, filename, contentType string, expiry time.Duration) (uploadURL, audioKey string, err error) {
+	audioKey = TherapyAudioPrefix(userID, sessionID) + uuid.New().String() + "-" + sanitizeFilename(filename)
+
+	if s.cfg.ProxyBaseURL != "" {
+		return s.cfg.ProxyBaseURL + "/upload?key=" + url.QueryEscape(audioKey), audioKey, nil
+	}
+
+	uploadURL, err = s.client.PresignUpload(ctx, audioKey)
+	if err != nil {
+		return "", "", fmt.Errorf("storage: presign therapy put: %w", err)
+	}
+	return uploadURL, audioKey, nil
+}
+
+// TherapyAudioPrefix is the key prefix for one session's voice uploads.
+func TherapyAudioPrefix(userID, sessionID uuid.UUID) string {
+	return fmt.Sprintf("therapy/%s/%s/", userID, sessionID)
+}
+
 // PresignPutKey presigns a PUT for an exact, server-generated object key
 // (no sanitisation - the caller owns the key format). Used for therapist
 // note photos where the key encodes the owning therapist's ID.

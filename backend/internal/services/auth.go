@@ -3,10 +3,12 @@ package services
 import (
 	"context"
 	"errors"
+	"sync"
 	"time"
 
 	"github.com/dreamlog/backend/internal/models"
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/google/uuid"
 	"go.uber.org/zap"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -104,6 +106,11 @@ func (s *AuthService) Login(ctx context.Context, email, password string) (*model
 		return nil, "", err
 	}
 
+	if user == nil || hash == "" {
+		// Spend the same bcrypt time as a real check so response latency
+		// doesn't reveal whether the email has an account.
+		_ = bcrypt.CompareHashAndPassword(dummyPasswordHash(), []byte(password))
+	}
 	if user == nil || hash == "" || bcrypt.CompareHashAndPassword([]byte(hash), []byte(password)) != nil {
 		// Only a real account accumulates a lockout counter - an unknown
 		// email is a no-op write (WHERE matches no row), so this can't be
@@ -138,4 +145,18 @@ func (s *AuthService) mintJWT(user *models.User) (string, error) {
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	return token.SignedString([]byte(s.jwtSecret))
+}
+
+var (
+	dummyHashOnce sync.Once
+	dummyHash     []byte
+)
+
+// dummyPasswordHash is a bcrypt hash (DefaultCost) of a random value, used to
+// equalize login timing for unknown emails.
+func dummyPasswordHash() []byte {
+	dummyHashOnce.Do(func() {
+		dummyHash, _ = bcrypt.GenerateFromPassword([]byte(uuid.NewString()), bcrypt.DefaultCost)
+	})
+	return dummyHash
 }
