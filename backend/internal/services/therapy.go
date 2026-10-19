@@ -97,9 +97,9 @@ func NewTherapyService(
 // StartSession creates a new therapy session for the user.
 // Billing logic:
 //   - First session ever → free (acquisition hook)
-//   - Pro plan → up to 2 sessions/month free
+//   - Pro plan → 1 session/month included (models constant; see docs/PRICING.md)
 //   - Otherwise → ₹499 (stub in dev: allow with billing_amount_paise set)
-func (s *TherapyService) StartSession(ctx context.Context, userID uuid.UUID, userPlan models.Plan, persona models.TherapyPersona, userCountry, userVoiceLanguage string) (*models.TherapySession, error) {
+func (s *TherapyService) StartSession(ctx context.Context, userID uuid.UUID, userPlan models.Plan, persona models.TherapyPersona, userCountry, userVoiceLanguage, userName string) (*models.TherapySession, error) {
 	billingPaise, err := s.computeBilling(ctx, userID, userPlan)
 	if err != nil {
 		return nil, err
@@ -112,6 +112,7 @@ func (s *TherapyService) StartSession(ctx context.Context, userID uuid.UUID, use
 	}
 	snapshot.Country = userCountry
 	snapshot.VoiceLanguage = userVoiceLanguage
+	snapshot.UserName = userName
 
 	session, err := s.repo.Create(ctx, userID, persona, snapshot, billingPaise)
 	if err != nil {
@@ -195,7 +196,7 @@ func (s *TherapyService) SendMessage(ctx context.Context, sessionID, userID uuid
 	timeRem := int(math.Max(0, time.Until(session.ExpiresAt).Seconds()))
 	windDown := buildWindDownInstruction(timeRem)
 	systemPrompt := buildTherapyModeSystemPrompt(
-		snapshotToPromptContext(session.ContextSnapshot, ""),
+		snapshotToPromptContext(session.ContextSnapshot, session.ContextSnapshot.UserName),
 		string(session.Persona),
 		windDown,
 	)
@@ -251,7 +252,11 @@ func (s *TherapyService) SendMessage(ctx context.Context, sessionID, userID uuid
 	}
 
 	// Increment turn counter.
-	newTurnCount, _ := s.repo.IncrementTurn(ctx, session.ID)
+	newTurnCount, err := s.repo.IncrementTurn(ctx, session.ID)
+	if err != nil {
+		s.log.Warn("therapy: increment turn failed", zap.Error(err), zap.String("session_id", session.ID.String()))
+		newTurnCount = session.TurnCount + 1
+	}
 
 	return &models.SendTherapyMessageResponse{
 		UserMessage:      *userMsg,
@@ -271,6 +276,19 @@ func (s *TherapyService) SendMessage(ctx context.Context, sessionID, userID uuid
 // Second detection (or fail-safe path): hard stop with crisis resources.
 func (s *TherapyService) handleCrisis(ctx context.Context, session *models.TherapySession, userContent, inputMode, crisisResponse string) (*models.SendTherapyMessageResponse, error) {
 	if session.CrisisWarnings == 0 {
+		// Claim the single de-escalation slot atomically BEFORE responding. The
+		// value read at request start is stale under concurrency; the counter
+		// returned by the increment is not, so two in-flight crisis messages
+		// get exactly one de-escalation and one hard stop (ADR-014). An error
+		// here fails safe to a hard stop.
+		newWarnings, err := s.repo.IncrementCrisisWarning(ctx, session.ID)
+		if err != nil || newWarnings > 1 {
+			if err != nil {
+				s.log.Warn("therapy: crisis warning increment failed, hard-stopping (fail-safe)", zap.Error(err))
+			}
+			return s.hardStopCrisis(ctx, session, userContent, inputMode, crisisResponse)
+		}
+
 		// Stage 1: de-escalate. Build a grounding response instead of the crisis resource dump.
 		deEscalationReply, err := s.claude.TherapyTurn(ctx, TherapyTurnInput{
 			SystemPrompt: buildDeEscalationPrompt(),
@@ -282,9 +300,14 @@ func (s *TherapyService) handleCrisis(ctx context.Context, session *models.Thera
 			return s.hardStopCrisis(ctx, session, userContent, inputMode, crisisResponse)
 		}
 
-		userMsg, _ := s.repo.AddMessage(ctx, session.ID, "user", userContent, inputMode)
-		assistantMsg, _ := s.repo.AddMessage(ctx, session.ID, "assistant", deEscalationReply, "text")
-		newWarnings, _ := s.repo.IncrementCrisisWarning(ctx, session.ID)
+		userMsg, err := s.repo.AddMessage(ctx, session.ID, "user", userContent, inputMode)
+		if err != nil {
+			s.log.Error("therapy: failed to persist crisis user message", zap.Error(err), zap.String("session_id", session.ID.String()))
+		}
+		assistantMsg, err := s.repo.AddMessage(ctx, session.ID, "assistant", deEscalationReply, "text")
+		if err != nil {
+			s.log.Error("therapy: failed to persist de-escalation reply", zap.Error(err), zap.String("session_id", session.ID.String()))
+		}
 
 		if userMsg == nil {
 			userMsg = &models.TherapySessionMessage{Role: "user", Content: userContent, InputMode: inputMode}
@@ -312,12 +335,21 @@ func (s *TherapyService) handleCrisis(ctx context.Context, session *models.Thera
 }
 
 func (s *TherapyService) hardStopCrisis(ctx context.Context, session *models.TherapySession, userContent, inputMode, crisisResponse string) (*models.SendTherapyMessageResponse, error) {
-	userMsg, _ := s.repo.AddMessage(ctx, session.ID, "user", userContent, inputMode)
-	assistantMsg, _ := s.repo.AddMessage(ctx, session.ID, "assistant", crisisResponse, "system")
+	userMsg, err := s.repo.AddMessage(ctx, session.ID, "user", userContent, inputMode)
+	if err != nil {
+		s.log.Error("therapy: failed to persist crisis user message", zap.Error(err), zap.String("session_id", session.ID.String()))
+	}
+	assistantMsg, err := s.repo.AddMessage(ctx, session.ID, "assistant", crisisResponse, "system")
+	if err != nil {
+		s.log.Error("therapy: failed to persist crisis resources reply", zap.Error(err), zap.String("session_id", session.ID.String()))
+	}
 
 	now := time.Now()
 	elapsed := int(now.Sub(session.StartedAt).Seconds())
-	_ = s.repo.UpdateStatus(ctx, session.ID, models.TherapyStatusCrisisDetected, &now, &elapsed)
+	if err := s.repo.UpdateStatus(ctx, session.ID, models.TherapyStatusCrisisDetected, &now, &elapsed); err != nil {
+		s.log.Error("therapy: failed to mark session crisis_detected", zap.Error(err), zap.String("session_id", session.ID.String()))
+		monitoring.CaptureErr(err, map[string]string{"component": "therapy_crisis_hard_stop", "session_id": session.ID.String()})
+	}
 
 	if userMsg == nil {
 		userMsg = &models.TherapySessionMessage{Role: "user", Content: userContent, InputMode: inputMode}
@@ -348,7 +380,11 @@ func (s *TherapyService) EndSession(ctx context.Context, sessionID, userID uuid.
 	if session == nil {
 		return nil, ErrTherapyNotFound
 	}
-	if session.Status == models.TherapyStatusCompleted || session.Status == models.TherapyStatusExpired {
+	// A crisis hard stop is final: "ending" it must not flip it back to
+	// completed, summarize the crisis transcript, or feed that summary into
+	// future session memory (ADR-014, ADR-016).
+	if session.Status == models.TherapyStatusCompleted || session.Status == models.TherapyStatusExpired ||
+		session.Status == models.TherapyStatusCrisisDetected {
 		return nil, ErrTherapyAlreadyEnded
 	}
 

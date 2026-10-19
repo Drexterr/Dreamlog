@@ -202,7 +202,7 @@ func claudeBlockingTherapyServer(t *testing.T) *httptest.Server {
 
 func startSession(t *testing.T, svc *TherapyService, userID uuid.UUID) *models.TherapySession {
 	t.Helper()
-	s, err := svc.StartSession(context.Background(), userID, models.PlanFree, models.PersonaComforting, "", "auto")
+	s, err := svc.StartSession(context.Background(), userID, models.PlanFree, models.PersonaComforting, "", "auto", "")
 	if err != nil {
 		t.Fatalf("StartSession: %v", err)
 	}
@@ -216,7 +216,7 @@ func TestTherapy_StartSession_FirstSessionFree(t *testing.T) {
 	repo.countAll = 0
 	svc := newStubTherapyService(repo, nil)
 
-	session, err := svc.StartSession(context.Background(), uuid.New(), models.PlanFree, models.PersonaComforting, "", "auto")
+	session, err := svc.StartSession(context.Background(), uuid.New(), models.PlanFree, models.PersonaComforting, "", "auto", "")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -234,7 +234,7 @@ func TestTherapy_StartSession_ProPlanIncluded(t *testing.T) {
 	repo.countMonth = 0
 	svc := newStubTherapyService(repo, nil)
 
-	session, err := svc.StartSession(context.Background(), uuid.New(), models.PlanPro, models.PersonaComforting, "", "auto")
+	session, err := svc.StartSession(context.Background(), uuid.New(), models.PlanPro, models.PersonaComforting, "", "auto", "")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -249,7 +249,7 @@ func TestTherapy_StartSession_PayPerUseInStubMode(t *testing.T) {
 	repo.countMonth = 5
 	svc := newStubTherapyService(repo, nil)
 
-	session, err := svc.StartSession(context.Background(), uuid.New(), models.PlanFree, models.PersonaComforting, "", "auto")
+	session, err := svc.StartSession(context.Background(), uuid.New(), models.PlanFree, models.PersonaComforting, "", "auto", "")
 	if err != nil {
 		t.Fatalf("unexpected error in stub mode: %v", err)
 	}
@@ -264,7 +264,7 @@ func TestTherapy_StartSession_ProBeyondAllowance_MemberPrice(t *testing.T) {
 	repo.countMonth = models.TherapyProMonthlyAllowance // included session already used
 	svc := newStubTherapyService(repo, nil)
 
-	session, err := svc.StartSession(context.Background(), uuid.New(), models.PlanPro, models.PersonaComforting, "", "auto")
+	session, err := svc.StartSession(context.Background(), uuid.New(), models.PlanPro, models.PersonaComforting, "", "auto", "")
 	if err != nil {
 		t.Fatalf("unexpected error in stub mode: %v", err)
 	}
@@ -279,7 +279,7 @@ func TestTherapy_StartSession_LoadsJournalContext(t *testing.T) {
 	repo.countAll = 0
 	svc := newStubTherapyService(repo, nil)
 
-	session, err := svc.StartSession(context.Background(), uuid.New(), models.PlanFree, models.PersonaComforting, "", "auto")
+	session, err := svc.StartSession(context.Background(), uuid.New(), models.PlanFree, models.PersonaComforting, "", "auto", "")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -547,7 +547,7 @@ func TestTherapy_PaymentRequired_NonStubbedMode(t *testing.T) {
 	transcription := NewTranscriptionService(&appconfig.OpenAIConfig{BaseURL: "http://localhost:9999"})
 	svc := NewTherapyService(repo, &fakeTherapyAnalysisRepo{}, nil, claude, transcription, &fakeTherapyStorage{}, NewCrisisDetector(nil, nil), nil, false, nil)
 
-	_, err := svc.StartSession(context.Background(), uuid.New(), models.PlanFree, models.PersonaComforting, "", "auto")
+	_, err := svc.StartSession(context.Background(), uuid.New(), models.PlanFree, models.PersonaComforting, "", "auto", "")
 	if err == nil {
 		t.Error("expected payment required error in non-stub mode; got nil")
 	}
@@ -717,7 +717,7 @@ func TestTherapy_StartSession_DefaultPersona(t *testing.T) {
 	repo := newFakeTherapyRepo()
 	svc := newStubTherapyService(repo, nil)
 
-	session, err := svc.StartSession(context.Background(), uuid.New(), models.PlanFree, models.PersonaComforting, "", "auto")
+	session, err := svc.StartSession(context.Background(), uuid.New(), models.PlanFree, models.PersonaComforting, "", "auto", "")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -736,7 +736,7 @@ func TestTherapy_StartSession_AllPersonasAccepted(t *testing.T) {
 	for _, p := range personas {
 		repo := newFakeTherapyRepo()
 		svc := newStubTherapyService(repo, nil)
-		session, err := svc.StartSession(context.Background(), uuid.New(), models.PlanFree, p, "", "auto")
+		session, err := svc.StartSession(context.Background(), uuid.New(), models.PlanFree, p, "", "auto", "")
 		if err != nil {
 			t.Errorf("persona %s: unexpected error: %v", p, err)
 		}
@@ -751,7 +751,7 @@ func TestTherapy_PersonaStoredInSession(t *testing.T) {
 	svc := newStubTherapyService(repo, nil)
 	userID := uuid.New()
 
-	session, _ := svc.StartSession(context.Background(), userID, models.PlanFree, models.PersonaRational, "", "auto")
+	session, _ := svc.StartSession(context.Background(), userID, models.PlanFree, models.PersonaRational, "", "auto", "")
 
 	got, err := svc.GetSession(context.Background(), session.ID, userID)
 	if err != nil {
@@ -837,7 +837,7 @@ func TestTherapy_StartSession_InjectsPastSummaries(t *testing.T) {
 	}
 	svc := newStubTherapyService(repo, nil)
 
-	session, err := svc.StartSession(context.Background(), uuid.New(), models.PlanFree, models.PersonaComforting, "", "auto")
+	session, err := svc.StartSession(context.Background(), uuid.New(), models.PlanFree, models.PersonaComforting, "", "auto", "")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -851,7 +851,7 @@ func TestTherapy_StartSession_NoPastSessions(t *testing.T) {
 	repo.pastSummaries = nil
 	svc := newStubTherapyService(repo, nil)
 
-	session, err := svc.StartSession(context.Background(), uuid.New(), models.PlanFree, models.PersonaComforting, "", "auto")
+	session, err := svc.StartSession(context.Background(), uuid.New(), models.PlanFree, models.PersonaComforting, "", "auto", "")
 	if err != nil {
 		t.Fatalf("first session must not error: %v", err)
 	}
@@ -865,7 +865,7 @@ func TestTherapy_StartSession_FewerThanThreeSessions(t *testing.T) {
 	repo.pastSummaries = []string{"One past session."}
 	svc := newStubTherapyService(repo, nil)
 
-	session, err := svc.StartSession(context.Background(), uuid.New(), models.PlanFree, models.PersonaComforting, "", "auto")
+	session, err := svc.StartSession(context.Background(), uuid.New(), models.PlanFree, models.PersonaComforting, "", "auto", "")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -975,5 +975,72 @@ func TestTherapy_WindDown_TimeRemainingAccurate(t *testing.T) {
 	}
 	if resp.SessionState.TimeRemainingSec > 3600 {
 		t.Errorf("time_remaining_sec must not exceed session duration; got %d", resp.SessionState.TimeRemainingSec)
+	}
+}
+
+// staleReadTherapyRepo models a second in-flight request: GetByID returns the
+// session as it was before a concurrent request claimed the de-escalation.
+type staleReadTherapyRepo struct{ *fakeTherapyRepo }
+
+func (r *staleReadTherapyRepo) GetByID(ctx context.Context, id, userID uuid.UUID) (*models.TherapySession, error) {
+	s, err := r.fakeTherapyRepo.GetByID(ctx, id, userID)
+	if s == nil || err != nil {
+		return s, err
+	}
+	cp := *s
+	cp.CrisisWarnings = 0 // stale
+	return &cp, nil
+}
+
+// H10: two concurrent crisis messages must yield one de-escalation and one hard stop.
+func TestTherapy_LayeredCrisis_ConcurrentSecondDetection_HardStops(t *testing.T) {
+	base := newFakeTherapyRepo()
+	userID := uuid.New()
+	session := startSession(t, newStubTherapyService(base, nil), userID)
+	svc := NewTherapyService(&staleReadTherapyRepo{base}, &fakeTherapyAnalysisRepo{}, nil,
+		NewClaudeService(&appconfig.AnthropicConfig{StubAnalysis: true, Model: "stub"}),
+		NewTranscriptionService(&appconfig.OpenAIConfig{BaseURL: "http://localhost:9999"}),
+		&fakeTherapyStorage{}, NewCrisisDetector(nil, nil), nil, true, nil)
+
+	// The "other" request already took the de-escalation slot.
+	base.sessions[session.ID].CrisisWarnings = 1
+
+	resp, err := svc.SendMessage(context.Background(), session.ID, userID, models.SendTherapyMessageRequest{
+		Content: "I want to kill myself", InputMode: "text",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if resp.SessionState.Status != models.TherapyStatusCrisisDetected {
+		t.Errorf("second concurrent crisis must hard-stop, got status %s", resp.SessionState.Status)
+	}
+}
+
+// H10: ending a crisis-stopped session must not flip it back to completed.
+func TestTherapy_EndSession_CrisisDetected_Rejected(t *testing.T) {
+	repo := newFakeTherapyRepo()
+	svc := newStubTherapyService(repo, NewCrisisDetector(nil, nil))
+	userID := uuid.New()
+	session := startSession(t, svc, userID)
+	repo.sessions[session.ID].Status = models.TherapyStatusCrisisDetected
+
+	if _, err := svc.EndSession(context.Background(), session.ID, userID); !errors.Is(err, ErrTherapyAlreadyEnded) {
+		t.Errorf("want ErrTherapyAlreadyEnded, got %v", err)
+	}
+	if repo.sessions[session.ID].Status != models.TherapyStatusCrisisDetected {
+		t.Error("crisis_detected status must be preserved")
+	}
+}
+
+// L2: the therapy prompt addresses the user by name.
+func TestTherapy_StartSession_SnapshotsUserName(t *testing.T) {
+	repo := newFakeTherapyRepo()
+	svc := newStubTherapyService(repo, NewCrisisDetector(nil, nil))
+	s, err := svc.StartSession(context.Background(), uuid.New(), models.PlanFree, models.PersonaComforting, "", "auto", "Asha")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if repo.sessions[s.ID].ContextSnapshot.UserName != "Asha" {
+		t.Errorf("snapshot user name: want Asha, got %q", repo.sessions[s.ID].ContextSnapshot.UserName)
 	}
 }

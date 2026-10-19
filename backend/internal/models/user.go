@@ -154,3 +154,12 @@ var SupportedVoiceLanguages = map[string]bool{
 
 // IsValidVoiceLanguage reports whether v is an accepted voice_language value.
 func IsValidVoiceLanguage(v string) bool { return SupportedVoiceLanguages[v] }
+
+// DisplayName is how the user is addressed by the AI: preferred_name when set,
+// otherwise name.
+func (u *User) DisplayName() string {
+	if u.PreferredName != nil && *u.PreferredName != "" {
+		return *u.PreferredName
+	}
+	return u.Name
+}
