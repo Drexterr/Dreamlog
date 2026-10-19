@@ -140,7 +140,9 @@ func (s *AuthService) mintJWT(user *models.User) (string, error) {
 	claims := jwt.MapClaims{
 		"sub":   user.SupabaseID,
 		"email": user.Email,
-		"exp":   time.Now().Add(30 * 24 * time.Hour).Unix(),
+		// Short-lived: the therapist portal keeps this in a JS-readable cookie
+		// (static export, no HttpOnly), so an XSS-stolen token must expire fast.
+		"exp":   time.Now().Add(localTokenTTL).Unix(),
 		"iat":   time.Now().Unix(),
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
@@ -160,3 +162,6 @@ func dummyPasswordHash() []byte {
 	})
 	return dummyHash
 }
+
+// localTokenTTL bounds tokens minted by the local-auth path (therapist portal).
+const localTokenTTL = 24 * time.Hour

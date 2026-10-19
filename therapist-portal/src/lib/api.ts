@@ -17,7 +17,7 @@ http.interceptors.request.use((config) => {
 
 export function saveToken(token: string) {
   Cookies.set(TOKEN_KEY, token, {
-    expires: 7,
+    expires: 1, // matches the backend local-token TTL (24h)
     sameSite: 'strict',
     // Only transmit the token over HTTPS in production. Kept off on localhost
     // (http) so dev login still works.

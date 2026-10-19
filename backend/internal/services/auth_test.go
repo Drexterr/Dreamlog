@@ -60,7 +60,7 @@ func TestMintJWT_ClaimsAreCorrect(t *testing.T) {
 	}
 }
 
-func TestMintJWT_TokenExpiresIn30Days(t *testing.T) {
+func TestMintJWT_TokenExpiresAfterLocalTTL(t *testing.T) {
 	secret := "test-secret-32-bytes-minimum!!!"
 	svc := &AuthService{jwtSecret: secret}
 	user := &models.User{SupabaseID: "sub", Email: "e@e.com"}
@@ -81,11 +81,11 @@ func TestMintJWT_TokenExpiresIn30Days(t *testing.T) {
 	expTime := time.Unix(expUnix, 0)
 
 	// JWT exp is truncated to seconds, so allow 1-second slack before the window.
-	minExp := before.Add(30 * 24 * time.Hour).Add(-time.Second)
-	maxExp := after.Add(30 * 24 * time.Hour).Add(5 * time.Second)
+	minExp := before.Add(localTokenTTL).Add(-time.Second)
+	maxExp := after.Add(localTokenTTL).Add(5 * time.Second)
 
 	if expTime.Before(minExp) || expTime.After(maxExp) {
-		t.Errorf("token expiry %v out of expected 30-day window [%v, %v]", expTime, minExp, maxExp)
+		t.Errorf("token expiry %v out of expected local-token TTL window [%v, %v]", expTime, minExp, maxExp)
 	}
 }
 
