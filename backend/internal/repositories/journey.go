@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/dreamlog/backend/internal/models"
+	"github.com/dreamlog/backend/pkg/apierr"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
@@ -114,6 +115,19 @@ func (r *JourneyRepository) AdvanceStep(
 		return fmt.Errorf("journey.AdvanceStep begin: %w", err)
 	}
 	defer tx.Rollback(ctx)
+
+	var ownsEntry bool
+	if err := tx.QueryRow(ctx, `
+		SELECT EXISTS (
+			SELECT 1 FROM entries e
+			JOIN journey_sessions s ON s.user_id = e.user_id
+			WHERE e.id = $1 AND s.id = $2
+		)`, entryID, sessionID).Scan(&ownsEntry); err != nil {
+		return fmt.Errorf("journey.AdvanceStep check entry: %w", err)
+	}
+	if !ownsEntry {
+		return apierr.NotFound("entry")
+	}
 
 	if _, err := tx.Exec(ctx, `
 		UPDATE journey_session_steps

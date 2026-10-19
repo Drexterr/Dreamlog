@@ -158,15 +158,19 @@ type annualReviewScanner interface {
 func scanAnnualReview(row annualReviewScanner) (*models.AnnualReview, error) {
 	rv := &models.AnnualReview{}
 	var arcJSON []byte
+	var narrative *string
 
 	err := row.Scan(
-		&rv.ID, &rv.UserID, &rv.Year, &rv.Narrative,
+		&rv.ID, &rv.UserID, &rv.Year, &narrative,
 		&rv.TopEmotions, &rv.TopTopics, &arcJSON,
 		&rv.EntryCount, &rv.AvgMood, &rv.Status,
 		&rv.ScheduledAt, &rv.GeneratedAt, &rv.CreatedAt,
 	)
 	if err != nil {
 		return nil, err
+	}
+	if narrative != nil {
+		rv.Narrative = *narrative
 	}
 
 	if len(arcJSON) > 0 {

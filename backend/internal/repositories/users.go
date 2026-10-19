@@ -340,10 +340,12 @@ func (r *UserRepository) ResetLoginAttempts(ctx context.Context, email string) e
 // since the given time. Used by the weekly review scheduler.
 func (r *UserRepository) ListWithRecentEntries(ctx context.Context, since time.Time) ([]*models.User, error) {
 	q := `
-		SELECT DISTINCT ON (u.id) ` + userColumns + `
+		SELECT ` + userColumns + `
 		FROM users u
-		JOIN entries e ON e.user_id = u.id
-		WHERE e.status = 'completed' AND e.created_at >= $1
+		WHERE EXISTS (
+		    SELECT 1 FROM entries e
+		    WHERE e.user_id = u.id AND e.status = 'completed' AND e.created_at >= $1
+		)
 		ORDER BY u.id`
 
 	rows, err := r.db.Query(ctx, q, since)

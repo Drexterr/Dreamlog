@@ -249,10 +249,13 @@ func (r *TherapistRepository) ClientMoodStats(ctx context.Context, clientID uuid
 		WHERE e.user_id = $1 AND e.status = 'completed' AND ea.is_crisis = FALSE
 		  AND e.created_at >= NOW() - INTERVAL '7 days'`
 
-	var avg7dRaw, cnt7d int
-	_ = r.db.QueryRow(ctx, moodQ, clientID).Scan(&avg7dRaw, &cnt7d)
+	var avg7dRaw *int
+	var cnt7d int
+	if scanErr := r.db.QueryRow(ctx, moodQ, clientID).Scan(&avg7dRaw, &cnt7d); scanErr != nil {
+		return nil, nil, "", fmt.Errorf("therapist.ClientMoodStats current: %w", scanErr)
+	}
 	if cnt7d > 0 {
-		avg7d = &avg7dRaw
+		avg7d = avg7dRaw
 	}
 
 	// Prior 7 days for trend.
@@ -264,12 +267,15 @@ func (r *TherapistRepository) ClientMoodStats(ctx context.Context, clientID uuid
 		  AND e.created_at >= NOW() - INTERVAL '14 days'
 		  AND e.created_at <  NOW() - INTERVAL '7 days'`
 
-	var prevAvg, prevCnt int
-	_ = r.db.QueryRow(ctx, prevQ, clientID).Scan(&prevAvg, &prevCnt)
+	var prevAvg *int
+	var prevCnt int
+	if scanErr := r.db.QueryRow(ctx, prevQ, clientID).Scan(&prevAvg, &prevCnt); scanErr != nil {
+		return nil, nil, "", fmt.Errorf("therapist.ClientMoodStats prior: %w", scanErr)
+	}
 
 	trend = "insufficient_data"
-	if cnt7d > 0 && prevCnt > 0 {
-		delta := avg7dRaw - prevAvg
+	if cnt7d > 0 && prevCnt > 0 && avg7dRaw != nil && prevAvg != nil {
+		delta := *avg7dRaw - *prevAvg
 		switch {
 		case delta >= 5:
 			trend = "improving"
@@ -290,7 +296,7 @@ func (r *TherapistRepository) ClientMoodStats(ctx context.Context, clientID uuid
 
 	eRows, qErr := r.db.Query(ctx, emotionQ, clientID)
 	if qErr != nil {
-		return avg7d, nil, trend, nil
+		return nil, nil, "", fmt.Errorf("therapist.ClientMoodStats emotions: %w", qErr)
 	}
 	defer eRows.Close()
 
@@ -298,7 +304,7 @@ func (r *TherapistRepository) ClientMoodStats(ctx context.Context, clientID uuid
 	for eRows.Next() {
 		var raw []byte
 		if sErr := eRows.Scan(&raw); sErr != nil {
-			continue
+			return nil, nil, "", fmt.Errorf("therapist.ClientMoodStats emotions scan: %w", sErr)
 		}
 		var tones []models.EmotionalTone
 		if uErr := json.Unmarshal(raw, &tones); uErr != nil {
@@ -309,6 +315,9 @@ func (r *TherapistRepository) ClientMoodStats(ctx context.Context, clientID uuid
 				counts[t.Emotion]++
 			}
 		}
+	}
+	if rowsErr := eRows.Err(); rowsErr != nil {
+		return nil, nil, "", fmt.Errorf("therapist.ClientMoodStats emotions rows: %w", rowsErr)
 	}
 	topEmotions = topN(counts, 5)
 

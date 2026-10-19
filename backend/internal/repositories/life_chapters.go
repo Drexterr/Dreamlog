@@ -10,6 +10,7 @@ import (
 	"github.com/dreamlog/backend/internal/models"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -312,8 +313,8 @@ type chapterScanner interface {
 
 func scanChapter(row chapterScanner) (*models.LifeChapter, error) {
 	ch := &models.LifeChapter{}
-	var startDate string
-	var endDate, summary *string
+	var startDate, endDate pgtype.Date
+	var summary *string
 	var updatedAt time.Time
 
 	err := row.Scan(
@@ -325,12 +326,14 @@ func scanChapter(row chapterScanner) (*models.LifeChapter, error) {
 	if err != nil {
 		return nil, err
 	}
-	ch.StartDate = startDate
-	ch.EndDate = endDate
+	ch.StartDate = startDate.Time.Format("2006-01-02")
+	if endDate.Valid {
+		formatted := endDate.Time.Format("2006-01-02")
+		ch.EndDate = &formatted
+	}
 	if summary != nil {
 		ch.Summary = *summary
 	}
 	ch.UpdatedAt = updatedAt
 	return ch, nil
 }
-

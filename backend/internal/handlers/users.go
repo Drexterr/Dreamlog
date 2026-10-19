@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"net/http"
+	"time"
 
 	"github.com/dreamlog/backend/internal/middleware"
 	"github.com/dreamlog/backend/internal/models"
@@ -48,6 +49,12 @@ func (h *UserHandler) UpdateMe(c *gin.Context) {
 	if input.VoiceLanguage != nil && !models.IsValidVoiceLanguage(*input.VoiceLanguage) {
 		c.Error(apierr.BadRequest("unsupported voice_language"))
 		return
+	}
+	if input.Timezone != nil {
+		if _, err := time.LoadLocation(*input.Timezone); err != nil || *input.Timezone == "" {
+			c.Error(apierr.BadRequest("unsupported timezone"))
+			return
+		}
 	}
 
 	userID := middleware.UserIDFromCtx(c.Request.Context())

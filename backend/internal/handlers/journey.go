@@ -103,6 +103,10 @@ func (h *JourneyHandler) AdvanceSession(c *gin.Context) {
 
 	session, err := h.svc.AdvanceSession(c.Request.Context(), sessionID, userID, input.EntryID)
 	if err != nil {
+		if apiErr, ok := apierr.As(err); ok {
+			c.Error(apiErr)
+			return
+		}
 		if err.Error() == "session already completed" {
 			c.Error(apierr.Conflict("journey session already completed"))
 			return

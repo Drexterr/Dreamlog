@@ -1,0 +1,2022 @@
+{
+  "version": 3,
+  "date": "2026-10-15",
+  "targetPercent": 80,
+  "frozenBeforeFirstRun": true,
+  "definition": "Passed named API contract scenarios divided by every declared scenario, including planned external cases. Parent feature must pass. Authentication route sweep counts once.",
+  "sourceHash": "a5056cbc2f293ff2ce5dc42a7c10a740ab259a2e8b41b6911a967434326522d7",
+  "cases": [
+    {
+      "id": "account.read-own-profile",
+      "test": "TestBlackboxAccountEntries/account.read-own-profile",
+      "source": "backend/tests/blackbox/account_entry_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "account.update-name-language",
+      "test": "TestBlackboxAccountEntries/account.update-name-language",
+      "source": "backend/tests/blackbox/account_entry_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "account.read-persisted-profile",
+      "test": "TestBlackboxAccountEntries/account.read-persisted-profile",
+      "source": "backend/tests/blackbox/account_entry_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "account.reject-invalid-hour",
+      "test": "TestBlackboxAccountEntries/account.reject-invalid-hour",
+      "source": "backend/tests/blackbox/account_entry_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "account.reject-invalid-timezone",
+      "test": "TestBlackboxAccountEntries/account.reject-invalid-timezone",
+      "source": "backend/tests/blackbox/account_entry_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "account.reject-malformed-json",
+      "test": "TestBlackboxAccountEntries/account.reject-malformed-json",
+      "source": "backend/tests/blackbox/account_entry_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "account.other-user-isolation",
+      "test": "TestBlackboxAccountEntries/account.other-user-isolation",
+      "source": "backend/tests/blackbox/account_entry_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "account.initial-terms",
+      "test": "TestBlackboxAccountEntries/account.initial-terms",
+      "source": "backend/tests/blackbox/account_entry_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "account.accept-terms",
+      "test": "TestBlackboxAccountEntries/account.accept-terms",
+      "source": "backend/tests/blackbox/account_entry_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "account.persisted-terms",
+      "test": "TestBlackboxAccountEntries/account.persisted-terms",
+      "source": "backend/tests/blackbox/account_entry_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "billing.paid-plan",
+      "test": "TestBlackboxAccountEntries/billing.paid-plan",
+      "source": "backend/tests/blackbox/account_entry_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "billing.free-plan",
+      "test": "TestBlackboxAccountEntries/billing.free-plan",
+      "source": "backend/tests/blackbox/account_entry_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "billing.reject-invalid-plan",
+      "test": "TestBlackboxAccountEntries/billing.reject-invalid-plan",
+      "source": "backend/tests/blackbox/account_entry_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "billing.reject-malformed-json",
+      "test": "TestBlackboxAccountEntries/billing.reject-malformed-json",
+      "source": "backend/tests/blackbox/account_entry_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "entries.empty-timeline",
+      "test": "TestBlackboxAccountEntries/entries.empty-timeline",
+      "source": "backend/tests/blackbox/account_entry_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "entries.empty-list",
+      "test": "TestBlackboxAccountEntries/entries.empty-list",
+      "source": "backend/tests/blackbox/account_entry_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "entries.presign-owned-key",
+      "test": "TestBlackboxAccountEntries/entries.presign-owned-key",
+      "source": "backend/tests/blackbox/account_entry_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "entries.reject-missing-fields",
+      "test": "TestBlackboxAccountEntries/entries.reject-missing-fields",
+      "source": "backend/tests/blackbox/account_entry_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "entries.reject-other-user-audio",
+      "test": "TestBlackboxAccountEntries/entries.reject-other-user-audio",
+      "source": "backend/tests/blackbox/account_entry_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "entries.reject-overlong-recording",
+      "test": "TestBlackboxAccountEntries/entries.reject-overlong-recording",
+      "source": "backend/tests/blackbox/account_entry_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "entries.reject-missing-object",
+      "test": "TestBlackboxAccountEntries/entries.reject-missing-object",
+      "source": "backend/tests/blackbox/account_entry_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "entries.create-and-queue",
+      "test": "TestBlackboxAccountEntries/entries.create-and-queue",
+      "source": "backend/tests/blackbox/account_entry_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "entries.read-created-entry",
+      "test": "TestBlackboxAccountEntries/entries.read-created-entry",
+      "source": "backend/tests/blackbox/account_entry_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "entries.reject-cross-account-read",
+      "test": "TestBlackboxAccountEntries/entries.reject-cross-account-read",
+      "source": "backend/tests/blackbox/account_entry_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "entries.reject-invalid-id",
+      "test": "TestBlackboxAccountEntries/entries.reject-invalid-id",
+      "source": "backend/tests/blackbox/account_entry_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "entries.missing-id",
+      "test": "TestBlackboxAccountEntries/entries.missing-id",
+      "source": "backend/tests/blackbox/account_entry_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "entries.pending-analysis",
+      "test": "TestBlackboxAccountEntries/entries.pending-analysis",
+      "source": "backend/tests/blackbox/account_entry_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "entries.search-empty-query",
+      "test": "TestBlackboxAccountEntries/entries.search-empty-query",
+      "source": "backend/tests/blackbox/account_entry_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "entries.search-no-match",
+      "test": "TestBlackboxAccountEntries/entries.search-no-match",
+      "source": "backend/tests/blackbox/account_entry_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "entries.paginated-list",
+      "test": "TestBlackboxAccountEntries/entries.paginated-list",
+      "source": "backend/tests/blackbox/account_entry_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "entries.other-user-empty-list",
+      "test": "TestBlackboxAccountEntries/entries.other-user-empty-list",
+      "source": "backend/tests/blackbox/account_entry_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "entries.checkin-requires-completed",
+      "test": "TestBlackboxAccountEntries/entries.checkin-requires-completed",
+      "source": "backend/tests/blackbox/account_entry_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "devices.reject-invalid-platform",
+      "test": "TestBlackboxAccountEntries/devices.reject-invalid-platform",
+      "source": "backend/tests/blackbox/account_entry_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "devices.register-android",
+      "test": "TestBlackboxAccountEntries/devices.register-android",
+      "source": "backend/tests/blackbox/account_entry_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "devices.retry-registration",
+      "test": "TestBlackboxAccountEntries/devices.retry-registration",
+      "source": "backend/tests/blackbox/account_entry_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "entries.completed-analysis",
+      "test": "TestBlackboxAccountEntries/entries.completed-analysis",
+      "source": "backend/tests/blackbox/account_entry_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "entries.analysis-ownership",
+      "test": "TestBlackboxAccountEntries/entries.analysis-ownership",
+      "source": "backend/tests/blackbox/account_entry_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "conversation.create",
+      "test": "TestBlackboxAccountEntries/conversation.create",
+      "source": "backend/tests/blackbox/account_entry_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "conversation.resume-idempotent",
+      "test": "TestBlackboxAccountEntries/conversation.resume-idempotent",
+      "source": "backend/tests/blackbox/account_entry_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "conversation.reject-empty-message",
+      "test": "TestBlackboxAccountEntries/conversation.reject-empty-message",
+      "source": "backend/tests/blackbox/account_entry_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "conversation.reply-first",
+      "test": "TestBlackboxAccountEntries/conversation.reply-first",
+      "source": "backend/tests/blackbox/account_entry_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "conversation.reply-second",
+      "test": "TestBlackboxAccountEntries/conversation.reply-second",
+      "source": "backend/tests/blackbox/account_entry_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "conversation.reply-third",
+      "test": "TestBlackboxAccountEntries/conversation.reply-third",
+      "source": "backend/tests/blackbox/account_entry_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "conversation.reject-fourth-turn",
+      "test": "TestBlackboxAccountEntries/conversation.reject-fourth-turn",
+      "source": "backend/tests/blackbox/account_entry_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "chapter_create",
+      "test": "TestBlackboxExploreChapters/chapter_create",
+      "source": "backend/tests/blackbox/explore_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "chapter_read_persisted",
+      "test": "TestBlackboxExploreChapters/chapter_read_persisted",
+      "source": "backend/tests/blackbox/explore_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "chapter_list_contains_created",
+      "test": "TestBlackboxExploreChapters/chapter_list_contains_created",
+      "source": "backend/tests/blackbox/explore_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "chapter_other_list_excludes_owner",
+      "test": "TestBlackboxExploreChapters/chapter_other_list_excludes_owner",
+      "source": "backend/tests/blackbox/explore_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "chapter_other_read_hidden",
+      "test": "TestBlackboxExploreChapters/chapter_other_read_hidden",
+      "source": "backend/tests/blackbox/explore_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "chapter_other_update_rejected",
+      "test": "TestBlackboxExploreChapters/chapter_other_update_rejected",
+      "source": "backend/tests/blackbox/explore_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "chapter_other_delete_noop",
+      "test": "TestBlackboxExploreChapters/chapter_other_delete_noop",
+      "source": "backend/tests/blackbox/explore_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "chapter_owner_survives_foreign_delete",
+      "test": "TestBlackboxExploreChapters/chapter_owner_survives_foreign_delete",
+      "source": "backend/tests/blackbox/explore_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "chapter_update",
+      "test": "TestBlackboxExploreChapters/chapter_update",
+      "source": "backend/tests/blackbox/explore_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "chapter_update_persisted",
+      "test": "TestBlackboxExploreChapters/chapter_update_persisted",
+      "source": "backend/tests/blackbox/explore_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "chapter_detail_aggregates_entries",
+      "test": "TestBlackboxExploreChapters/chapter_detail_aggregates_entries",
+      "source": "backend/tests/blackbox/explore_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "chapter_missing_title",
+      "test": "TestBlackboxExploreChapters/chapter_missing_title",
+      "source": "backend/tests/blackbox/explore_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "chapter_invalid_id",
+      "test": "TestBlackboxExploreChapters/chapter_invalid_id",
+      "source": "backend/tests/blackbox/explore_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "chapter_delete",
+      "test": "TestBlackboxExploreChapters/chapter_delete",
+      "source": "backend/tests/blackbox/explore_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "chapter_deleted_read",
+      "test": "TestBlackboxExploreChapters/chapter_deleted_read",
+      "source": "backend/tests/blackbox/explore_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "relationship_map_contains_seed",
+      "test": "TestBlackboxExploreRelationships/relationship_map_contains_seed",
+      "source": "backend/tests/blackbox/explore_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "relationship_detail_mentions",
+      "test": "TestBlackboxExploreRelationships/relationship_detail_mentions",
+      "source": "backend/tests/blackbox/explore_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "relationship_foreign_read_hidden",
+      "test": "TestBlackboxExploreRelationships/relationship_foreign_read_hidden",
+      "source": "backend/tests/blackbox/explore_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "relationship_foreign_update_rejected",
+      "test": "TestBlackboxExploreRelationships/relationship_foreign_update_rejected",
+      "source": "backend/tests/blackbox/explore_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "relationship_rename_and_role",
+      "test": "TestBlackboxExploreRelationships/relationship_rename_and_role",
+      "source": "backend/tests/blackbox/explore_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "relationship_edit_persisted",
+      "test": "TestBlackboxExploreRelationships/relationship_edit_persisted",
+      "source": "backend/tests/blackbox/explore_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "relationship_empty_edit",
+      "test": "TestBlackboxExploreRelationships/relationship_empty_edit",
+      "source": "backend/tests/blackbox/explore_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "relationship_blank_name",
+      "test": "TestBlackboxExploreRelationships/relationship_blank_name",
+      "source": "backend/tests/blackbox/explore_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "relationship_invalid_role",
+      "test": "TestBlackboxExploreRelationships/relationship_invalid_role",
+      "source": "backend/tests/blackbox/explore_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "relationship_duplicate_name",
+      "test": "TestBlackboxExploreRelationships/relationship_duplicate_name",
+      "source": "backend/tests/blackbox/explore_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "relationship_hide",
+      "test": "TestBlackboxExploreRelationships/relationship_hide",
+      "source": "backend/tests/blackbox/explore_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "relationship_hidden_map_excludes",
+      "test": "TestBlackboxExploreRelationships/relationship_hidden_map_excludes",
+      "source": "backend/tests/blackbox/explore_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "relationship_unhide",
+      "test": "TestBlackboxExploreRelationships/relationship_unhide",
+      "source": "backend/tests/blackbox/explore_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "relationship_self_merge",
+      "test": "TestBlackboxExploreRelationships/relationship_self_merge",
+      "source": "backend/tests/blackbox/explore_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "relationship_foreign_source_merge",
+      "test": "TestBlackboxExploreRelationships/relationship_foreign_source_merge",
+      "source": "backend/tests/blackbox/explore_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "relationship_merge",
+      "test": "TestBlackboxExploreRelationships/relationship_merge",
+      "source": "backend/tests/blackbox/explore_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "relationship_merged_mentions",
+      "test": "TestBlackboxExploreRelationships/relationship_merged_mentions",
+      "source": "backend/tests/blackbox/explore_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "relationship_source_removed",
+      "test": "TestBlackboxExploreRelationships/relationship_source_removed",
+      "source": "backend/tests/blackbox/explore_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "relationship_other_map_isolated",
+      "test": "TestBlackboxExploreRelationships/relationship_other_map_isolated",
+      "source": "backend/tests/blackbox/explore_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "journey_public_catalogue",
+      "test": "TestBlackboxExploreJourneys/journey_public_catalogue",
+      "source": "backend/tests/blackbox/explore_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "journey_unknown_template",
+      "test": "TestBlackboxExploreJourneys/journey_unknown_template",
+      "source": "backend/tests/blackbox/explore_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "journey_start",
+      "test": "TestBlackboxExploreJourneys/journey_start",
+      "source": "backend/tests/blackbox/explore_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "journey_read_initial_steps",
+      "test": "TestBlackboxExploreJourneys/journey_read_initial_steps",
+      "source": "backend/tests/blackbox/explore_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "journey_owner_sessions",
+      "test": "TestBlackboxExploreJourneys/journey_owner_sessions",
+      "source": "backend/tests/blackbox/explore_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "journey_other_sessions_empty",
+      "test": "TestBlackboxExploreJourneys/journey_other_sessions_empty",
+      "source": "backend/tests/blackbox/explore_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "journey_foreign_read_hidden",
+      "test": "TestBlackboxExploreJourneys/journey_foreign_read_hidden",
+      "source": "backend/tests/blackbox/explore_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "journey_advance_requires_entry",
+      "test": "TestBlackboxExploreJourneys/journey_advance_requires_entry",
+      "source": "backend/tests/blackbox/explore_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "journey_advance_first",
+      "test": "TestBlackboxExploreJourneys/journey_advance_first",
+      "source": "backend/tests/blackbox/explore_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "journey_advance_second",
+      "test": "TestBlackboxExploreJourneys/journey_advance_second",
+      "source": "backend/tests/blackbox/explore_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "journey_advance_complete",
+      "test": "TestBlackboxExploreJourneys/journey_advance_complete",
+      "source": "backend/tests/blackbox/explore_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "journey_completed_persisted",
+      "test": "TestBlackboxExploreJourneys/journey_completed_persisted",
+      "source": "backend/tests/blackbox/explore_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "journey_completed_rejects_advance",
+      "test": "TestBlackboxExploreJourneys/journey_completed_rejects_advance",
+      "source": "backend/tests/blackbox/explore_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "journey_foreign_entry_session",
+      "test": "TestBlackboxExploreJourneys/journey_foreign_entry_session",
+      "source": "backend/tests/blackbox/explore_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "journey_rejects_foreign_entry",
+      "test": "TestBlackboxExploreJourneys/journey_rejects_foreign_entry",
+      "source": "backend/tests/blackbox/explore_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "journey_foreign_entry_did_not_advance",
+      "test": "TestBlackboxExploreJourneys/journey_foreign_entry_did_not_advance",
+      "source": "backend/tests/blackbox/explore_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "weekly_latest_empty",
+      "test": "TestBlackboxExploreReviews/weekly_latest_empty",
+      "source": "backend/tests/blackbox/explore_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "annual_latest_empty",
+      "test": "TestBlackboxExploreReviews/annual_latest_empty",
+      "source": "backend/tests/blackbox/explore_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "weekly_completed_only",
+      "test": "TestBlackboxExploreReviews/weekly_completed_only",
+      "source": "backend/tests/blackbox/explore_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "weekly_latest_completed",
+      "test": "TestBlackboxExploreReviews/weekly_latest_completed",
+      "source": "backend/tests/blackbox/explore_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "annual_completed_only",
+      "test": "TestBlackboxExploreReviews/annual_completed_only",
+      "source": "backend/tests/blackbox/explore_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "annual_latest_completed",
+      "test": "TestBlackboxExploreReviews/annual_latest_completed",
+      "source": "backend/tests/blackbox/explore_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "weekly_free_plan_denied",
+      "test": "TestBlackboxExploreReviews/weekly_free_plan_denied",
+      "source": "backend/tests/blackbox/explore_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "annual_free_plan_denied",
+      "test": "TestBlackboxExploreReviews/annual_free_plan_denied",
+      "source": "backend/tests/blackbox/explore_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "weekly_other_paid_list_isolated",
+      "test": "TestBlackboxExploreReviews/weekly_other_paid_list_isolated",
+      "source": "backend/tests/blackbox/explore_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "annual_other_paid_list_isolated",
+      "test": "TestBlackboxExploreReviews/annual_other_paid_list_isolated",
+      "source": "backend/tests/blackbox/explore_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "weekly_other_paid_latest_missing",
+      "test": "TestBlackboxExploreReviews/weekly_other_paid_latest_missing",
+      "source": "backend/tests/blackbox/explore_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "annual_other_paid_latest_missing",
+      "test": "TestBlackboxExploreReviews/annual_other_paid_latest_missing",
+      "source": "backend/tests/blackbox/explore_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "mood_weekly_aggregates_noncrisis",
+      "test": "TestBlackboxExploreMood/mood_weekly_aggregates_noncrisis",
+      "source": "backend/tests/blackbox/explore_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "mood_other_weekly_isolated",
+      "test": "TestBlackboxExploreMood/mood_other_weekly_isolated",
+      "source": "backend/tests/blackbox/explore_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "mood_history_paid_aggregate",
+      "test": "TestBlackboxExploreMood/mood_history_paid_aggregate",
+      "source": "backend/tests/blackbox/explore_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "mood_history_invalid_range",
+      "test": "TestBlackboxExploreMood/mood_history_invalid_range",
+      "source": "backend/tests/blackbox/explore_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "mood_history_free_denied",
+      "test": "TestBlackboxExploreMood/mood_history_free_denied",
+      "source": "backend/tests/blackbox/explore_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "mood_patterns_exclude_crisis_and_noise",
+      "test": "TestBlackboxExploreMood/mood_patterns_exclude_crisis_and_noise",
+      "source": "backend/tests/blackbox/explore_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "mood_patterns_invalid_range",
+      "test": "TestBlackboxExploreMood/mood_patterns_invalid_range",
+      "source": "backend/tests/blackbox/explore_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "mood_other_patterns_isolated",
+      "test": "TestBlackboxExploreMood/mood_other_patterns_isolated",
+      "source": "backend/tests/blackbox/explore_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "mood_streak_completed_entries",
+      "test": "TestBlackboxExploreMood/mood_streak_completed_entries",
+      "source": "backend/tests/blackbox/explore_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "insight_initial_card",
+      "test": "TestBlackboxExploreInsights/insight_initial_card",
+      "source": "backend/tests/blackbox/explore_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "insight_share_explicit_week",
+      "test": "TestBlackboxExploreInsights/insight_share_explicit_week",
+      "source": "backend/tests/blackbox/explore_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "insight_share_default_week",
+      "test": "TestBlackboxExploreInsights/insight_share_default_week",
+      "source": "backend/tests/blackbox/explore_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "insight_card_counts_shares",
+      "test": "TestBlackboxExploreInsights/insight_card_counts_shares",
+      "source": "backend/tests/blackbox/explore_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "insight_other_card_isolated",
+      "test": "TestBlackboxExploreInsights/insight_other_card_isolated",
+      "source": "backend/tests/blackbox/explore_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "insight_other_share_own_counter",
+      "test": "TestBlackboxExploreInsights/insight_other_share_own_counter",
+      "source": "backend/tests/blackbox/explore_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "insight_owner_counter_unchanged",
+      "test": "TestBlackboxExploreInsights/insight_owner_counter_unchanged",
+      "source": "backend/tests/blackbox/explore_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "b2b_nonmember_dashboard_denied",
+      "test": "TestBlackboxExploreB2B/b2b_nonmember_dashboard_denied",
+      "source": "backend/tests/blackbox/explore_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "b2b_join",
+      "test": "TestBlackboxExploreB2B/b2b_join",
+      "source": "backend/tests/blackbox/explore_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "b2b_member_dashboard_denied",
+      "test": "TestBlackboxExploreB2B/b2b_member_dashboard_denied",
+      "source": "backend/tests/blackbox/explore_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "b2b_admin_dashboard_aggregate",
+      "test": "TestBlackboxExploreB2B/b2b_admin_dashboard_aggregate",
+      "source": "backend/tests/blackbox/explore_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "b2b_admin_dashboard_90d",
+      "test": "TestBlackboxExploreB2B/b2b_admin_dashboard_90d",
+      "source": "backend/tests/blackbox/explore_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "b2b_join_full_company",
+      "test": "TestBlackboxExploreB2B/b2b_join_full_company",
+      "source": "backend/tests/blackbox/explore_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "b2b_unknown_company",
+      "test": "TestBlackboxExploreB2B/b2b_unknown_company",
+      "source": "backend/tests/blackbox/explore_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "b2b_other_company_admin_denied",
+      "test": "TestBlackboxExploreB2B/b2b_other_company_admin_denied",
+      "source": "backend/tests/blackbox/explore_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "notes.nontherapist-profile",
+      "test": "TestBlackboxNotes/notes.nontherapist-profile",
+      "source": "backend/tests/blackbox/notes_therapy_share_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "notes.nontherapist-denied",
+      "test": "TestBlackboxNotes/notes.nontherapist-denied",
+      "source": "backend/tests/blackbox/notes_therapy_share_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "notes.registration-validation",
+      "test": "TestBlackboxNotes/notes.registration-validation",
+      "source": "backend/tests/blackbox/notes_therapy_share_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "notes.register-therapist",
+      "test": "TestBlackboxNotes/notes.register-therapist",
+      "source": "backend/tests/blackbox/notes_therapy_share_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "notes.profile-after-registration",
+      "test": "TestBlackboxNotes/notes.profile-after-registration",
+      "source": "backend/tests/blackbox/notes_therapy_share_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "notes.consent-required",
+      "test": "TestBlackboxNotes/notes.consent-required",
+      "source": "backend/tests/blackbox/notes_therapy_share_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "notes.accept-client-consent",
+      "test": "TestBlackboxNotes/notes.accept-client-consent",
+      "source": "backend/tests/blackbox/notes_therapy_share_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "notes.reject-empty-client",
+      "test": "TestBlackboxNotes/notes.reject-empty-client",
+      "source": "backend/tests/blackbox/notes_therapy_share_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "notes.create-encrypted-client",
+      "test": "TestBlackboxNotes/notes.create-encrypted-client",
+      "source": "backend/tests/blackbox/notes_therapy_share_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "notes.read-decrypted-client",
+      "test": "TestBlackboxNotes/notes.read-decrypted-client",
+      "source": "backend/tests/blackbox/notes_therapy_share_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "notes.list-clients",
+      "test": "TestBlackboxNotes/notes.list-clients",
+      "source": "backend/tests/blackbox/notes_therapy_share_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "notes.rename-client",
+      "test": "TestBlackboxNotes/notes.rename-client",
+      "source": "backend/tests/blackbox/notes_therapy_share_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "notes.client-invalid-id",
+      "test": "TestBlackboxNotes/notes.client-invalid-id",
+      "source": "backend/tests/blackbox/notes_therapy_share_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "notes.client-not-found",
+      "test": "TestBlackboxNotes/notes.client-not-found",
+      "source": "backend/tests/blackbox/notes_therapy_share_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "notes.session-missing-client",
+      "test": "TestBlackboxNotes/notes.session-missing-client",
+      "source": "backend/tests/blackbox/notes_therapy_share_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "notes.session-invalid-date",
+      "test": "TestBlackboxNotes/notes.session-invalid-date",
+      "source": "backend/tests/blackbox/notes_therapy_share_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "notes.session-empty-bullets",
+      "test": "TestBlackboxNotes/notes.session-empty-bullets",
+      "source": "backend/tests/blackbox/notes_therapy_share_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "notes.create-typed-session",
+      "test": "TestBlackboxNotes/notes.create-typed-session",
+      "source": "backend/tests/blackbox/notes_therapy_share_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "notes.read-session",
+      "test": "TestBlackboxNotes/notes.read-session",
+      "source": "backend/tests/blackbox/notes_therapy_share_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "notes.list-session-filter",
+      "test": "TestBlackboxNotes/notes.list-session-filter",
+      "source": "backend/tests/blackbox/notes_therapy_share_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "notes.update-bullets",
+      "test": "TestBlackboxNotes/notes.update-bullets",
+      "source": "backend/tests/blackbox/notes_therapy_share_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "notes.summarize-session-controlled-ai",
+      "test": "TestBlackboxNotes/notes.summarize-session-controlled-ai",
+      "source": "backend/tests/blackbox/notes_therapy_share_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "notes.overview",
+      "test": "TestBlackboxNotes/notes.overview",
+      "source": "backend/tests/blackbox/notes_therapy_share_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "notes.presign-reject-type",
+      "test": "TestBlackboxNotes/notes.presign-reject-type",
+      "source": "backend/tests/blackbox/notes_therapy_share_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "notes.presign-image",
+      "test": "TestBlackboxNotes/notes.presign-image",
+      "source": "backend/tests/blackbox/notes_therapy_share_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "notes.reject-foreign-image-key",
+      "test": "TestBlackboxNotes/notes.reject-foreign-image-key",
+      "source": "backend/tests/blackbox/notes_therapy_share_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "notes.create-ocr-job",
+      "test": "TestBlackboxNotes/notes.create-ocr-job",
+      "source": "backend/tests/blackbox/notes_therapy_share_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "notes.register-second-therapist",
+      "test": "TestBlackboxNotes/notes.register-second-therapist",
+      "source": "backend/tests/blackbox/notes_therapy_share_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "notes.second-consent",
+      "test": "TestBlackboxNotes/notes.second-consent",
+      "source": "backend/tests/blackbox/notes_therapy_share_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "notes.cross-therapist-client-denied",
+      "test": "TestBlackboxNotes/notes.cross-therapist-client-denied",
+      "source": "backend/tests/blackbox/notes_therapy_share_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "notes.cross-therapist-session-denied",
+      "test": "TestBlackboxNotes/notes.cross-therapist-session-denied",
+      "source": "backend/tests/blackbox/notes_therapy_share_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "notes.cross-therapist-update-denied",
+      "test": "TestBlackboxNotes/notes.cross-therapist-update-denied",
+      "source": "backend/tests/blackbox/notes_therapy_share_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "notes.archive-client",
+      "test": "TestBlackboxNotes/notes.archive-client",
+      "source": "backend/tests/blackbox/notes_therapy_share_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "notes.list-archived-clients",
+      "test": "TestBlackboxNotes/notes.list-archived-clients",
+      "source": "backend/tests/blackbox/notes_therapy_share_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "notes.restore-client",
+      "test": "TestBlackboxNotes/notes.restore-client",
+      "source": "backend/tests/blackbox/notes_therapy_share_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "notes.delete-session",
+      "test": "TestBlackboxNotes/notes.delete-session",
+      "source": "backend/tests/blackbox/notes_therapy_share_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "notes.deleted-session-hidden",
+      "test": "TestBlackboxNotes/notes.deleted-session-hidden",
+      "source": "backend/tests/blackbox/notes_therapy_share_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "notes.delete-client",
+      "test": "TestBlackboxNotes/notes.delete-client",
+      "source": "backend/tests/blackbox/notes_therapy_share_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "notes.deleted-client-hidden",
+      "test": "TestBlackboxNotes/notes.deleted-client-hidden",
+      "source": "backend/tests/blackbox/notes_therapy_share_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "sharing.free-plan-denied",
+      "test": "TestBlackboxSharingTherapy/sharing.free-plan-denied",
+      "source": "backend/tests/blackbox/notes_therapy_share_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "sharing.create-link",
+      "test": "TestBlackboxSharingTherapy/sharing.create-link",
+      "source": "backend/tests/blackbox/notes_therapy_share_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "sharing.reject-no-passcode",
+      "test": "TestBlackboxSharingTherapy/sharing.reject-no-passcode",
+      "source": "backend/tests/blackbox/notes_therapy_share_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "sharing.reject-wrong-passcode",
+      "test": "TestBlackboxSharingTherapy/sharing.reject-wrong-passcode",
+      "source": "backend/tests/blackbox/notes_therapy_share_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "sharing.authorized-view",
+      "test": "TestBlackboxSharingTherapy/sharing.authorized-view",
+      "source": "backend/tests/blackbox/notes_therapy_share_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "sharing.list-owner",
+      "test": "TestBlackboxSharingTherapy/sharing.list-owner",
+      "source": "backend/tests/blackbox/notes_therapy_share_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "sharing.reject-invalid-revoke-id",
+      "test": "TestBlackboxSharingTherapy/sharing.reject-invalid-revoke-id",
+      "source": "backend/tests/blackbox/notes_therapy_share_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "sharing.revoke-link",
+      "test": "TestBlackboxSharingTherapy/sharing.revoke-link",
+      "source": "backend/tests/blackbox/notes_therapy_share_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "sharing.revoked-view-denied",
+      "test": "TestBlackboxSharingTherapy/sharing.revoked-view-denied",
+      "source": "backend/tests/blackbox/notes_therapy_share_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "sharing.missing-link",
+      "test": "TestBlackboxSharingTherapy/sharing.missing-link",
+      "source": "backend/tests/blackbox/notes_therapy_share_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "therapy.invalid-persona",
+      "test": "TestBlackboxSharingTherapy/therapy.invalid-persona",
+      "source": "backend/tests/blackbox/notes_therapy_share_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "therapy.empty-sessions",
+      "test": "TestBlackboxSharingTherapy/therapy.empty-sessions",
+      "source": "backend/tests/blackbox/notes_therapy_share_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "therapy.start-comforting",
+      "test": "TestBlackboxSharingTherapy/therapy.start-comforting",
+      "source": "backend/tests/blackbox/notes_therapy_share_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "therapy.read-session",
+      "test": "TestBlackboxSharingTherapy/therapy.read-session",
+      "source": "backend/tests/blackbox/notes_therapy_share_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "therapy.cross-account-denied",
+      "test": "TestBlackboxSharingTherapy/therapy.cross-account-denied",
+      "source": "backend/tests/blackbox/notes_therapy_share_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "therapy.invalid-session-id",
+      "test": "TestBlackboxSharingTherapy/therapy.invalid-session-id",
+      "source": "backend/tests/blackbox/notes_therapy_share_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "therapy.reject-empty-message",
+      "test": "TestBlackboxSharingTherapy/therapy.reject-empty-message",
+      "source": "backend/tests/blackbox/notes_therapy_share_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "therapy.text-turn-controlled-ai",
+      "test": "TestBlackboxSharingTherapy/therapy.text-turn-controlled-ai",
+      "source": "backend/tests/blackbox/notes_therapy_share_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "therapy.end-session",
+      "test": "TestBlackboxSharingTherapy/therapy.end-session",
+      "source": "backend/tests/blackbox/notes_therapy_share_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "therapy.reject-turn-after-end",
+      "test": "TestBlackboxSharingTherapy/therapy.reject-turn-after-end",
+      "source": "backend/tests/blackbox/notes_therapy_share_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "public.health",
+      "test": "TestBlackboxSecurity/public.health",
+      "source": "backend/tests/blackbox/security_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "public.version",
+      "test": "TestBlackboxSecurity/public.version",
+      "source": "backend/tests/blackbox/security_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "public.catalogue",
+      "test": "TestBlackboxSecurity/public.catalogue",
+      "source": "backend/tests/blackbox/security_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "public.unknown-route",
+      "test": "TestBlackboxSecurity/public.unknown-route",
+      "source": "backend/tests/blackbox/security_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "public.upload-proxy-disabled",
+      "test": "TestBlackboxSecurity/public.upload-proxy-disabled",
+      "source": "backend/tests/blackbox/security_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "auth.login-valid-local",
+      "test": "TestBlackboxSecurity/auth.login-valid-local",
+      "source": "backend/tests/blackbox/security_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "auth.login-wrong-password",
+      "test": "TestBlackboxSecurity/auth.login-wrong-password",
+      "source": "backend/tests/blackbox/security_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "auth.login-missing-fields",
+      "test": "TestBlackboxSecurity/auth.login-missing-fields",
+      "source": "backend/tests/blackbox/security_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "auth.register-duplicate-email",
+      "test": "TestBlackboxSecurity/auth.register-duplicate-email",
+      "source": "backend/tests/blackbox/security_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "auth.register-invalid-email",
+      "test": "TestBlackboxSecurity/auth.register-invalid-email",
+      "source": "backend/tests/blackbox/security_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "auth.register-short-password",
+      "test": "TestBlackboxSecurity/auth.register-short-password",
+      "source": "backend/tests/blackbox/security_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "security.protected-route-authentication",
+      "test": "TestBlackboxSecurity/security.protected-route-authentication",
+      "source": "backend/tests/blackbox/security_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "security.response-headers",
+      "test": "TestBlackboxSecurity/security.response-headers",
+      "source": "backend/tests/blackbox/security_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "security.cors-preflight",
+      "test": "TestBlackboxSecurity/security.cors-preflight",
+      "source": "backend/tests/blackbox/security_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "external.supabase-es256-login",
+      "description": "Real Supabase-issued session against the isolated backend",
+      "test": null,
+      "status": "planned",
+      "boundary": "requires additional fixture or service configuration"
+    },
+    {
+      "id": "external.supabase-key-rotation",
+      "description": "JWKS key rotation and cache refresh through HTTP",
+      "test": null,
+      "status": "planned",
+      "boundary": "requires additional fixture or service configuration"
+    },
+    {
+      "id": "external.supabase-jwks-outage",
+      "description": "JWKS endpoint outage with and without cached keys",
+      "test": null,
+      "status": "planned",
+      "boundary": "requires additional fixture or service configuration"
+    },
+    {
+      "id": "external.reference-audio-english",
+      "description": "Reference speech upload and completed transcription through API",
+      "test": null,
+      "status": "planned",
+      "boundary": "requires additional fixture or service configuration"
+    },
+    {
+      "id": "external.reference-audio-hindi",
+      "description": "Hindi reference transcription and language handling",
+      "test": null,
+      "status": "planned",
+      "boundary": "requires additional fixture or service configuration"
+    },
+    {
+      "id": "external.reference-audio-noise",
+      "description": "Noisy/silent audio rejection and safe processing outcome",
+      "test": null,
+      "status": "planned",
+      "boundary": "requires additional fixture or service configuration"
+    },
+    {
+      "id": "external.transcription-provider-outage",
+      "description": "Transcription provider timeout/retry visible through entry status",
+      "test": null,
+      "status": "planned",
+      "boundary": "requires additional fixture or service configuration"
+    },
+    {
+      "id": "external.ai-provider-timeout",
+      "description": "AI timeout and recovery through conversation API",
+      "test": null,
+      "status": "planned",
+      "boundary": "requires additional fixture or service configuration"
+    },
+    {
+      "id": "external.ai-malformed-result",
+      "description": "Malformed provider output and safe API failure",
+      "test": null,
+      "status": "planned",
+      "boundary": "requires additional fixture or service configuration"
+    },
+    {
+      "id": "external.note-ocr-end-to-end",
+      "description": "Queued synthetic image reaches decrypted completed session through API",
+      "test": null,
+      "status": "planned",
+      "boundary": "requires additional fixture or service configuration"
+    },
+    {
+      "id": "external.note-ocr-failure",
+      "description": "Invalid image and provider failure reach safe session state",
+      "test": null,
+      "status": "planned",
+      "boundary": "requires additional fixture or service configuration"
+    },
+    {
+      "id": "external.google-valid-receipt",
+      "description": "Google sandbox purchase verification grants correct entitlement",
+      "test": null,
+      "status": "planned",
+      "boundary": "requires additional fixture or service configuration"
+    },
+    {
+      "id": "external.google-replayed-receipt",
+      "description": "Google receipt replay cannot grant another account entitlement",
+      "test": null,
+      "status": "planned",
+      "boundary": "requires additional fixture or service configuration"
+    },
+    {
+      "id": "external.apple-valid-receipt",
+      "description": "Apple sandbox purchase verification grants correct entitlement",
+      "test": null,
+      "status": "planned",
+      "boundary": "requires additional fixture or service configuration"
+    },
+    {
+      "id": "external.apple-invalid-receipt",
+      "description": "Invalid/revoked Apple receipt fails without entitlement change",
+      "test": null,
+      "status": "planned",
+      "boundary": "requires additional fixture or service configuration"
+    },
+    {
+      "id": "external.storage-service-outage",
+      "description": "Object storage outage is surfaced safely through API",
+      "test": null,
+      "status": "planned",
+      "boundary": "requires additional fixture or service configuration"
+    },
+    {
+      "id": "external.queue-service-outage",
+      "description": "Redis outage during entry creation has documented recoverable outcome",
+      "test": null,
+      "status": "planned",
+      "boundary": "requires additional fixture or service configuration"
+    },
+    {
+      "id": "external.database-service-outage",
+      "description": "Database outage returns safe errors and recovers",
+      "test": null,
+      "status": "planned",
+      "boundary": "requires additional fixture or service configuration"
+    },
+    {
+      "id": "external.concurrent-api-workload",
+      "description": "Bounded concurrent API workload preserves ownership and consistency",
+      "test": null,
+      "status": "planned",
+      "boundary": "requires additional fixture or service configuration"
+    },
+    {
+      "id": "external.export-native-pdf-validation",
+      "description": "Generated PDF has expected content and excludes foreign/crisis data",
+      "test": null,
+      "status": "planned",
+      "boundary": "requires additional fixture or service configuration"
+    },
+    {
+      "id": "external.therapy-voice-roundtrip",
+      "description": "Reference voice turn reaches transcript, reply and playable voice output",
+      "test": null,
+      "status": "planned",
+      "boundary": "requires additional fixture or service configuration"
+    },
+    {
+      "id": "external.notification-delivery",
+      "description": "Registered sandbox device receives only expected synthetic notification",
+      "test": null,
+      "status": "planned",
+      "boundary": "requires additional fixture or service configuration"
+    },
+    {
+      "id": "consent.register-therapist",
+      "test": "TestBlackboxConsent/consent.register-therapist",
+      "source": "backend/tests/blackbox/consent_ownership_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "consent.reject-nontherapist-list",
+      "test": "TestBlackboxConsent/consent.reject-nontherapist-list",
+      "source": "backend/tests/blackbox/consent_ownership_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "consent.invalid-client-id",
+      "test": "TestBlackboxConsent/consent.invalid-client-id",
+      "source": "backend/tests/blackbox/consent_ownership_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "consent.request-link",
+      "test": "TestBlackboxConsent/consent.request-link",
+      "source": "backend/tests/blackbox/consent_ownership_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "consent.pending-request-visible-to-client",
+      "test": "TestBlackboxConsent/consent.pending-request-visible-to-client",
+      "source": "backend/tests/blackbox/consent_ownership_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "consent.pending-client-brief-hidden",
+      "test": "TestBlackboxConsent/consent.pending-client-brief-hidden",
+      "source": "backend/tests/blackbox/consent_ownership_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "consent.invalid-approval-id",
+      "test": "TestBlackboxConsent/consent.invalid-approval-id",
+      "source": "backend/tests/blackbox/consent_ownership_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "consent.approve-link",
+      "test": "TestBlackboxConsent/consent.approve-link",
+      "source": "backend/tests/blackbox/consent_ownership_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "consent.approved-client-visible",
+      "test": "TestBlackboxConsent/consent.approved-client-visible",
+      "source": "backend/tests/blackbox/consent_ownership_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "consent.approved-brief",
+      "test": "TestBlackboxConsent/consent.approved-brief",
+      "source": "backend/tests/blackbox/consent_ownership_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "consent.client-revokes",
+      "test": "TestBlackboxConsent/consent.client-revokes",
+      "source": "backend/tests/blackbox/consent_ownership_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "consent.revoked-brief-hidden",
+      "test": "TestBlackboxConsent/consent.revoked-brief-hidden",
+      "source": "backend/tests/blackbox/consent_ownership_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "consent.therapist-unlink",
+      "test": "TestBlackboxConsent/consent.therapist-unlink",
+      "source": "backend/tests/blackbox/consent_ownership_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "conversation.ownership-owner-create",
+      "test": "TestBlackboxConversationOwnership/conversation.ownership-owner-create",
+      "source": "backend/tests/blackbox/consent_ownership_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "conversation.ownership-owner-reply",
+      "test": "TestBlackboxConversationOwnership/conversation.ownership-owner-reply",
+      "source": "backend/tests/blackbox/consent_ownership_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "conversation.ownership-existing-denied",
+      "test": "TestBlackboxConversationOwnership/conversation.ownership-existing-denied",
+      "source": "backend/tests/blackbox/consent_ownership_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "conversation.ownership-new-denied",
+      "test": "TestBlackboxConversationOwnership/conversation.ownership-new-denied",
+      "source": "backend/tests/blackbox/consent_ownership_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "conversation.ownership-owner-preserved",
+      "test": "TestBlackboxConversationOwnership/conversation.ownership-owner-preserved",
+      "source": "backend/tests/blackbox/consent_ownership_test.go",
+      "boundary": "HTTP with real application, PostgreSQL and Redis; controlled AI/storage"
+    },
+    {
+      "id": "endpoint.DELETE:/me.success",
+      "description": "DELETE /me: authorized successful feature behavior and returned/persisted result",
+      "test": null,
+      "status": "planned",
+      "boundary": "HTTP endpoint scenario awaiting implementation"
+    },
+    {
+      "id": "endpoint.DELETE:/me.negative",
+      "description": "DELETE /me: validation, entitlement, ownership or dependency failure as applicable",
+      "test": null,
+      "status": "planned",
+      "boundary": "HTTP endpoint scenario awaiting implementation"
+    },
+    {
+      "id": "endpoint.GET:/entries/flashback.success",
+      "description": "GET /entries/flashback: authorized successful feature behavior and returned/persisted result",
+      "test": null,
+      "status": "planned",
+      "boundary": "HTTP endpoint scenario awaiting implementation"
+    },
+    {
+      "id": "endpoint.GET:/entries/flashback.negative",
+      "description": "GET /entries/flashback: validation, entitlement, ownership or dependency failure as applicable",
+      "test": null,
+      "status": "planned",
+      "boundary": "HTTP endpoint scenario awaiting implementation"
+    },
+    {
+      "id": "endpoint.POST:/streak/freeze.success",
+      "description": "POST /streak/freeze: authorized successful feature behavior and returned/persisted result",
+      "test": null,
+      "status": "planned",
+      "boundary": "HTTP endpoint scenario awaiting implementation"
+    },
+    {
+      "id": "endpoint.POST:/streak/freeze.negative",
+      "description": "POST /streak/freeze: validation, entitlement, ownership or dependency failure as applicable",
+      "test": null,
+      "status": "planned",
+      "boundary": "HTTP endpoint scenario awaiting implementation"
+    },
+    {
+      "id": "endpoint.GET:/export/pdf.success",
+      "description": "GET /export/pdf: authorized successful feature behavior and returned/persisted result",
+      "test": null,
+      "status": "planned",
+      "boundary": "HTTP endpoint scenario awaiting implementation"
+    },
+    {
+      "id": "endpoint.GET:/export/pdf.negative",
+      "description": "GET /export/pdf: validation, entitlement, ownership or dependency failure as applicable",
+      "test": null,
+      "status": "planned",
+      "boundary": "HTTP endpoint scenario awaiting implementation"
+    },
+    {
+      "id": "endpoint.POST:/chapters/:id/summarize.success",
+      "description": "POST /chapters/:id/summarize: authorized successful feature behavior and returned/persisted result",
+      "test": null,
+      "status": "planned",
+      "boundary": "HTTP endpoint scenario awaiting implementation"
+    },
+    {
+      "id": "endpoint.POST:/chapters/:id/summarize.negative",
+      "description": "POST /chapters/:id/summarize: validation, entitlement, ownership or dependency failure as applicable",
+      "test": null,
+      "status": "planned",
+      "boundary": "HTTP endpoint scenario awaiting implementation"
+    },
+    {
+      "id": "endpoint.POST:/therapy/sessions/:id/presign.success",
+      "description": "POST /therapy/sessions/:id/presign: authorized successful feature behavior and returned/persisted result",
+      "test": null,
+      "status": "planned",
+      "boundary": "HTTP endpoint scenario awaiting implementation"
+    },
+    {
+      "id": "endpoint.POST:/therapy/sessions/:id/presign.negative",
+      "description": "POST /therapy/sessions/:id/presign: validation, entitlement, ownership or dependency failure as applicable",
+      "test": null,
+      "status": "planned",
+      "boundary": "HTTP endpoint scenario awaiting implementation"
+    }
+  ],
+  "routes": [
+    {
+      "method": "GET",
+      "path": "/health",
+      "optional": false
+    },
+    {
+      "method": "GET",
+      "path": "/version",
+      "optional": false
+    },
+    {
+      "method": "POST",
+      "path": "/auth/register",
+      "optional": false
+    },
+    {
+      "method": "POST",
+      "path": "/auth/login",
+      "optional": false
+    },
+    {
+      "method": "GET",
+      "path": "/me",
+      "optional": false
+    },
+    {
+      "method": "PUT",
+      "path": "/me",
+      "optional": false
+    },
+    {
+      "method": "DELETE",
+      "path": "/me",
+      "optional": false
+    },
+    {
+      "method": "GET",
+      "path": "/billing/plan",
+      "optional": false
+    },
+    {
+      "method": "POST",
+      "path": "/billing/upgrade",
+      "optional": false
+    },
+    {
+      "method": "PUT",
+      "path": "/upload",
+      "optional": true
+    },
+    {
+      "method": "POST",
+      "path": "/entries/presign",
+      "optional": false
+    },
+    {
+      "method": "POST",
+      "path": "/entries",
+      "optional": false
+    },
+    {
+      "method": "GET",
+      "path": "/entries",
+      "optional": false
+    },
+    {
+      "method": "GET",
+      "path": "/entries/:id",
+      "optional": false
+    },
+    {
+      "method": "GET",
+      "path": "/entries/:id/analysis",
+      "optional": false
+    },
+    {
+      "method": "GET",
+      "path": "/timeline",
+      "optional": false
+    },
+    {
+      "method": "GET",
+      "path": "/entries/search",
+      "optional": false
+    },
+    {
+      "method": "POST",
+      "path": "/entries/:id/conversation",
+      "optional": false
+    },
+    {
+      "method": "POST",
+      "path": "/conversations/:id/messages",
+      "optional": false
+    },
+    {
+      "method": "GET",
+      "path": "/entries/flashback",
+      "optional": false
+    },
+    {
+      "method": "POST",
+      "path": "/entries/:id/checkin",
+      "optional": false
+    },
+    {
+      "method": "GET",
+      "path": "/mood/weekly",
+      "optional": false
+    },
+    {
+      "method": "GET",
+      "path": "/mood/streak",
+      "optional": false
+    },
+    {
+      "method": "GET",
+      "path": "/mood/history",
+      "optional": false
+    },
+    {
+      "method": "GET",
+      "path": "/mood/patterns",
+      "optional": false
+    },
+    {
+      "method": "POST",
+      "path": "/streak/freeze",
+      "optional": false
+    },
+    {
+      "method": "POST",
+      "path": "/devices",
+      "optional": false
+    },
+    {
+      "method": "GET",
+      "path": "/reviews/weekly",
+      "optional": false
+    },
+    {
+      "method": "GET",
+      "path": "/reviews/weekly/latest",
+      "optional": false
+    },
+    {
+      "method": "GET",
+      "path": "/reviews/annual",
+      "optional": false
+    },
+    {
+      "method": "GET",
+      "path": "/reviews/annual/latest",
+      "optional": false
+    },
+    {
+      "method": "POST",
+      "path": "/share",
+      "optional": false
+    },
+    {
+      "method": "GET",
+      "path": "/share",
+      "optional": false
+    },
+    {
+      "method": "DELETE",
+      "path": "/share/:id",
+      "optional": false
+    },
+    {
+      "method": "GET",
+      "path": "/share/:token",
+      "optional": false
+    },
+    {
+      "method": "GET",
+      "path": "/export/pdf",
+      "optional": false
+    },
+    {
+      "method": "GET",
+      "path": "/insights/card",
+      "optional": false
+    },
+    {
+      "method": "POST",
+      "path": "/insights/share",
+      "optional": false
+    },
+    {
+      "method": "POST",
+      "path": "/b2b/companies/:slug/join",
+      "optional": false
+    },
+    {
+      "method": "GET",
+      "path": "/b2b/companies/:slug/mood",
+      "optional": false
+    },
+    {
+      "method": "GET",
+      "path": "/journeys",
+      "optional": false
+    },
+    {
+      "method": "POST",
+      "path": "/journeys/:journeyID/start",
+      "optional": false
+    },
+    {
+      "method": "GET",
+      "path": "/journeys/sessions",
+      "optional": false
+    },
+    {
+      "method": "GET",
+      "path": "/journeys/sessions/:sessionID",
+      "optional": false
+    },
+    {
+      "method": "POST",
+      "path": "/journeys/sessions/:sessionID/advance",
+      "optional": false
+    },
+    {
+      "method": "GET",
+      "path": "/chapters",
+      "optional": false
+    },
+    {
+      "method": "POST",
+      "path": "/chapters",
+      "optional": false
+    },
+    {
+      "method": "GET",
+      "path": "/chapters/:id",
+      "optional": false
+    },
+    {
+      "method": "PUT",
+      "path": "/chapters/:id",
+      "optional": false
+    },
+    {
+      "method": "DELETE",
+      "path": "/chapters/:id",
+      "optional": false
+    },
+    {
+      "method": "GET",
+      "path": "/chapters/:id/detail",
+      "optional": false
+    },
+    {
+      "method": "POST",
+      "path": "/chapters/:id/summarize",
+      "optional": false
+    },
+    {
+      "method": "GET",
+      "path": "/relationships",
+      "optional": false
+    },
+    {
+      "method": "GET",
+      "path": "/relationships/:id",
+      "optional": false
+    },
+    {
+      "method": "PATCH",
+      "path": "/relationships/:id",
+      "optional": false
+    },
+    {
+      "method": "POST",
+      "path": "/relationships/:id/merge",
+      "optional": false
+    },
+    {
+      "method": "POST",
+      "path": "/therapists/register",
+      "optional": false
+    },
+    {
+      "method": "POST",
+      "path": "/therapists/clients/link",
+      "optional": false
+    },
+    {
+      "method": "DELETE",
+      "path": "/therapists/clients/:clientID",
+      "optional": false
+    },
+    {
+      "method": "GET",
+      "path": "/therapists/clients",
+      "optional": false
+    },
+    {
+      "method": "GET",
+      "path": "/therapists/clients/:clientID/brief",
+      "optional": false
+    },
+    {
+      "method": "GET",
+      "path": "/therapists/requests",
+      "optional": false
+    },
+    {
+      "method": "POST",
+      "path": "/therapists/requests/:therapistID/approve",
+      "optional": false
+    },
+    {
+      "method": "POST",
+      "path": "/therapists/requests/:therapistID/decline",
+      "optional": false
+    },
+    {
+      "method": "GET",
+      "path": "/therapists/me",
+      "optional": false
+    },
+    {
+      "method": "POST",
+      "path": "/therapists/consent",
+      "optional": false
+    },
+    {
+      "method": "GET",
+      "path": "/therapists/overview",
+      "optional": false
+    },
+    {
+      "method": "POST",
+      "path": "/therapists/external-clients",
+      "optional": false
+    },
+    {
+      "method": "GET",
+      "path": "/therapists/external-clients",
+      "optional": false
+    },
+    {
+      "method": "GET",
+      "path": "/therapists/external-clients/:id",
+      "optional": false
+    },
+    {
+      "method": "PATCH",
+      "path": "/therapists/external-clients/:id",
+      "optional": false
+    },
+    {
+      "method": "DELETE",
+      "path": "/therapists/external-clients/:id",
+      "optional": false
+    },
+    {
+      "method": "POST",
+      "path": "/therapists/sessions/presign",
+      "optional": false
+    },
+    {
+      "method": "POST",
+      "path": "/therapists/sessions",
+      "optional": false
+    },
+    {
+      "method": "GET",
+      "path": "/therapists/sessions",
+      "optional": false
+    },
+    {
+      "method": "GET",
+      "path": "/therapists/sessions/:id",
+      "optional": false
+    },
+    {
+      "method": "PATCH",
+      "path": "/therapists/sessions/:id",
+      "optional": false
+    },
+    {
+      "method": "POST",
+      "path": "/therapists/sessions/:id/summarize",
+      "optional": false
+    },
+    {
+      "method": "DELETE",
+      "path": "/therapists/sessions/:id",
+      "optional": false
+    },
+    {
+      "method": "POST",
+      "path": "/me/accept-terms",
+      "optional": false
+    },
+    {
+      "method": "GET",
+      "path": "/me/terms",
+      "optional": false
+    },
+    {
+      "method": "POST",
+      "path": "/therapy/sessions",
+      "optional": false
+    },
+    {
+      "method": "GET",
+      "path": "/therapy/sessions",
+      "optional": false
+    },
+    {
+      "method": "GET",
+      "path": "/therapy/sessions/:id",
+      "optional": false
+    },
+    {
+      "method": "POST",
+      "path": "/therapy/sessions/:id/presign",
+      "optional": false
+    },
+    {
+      "method": "POST",
+      "path": "/therapy/sessions/:id/messages",
+      "optional": false
+    },
+    {
+      "method": "POST",
+      "path": "/therapy/sessions/:id/end",
+      "optional": false
+    }
+  ],
+  "history": [
+    {
+      "version": 1,
+      "total": 225
+    },
+    {
+      "version": 2,
+      "total": 243
+    }
+  ],
+  "changeReason": "Endpoint inventory audit added positive and negative placeholders for all six untouched enabled endpoints. No earlier case removed."
+}

@@ -133,7 +133,7 @@ func (r *NudgeRepository) LapsedUsersAtNudgeHour(ctx context.Context, lapseHours
 		      SELECT 1 FROM entries e
 		      WHERE e.user_id = u.id
 		        AND e.status = 'completed'
-		        AND e.created_at > NOW() - ($1 || ' hours')::INTERVAL
+		        AND e.created_at > NOW() - ($1::int * INTERVAL '1 hour')
 		  )
 		  -- no reengagement nudge sent in last 23 hours (dedup)
 		  AND NOT EXISTS (
@@ -292,14 +292,14 @@ func (r *NudgeRepository) PlanExpiringSoonUsersAtLocalHour(ctx context.Context, 
 		  AND u.plan <> 'free'
 		  AND u.plan_expires_at IS NOT NULL
 		  AND u.plan_expires_at > NOW()
-		  AND u.plan_expires_at <= NOW() + ($2 || ' days')::INTERVAL
+		  AND u.plan_expires_at <= NOW() + ($2::int * INTERVAL '1 day')
 		  AND EXTRACT(HOUR FROM NOW() AT TIME ZONE COALESCE(NULLIF(u.timezone, ''), 'UTC'))::int = $1
 		  -- dedup: no plan_expiring_soon nudge sent for this expiry cycle yet
 		  AND NOT EXISTS (
 		      SELECT 1 FROM nudges n
 		      WHERE n.user_id = u.id
 		        AND n.nudge_type = 'plan_expiring_soon'
-		        AND n.created_at > NOW() - (($2 + 1) || ' days')::INTERVAL
+		        AND n.created_at > NOW() - (($2::int + 1) * INTERVAL '1 day')
 		  )`
 
 	rows, err := r.db.Query(ctx, q, localHour, warnDays)

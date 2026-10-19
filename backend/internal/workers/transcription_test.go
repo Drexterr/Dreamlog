@@ -52,11 +52,11 @@ func (q *fakeQueue) EnqueueDLQ(_ context.Context, payload []byte, _ string) erro
 
 // fakeEntryStore holds one entry and tracks state transitions.
 type fakeEntryStore struct {
-	mu         sync.Mutex
-	entry      *models.Entry
-	setFailed  []string
+	mu           sync.Mutex
+	entry        *models.Entry
+	setFailed    []string
 	setCompleted bool
-	deleted    bool
+	deleted      bool
 }
 
 func (s *fakeEntryStore) SetProcessing(_ context.Context, id uuid.UUID) (bool, error) {
@@ -93,6 +93,15 @@ func (s *fakeEntryStore) SetCompleted(_ context.Context, id uuid.UUID, transcrip
 	return nil
 }
 
+func (s *fakeEntryStore) SetTranscript(_ context.Context, id uuid.UUID, transcript, _ string) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if s.entry != nil && s.entry.ID == id {
+		s.entry.Transcript = &transcript
+	}
+	return nil
+}
+
 func (s *fakeEntryStore) SetFailed(_ context.Context, _ uuid.UUID, errMsg string) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -105,15 +114,56 @@ func (s *fakeEntryStore) SetFailed(_ context.Context, _ uuid.UUID, errMsg string
 }
 
 type fakeAnalysisStore struct {
-	mu       sync.Mutex
-	upserted []*models.EntryAnalysis
+	mu           sync.Mutex
+	upserted     []*models.EntryAnalysis
+	err          error
+	beforeUpsert func()
 }
 
 func (s *fakeAnalysisStore) Upsert(_ context.Context, _ uuid.UUID, a *models.EntryAnalysis) (*models.EntryAnalysis, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
+	if s.beforeUpsert != nil {
+		s.beforeUpsert()
+	}
+	if s.err != nil {
+		return nil, s.err
+	}
 	s.upserted = append(s.upserted, a)
 	return a, nil
+}
+
+func TestWorker_CompletedOnlyAfterAnalysisIsStored(t *testing.T) {
+	entryID, userID := uuid.New(), uuid.New()
+	f := newWorkerFixture(entryID, userID, "audio/qa")
+	f.analysisStore.beforeUpsert = func() {
+		if f.entryStore.entry.Status != models.EntryStatusProcessing {
+			t.Error("entry advertised completion before analysis was saved")
+		}
+		if f.entryStore.entry.Transcript == nil {
+			t.Error("transcript should be available while analysis is processing")
+		}
+	}
+	if err := f.worker.handle(context.Background(), &models.TranscriptionJob{EntryID: entryID, UserID: userID, AudioKey: "audio/qa"}, zap.NewNop()); err != nil {
+		t.Fatal(err)
+	}
+	if f.entryStore.entry.Status != models.EntryStatusCompleted {
+		t.Error("entry did not complete after analysis")
+	}
+}
+
+func TestWorker_CrisisAnalysisPersistenceFailureDoesNotComplete(t *testing.T) {
+	entryID, userID := uuid.New(), uuid.New()
+	f := newWorkerFixture(entryID, userID, "audio/qa")
+	f.crisis.result = &services.CrisisResult{Detected: true, Response: "safe response"}
+	f.analysisStore.err = errors.New("storage unavailable")
+	err := f.worker.handle(context.Background(), &models.TranscriptionJob{EntryID: entryID, UserID: userID, AudioKey: "audio/qa"}, zap.NewNop())
+	if err == nil {
+		t.Error("analysis persistence failure must be retried")
+	}
+	if f.entryStore.entry.Status == models.EntryStatusCompleted {
+		t.Error("missing crisis analysis must not advertise completion")
+	}
 }
 
 type fakeStorage struct {
@@ -186,9 +236,9 @@ func (a *fakeAIAnalyzer) AnalyzeEntry(_ context.Context, _ services.AnalyzeEntry
 }
 
 type fakeNudgeScheduler struct {
-	mu       sync.Mutex
-	calls    int
-	lastMsg  string
+	mu      sync.Mutex
+	calls   int
+	lastMsg string
 }
 
 func (s *fakeNudgeScheduler) ScheduleMorningNudge(_ context.Context, _, _ uuid.UUID, message string) error {
@@ -202,16 +252,16 @@ func (s *fakeNudgeScheduler) ScheduleMorningNudge(_ context.Context, _, _ uuid.U
 // ── Worker builder ────────────────────────────────────────────────────────────
 
 type workerFixture struct {
-	entryStore   *fakeEntryStore
+	entryStore    *fakeEntryStore
 	analysisStore *fakeAnalysisStore
-	storage      *fakeStorage
-	transcriber  *fakeTranscriber
-	crisis       *fakeCrisisScreener
-	context      *fakeContextAssembler
-	ai           *fakeAIAnalyzer
-	nudge        *fakeNudgeScheduler
-	queue        *fakeQueue
-	worker       *TranscriptionWorker
+	storage       *fakeStorage
+	transcriber   *fakeTranscriber
+	crisis        *fakeCrisisScreener
+	context       *fakeContextAssembler
+	ai            *fakeAIAnalyzer
+	nudge         *fakeNudgeScheduler
+	queue         *fakeQueue
+	worker        *TranscriptionWorker
 }
 
 func newWorkerFixture(entryID, userID uuid.UUID, audioKey string) *workerFixture {

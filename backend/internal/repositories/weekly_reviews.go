@@ -158,14 +158,18 @@ type weeklyReviewScanner interface {
 func scanWeeklyReview(row weeklyReviewScanner) (*models.WeeklyReview, error) {
 	rv := &models.WeeklyReview{}
 	var arcJSON []byte
+	var narrative *string
 
 	err := row.Scan(
-		&rv.ID, &rv.UserID, &rv.WeekStart, &rv.Narrative,
+		&rv.ID, &rv.UserID, &rv.WeekStart, &narrative,
 		&rv.TopEmotions, &arcJSON,
 		&rv.EntryCount, &rv.Status, &rv.ScheduledAt, &rv.GeneratedAt, &rv.CreatedAt,
 	)
 	if err != nil {
 		return nil, err
+	}
+	if narrative != nil {
+		rv.Narrative = *narrative
 	}
 
 	if len(arcJSON) > 0 {

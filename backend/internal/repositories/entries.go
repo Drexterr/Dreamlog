@@ -161,6 +161,15 @@ func (r *EntryRepository) SetProcessing(ctx context.Context, id uuid.UUID) (bool
 	return true, nil
 }
 
+// SetTranscript persists transcription without advertising that analysis is ready.
+func (r *EntryRepository) SetTranscript(ctx context.Context, id uuid.UUID, transcript, language string) error {
+	_, err := r.db.Exec(ctx, `UPDATE entries SET transcript = $2, language = $3 WHERE id = $1`, id, transcript, language)
+	if err != nil {
+		return fmt.Errorf("entries.SetTranscript: %w", err)
+	}
+	return nil
+}
+
 // SetCompleted stores the transcript and marks entry as completed.
 func (r *EntryRepository) SetCompleted(ctx context.Context, id uuid.UUID, transcript, language string) error {
 	const q = `

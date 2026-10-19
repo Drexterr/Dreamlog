@@ -59,17 +59,13 @@ func (r *RelationshipRepository) UpsertPersonMentions(
 		// Upsert person (case-insensitive name match via the unique index).
 		const upsertPerson = `
 			INSERT INTO people (user_id, name, role, mention_count, positive_count, negative_count, last_mentioned_at)
-			VALUES ($1, $2, $3, 1, $4, $5, NOW())
+			VALUES ($1, $2, $3, 0, 0, 0, NOW())
 			ON CONFLICT (user_id, LOWER(name)) DO UPDATE
-			    SET mention_count     = people.mention_count + 1,
-			        positive_count    = people.positive_count + $4,
-			        negative_count    = people.negative_count + $5,
-			        last_mentioned_at = NOW(),
-			        updated_at        = NOW()
+			    SET name = people.name
 			RETURNING id`
 
 		var personID uuid.UUID
-		if err := tx.QueryRow(ctx, upsertPerson, userID, ep.Name, role, posInc, negInc).Scan(&personID); err != nil {
+		if err := tx.QueryRow(ctx, upsertPerson, userID, ep.Name, role).Scan(&personID); err != nil {
 			return fmt.Errorf("relationships.UpsertPersonMentions: upsert person %q: %w", ep.Name, err)
 		}
 
@@ -79,8 +75,20 @@ func (r *RelationshipRepository) UpsertPersonMentions(
 			VALUES ($1, $2, $3, $4, $5)
 			ON CONFLICT (person_id, entry_id) DO NOTHING`
 
-		if _, err := tx.Exec(ctx, insertMention, personID, entryID, userID, sentiment, ep.Context); err != nil {
+		tag, err := tx.Exec(ctx, insertMention, personID, entryID, userID, sentiment, ep.Context)
+		if err != nil {
 			return fmt.Errorf("relationships.UpsertPersonMentions: insert mention %q: %w", ep.Name, err)
+		}
+		if tag.RowsAffected() == 0 {
+			continue
+		}
+		// A retried entry must not inflate aggregates or move its mention time.
+		if _, err := tx.Exec(ctx, `
+			UPDATE people SET mention_count = mention_count + 1,
+			    positive_count = positive_count + $2, negative_count = negative_count + $3,
+			    last_mentioned_at = NOW(), updated_at = NOW()
+			WHERE id = $1`, personID, posInc, negInc); err != nil {
+			return fmt.Errorf("relationships.UpsertPersonMentions: update counts %q: %w", ep.Name, err)
 		}
 	}
 

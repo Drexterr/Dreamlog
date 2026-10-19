@@ -1,0 +1,23 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: ode_test
+      POSTGRES_USER: ode_test
+      POSTGRES_PASSWORD: regression-local-only
+    ports:
+      - "127.0.0.1:54331:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ode_test -d ode_test"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "127.0.0.1:63791:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 2s
+      timeout: 3s
+      retries: 30

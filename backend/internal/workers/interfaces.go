@@ -24,6 +24,7 @@ type entryStore interface {
 	SetProcessing(ctx context.Context, id uuid.UUID) (bool, error)
 	GetByIDInternal(ctx context.Context, id uuid.UUID) (*models.Entry, error)
 	SetCompleted(ctx context.Context, id uuid.UUID, transcript, language string) error
+	SetTranscript(ctx context.Context, id uuid.UUID, transcript, language string) error
 	SetFailed(ctx context.Context, id uuid.UUID, errMsg string) error
 }
 

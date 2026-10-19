@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	"github.com/dreamlog/backend/internal/models"
+	"github.com/dreamlog/backend/pkg/apierr"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -23,14 +24,18 @@ func NewConversationRepository(db *pgxpool.Pool) *ConversationRepository {
 func (r *ConversationRepository) GetOrCreate(ctx context.Context, entryID, userID uuid.UUID) (*models.Conversation, error) {
 	const upsertQ = `
 		INSERT INTO conversations (entry_id, user_id)
-		VALUES ($1, $2)
+		SELECT id, $2 FROM entries WHERE id = $1 AND user_id = $2
 		ON CONFLICT (entry_id) DO UPDATE SET updated_at = NOW()
+		WHERE conversations.user_id = $2
 		RETURNING id, entry_id, user_id, turn_count, is_closed, created_at, updated_at`
 
 	c := &models.Conversation{}
 	err := r.db.QueryRow(ctx, upsertQ, entryID, userID).Scan(
 		&c.ID, &c.EntryID, &c.UserID, &c.TurnCount, &c.IsClosed, &c.CreatedAt, &c.UpdatedAt,
 	)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return nil, apierr.NotFound("entry")
+	}
 	if err != nil {
 		return nil, fmt.Errorf("conv.GetOrCreate: %w", err)
 	}

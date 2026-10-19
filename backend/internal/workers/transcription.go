@@ -197,7 +197,7 @@ func (w *TranscriptionWorker) handle(ctx context.Context, job *models.Transcript
 	}
 
 	// Persist transcript immediately - before AI analysis.
-	if err := w.entryRepo.SetCompleted(ctx, job.EntryID, whisperResult.Text, whisperResult.Language); err != nil {
+	if err := w.entryRepo.SetTranscript(ctx, job.EntryID, whisperResult.Text, whisperResult.Language); err != nil {
 		return fmt.Errorf("store transcript: %w", err)
 	}
 
@@ -222,7 +222,10 @@ func (w *TranscriptionWorker) handle(ctx context.Context, job *models.Transcript
 			KeyQuotes:  []string{},
 		}
 		if _, err := w.analysisRepo.Upsert(ctx, job.EntryID, analysis); err != nil {
-			log.Error("worker: store crisis analysis", zap.Error(err))
+			return fmt.Errorf("store crisis analysis: %w", err)
+		}
+		if err := w.entryRepo.SetCompleted(ctx, job.EntryID, whisperResult.Text, whisperResult.Language); err != nil {
+			return fmt.Errorf("complete crisis entry: %w", err)
 		}
 		// No nudge for crisis entries. Skip audio deletion for safety audit trail.
 		return nil
@@ -255,14 +258,14 @@ func (w *TranscriptionWorker) handle(ctx context.Context, job *models.Transcript
 
 	// ── 6. Persist analysis ─────────────────────────────────────────────────
 	analysis := &models.EntryAnalysis{
-		EntryID:       job.EntryID,
-		MoodScore:     claudeOut.MoodScore,
-		EmotionalTone: claudeOut.EmotionalTone,
-		Topics:        claudeOut.Topics,
-		KeyQuotes:     claudeOut.KeyQuotes,
-		Summary:       claudeOut.Summary,
-		Reflection:    claudeOut.Reflection,
-		MorningNudge:  claudeOut.MorningNudge,
+		EntryID:           job.EntryID,
+		MoodScore:         claudeOut.MoodScore,
+		EmotionalTone:     claudeOut.EmotionalTone,
+		Topics:            claudeOut.Topics,
+		KeyQuotes:         claudeOut.KeyQuotes,
+		Summary:           claudeOut.Summary,
+		Reflection:        claudeOut.Reflection,
+		MorningNudge:      claudeOut.MorningNudge,
 		IsCrisis:          false,
 		ConnectionInsight: connectionInsight,
 		DreamSymbols:      claudeOut.DreamSymbols,
@@ -272,6 +275,9 @@ func (w *TranscriptionWorker) handle(ctx context.Context, job *models.Transcript
 	}
 	if _, err := w.analysisRepo.Upsert(ctx, job.EntryID, analysis); err != nil {
 		return fmt.Errorf("store analysis: %w", err)
+	}
+	if err := w.entryRepo.SetCompleted(ctx, job.EntryID, whisperResult.Text, whisperResult.Language); err != nil {
+		return fmt.Errorf("complete entry: %w", err)
 	}
 
 	// ── 7. Schedule morning nudge ───────────────────────────────────────────

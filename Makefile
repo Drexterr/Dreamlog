@@ -9,7 +9,7 @@
         scale-worker \
         minio-console \
         api worker tidy vet lint \
-        test test-race test-cover test-crisis test-services test-handlers test-workers \
+        test test-race test-cover test-crisis test-services test-handlers test-workers test-backend-regression \
         mobile-install mobile-start mobile-tunnel mobile-android mobile-ios mobile-web mobile-lint mobile-typecheck \
         mobile-build-dev mobile-build-dev-local mobile-build-preview mobile-build-preview-local mobile-build-prod \
         mobile-build-dev-ios mobile-build-preview-ios mobile-build-prod-ios \
@@ -82,6 +82,7 @@ help:
 	@echo "    make test-services    Run only internal/services tests"
 	@echo "    make test-handlers    Run only internal/handlers tests"
 	@echo "    make test-workers     Run only internal/workers tests"
+	@echo "    make test-backend-regression  Run backend white-box + black-box 80% gates (Docker required)"
 	@echo ""
 	@echo "  Mobile - dev server"
 	@echo "    make mobile-install        npm install"
@@ -282,6 +283,11 @@ test-handlers:
 # All worker tests (transcription pipeline, schedulers, nudge).
 test-workers:
 	cd backend && go test -race ./internal/workers/...
+
+# Full backend regression with isolated PostgreSQL/Redis and both 80% gates.
+test-backend-regression:
+	docker compose -p ode-regression -f scripts/regression/compose.yml up -d --wait
+	node scripts/regression/run-backend-dual80.mjs
 
 # ── Mobile ────────────────────────────────────────────────────────────────────
 # --legacy-peer-deps: the tree has a pre-existing react/react-dom peer conflict
