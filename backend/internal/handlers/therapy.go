@@ -240,5 +240,5 @@ func (h *TherapyHandler) ListSessions(c *gin.Context) {
 }
 
 func isPaymentRequired(err error) bool {
-	return err != nil && err.Error() == "therapy session requires payment"
+	return errors.Is(err, services.ErrTherapyPaymentRequired)
 }

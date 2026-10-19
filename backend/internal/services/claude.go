@@ -8,6 +8,7 @@ import (
 	"io"
 	"net/http"
 	"strings"
+	"unicode/utf8"
 	"time"
 
 	appconfig "github.com/dreamlog/backend/internal/config"
@@ -115,7 +116,7 @@ func (s *ClaudeService) AnalyzeEntry(ctx context.Context, input AnalyzeEntryInpu
 	cleaned = strings.TrimSpace(cleaned)
 
 	if err := json.Unmarshal([]byte(cleaned), &output); err != nil {
-		return nil, fmt.Errorf("claude.AnalyzeEntry: unmarshal response: %w (raw: %s)", err, truncate(result, 200))
+		return nil, fmt.Errorf("claude.AnalyzeEntry: unmarshal response: %w (raw_len=%d)", err, len(result))
 	}
 
 	// The model's own SAFETY OVERRIDE. Return it as-is so the worker routes
@@ -202,7 +203,7 @@ func (s *ClaudeService) GenerateWeeklyReview(ctx context.Context, input WeeklyRe
 
 	var out WeeklyReviewOutput
 	if err := json.Unmarshal([]byte(cleaned), &out); err != nil {
-		return nil, fmt.Errorf("claude.GenerateWeeklyReview: unmarshal: %w (raw: %s)", err, truncate(result, 200))
+		return nil, fmt.Errorf("claude.GenerateWeeklyReview: unmarshal: %w (raw_len=%d)", err, len(result))
 	}
 	return &out, nil
 }
@@ -241,7 +242,7 @@ func (s *ClaudeService) GenerateYearInReview(ctx context.Context, input YearInRe
 
 	var out YearInReviewOutput
 	if err := json.Unmarshal([]byte(cleaned), &out); err != nil {
-		return nil, fmt.Errorf("claude.GenerateYearInReview: unmarshal: %w (raw: %s)", err, truncate(result, 200))
+		return nil, fmt.Errorf("claude.GenerateYearInReview: unmarshal: %w (raw_len=%d)", err, len(result))
 	}
 	return &out, nil
 }
@@ -309,7 +310,7 @@ func (s *ClaudeService) ExtractPeople(ctx context.Context, transcript string) (*
 
 	var out models.PersonExtractionOutput
 	if err := json.Unmarshal([]byte(cleaned), &out); err != nil {
-		return nil, fmt.Errorf("claude.ExtractPeople: unmarshal: %w (raw: %s)", err, truncate(result, 200))
+		return nil, fmt.Errorf("claude.ExtractPeople: unmarshal: %w (raw_len=%d)", err, len(result))
 	}
 	return &out, nil
 }
@@ -346,7 +347,7 @@ func (s *ClaudeService) GenerateChapterSummary(ctx context.Context, input Chapte
 
 	var out ChapterSummaryOutput
 	if err := json.Unmarshal([]byte(cleaned), &out); err != nil {
-		return nil, fmt.Errorf("claude.GenerateChapterSummary: unmarshal: %w (raw: %s)", err, truncate(result, 200))
+		return nil, fmt.Errorf("claude.GenerateChapterSummary: unmarshal: %w (raw_len=%d)", err, len(result))
 	}
 	return &out, nil
 }
@@ -475,11 +476,17 @@ func isRetryableError(err error) bool {
 	return false
 }
 
+// truncate shortens s to at most n bytes without splitting a UTF-8 rune
+// (Hindi / Devanagari text is multi-byte).
 func truncate(s string, n int) string {
 	if len(s) <= n {
 		return s
 	}
-	return s[:n] + "…"
+	cut := n
+	for cut > 0 && !utf8.RuneStart(s[cut]) {
+		cut--
+	}
+	return s[:cut] + "…"
 }
 
 // ── Stub (dev only) ───────────────────────────────────────────────────────────
@@ -631,7 +638,7 @@ func (s *ClaudeService) TherapySummary(ctx context.Context, input TherapySummary
 
 	var analysis models.TherapySessionAnalysis
 	if err := json.Unmarshal([]byte(cleaned), &analysis); err != nil {
-		return nil, fmt.Errorf("claude.TherapySummary: parse JSON: %w (raw: %s)", err, truncate(result, 200))
+		return nil, fmt.Errorf("claude.TherapySummary: parse JSON: %w (raw_len=%d)", err, len(result))
 	}
 	if analysis.MoodScore < 1 {
 		analysis.MoodScore = 1

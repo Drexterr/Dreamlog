@@ -2,23 +2,17 @@ package middleware
 
 import (
 	"net/http"
-	"os"
 	"strings"
 
 	"github.com/gin-gonic/gin"
 )
 
-// CORSMiddleware restricts cross-origin requests to an explicit allowlist.
-// Set CORS_ALLOWED_ORIGINS as a comma-separated list of origins; defaults to
-// localhost dev origins when unset.
-func CORSMiddleware() gin.HandlerFunc {
-	rawOrigins := os.Getenv("CORS_ALLOWED_ORIGINS")
-	if rawOrigins == "" {
-		rawOrigins = "http://localhost:5173,http://localhost:3000"
-	}
-
+// CORSMiddleware restricts cross-origin requests to an explicit allowlist
+// (config: CORS_ALLOWED_ORIGINS, comma-separated; defaults to localhost dev
+// origins). Config is passed in, never read from the environment here (ADR-010).
+func CORSMiddleware(origins []string) gin.HandlerFunc {
 	allowed := make(map[string]bool)
-	for _, o := range strings.Split(rawOrigins, ",") {
+	for _, o := range origins {
 		if trimmed := strings.TrimSpace(o); trimmed != "" {
 			allowed[trimmed] = true
 		}

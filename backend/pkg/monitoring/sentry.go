@@ -4,6 +4,7 @@
 package monitoring
 
 import (
+	"net/http"
 	"time"
 
 	"github.com/getsentry/sentry-go"
@@ -17,7 +18,7 @@ func InitSentry(dsn, process string, log *zap.Logger) func() {
 	if dsn == "" {
 		return func() {}
 	}
-	if err := sentry.Init(sentry.ClientOptions{Dsn: dsn}); err != nil {
+	if err := sentry.Init(sentry.ClientOptions{Dsn: dsn, BeforeSend: scrubEvent}); err != nil {
 		log.Warn("sentry init failed - continuing without error reporting", zap.Error(err))
 		return func() {}
 	}
@@ -51,4 +52,24 @@ func RecoverRepanic() {
 		sentry.Flush(2 * time.Second)
 		panic(r)
 	}
+}
+
+// scrubEvent strips anything that can carry journal content or credentials
+// before an event leaves the process: request bodies, cookies, query strings
+// and auth headers. Sentry is a third party - error context must be IDs and
+// error types only.
+func scrubEvent(event *sentry.Event, _ *sentry.EventHint) *sentry.Event {
+	if event == nil || event.Request == nil {
+		return event
+	}
+	event.Request.Data = ""
+	event.Request.Cookies = ""
+	event.Request.QueryString = ""
+	for k := range event.Request.Headers {
+		switch http.CanonicalHeaderKey(k) {
+		case "Authorization", "Cookie", "X-Api-Key":
+			delete(event.Request.Headers, k)
+		}
+	}
+	return event
 }

@@ -51,6 +51,7 @@ type Deps struct {
 	StorageProxyBaseURL  string
 	TrustedProxies       []string // CIDRs whose X-Forwarded-For hops are trusted
 	TrustedPlatform      string   // optional client-IP header set by the platform edge
+	CORSAllowedOrigins   []string // browser-origin allowlist
 	Log                  *zap.Logger
 }
 
@@ -69,7 +70,7 @@ func NewRouter(deps Deps) http.Handler {
 
 	r.Use(middleware.SecurityHeaders())
 	r.Use(middleware.MaxBodySize(middleware.MaxRequestBodyBytes))
-	r.Use(middleware.CORSMiddleware())
+	r.Use(middleware.CORSMiddleware(deps.CORSAllowedOrigins))
 	r.Use(middleware.RecoveryHandler(deps.Log))
 	// Registered after RecoveryHandler so it sees a panic first (deferred
 	// recovery runs innermost-first): Sentry captures it, re-panics, and

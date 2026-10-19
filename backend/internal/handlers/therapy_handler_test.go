@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"errors"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -181,7 +180,7 @@ func TestTherapyHandler_StartSession_InvalidPersona_Returns400(t *testing.T) {
 
 func TestTherapyHandler_StartSession_NoCredits_Returns402(t *testing.T) {
 	// The handler matches this by message (the service sentinel is unexported).
-	svc := &fakeTherapyServicer{startErr: errors.New("therapy session requires payment")}
+	svc := &fakeTherapyServicer{startErr: services.ErrTherapyPaymentRequired}
 	r := newTherapyTestRouter(t, svc, &fakeTherapyPresigner{}, &fakeTherapyUserGetter{})
 	w := therapyDo(t, r, http.MethodPost, "/therapy/sessions", nil)
 	if w.Code != http.StatusPaymentRequired {

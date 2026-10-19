@@ -245,7 +245,7 @@ func newCORSRouter(t *testing.T, allowedOrigins string) *gin.Engine {
 
 	gin.SetMode(gin.TestMode)
 	r := gin.New()
-	r.Use(CORSMiddleware())
+	r.Use(CORSMiddleware(strings.Split(allowedOrigins, ",")))
 	r.GET("/x", func(c *gin.Context) { c.JSON(http.StatusOK, gin.H{"ok": true}) })
 	return r
 }
@@ -292,7 +292,8 @@ func TestCORS_PreflightOPTIONS_Returns204(t *testing.T) {
 	}
 }
 
-func TestCORS_DefaultsToLocalhostDevOrigins(t *testing.T) {
+// Defaults live in config (CORS_ALLOWED_ORIGINS); an empty allowlist allows nothing.
+func TestCORS_EmptyAllowlist_AllowsNoOrigin(t *testing.T) {
 	r := newCORSRouter(t, "")
 
 	w := httptest.NewRecorder()
@@ -300,7 +301,7 @@ func TestCORS_DefaultsToLocalhostDevOrigins(t *testing.T) {
 	req.Header.Set("Origin", "http://localhost:3000")
 	r.ServeHTTP(w, req)
 
-	if got := w.Header().Get("Access-Control-Allow-Origin"); got != "http://localhost:3000" {
-		t.Errorf("expected localhost dev origin allowed by default, got %q", got)
+	if got := w.Header().Get("Access-Control-Allow-Origin"); got != "" {
+		t.Errorf("empty allowlist must not echo any origin, got %q", got)
 	}
 }

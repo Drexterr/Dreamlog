@@ -29,3 +29,26 @@ func TestProductionProblems(t *testing.T) {
 		t.Errorf("worker does not need IAP credentials, got %v", p)
 	}
 }
+
+func TestLoad_CORSDefaultsToLocalhostDevOrigins(t *testing.T) {
+	for k, v := range map[string]string{
+		"DATABASE_URL": "postgres://x", "STORAGE_ENDPOINT": "http://localhost:9000",
+		"STORAGE_ACCESS_KEY_ID": "a", "STORAGE_SECRET_ACCESS_KEY": "b", "STORAGE_BUCKET": "c",
+		"SUPABASE_JWT_SECRET": "s", "CORS_ALLOWED_ORIGINS": "",
+	} {
+		t.Setenv(k, v)
+	}
+	cfg, err := Load()
+	if err != nil {
+		t.Fatal(err)
+	}
+	found := false
+	for _, o := range cfg.CORSAllowedOrigins {
+		if o == "http://localhost:3000" {
+			found = true
+		}
+	}
+	if !found {
+		t.Errorf("localhost dev origin must be allowed by default, got %v", cfg.CORSAllowedOrigins)
+	}
+}

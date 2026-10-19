@@ -504,7 +504,7 @@ func (s *TherapyService) computeBilling(ctx context.Context, userID uuid.UUID, p
 	}
 
 	// In prod: real payment would be processed here. For now, return 402.
-	return 0, errTherapyPaymentRequired
+	return 0, ErrTherapyPaymentRequired
 }
 
 func (s *TherapyService) loadContextSnapshot(ctx context.Context, userID uuid.UUID) (models.TherapyContextSnapshot, bool, error) {
@@ -589,5 +589,5 @@ var (
 	errTherapyMissingAudio   = fmt.Errorf("audio_key is required for voice input")
 	errTherapyInvalidAudioKey = fmt.Errorf("audio_key is not a valid therapy upload key")
 	errTherapyEmptyContent   = fmt.Errorf("message content is empty")
-	errTherapyPaymentRequired = fmt.Errorf("therapy session requires payment")
+	ErrTherapyPaymentRequired = fmt.Errorf("therapy session requires payment")
 )

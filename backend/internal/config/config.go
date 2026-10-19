@@ -23,6 +23,8 @@ type Config struct {
 	// TrustedPlatformHeader, when set, is read for the client IP instead
 	// (e.g. "CF-Connecting-IP", "Fly-Client-IP").
 	TrustedPlatformHeader string
+	// CORSAllowedOrigins is the browser-origin allowlist (therapist portal).
+	CORSAllowedOrigins []string
 	Server    ServerConfig
 	Database  DatabaseConfig
 	Redis     RedisConfig
@@ -157,6 +159,7 @@ func Load() (*Config, error) {
 		AppEnv:                getEnv("APP_ENV", "development"),
 		TrustedProxies:        splitCommaList(getEnv("TRUSTED_PROXIES", "10.0.0.0/8,172.16.0.0/12,192.168.0.0/16,100.64.0.0/10,127.0.0.0/8,fc00::/7,::1/128")),
 		TrustedPlatformHeader: getEnv("TRUSTED_PLATFORM_HEADER", ""),
+		CORSAllowedOrigins:    splitCommaList(getEnv("CORS_ALLOWED_ORIGINS", "http://localhost:5173,http://localhost:3000")),
 		Server: ServerConfig{
 			Port:         getEnv("PORT", "8080"),
 			ReadTimeout:  parseDuration("SERVER_READ_TIMEOUT", 30*time.Second),

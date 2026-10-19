@@ -189,6 +189,7 @@ func main() {
 		SupabaseJWKSURL:      supabaseJWKSURL(cfg.Supabase.URL),
 		TrustedProxies:       cfg.TrustedProxies,
 		TrustedPlatform:      cfg.TrustedPlatformHeader,
+		CORSAllowedOrigins:   cfg.CORSAllowedOrigins,
 		AppBaseURL:           cfg.App.BaseURL,
 		MinimumAppVersion:    cfg.App.MinimumAppVersion,
 		AndroidStoreURL:      cfg.App.AndroidStoreURL,
