@@ -181,7 +181,11 @@ export default function FollowUpScreen() {
         {/* Input / closed banner */}
         {isClosed ? (
           <View style={[styles.closedBanner, { borderTopColor: colors.borderFaint }]}>
-            <Text style={[styles.closedText, { color: colors.textMuted }]}>You've reached the end of this conversation.</Text>
+            <Text style={[styles.closedText, { color: colors.textMuted }]}>
+              {conversation?.is_crisis
+                ? "The support lines above are free and confidential. You don't have to go through this alone."
+                : "You've reached the end of this conversation."}
+            </Text>
             <TouchableOpacity
               testID={T.followup.goodnight}
               style={[styles.goodnightBtn, { backgroundColor: colors.card, borderColor: colors.border }]}

@@ -393,7 +393,8 @@ Response `200`:
 ## Conversations
 
 ### POST /entries/:id/conversation
-Idempotent - returns existing conversation if already created for this entry.
+Idempotent - returns existing conversation if already created for this entry. Only completed,
+non-crisis entries can be followed up on.
 
 Response `200` or `201`:
 ```json
@@ -435,7 +436,13 @@ Errors: `404` if entry not found or not completed.
 
 Errors:
 - `404` - conversation not found
-- `409` - conversation is already closed (turn_count = 3)
+- `409` - conversation is already closed (turn_count = 3, or closed after a crisis reply). The cap is
+  enforced atomically in the database, so concurrent sends can never exceed 3 user turns.
+
+**Crisis screening (ADR-002 / ADR-013):** every user message is screened before it reaches the
+reflection model. On detection (or a screener error) the user message is stored, the assistant
+reply is the localized crisis-resource message, the conversation is closed, and the response
+carries `"is_crisis": true`.
 - `400` - empty content
 
 ---

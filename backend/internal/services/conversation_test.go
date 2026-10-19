@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"errors"
 	"testing"
 
 	appconfig "github.com/dreamlog/backend/internal/config"
@@ -48,6 +49,9 @@ func (r *fakeConvRepo) AddMessage(_ context.Context, convID uuid.UUID, role, con
 	if r.addErr != nil {
 		return nil, nil, r.addErr
 	}
+	if role == "user" && r.conv != nil && (r.conv.IsClosed || r.conv.TurnCount >= models.MaxConversationTurns) {
+		return nil, nil, models.ErrConversationTurnUnavailable
+	}
 	msg := &models.ConversationMessage{
 		ID:             uuid.New(),
 		ConversationID: convID,
@@ -66,6 +70,25 @@ func (r *fakeConvRepo) AddMessage(_ context.Context, convID uuid.UUID, role, con
 
 func (r *fakeConvRepo) ListMessages(_ context.Context, _ uuid.UUID) ([]models.ConversationMessage, error) {
 	return r.msgs, nil
+}
+
+func (r *fakeConvRepo) Close(_ context.Context, _ uuid.UUID) (*models.Conversation, error) {
+	if r.conv != nil {
+		r.conv.IsClosed = true
+	}
+	return r.conv, nil
+}
+
+type fakeConvCrisis struct {
+	result *CrisisResult
+	err    error
+}
+
+func (f *fakeConvCrisis) Screen(_ context.Context, _, _ string) (*CrisisResult, error) {
+	if f.result == nil && f.err == nil {
+		return &CrisisResult{}, nil
+	}
+	return f.result, f.err
 }
 
 type fakeEntryReader struct {
@@ -134,11 +157,10 @@ func newOpenConv(convID, entryID, userID uuid.UUID, turns int) *models.Conversat
 // ── GetOrCreate tests ─────────────────────────────────────────────────────────
 
 func TestConvService_GetOrCreate_NewConversation(t *testing.T) {
-	cr := &fakeConvRepo{}
-	svc := newConvSvc(cr, &fakeEntryReader{}, &fakeAnalysisReader{})
-
 	entryID := uuid.New()
 	userID := uuid.New()
+	cr := &fakeConvRepo{}
+	svc := newConvSvc(cr, &fakeEntryReader{entry: makeOwnedConvEntry(entryID, userID)}, &fakeAnalysisReader{analysis: makeConvAnalysis(entryID)})
 	conv, err := svc.GetOrCreate(context.Background(), entryID, userID)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -158,11 +180,10 @@ func TestConvService_GetOrCreate_NewConversation(t *testing.T) {
 }
 
 func TestConvService_GetOrCreate_IsIdempotent(t *testing.T) {
-	cr := &fakeConvRepo{}
-	svc := newConvSvc(cr, &fakeEntryReader{}, &fakeAnalysisReader{})
-
 	entryID := uuid.New()
 	userID := uuid.New()
+	cr := &fakeConvRepo{}
+	svc := newConvSvc(cr, &fakeEntryReader{entry: makeOwnedConvEntry(entryID, userID)}, &fakeAnalysisReader{analysis: makeConvAnalysis(entryID)})
 
 	conv1, _ := svc.GetOrCreate(context.Background(), entryID, userID)
 	conv2, _ := svc.GetOrCreate(context.Background(), entryID, userID)
@@ -184,7 +205,7 @@ func TestConvService_SendMessage_FirstTurn_Succeeds(t *testing.T) {
 	ar := &fakeAnalysisReader{analysis: makeConvAnalysis(entryID)}
 
 	svc := newConvSvc(cr, er, ar)
-	conv, err := svc.SendMessage(context.Background(), convID, userID, "Hello!")
+	conv, err := svc.SendMessage(context.Background(), convID, userID, "Hello!", "IN")
 	if err != nil {
 		t.Fatalf("first turn must succeed: %v", err)
 	}
@@ -203,7 +224,7 @@ func TestConvService_SendMessage_SecondTurn_Succeeds(t *testing.T) {
 	ar := &fakeAnalysisReader{analysis: makeConvAnalysis(entryID)}
 
 	svc := newConvSvc(cr, er, ar)
-	conv, err := svc.SendMessage(context.Background(), convID, userID, "Second message!")
+	conv, err := svc.SendMessage(context.Background(), convID, userID, "Second message!", "IN")
 	if err != nil {
 		t.Fatalf("second turn must succeed: %v", err)
 	}
@@ -223,7 +244,7 @@ func TestConvService_SendMessage_ThirdTurn_ClosesConversation(t *testing.T) {
 	ar := &fakeAnalysisReader{analysis: makeConvAnalysis(entryID)}
 
 	svc := newConvSvc(cr, er, ar)
-	conv, err := svc.SendMessage(context.Background(), convID, userID, "Third message!")
+	conv, err := svc.SendMessage(context.Background(), convID, userID, "Third message!", "IN")
 	if err != nil {
 		t.Fatalf("third turn must succeed: %v", err)
 	}
@@ -250,13 +271,12 @@ func TestConvService_SendMessage_ClosedConversation_ReturnsError(t *testing.T) {
 	cr := &fakeConvRepo{conv: closedConv}
 	svc := newConvSvc(cr, &fakeEntryReader{}, &fakeAnalysisReader{})
 
-	_, err := svc.SendMessage(context.Background(), convID, userID, "One more!")
+	_, err := svc.SendMessage(context.Background(), convID, userID, "One more!", "IN")
 	if err == nil {
 		t.Error("closed conversation must reject new messages")
 	}
-	want := "convSvc.SendMessage: conversation is closed"
-	if err.Error() != want {
-		t.Errorf("error: want %q, got %q", want, err.Error())
+	if !errors.Is(err, ErrConversationClosed) {
+		t.Errorf("error: want ErrConversationClosed, got %v", err)
 	}
 }
 
@@ -276,13 +296,12 @@ func TestConvService_SendMessage_MaxTurnsNotClosed_ReturnsError(t *testing.T) {
 	}}
 	svc := newConvSvc(cr, &fakeEntryReader{}, &fakeAnalysisReader{})
 
-	_, err := svc.SendMessage(context.Background(), convID, userID, "Extra turn!")
+	_, err := svc.SendMessage(context.Background(), convID, userID, "Extra turn!", "IN")
 	if err == nil {
 		t.Error("max turns reached must reject new messages")
 	}
-	want := "convSvc.SendMessage: max turns reached"
-	if err.Error() != want {
-		t.Errorf("error: want %q, got %q", want, err.Error())
+	if !errors.Is(err, ErrConversationClosed) {
+		t.Errorf("error: want ErrConversationClosed, got %v", err)
 	}
 }
 
@@ -290,7 +309,7 @@ func TestConvService_SendMessage_NotFound_ReturnsError(t *testing.T) {
 	cr := &fakeConvRepo{conv: nil}
 	svc := newConvSvc(cr, &fakeEntryReader{}, &fakeAnalysisReader{})
 
-	_, err := svc.SendMessage(context.Background(), uuid.New(), uuid.New(), "Hello")
+	_, err := svc.SendMessage(context.Background(), uuid.New(), uuid.New(), "Hello", "IN")
 	if err == nil {
 		t.Error("not-found conversation must return an error")
 	}
@@ -306,7 +325,7 @@ func TestConvService_SendMessage_WrongUser_ReturnsError(t *testing.T) {
 	cr := &fakeConvRepo{conv: newOpenConv(convID, entryID, ownerID, 0)}
 	svc := newConvSvc(cr, &fakeEntryReader{}, &fakeAnalysisReader{})
 
-	_, err := svc.SendMessage(context.Background(), convID, otherID, "Intrude!")
+	_, err := svc.SendMessage(context.Background(), convID, otherID, "Intrude!", "IN")
 	if err == nil {
 		t.Error("wrong user must not be able to send messages (ownership check)")
 	}
@@ -331,7 +350,7 @@ func TestConvService_SendMessage_ReturnsAssistantReply(t *testing.T) {
 	ar := &fakeAnalysisReader{analysis: makeConvAnalysis(entryID)}
 
 	svc := newConvSvc(cr, er, ar)
-	_, err := svc.SendMessage(context.Background(), convID, userID, "Hello")
+	_, err := svc.SendMessage(context.Background(), convID, userID, "Hello", "IN")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -347,4 +366,87 @@ func TestConvService_SendMessage_ReturnsAssistantReply(t *testing.T) {
 	if lastMsg.Content == "" {
 		t.Error("assistant reply must not be empty")
 	}
+}
+
+func makeOwnedConvEntry(entryID, userID uuid.UUID) *models.Entry {
+	e := makeConvEntry(entryID)
+	e.UserID = userID
+	return e
+}
+
+// H4 / API contract: follow-ups only open on completed, non-crisis entries.
+func TestConvService_GetOrCreate_RejectsPendingAndCrisisEntries(t *testing.T) {
+	entryID, userID := uuid.New(), uuid.New()
+
+	pending := makeOwnedConvEntry(entryID, userID)
+	pending.Status = models.EntryStatusPending
+	svc := newConvSvc(&fakeConvRepo{}, &fakeEntryReader{entry: pending}, &fakeAnalysisReader{analysis: makeConvAnalysis(entryID)})
+	if _, err := svc.GetOrCreate(context.Background(), entryID, userID); err == nil {
+		t.Error("pending entry must not open a conversation")
+	}
+
+	crisis := makeConvAnalysis(entryID)
+	crisis.IsCrisis = true
+	svc = newConvSvc(&fakeConvRepo{}, &fakeEntryReader{entry: makeOwnedConvEntry(entryID, userID)}, &fakeAnalysisReader{analysis: crisis})
+	if _, err := svc.GetOrCreate(context.Background(), entryID, userID); err == nil {
+		t.Error("crisis entry must not open a conversation")
+	}
+}
+
+// H4: a crisis message gets resources, closes the conversation, and never
+// reaches the reflection model.
+func TestConvService_SendMessage_CrisisMessage_ClosesWithResources(t *testing.T) {
+	entryID, userID, convID := uuid.New(), uuid.New(), uuid.New()
+	cr := &fakeConvRepo{conv: newOpenConv(convID, entryID, userID, 0)}
+	svc := newConvSvc(cr, &fakeEntryReader{entry: makeConvEntry(entryID)}, &fakeAnalysisReader{analysis: makeConvAnalysis(entryID)}).
+		WithCrisisScreener(&fakeConvCrisis{result: &CrisisResult{Detected: true, Response: "helplines"}}, nil)
+
+	conv, err := svc.SendMessage(context.Background(), convID, userID, "honestly I want to kill myself", "IN")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !conv.IsCrisis || !conv.IsClosed {
+		t.Errorf("crisis reply must be flagged and close the conversation: crisis=%v closed=%v", conv.IsCrisis, conv.IsClosed)
+	}
+	last := cr.msgs[len(cr.msgs)-1]
+	if last.Role != "assistant" || last.Content != "helplines" {
+		t.Errorf("last message must be the crisis resources, got %+v", last)
+	}
+}
+
+// H4 + ADR-002: a screener error fails safe to the crisis reply.
+func TestConvService_SendMessage_ScreenerError_FailsSafe(t *testing.T) {
+	entryID, userID, convID := uuid.New(), uuid.New(), uuid.New()
+	cr := &fakeConvRepo{conv: newOpenConv(convID, entryID, userID, 0)}
+	svc := newConvSvc(cr, &fakeEntryReader{entry: makeConvEntry(entryID)}, &fakeAnalysisReader{analysis: makeConvAnalysis(entryID)}).
+		WithCrisisScreener(&fakeConvCrisis{err: context.DeadlineExceeded}, nil)
+
+	conv, err := svc.SendMessage(context.Background(), convID, userID, "it's all too much", "IN")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !conv.IsCrisis {
+		t.Error("screener error must be treated as crisis")
+	}
+}
+
+// H9: losing the turn-claim race surfaces as ErrConversationClosed.
+func TestConvService_SendMessage_TurnRaceLost_ReturnsClosed(t *testing.T) {
+	entryID, userID, convID := uuid.New(), uuid.New(), uuid.New()
+	cr := &raceConvRepo{fakeConvRepo: &fakeConvRepo{conv: newOpenConv(convID, entryID, userID, 2)}}
+	svc := newConvSvc(cr, &fakeEntryReader{entry: makeConvEntry(entryID)}, &fakeAnalysisReader{analysis: makeConvAnalysis(entryID)})
+	if _, err := svc.SendMessage(context.Background(), convID, userID, "race", "IN"); !errors.Is(err, ErrConversationClosed) {
+		t.Errorf("want ErrConversationClosed, got %v", err)
+	}
+}
+
+// raceConvRepo reports an open conversation on read, but another request has
+// already taken the last turn by the time AddMessage runs.
+type raceConvRepo struct{ *fakeConvRepo }
+
+func (r *raceConvRepo) AddMessage(_ context.Context, _ uuid.UUID, role, _ string) (*models.Conversation, *models.ConversationMessage, error) {
+	if role == "user" {
+		return nil, nil, models.ErrConversationTurnUnavailable
+	}
+	return r.conv, &models.ConversationMessage{}, nil
 }

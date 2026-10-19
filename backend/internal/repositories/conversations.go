@@ -87,8 +87,14 @@ func (r *ConversationRepository) ListMessages(ctx context.Context, convID uuid.U
 	return msgs, rows.Err()
 }
 
-// AddMessage inserts a message and increments the turn counter when role=user.
-// Returns the updated conversation and new message, atomically.
+// AddMessage inserts a message and, for role=user, claims a turn.
+//
+// The turn is claimed FIRST with a conditional UPDATE (NOT is_closed AND
+// turn_count < MaxConversationTurns). The row lock serializes concurrent
+// requests and Postgres re-checks the WHERE after the lock, so parallel sends
+// can never push the conversation past the cap (ADR-006). When no turn is
+// available, models.ErrConversationTurnUnavailable is returned and nothing is
+// written.
 func (r *ConversationRepository) AddMessage(ctx context.Context, convID uuid.UUID, role, content string) (*models.Conversation, *models.ConversationMessage, error) {
 	tx, err := r.db.Begin(ctx)
 	if err != nil {
@@ -96,53 +102,63 @@ func (r *ConversationRepository) AddMessage(ctx context.Context, convID uuid.UUI
 	}
 	defer tx.Rollback(ctx)
 
-	// Insert message.
-	msg := &models.ConversationMessage{}
-	const insertQ = `
-		INSERT INTO conversation_messages (conversation_id, role, content)
-		VALUES ($1, $2, $3)
-		RETURNING id, conversation_id, role, content, created_at`
-
-	if err := tx.QueryRow(ctx, insertQ, convID, role, content).Scan(
-		&msg.ID, &msg.ConversationID, &msg.Role, &msg.Content, &msg.CreatedAt,
-	); err != nil {
-		return nil, nil, fmt.Errorf("conv.AddMessage insert msg: %w", err)
-	}
-
-	// Increment turn_count when the user speaks, and auto-close at MaxConversationTurns.
-	var updateQ string
+	conv := &models.Conversation{}
+	var row pgx.Row
 	if role == "user" {
-		updateQ = `
+		row = tx.QueryRow(ctx, `
 			UPDATE conversations
 			SET turn_count = turn_count + 1,
 			    is_closed  = (turn_count + 1 >= $2),
 			    updated_at = NOW()
-			WHERE id = $1
-			RETURNING id, entry_id, user_id, turn_count, is_closed, created_at, updated_at`
+			WHERE id = $1 AND NOT is_closed AND turn_count < $2
+			RETURNING id, entry_id, user_id, turn_count, is_closed, created_at, updated_at`,
+			convID, models.MaxConversationTurns)
 	} else {
-		updateQ = `
+		row = tx.QueryRow(ctx, `
 			UPDATE conversations
 			SET updated_at = NOW()
 			WHERE id = $1
-			RETURNING id, entry_id, user_id, turn_count, is_closed, created_at, updated_at`
+			RETURNING id, entry_id, user_id, turn_count, is_closed, created_at, updated_at`,
+			convID)
 	}
-
-	conv := &models.Conversation{}
-	var row pgx.Row
-	if role == "user" {
-		row = tx.QueryRow(ctx, updateQ, convID, models.MaxConversationTurns)
-	} else {
-		row = tx.QueryRow(ctx, updateQ, convID)
-	}
-	if err := row.Scan(
+	err = row.Scan(
 		&conv.ID, &conv.EntryID, &conv.UserID, &conv.TurnCount, &conv.IsClosed,
 		&conv.CreatedAt, &conv.UpdatedAt,
-	); err != nil {
+	)
+	if errors.Is(err, pgx.ErrNoRows) && role == "user" {
+		return nil, nil, models.ErrConversationTurnUnavailable
+	}
+	if err != nil {
 		return nil, nil, fmt.Errorf("conv.AddMessage update conv: %w", err)
+	}
+
+	msg := &models.ConversationMessage{}
+	if err := tx.QueryRow(ctx, `
+		INSERT INTO conversation_messages (conversation_id, role, content)
+		VALUES ($1, $2, $3)
+		RETURNING id, conversation_id, role, content, created_at`,
+		convID, role, content,
+	).Scan(&msg.ID, &msg.ConversationID, &msg.Role, &msg.Content, &msg.CreatedAt); err != nil {
+		return nil, nil, fmt.Errorf("conv.AddMessage insert msg: %w", err)
 	}
 
 	if err := tx.Commit(ctx); err != nil {
 		return nil, nil, fmt.Errorf("conv.AddMessage commit: %w", err)
 	}
 	return conv, msg, nil
+}
+
+// Close marks a conversation closed (used after a crisis reply).
+func (r *ConversationRepository) Close(ctx context.Context, convID uuid.UUID) (*models.Conversation, error) {
+	conv := &models.Conversation{}
+	err := r.db.QueryRow(ctx, `
+		UPDATE conversations SET is_closed = true, updated_at = NOW()
+		WHERE id = $1
+		RETURNING id, entry_id, user_id, turn_count, is_closed, created_at, updated_at`,
+		convID,
+	).Scan(&conv.ID, &conv.EntryID, &conv.UserID, &conv.TurnCount, &conv.IsClosed, &conv.CreatedAt, &conv.UpdatedAt)
+	if err != nil {
+		return nil, fmt.Errorf("conv.Close: %w", err)
+	}
+	return conv, nil
 }

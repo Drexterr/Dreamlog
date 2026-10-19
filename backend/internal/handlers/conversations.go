@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"errors"
 	"net/http"
 
 	"github.com/dreamlog/backend/internal/middleware"
@@ -53,16 +54,18 @@ func (h *ConversationHandler) SendMessage(c *gin.Context) {
 		return
 	}
 
-	conv, err := h.svc.SendMessage(c.Request.Context(), convID, userID, input.Content)
+	country := ""
+	if u := middleware.UserFromCtx(c.Request.Context()); u != nil && u.Country != nil {
+		country = *u.Country
+	}
+
+	conv, err := h.svc.SendMessage(c.Request.Context(), convID, userID, input.Content, country)
 	if err != nil {
-		switch err.Error() {
-		case "convSvc.SendMessage: conversation is closed":
+		if errors.Is(err, services.ErrConversationClosed) {
 			c.Error(apierr.Conflict("conversation is closed"))
-		case "convSvc.SendMessage: max turns reached":
-			c.Error(apierr.Conflict("maximum conversation turns reached"))
-		default:
-			c.Error(err)
+			return
 		}
+		c.Error(err)
 		return
 	}
 	c.JSON(http.StatusOK, conv)

@@ -124,12 +124,13 @@ func main() {
 	authSvc := services.NewAuthService(userRepo, cfg.Supabase.JWTSecret, log)
 	entrySvc := services.NewEntryService(entryRepo, storageSvc, jobQueue)
 	claudeSvc := services.NewClaudeService(&cfg.Anthropic)
-	convSvc := services.NewConversationService(convRepo, entryRepo, analysisRepo, claudeSvc)
 	subscriptionSvc := services.NewSubscriptionService(userRepo, shareRepo)
 	transcriptionSvc := services.NewTranscriptionService(&cfg.OpenAI)
 	analyticsSvc := services.NewAnalyticsService(analyticsRepo)
 	ttsSvc := services.NewTTSService(&cfg.OpenAI, &cfg.AzureTTS, storageClient)
 	crisisDetector := services.NewCrisisDetector(claudeSvc, log)
+	convSvc := services.NewConversationService(convRepo, entryRepo, analysisRepo, claudeSvc).
+		WithCrisisScreener(crisisDetector, log)
 	iapSvc := services.NewIAPService(&cfg.IAP)
 
 	// Therapist notes: per-therapist envelope encryption + OCR job queue.

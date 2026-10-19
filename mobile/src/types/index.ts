@@ -187,6 +187,9 @@ export interface Conversation {
   user_id: string;
   turn_count: number;
   is_closed: boolean;
+  // Set when the last message triggered crisis screening: the reply holds
+  // crisis resources and the conversation is closed.
+  is_crisis?: boolean;
   messages: ConversationMessage[];
   created_at: string;
   updated_at: string;

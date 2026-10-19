@@ -58,6 +58,9 @@ func (r *hFakeConvRepo) AddMessage(_ context.Context, convID uuid.UUID, role, co
 	if r.addErr != nil {
 		return nil, nil, r.addErr
 	}
+	if role == "user" && r.conv != nil && (r.conv.IsClosed || r.conv.TurnCount >= models.MaxConversationTurns) {
+		return nil, nil, models.ErrConversationTurnUnavailable
+	}
 	msg := &models.ConversationMessage{
 		ID:             uuid.New(),
 		ConversationID: convID,
@@ -76,6 +79,13 @@ func (r *hFakeConvRepo) AddMessage(_ context.Context, convID uuid.UUID, role, co
 
 func (r *hFakeConvRepo) ListMessages(_ context.Context, _ uuid.UUID) ([]models.ConversationMessage, error) {
 	return r.msgs, nil
+}
+
+func (r *hFakeConvRepo) Close(_ context.Context, _ uuid.UUID) (*models.Conversation, error) {
+	if r.conv != nil {
+		r.conv.IsClosed = true
+	}
+	return r.conv, nil
 }
 
 type hFakeEntryReader struct {
@@ -172,6 +182,7 @@ func TestConvHandler_GetOrCreate_Returns200(t *testing.T) {
 	user := convTestUser()
 	cr := &hFakeConvRepo{}
 	er := &hFakeEntryReader{entry: convTestEntry(entryID)}
+	er.entry.UserID = user.ID
 	ar := &hFakeAnalysisReader{analysis: convTestAnalysis(entryID)}
 
 	r := newConvTestRouter(t, cr, er, ar, user)

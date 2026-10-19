@@ -28,6 +28,7 @@ type ConvRepository interface {
 	GetByID(ctx context.Context, id, userID uuid.UUID) (*models.Conversation, error)
 	AddMessage(ctx context.Context, convID uuid.UUID, role, content string) (*models.Conversation, *models.ConversationMessage, error)
 	ListMessages(ctx context.Context, convID uuid.UUID) ([]models.ConversationMessage, error)
+	Close(ctx context.Context, convID uuid.UUID) (*models.Conversation, error)
 }
 
 // EntryStoreReader is the minimal entry-repository interface required by ConversationService.
