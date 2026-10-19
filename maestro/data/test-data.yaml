@@ -15,7 +15,7 @@ APP_SCHEME: "dreamlog"          # deep-link scheme from app.json ("scheme": "dre
 # ── Existing, already-verified account (seed this in Supabase before running) ──
 # The launch checklist §2d documents a real tester account; substitute it here.
 EMAIL_EXISTING: "bharatbanthia2207+tester@gmail.com"
-PASSWORD: "DreamTest!2026"
+PASSWORD: "" # supplied at run time: ODE_QA_PASSWORD / -e (never commit it)
 
 # ── Fresh registration. Append a unique suffix per CI run to avoid 409s, e.g.
 #    -e EMAIL_NEW=qa+$(date +%s)@dreamlog.dev
@@ -50,7 +50,7 @@ THERAPY_TEXT_MESSAGE: "I have been feeling stretched thin at work this week."
 # pre-registered as a therapist — flow 08 registers the workspace on first
 # run and skips the register step on reruns (GET /therapists/me succeeds).
 EMAIL_THERAPIST: "bharatbanthia2207+maestro-therapist@gmail.com"
-PASSWORD_THERAPIST: "DreamTest!2026"
+PASSWORD_THERAPIST: "" # supplied at run time: ODE_QA_PASSWORD / -e (never commit it)
 THERAPIST_NAME: "Dr. Maestro Test"
 THERAPIST_CREDENTIALS: "M.Phil Clinical Psychology"
 CLIENT_NAME: "Asha K (QA)"

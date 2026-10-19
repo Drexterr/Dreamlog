@@ -17,7 +17,7 @@ appId: com.talktoode.app
 phoneFlow: ../subflows/explore-qa-phone.yaml
 env:
   EMAIL_EXISTING: "bharatbanthia2207+tester@gmail.com"
-  PASSWORD: "DreamTest!2026"
+  PASSWORD: "" # supplied at run time: ODE_QA_PASSWORD / -e (never commit it)
 tags:
   - explore
   - journeys

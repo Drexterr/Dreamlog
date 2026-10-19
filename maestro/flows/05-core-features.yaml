@@ -22,7 +22,7 @@ appId: com.talktoode.app
 phoneFlow: ../subflows/core-controls-qa-phone.yaml
 env:
   EMAIL_EXISTING: "bharatbanthia2207+tester@gmail.com"
-  PASSWORD: "DreamTest!2026"
+  PASSWORD: "" # supplied at run time: ODE_QA_PASSWORD / -e (never commit it)
   ENTRY_MODE_KEY: "processing"          # enum → record-mode-processing
   THERAPY_PERSONA_KEY: "comforting"     # enum → persona-card-comforting
   THERAPY_TEXT_MESSAGE: "I have been feeling stretched thin at work this week."

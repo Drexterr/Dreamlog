@@ -30,7 +30,7 @@
 appId: com.talktoode.app
 env:
   EMAIL_THERAPIST: "bharatbanthia2207+maestro-therapist@gmail.com"
-  PASSWORD_THERAPIST: "DreamTest!2026"
+  PASSWORD_THERAPIST: "" # supplied at run time: ODE_QA_PASSWORD / -e (never commit it)
   THERAPIST_NAME: "Dr. Maestro Test"
   THERAPIST_CREDENTIALS: "M.Phil Clinical Psychology"
   CLIENT_NAME: "Ode QA Dashboard D (20261014)"

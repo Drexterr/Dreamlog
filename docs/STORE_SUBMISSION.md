@@ -80,7 +80,7 @@ Paste into App Store Connect → App Review Information → Notes:
 >
 > DEMO ACCOUNT (pre-seeded with journal entries):
 > - Email: bharatbanthia2207+tester@gmail.com
-> - Password: DreamTest!2026
+> - Password: (provide in App Store Connect review notes from the password manager - not committed)
 >
 > IN-APP PURCHASES: consumable 30/365-day plan passes (Ode+ and Ode Pro), verified
 > server-side. They do not auto-renew, and the app says so on the purchase screen.

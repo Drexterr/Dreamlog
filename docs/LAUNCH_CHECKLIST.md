@@ -166,7 +166,7 @@ For App Review notes and human testers. Created in the production Supabase proje
 
 ```
 Email:    bharatbanthia2207+tester@gmail.com
-Password: DreamTest!2026
+Password: (in the team password manager - ODE_QA_PASSWORD in CI / EAS secrets; never commit it)
 ```
 
 - [ ] **Activate it**: a confirmation email was sent to your Gmail inbox (plus-addressing
@@ -176,8 +176,10 @@ Password: DreamTest!2026
       reviewers see reflections, mood charts, and the timeline populated.
 - [ ] Housekeeping: an earlier orphan account `dreamlog.tester01@gmail.com` (unconfirmed) can
       be deleted from the Supabase users list.
-- [ ] Note: these credentials are committed to the repo — fine for a seeded demo account, but
-      never reuse this password elsewhere, and rotate it if the repo ever goes public.
+- [ ] **Rotate the demo password now** (Supabase → Authentication → Users). The old one was
+      committed to the repo and shipped in the therapist portal bundle ("Click to enter the
+      portal"), both removed 2026-10-19 - it is still in git history, so treat it as public. Store
+      the new one only in the password manager, CI (`ODE_QA_PASSWORD`) and App Review notes.
 
 ## 3. Production environment verification 🟡
 

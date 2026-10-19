@@ -21,7 +21,7 @@ appId: com.talktoode.app
 env:
   QA_ENTRY_ID: "4904e2b1-1ef9-4b11-af98-0dabe886f156"
   EMAIL_EXISTING: "bharatbanthia2207+tester@gmail.com"
-  PASSWORD: "DreamTest!2026"
+  PASSWORD: "" # supplied at run time: ODE_QA_PASSWORD / -e (never commit it)
 tags:
   - journal
   - hook-model

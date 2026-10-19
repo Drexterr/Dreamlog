@@ -15,7 +15,7 @@
 appId: com.talktoode.app
 env:
   EMAIL_EXISTING: "bharatbanthia2207+tester@gmail.com"
-  PASSWORD: "DreamTest!2026"
+  PASSWORD: "" # supplied at run time: ODE_QA_PASSWORD / -e (never commit it)
   EMAIL_MALFORMED: "not-an-email"
   NEW_USER_NAME: "Maestro QA"
   PASSWORD_TOO_SHORT: "123"

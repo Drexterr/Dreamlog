@@ -210,17 +210,6 @@ export default function LoginPage() {
             <a href="/login" onClick={() => setMode('register')} style={{ color: 'var(--muted)' }}>For therapists</a>
           </p>
 
-          {mode === 'login' && (
-            <p style={{ textAlign: 'center', marginTop: 12, color: 'var(--muted-2)', fontSize: '0.72rem' }}>
-              Demo credentials are pre-filled.{' '}
-              <span
-                style={{ color: 'var(--muted)', cursor: 'pointer', textDecoration: 'underline' }}
-                onClick={() => { setEmail('bharatbanthia2207+tester@gmail.com'); setPassword('DreamTest!2026'); }}
-              >
-                Click to enter the portal.
-              </span>
-            </p>
-          )}
         </div>
       </div>
 

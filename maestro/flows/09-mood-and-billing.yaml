@@ -20,7 +20,7 @@ appId: com.talktoode.app
 incompleteReason: Lost-streak/populated-review device fixtures and Play sandbox remain unclosed; unit tests cover the new state transitions.
 env:
   EMAIL_EXISTING: "bharatbanthia2207+tester@gmail.com"
-  PASSWORD: "DreamTest!2026"
+  PASSWORD: "" # supplied at run time: ODE_QA_PASSWORD / -e (never commit it)
 tags:
   - mood
   - billing
