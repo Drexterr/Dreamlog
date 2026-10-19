@@ -19,7 +19,7 @@
 # Required env: EMAIL_THERAPIST, PASSWORD_THERAPIST, THERAPIST_NAME,
 #               THERAPIST_CREDENTIALS
 # Postcondition: on the therapist dashboard (therapist-dashboard-screen).
-appId: com.ode.app
+appId: com.talktoode.app
 ---
 # Step 1 — first sign-in via the sheet (role defaults to 'user').
 - tapOn:
@@ -34,23 +34,8 @@ appId: com.ode.app
       # id-based tapOn on this element has been unreliable — a
       # coordinate-based tap issues a real touch event and is more
       # reliable (see sign-in-email.yaml for the full writeup).
-      - waitForAnimationToEnd:
-          timeout: 5000
-      - repeat:
-          times: 5
-          commands:
-            - runFlow:
-                when:
-                  notVisible:
-                    id: "auth-tab-login"
-                commands:
-                  - tapOn:
-                      point: "50%,87%"
-                  - extendedWaitUntil:
-                      visible:
-                        id: "auth-tab-login"
-                      timeout: 4000
-                      optional: true
+      - tapOn:
+          id: "auth-use-email"
 - extendedWaitUntil:
     visible:
       id: "auth-tab-login"                     # T.auth.tabLogin
@@ -61,6 +46,10 @@ appId: com.ode.app
     id: "auth-email-input"                   # T.auth.emailInput
 - inputText: ${EMAIL_THERAPIST}
 - hideKeyboard
+- scrollUntilVisible:
+    element:
+      id: auth-password-input
+    direction: DOWN
 - tapOn:
     id: "auth-password-input"                # T.auth.passwordInput
 - inputText: ${PASSWORD_THERAPIST}
@@ -72,7 +61,7 @@ appId: com.ode.app
 - extendedWaitUntil:
     visible:
       id: "record-screen"
-    timeout: 20000
+    timeout: 60000
 - tapOn:
     id: "record-cancel"
 - extendedWaitUntil:
@@ -85,6 +74,13 @@ appId: com.ode.app
     id: "tab-settings"                       # T.tab.settings
 - assertVisible:
     id: "settings-screen"
+- tapOn:
+    id: settings-profile-card
+- assertQaIdentity:
+    email: ${EMAIL_THERAPIST}
+    timeout: 30000
+- tapOn:
+    id: settings-profile-modal-close
 # The sign-out row is below the fold on most screen sizes — scroll until visible.
 - scrollUntilVisible:
     element:
@@ -128,11 +124,12 @@ appId: com.ode.app
 # A brand-new account (tos_accepted_at unset) is routed through the one-time
 # terms gate before therapist routing — see resolvePostAuthRoute(). Guarded:
 # a returning account with terms already accepted skips straight past this.
-- extendedWaitUntil:
+- extendedWaitUntilAny:
     visible:
-      id: "accept-terms-screen"               # T.acceptTerms.screen
-    timeout: 10000
-    optional: true
+      - id: accept-terms-screen
+      - text: Therapist profile
+      - id: therapist-dashboard-screen
+    timeout: 60000
 - runFlow:
     when:
       visible:
@@ -144,11 +141,11 @@ appId: com.ode.app
           id: "accept-terms-continue"          # T.acceptTerms.continue
 
 # Step 4 — land on registration (first run) or straight on the dashboard.
-- extendedWaitUntil:
+- extendedWaitUntilAny:
     visible:
-      text: "Therapist profile"
-    timeout: 15000
-    optional: true
+      - text: Therapist profile
+      - id: therapist-dashboard-screen
+    timeout: 60000
 - runFlow:
     when:
       visible: "Therapist profile"
@@ -174,4 +171,4 @@ appId: com.ode.app
 - extendedWaitUntil:
     visible:
       id: "therapist-dashboard-screen"
-    timeout: 20000
+    timeout: 60000

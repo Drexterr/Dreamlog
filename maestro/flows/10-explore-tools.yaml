@@ -13,7 +13,8 @@
 #     screen — if the account has no completed entries yet, that block is
 #     skipped (optional). Run 05-core-features first to seed one entry.
 # ═══════════════════════════════════════════════════════════════════════════
-appId: com.ode.app
+appId: com.talktoode.app
+phoneFlow: ../subflows/explore-qa-phone.yaml
 env:
   EMAIL_EXISTING: "bharatbanthia2207+tester@gmail.com"
   PASSWORD: "DreamTest!2026"
@@ -53,6 +54,14 @@ tags:
     visible:
       id: "explore-screen"
     timeout: 10000
+- scrollUntilVisible:
+    element:
+      id: explore-header
+    direction: UP
+- scrollUntilVisible:
+    element:
+      id: explore-journeys
+    direction: DOWN
 - tapOn:
     id: "explore-journeys"
 - extendedWaitUntil:
@@ -89,6 +98,14 @@ tags:
 # ─────────────────────────────────────────────────────────────────────────
 # EXPLORE 2 — Relationship Map: renders list or empty state
 # ─────────────────────────────────────────────────────────────────────────
+- scrollUntilVisible:
+    element:
+      id: explore-header
+    direction: UP
+- scrollUntilVisible:
+    element:
+      id: explore-relationships
+    direction: DOWN
 - tapOn:
     id: "explore-relationships"
 - extendedWaitUntil:
@@ -124,6 +141,14 @@ tags:
 # ─────────────────────────────────────────────────────────────────────────
 # EXPLORE 3 — Journal entries + PDF export (reached via Settings → Export)
 # ─────────────────────────────────────────────────────────────────────────
+- scrollUntilVisible:
+    element:
+      id: explore-header
+    direction: UP
+- scrollUntilVisible:
+    element:
+      id: explore-entries
+    direction: DOWN
 - tapOn:
     id: "explore-entries"
 - extendedWaitUntil:
@@ -180,6 +205,14 @@ tags:
 # ─────────────────────────────────────────────────────────────────────────
 - tapOn:
     id: "tab-explore"
+- scrollUntilVisible:
+    element:
+      id: explore-header
+    direction: UP
+- scrollUntilVisible:
+    element:
+      id: explore-entries
+    direction: DOWN
 - tapOn:
     id: "explore-entries"
 - runFlow:

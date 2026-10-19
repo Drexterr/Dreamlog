@@ -18,7 +18,8 @@
 #   sign-in below). See mobile/src/config/e2e.ts. When using that build, delete
 #   the onboarding + sign-in runFlow lines and start at FEATURE 1.
 # ═══════════════════════════════════════════════════════════════════════════
-appId: com.ode.app
+appId: com.talktoode.app
+phoneFlow: ../subflows/core-controls-qa-phone.yaml
 env:
   EMAIL_EXISTING: "bharatbanthia2207+tester@gmail.com"
   PASSWORD: "DreamTest!2026"
@@ -158,6 +159,14 @@ tags:
 # ─────────────────────────────────────────────────────────────────────────
 - tapOn:
     id: "tab-explore"
+- scrollUntilVisible:
+    element:
+      id: explore-header
+    direction: UP
+- scrollUntilVisible:
+    element:
+      id: explore-therapy
+    direction: DOWN
 - tapOn:
     id: "explore-therapy"
 - assertVisible:
@@ -197,6 +206,14 @@ tags:
 - tapOn:
     id: "tab-explore"
     optional: true
+- scrollUntilVisible:
+    element:
+      id: explore-header
+    direction: UP
+- scrollUntilVisible:
+    element:
+      id: explore-entries
+    direction: DOWN
 - tapOn:
     id: "explore-entries"
     optional: true

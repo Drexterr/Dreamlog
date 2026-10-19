@@ -1,0 +1,69 @@
+appId: com.talktoode.app
+tags:
+  - regression
+  - authentication
+  - negative
+---
+- clearState
+- launchApp:
+    clearKeychain: true
+- runFlow: ../subflows/complete-onboarding-guest.yaml
+- tapOn:
+    id: home-record-button
+- assertVisible:
+    id: auth-sheet
+- tapOn:
+    id: auth-use-email
+- tapOn:
+    id: auth-submit
+- assertVisible: "Email and password are required."
+- tapOn:
+    id: auth-tab-register
+- tapOn:
+    id: auth-email-input
+- inputText: "qa@example.test"
+- assertVisible:
+    id: auth-email-input
+- scrollUntilVisible:
+    element:
+      id: auth-password-input
+    direction: DOWN
+- tapOn:
+    id: auth-password-input
+- inputText: "12345"
+- assertVisible:
+    id: auth-password-input
+- hideKeyboard
+- tapOn:
+    id: auth-submit
+- assertVisible: "Name is required."
+- tapOn:
+    id: auth-name-input
+- inputText: "Regression QA"
+- hideKeyboard
+- tapOn:
+    id: auth-submit
+- assertVisible: "Password must be at least 6 characters."
+- takeScreenshot: "auth-required-and-short-password"
+- tapOn:
+    id: auth-back-to-social
+- assertVisible:
+    id: auth-use-email
+- tapOn:
+    id: auth-later
+- assertVisible:
+    id: home-screen
+- assertNotVisible:
+    id: auth-sheet
+- tapOn:
+    id: home-record-button
+- tapOn:
+    id: auth-use-email
+- tapOn:
+    id: auth-submit
+- assertVisible: "Email and password are required."
+- tapOn:
+    id: auth-later
+- assertVisible:
+    id: home-screen
+- takeScreenshot: "auth-dismiss-and-reopen"

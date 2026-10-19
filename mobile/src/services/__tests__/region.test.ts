@@ -1,0 +1,23 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { getLocales } from 'expo-localization';
+import { api } from '../../api/client';
+import { cacheUserCountry,currencyForCountry,detectAndCacheRegion,detectUserCountry,getCachedCountry,getCachedRegion,resetAndDetectRegion,setRegionFromCountry } from '../region';
+jest.mock('../../api/client',()=>({api:{me:jest.fn()}}));
+jest.mock('expo-localization',()=>({getLocales:jest.fn()}));
+const locales=getLocales as jest.Mock;const me=api.me as jest.Mock;
+beforeEach(async()=>{jest.clearAllMocks();me.mockReset();locales.mockReset();me.mockResolvedValue({});locales.mockReturnValue([{regionCode:'US',currencyCode:'USD'}]);await AsyncStorage.clear();});
+describe('country and pricing region',()=>{
+  it.each([['IN','inr'],['in','inr'],['DE','eur'],['GB','eur'],['US','usd'],['OTHER','usd'],[null,'usd']])('maps %s to %s',(country,want)=>{expect(currencyForCountry(country)).toBe(want);});
+  it('stores chosen country and currency together',async()=>{expect(await setRegionFromCountry('in')).toBe('inr');expect(await getCachedCountry()).toBe('IN');expect(await getCachedRegion()).toBe('inr');});
+  it('clears country for OTHER',async()=>{await cacheUserCountry('IN');await cacheUserCountry('OTHER');expect(await getCachedCountry()).toBeNull();});
+  it('prefers cached country over API and locale',async()=>{await cacheUserCountry('IN');expect(await detectUserCountry()).toBe('IN');expect(me).not.toHaveBeenCalled();});
+  it('uses authoritative profile country',async()=>{me.mockResolvedValue({country:'DE'});expect(await detectUserCountry()).toBe('DE');expect(await getCachedCountry()).toBe('DE');});
+  it('falls back to device region on profile failure',async()=>{me.mockRejectedValue(new Error('offline'));expect(await detectUserCountry()).toBe('US');});
+  it('prefers cached currency without a profile request',async()=>{await setRegionFromCountry('IN');expect(await detectAndCacheRegion()).toBe('inr');expect(me).not.toHaveBeenCalled();});
+  it('ignores invalid cached currency and uses profile',async()=>{await AsyncStorage.setItem('dreamlog_region_currency','invalid');me.mockResolvedValue({country:'DE'});expect(await detectAndCacheRegion()).toBe('eur');});
+  it('recognizes Indian currency despite US device region',async()=>{locales.mockReturnValue([{regionCode:'US',currencyCode:'INR'}]);expect(await detectAndCacheRegion()).toBe('inr');});
+  it('recognizes European secondary locale',async()=>{locales.mockReturnValue([{regionCode:'US',currencyCode:'USD'},{regionCode:'FR',currencyCode:'EUR'}]);expect(await detectAndCacheRegion()).toBe('eur');});
+  it('defaults safely when locale detection throws',async()=>{locales.mockImplementation(()=>{throw new Error('unavailable');});expect(await detectAndCacheRegion()).toBe('usd');});
+  it('re-detects after removing stale currency',async()=>{await setRegionFromCountry('IN');me.mockResolvedValue({country:'DE'});expect(await resetAndDetectRegion()).toBe('eur');});
+  it('returns null for unknown cached currency',async()=>{await AsyncStorage.setItem('dreamlog_region_currency','invalid');expect(await getCachedRegion()).toBeNull();});
+});

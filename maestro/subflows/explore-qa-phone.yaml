@@ -1,0 +1,148 @@
+appId: com.talktoode.app
+incompleteReason: Native export receipt, populated relationship fixtures, and an open follow-up conversation remain required.
+env:
+  QA_ENTRY_ID: "4904e2b1-1ef9-4b11-af98-0dabe886f156"
+---
+- stopApp
+- launchApp
+- extendedWaitUntil:
+    visible:
+      id: home-screen
+    timeout: 60000
+- tapOn:
+    id: tab-settings
+- tapOn:
+    id: settings-profile-card
+- assertQaIdentity:
+    timeout: 30000
+- tapOn:
+    id: settings-profile-modal-close
+- tapOn:
+    id: tab-explore
+- scrollUntilVisible:
+    element:
+      id: explore-header
+    direction: UP
+- scrollUntilVisible:
+    element:
+      id: explore-journeys
+    direction: DOWN
+- tapOn:
+    id: explore-journeys
+- extendedWaitUntil:
+    visible:
+      id: journeys-screen
+    timeout: 30000
+- tapOn:
+    id: journeys-start-stress_relief
+- extendedWaitUntil:
+    visible:
+      id: journey-session-screen
+    timeout: 30000
+- assertVisible:
+    id: journey-session-record
+- tapOn:
+    id: journey-session-back
+- tapOn:
+    id: journeys-back
+- assertVisible:
+    id: explore-screen
+- scrollUntilVisible:
+    element:
+      id: explore-header
+    direction: UP
+- scrollUntilVisible:
+    element:
+      id: explore-relationships
+    direction: DOWN
+- tapOn:
+    id: explore-relationships
+- extendedWaitUntil:
+    visible:
+      id: relationships-screen
+    timeout: 30000
+- assertVisible: Relationship Map
+- runFlow:
+    required: true
+    when:
+      visible:
+        id: relationships-rename-action
+    commands:
+      - tapOn:
+          id: relationships-rename-action
+      - assertVisible:
+          id: relationships-rename-input
+      - tapOn:
+          id: relationships-rename-cancel
+- tapOn:
+    id: relationships-back
+- openLink: ode://reflection/${QA_ENTRY_ID}
+- scrollUntilVisible:
+    element:
+      id: reflection-share-therapist-button
+    direction: DOWN
+- tapOn:
+    id: reflection-share-therapist-button
+- extendedWaitUntil:
+    visible:
+      id: share-screen
+    timeout: 30000
+- extendedWaitUntil:
+    notVisible:
+      id: share-links-loading
+    timeout: 30000
+# Fail closed if an existing link could be confused with the new QA link.
+- assertNotVisible:
+    id: share-revoke-button
+- tapOn:
+    id: share-create-button
+- extendedWaitUntil:
+    visible:
+      id: share-send-button
+    timeout: 30000
+- assertVisible: "Link created.*"
+- scrollUntilVisible:
+    element:
+      id: share-revoke-button
+    direction: DOWN
+- tapOn:
+    id: share-revoke-button
+- assertVisible: Revoke link
+- tapOn:
+    id: android:id/button1
+- extendedWaitUntil:
+    notVisible:
+      id: share-revoke-button
+    timeout: 30000
+- assertNotVisible:
+    id: share-send-button
+- tapOn:
+    id: share-back
+- stopApp
+- launchApp
+- extendedWaitUntil:
+    visible:
+      id: home-screen
+    timeout: 60000
+- tapOn:
+    id: tab-settings
+- scrollUntilVisible:
+    element:
+      id: settings-export-row
+    direction: DOWN
+- tapOn:
+    id: settings-export-row
+- assertVisible:
+    id: export-screen
+- assertVisible: Export Journal
+- tapOn:
+    id: export-period-yearly
+- tapOn:
+    id: export-period-monthly
+- assertVisible:
+    id: export-button
+# No unverified native share-sheet interaction or external recipient selection.
+- tapOn:
+    id: export-back
+- assertVisible:
+    id: settings-screen

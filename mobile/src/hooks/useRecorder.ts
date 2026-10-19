@@ -27,7 +27,7 @@ export interface UseRecorderReturn {
   state: RecorderState;
   durationMs: number;
   error: string | null;
-  startRecording: () => Promise<void>;
+  startRecording: () => Promise<boolean>;
   stopRecording: () => Promise<RecordingResult | null>;
   discardRecording: () => Promise<void>;
 }
@@ -57,6 +57,7 @@ const RECORDING_OPTIONS: Audio.RecordingOptions = {
 
 export function useRecorder(): UseRecorderReturn {
   const recordingRef = useRef<Audio.Recording | null>(null);
+  const completedRef = useRef<RecordingResult | null>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const maxTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -70,7 +71,10 @@ export function useRecorder(): UseRecorderReturn {
       clearInterval(timerRef.current ?? undefined);
       clearTimeout(maxTimerRef.current ?? undefined);
       if (recordingRef.current) {
-        recordingRef.current.stopAndUnloadAsync().catch(() => {});
+        recordingRef.current.stopAndUnloadAsync()
+          .catch(() => {})
+          .then(() => Audio.setAudioModeAsync({ allowsRecordingIOS: false }))
+          .catch(() => {});
         recordingRef.current = null;
       }
     };
@@ -80,6 +84,7 @@ export function useRecorder(): UseRecorderReturn {
     try {
       setError(null);
       setDurationMs(0);
+      completedRef.current = null;
 
       // Ensure any existing recording is stopped and unloaded first
       if (recordingRef.current) {
@@ -93,7 +98,7 @@ export function useRecorder(): UseRecorderReturn {
       if (status !== 'granted') {
         setError('Microphone permission denied');
         setState('error');
-        return;
+        return false;
       }
 
       await Audio.setAudioModeAsync({
@@ -113,21 +118,41 @@ export function useRecorder(): UseRecorderReturn {
 
       // Auto-stop at max duration.
       maxTimerRef.current = setTimeout(async () => {
-        if (recordingRef.current) {
+        const active = recordingRef.current;
+        if (active) {
           clearInterval(timerRef.current ?? undefined);
-          await recordingRef.current.stopAndUnloadAsync();
-          setState('stopped');
+          try {
+            const status = await active.getStatusAsync();
+            await active.stopAndUnloadAsync();
+            const uri = active.getURI();
+            recordingRef.current = null;
+            await Audio.setAudioModeAsync({ allowsRecordingIOS: false });
+            if (!uri) throw new Error('Recording URI not available');
+            completedRef.current = { uri, durationSec: (status.durationMillis || MAX_DURATION_MS) / 1000, sizeBytes: 0 };
+            setDurationMs(MAX_DURATION_MS);
+            setState('stopped');
+          } catch (err) {
+            setError(err instanceof Error ? err.message : 'Failed to stop recording');
+            setState('error');
+          }
         }
       }, MAX_DURATION_MS);
+      return true;
     } catch (err) {
+      await Audio.setAudioModeAsync({ allowsRecordingIOS: false }).catch(() => {});
       const msg = err instanceof Error ? err.message : 'Failed to start recording';
       setError(msg);
       setState('error');
+      return false;
     }
   }, []);
 
   const stopRecording = useCallback(async (): Promise<RecordingResult | null> => {
-    if (!recordingRef.current) return null;
+    if (!recordingRef.current) {
+      const completed = completedRef.current;
+      completedRef.current = null;
+      return completed;
+    }
 
     clearInterval(timerRef.current ?? undefined);
     clearTimeout(maxTimerRef.current ?? undefined);
@@ -144,14 +169,13 @@ export function useRecorder(): UseRecorderReturn {
       recordingRef.current = null;
       setState('stopped');
 
+      await Audio.setAudioModeAsync({ allowsRecordingIOS: false });
+
       if (!uri) {
         setError('Recording URI not available');
         setState('error');
         return null;
       }
-
-      // Reset audio mode.
-      await Audio.setAudioModeAsync({ allowsRecordingIOS: false });
 
       // Prefer the native-reported duration; fall back to the JS timer. Use `||`
       // (not `??`) so a 0 from either source falls through to the next.
@@ -168,6 +192,7 @@ export function useRecorder(): UseRecorderReturn {
   const discardRecording = useCallback(async () => {
     clearInterval(timerRef.current ?? undefined);
     clearTimeout(maxTimerRef.current ?? undefined);
+    completedRef.current = null;
 
     if (recordingRef.current) {
       try {
@@ -178,6 +203,7 @@ export function useRecorder(): UseRecorderReturn {
       recordingRef.current = null;
     }
 
+    await Audio.setAudioModeAsync({ allowsRecordingIOS: false }).catch(() => {});
     setDurationMs(0);
     setState('idle');
     setError(null);

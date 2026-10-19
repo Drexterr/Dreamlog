@@ -26,7 +26,10 @@ extensions.configure(com.facebook.react.ReactSettingsExtension) { ex ->
   if (System.getenv('EXPO_USE_COMMUNITY_AUTOLINKING') == '1') {
     ex.autolinkLibrariesFromCommand()
   } else {
-    ex.autolinkLibrariesFromCommand(expoAutolinking.rnConfigCommand)
+    // Package changes must invalidate generated BuildConfig references too.
+    def configInputs = files('../yarn.lock', '../package-lock.json', '../package.json',
+      '../react-native.config.js', '../app.json', 'app/build.gradle')
+    ex.autolinkLibrariesFromCommand(expoAutolinking.rnConfigCommand, rootDir.parentFile, configInputs)
   }
 }
 expoAutolinking.useExpoModules()

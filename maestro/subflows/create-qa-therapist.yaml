@@ -1,0 +1,41 @@
+# One authorized signup attempt; run only from the post-onboarding guest Home.
+# Password comes from the existing in-memory QA fixture, never this file.
+appId: com.talktoode.app
+incompleteReason: This prepares a disposable account; verified email, therapist registration and workspace tests are still required.
+env:
+  NEW_QA_THERAPIST_EMAIL: "bharatbanthia2207+odeqa-therapist-20261014@gmail.com"
+---
+- assertVisible:
+    id: home-screen
+- tapOn:
+    id: home-record-button
+- assertVisible:
+    id: auth-sheet
+- tapOn:
+    id: auth-use-email
+- tapOn:
+    id: auth-tab-register
+- tapOn:
+    id: auth-name-input
+- inputText: Dr Ode QA
+- hideKeyboard
+- tapOn:
+    id: auth-email-input
+- inputText: ${NEW_QA_THERAPIST_EMAIL}
+- hideKeyboard
+- scrollUntilVisible:
+    element:
+      id: auth-password-input
+    direction: DOWN
+- tapOn:
+    id: auth-password-input
+- inputText: ${PASSWORD}
+- hideKeyboard
+- tapOn:
+    id: auth-submit
+- extendedWaitUntil:
+    notVisible:
+      id: auth-sheet
+    timeout: 60000
+- assertNotVisible:
+    id: auth-error

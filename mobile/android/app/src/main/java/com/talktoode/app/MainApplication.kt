@@ -1,4 +1,4 @@
-package com.ode.app
+package com.talktoode.app
 
 import android.app.Application
 import android.content.res.Configuration

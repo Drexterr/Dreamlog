@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -60,8 +60,10 @@ export default function AuthSheet({ visible, prompt, onClose }: AuthSheetProps) 
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const authInFlight = useRef(false);
 
   function reset() {
+    authInFlight.current = false;
     setMode('social');
     setEmailMode('login');
     setEmail('');
@@ -71,12 +73,18 @@ export default function AuthSheet({ visible, prompt, onClose }: AuthSheetProps) 
     setLoading(false);
   }
 
+  useEffect(() => {
+    if (!visible) reset();
+  }, [visible]);
+
   function handleClose() {
     reset();
     onClose();
   }
 
   async function handleGoogle() {
+    if (authInFlight.current) return;
+    authInFlight.current = true;
     // Browser-based OAuth (not native @react-native-google-signin): iOS's Google
     // SDK injects a nonce Supabase can't verify. The browser flow lets Supabase
     // own the PKCE nonce, so it works on both platforms. See app/auth.tsx.
@@ -92,17 +100,20 @@ export default function AuthSheet({ visible, prompt, onClose }: AuthSheetProps) 
       if (!data?.url) throw new Error('Could not start Google sign-in');
 
       const result = await WebBrowser.openAuthSessionAsync(data.url, redirectTo);
-      if (result.type !== 'success' || !result.url) { setLoading(false); return; }
+      if (result.type !== 'success' || !result.url) { authInFlight.current = false; setLoading(false); return; }
 
       await handleDeepLink(result.url);
       // onAuthStateChange in _layout.tsx handles the rest
     } catch (err: unknown) {
+      authInFlight.current = false;
       setError((err as any)?.message ?? 'Google sign-in failed');
       setLoading(false);
     }
   }
 
   async function handleApple() {
+    if (authInFlight.current) return;
+    authInFlight.current = true;
     setError('');
     setLoading(true);
     try {
@@ -117,6 +128,7 @@ export default function AuthSheet({ visible, prompt, onClose }: AuthSheetProps) 
       if (err) throw err;
       // onAuthStateChange in _layout.tsx handles the rest
     } catch (err: unknown) {
+      authInFlight.current = false;
       if ((err as any)?.code === 'ERR_REQUEST_CANCELED') { setLoading(false); return; }
       setError((err as any)?.message ?? 'Apple sign-in failed');
       setLoading(false);
@@ -124,13 +136,15 @@ export default function AuthSheet({ visible, prompt, onClose }: AuthSheetProps) 
   }
 
   async function handleEmailSubmit() {
+    if (authInFlight.current) return;
     const e = email.trim();
-    const p = password.trim();
+    const p = password;
     const n = name.trim();
-    if (!e || !p) { setError('Email and password are required.'); return; }
+    if (!e || !p.trim()) { setError('Email and password are required.'); return; }
     if (emailMode === 'register' && !n) { setError('Name is required.'); return; }
     if (emailMode === 'register' && p.length < 6) { setError('Password must be at least 6 characters.'); return; }
     setError('');
+    authInFlight.current = true;
     setLoading(true);
     try {
       if (emailMode === 'register') {
@@ -151,6 +165,7 @@ export default function AuthSheet({ visible, prompt, onClose }: AuthSheetProps) 
         // onAuthStateChange handles the rest
       }
     } catch (err: unknown) {
+      authInFlight.current = false;
       setError((err as any)?.message ?? (emailMode === 'login' ? 'Invalid email or password.' : 'Registration failed.'));
       setLoading(false);
     }
@@ -168,13 +183,15 @@ export default function AuthSheet({ visible, prompt, onClose }: AuthSheetProps) 
 
       <KeyboardAvoidingView
         style={s.sheetWrap}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        pointerEvents="box-none"
       >
         <View testID={T.auth.sheet} style={[s.sheet, { backgroundColor: colors.cardSolid, borderColor: colors.border }]}>
           {/* Handle */}
           <View style={[s.handle, { backgroundColor: colors.borderFaint }]} />
 
           <ScrollView
+            style={s.scroll}
             contentContainerStyle={s.content}
             keyboardShouldPersistTaps="handled"
             showsVerticalScrollIndicator={false}
@@ -322,18 +339,18 @@ const s = StyleSheet.create({
     backgroundColor: 'rgba(0,0,0,0.55)',
   },
   sheetWrap: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
+    flex: 1,
+    justifyContent: 'flex-end',
   },
   sheet: {
+    maxHeight: '90%',
     borderTopLeftRadius: 28,
     borderTopRightRadius: 28,
     borderWidth: 1,
     borderBottomWidth: 0,
     paddingBottom: 32,
   },
+  scroll: { flexShrink: 1 },
   handle: {
     width: 40,
     height: 4,

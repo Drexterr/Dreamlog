@@ -24,13 +24,13 @@
 #     and note text are encrypted at rest (ADR-017); without it these
 #     endpoints error and this whole flow fails closed.
 # ═══════════════════════════════════════════════════════════════════════════
-appId: com.ode.app
+appId: com.talktoode.app
 env:
   EMAIL_THERAPIST: "bharatbanthia2207+maestro-therapist@gmail.com"
   PASSWORD_THERAPIST: "DreamTest!2026"
   THERAPIST_NAME: "Dr. Maestro Test"
   THERAPIST_CREDENTIALS: "M.Phil Clinical Psychology"
-  CLIENT_NAME: "Asha K (QA)"
+  CLIENT_NAME: "Ode QA Portal C (20261014)"
   SESSION_BULLET_TYPED: "Discussed sleep routine and set a boundary with family"
   SESSION_BULLET_ADDED: "Follow up on breathing exercise next session"
 tags:
@@ -67,14 +67,19 @@ tags:
     id: "therapist-clients-add-button"
 - assertVisible: "Add a client"
 - tapOn:
+    id: therapist-clients-add-submit
+- assertVisible: A name or initials are required\.
+- tapOn:
     id: "therapist-clients-add-name-input"
 - inputText: ${CLIENT_NAME}
 - hideKeyboard
 - tapOn:
     id: "therapist-clients-add-submit"
 - extendedWaitUntil:
-    visible: ${CLIENT_NAME}
+    visible: ${CLIENT_NAME_REGEX}
     timeout: 10000
+- waitForAnimationToEnd:
+    timeout: 1500
 - takeScreenshot: "therapist-client-added"
 
 # ─────────────────────────────────────────────────────────────────────────
@@ -82,7 +87,7 @@ tags:
 # the photo/OCR path needs a real camera and async worker processing, so it
 # is out of scope for this UI-automation pass)
 # ─────────────────────────────────────────────────────────────────────────
-- tapOn: ${CLIENT_NAME}
+- tapOn: ${CLIENT_ROW_REGEX}
 - assertVisible:
     id: "therapist-client-detail-screen"
 - tapOn:
@@ -135,9 +140,8 @@ tags:
 - tapOn:
     id: "therapist-session-summarize-button"
 - extendedWaitUntil:
-    visible: "AI SESSION SUMMARY"
-    timeout: 20000
-    optional: true
+    visible: ".*AI SESSION SUMMARY"
+    timeout: 60000
 - takeScreenshot: "therapist-session-summarized"
 
 # ─────────────────────────────────────────────────────────────────────────
@@ -146,16 +150,18 @@ tags:
 # ─────────────────────────────────────────────────────────────────────────
 - tapOn:
     id: "therapist-session-delete"
+- assertVisible: Delete session\?
 - tapOn:
-    text: "Delete"
+    id: android:id/button1
 - extendedWaitUntil:
     visible:
       id: "therapist-client-detail-screen"
     timeout: 10000
 - tapOn:
     id: "therapist-client-detail-delete"
+- assertVisible: Delete client\?
 - tapOn:
-    text: "Delete everything"
+    id: android:id/button1
 - extendedWaitUntil:
     visible:
       id: "therapist-clients-screen"

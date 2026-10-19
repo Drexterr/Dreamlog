@@ -18,13 +18,21 @@ sales-led and off-store.
 | SKU | India | Global | Store product type |
 |---|---|---|---|
 | **Free** | ₹0 | $0 | — |
-| **Plus** (journal only) | ₹249/mo | $5.99/mo | Auto-renewing subscription |
-| **Plus — annual** | ₹1,999/yr (~₹167/mo, save 33%) | $39.99/yr (~$3.33/mo, save 44%) | Auto-renewing subscription |
-| **Pro** (journal + therapy) | ₹499/mo | $9.99/mo | Auto-renewing subscription |
-| **Pro — annual** | ₹4,499/yr (~₹375/mo, save 25%) | $79.99/yr (~$6.67/mo, save 33%) | Auto-renewing subscription |
+| **Plus** (journal only) | ₹249/mo | $5.99/mo | Consumable IAP (one-time, 30-day pass) |
+| **Plus — annual** | ₹1,999/yr (~₹167/mo, save 33%) | $39.99/yr (~$3.33/mo, save 44%) | Consumable IAP (one-time, 365-day pass) |
+| **Pro** (journal + therapy) | ₹499/mo | $9.99/mo | Consumable IAP (one-time, 30-day pass) |
+| **Pro — annual** | ₹4,499/yr (~₹375/mo, save 25%) | $79.99/yr (~$6.67/mo, save 33%) | Consumable IAP (one-time, 365-day pass) |
 | **Therapy session — Pro member price** | ₹299 | $4.99 | Consumable IAP |
 | **Therapy session — standalone** | ₹499 | $7.99 | Consumable IAP |
 | **B2B Wellness** | ₹199/employee/mo (min 50) | custom | Invoiced, not in stores |
+
+> ⚠️ All four plan-pass products are **one-time products** (App Store: consumable;
+> Play Console: **In-app products**, not Subscriptions), not auto-renewing
+> subscriptions - the "Auto-renewing subscription" label previously in this table
+> was wrong and contradicted both the prose below and the actual verification code
+> (`backend/internal/services/iap.go` calls the Play `purchases/products/...` API,
+> never `purchases/subscriptions/...`). Creating them as Play Subscriptions would
+> break server-side verification entirely.
 
 EUR mirrors USD (€5.99 / €39.99 / €9.99 / €79.99; sessions €7.99 / €4.99).
 Plan passes are sold as **consumable In-App Purchases** (App Store / Google Play,
@@ -279,7 +287,7 @@ Code/doc changes to land the new pricing:
 - [x] IAP migration: 4 consumable plan-pass SKUs, both stores; `expo-iap` client +
       server-side receipt verification (`services/iap.go`); Stripe removed ✅ 2026-07-13
 - [ ] Create the 4 products in App Store Connect + Play Console
-      (`com.ode.app.{plus,pro}.{monthly,annual}`) at the list prices above
+      (`com.talktoode.app.{plus,pro}.{monthly,annual}`) at the list prices above
 - [ ] Enroll: App Store Small Business Program + Play 15% tier
 - [ ] Therapy pay-per-use charge server-side (`computeBilling` still returns 402 in
       prod for non-included sessions - wire a therapy-session consumable SKU through

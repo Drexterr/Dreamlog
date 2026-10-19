@@ -4,7 +4,7 @@
 # navigation (Settings sheets) opens/closes. Tabs carry stable testIDs
 # (tabBarButtonTestID in app/(tabs)/_layout.tsx).
 # ═══════════════════════════════════════════════════════════════════════════
-appId: com.ode.app
+appId: com.talktoode.app
 tags:
   - navigation
 ---
@@ -50,6 +50,14 @@ tags:
 # ── 2. Explore → each tool screen opens and back returns to Explore ──
 - tapOn:
     id: "tab-explore"
+- scrollUntilVisible:
+    element:
+      id: explore-header
+    direction: UP
+- scrollUntilVisible:
+    element:
+      id: explore-entries
+    direction: DOWN
 - tapOn:
     id: "explore-entries"
 - extendedWaitUntil:
@@ -62,6 +70,14 @@ tags:
       id: "explore-screen"
     timeout: 10000
 
+- scrollUntilVisible:
+    element:
+      id: explore-header
+    direction: UP
+- scrollUntilVisible:
+    element:
+      id: explore-journeys
+    direction: DOWN
 - tapOn:
     id: "explore-journeys"
 - extendedWaitUntil:
@@ -74,6 +90,14 @@ tags:
       id: "explore-screen"
     timeout: 10000
 
+- scrollUntilVisible:
+    element:
+      id: explore-header
+    direction: UP
+- scrollUntilVisible:
+    element:
+      id: explore-relationships
+    direction: DOWN
 - tapOn:
     id: "explore-relationships"
 - back
@@ -86,6 +110,10 @@ tags:
 #       its Close button without leaving Settings. ──
 - tapOn:
     id: "tab-settings"
+- scrollUntilVisible:
+    element:
+      id: "settings-help-row"
+    direction: DOWN
 - tapOn:
     id: "settings-help-row"
 - extendedWaitUntil:
@@ -98,6 +126,10 @@ tags:
 - takeScreenshot: "nav-crisis-modal-closed"
 
 # ── 4. Nudge-hour picker modal opens and dismisses via backdrop tap ──
+- scrollUntilVisible:
+    element:
+      id: "settings-nudge-hour-row"
+    direction: UP
 - tapOn:
     id: "settings-nudge-hour-row"
 - extendedWaitUntil:

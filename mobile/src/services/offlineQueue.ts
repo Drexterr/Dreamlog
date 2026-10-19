@@ -29,16 +29,21 @@ async function writeQueue(items: OfflineQueueItem[]): Promise<void> {
   await AsyncStorage.setItem(QUEUE_KEY, JSON.stringify(items));
 }
 
+// Serialize read-modify-write operations so concurrent saves cannot overwrite.
+let mutationTail: Promise<void> = Promise.resolve();
+function mutateQueue(update: (items: OfflineQueueItem[]) => OfflineQueueItem[]): Promise<void> {
+  const mutation = mutationTail.then(async () => writeQueue(update(await readQueue())));
+  mutationTail = mutation.catch(() => {});
+  return mutation;
+}
+
 // ── Public API ───────────────────────────────────────────────────────────────
 export async function enqueue(item: Omit<OfflineQueueItem, 'attempts'>): Promise<void> {
-  const queue = await readQueue();
-  queue.push({ ...item, attempts: 0 });
-  await writeQueue(queue);
+  await mutateQueue(queue => [...queue, { ...item, attempts: 0 }]);
 }
 
 export async function removeItem(id: string): Promise<void> {
-  const queue = await readQueue();
-  await writeQueue(queue.filter((i) => i.id !== id));
+  await mutateQueue(queue => queue.filter((i) => i.id !== id));
 }
 
 export async function getQueue(): Promise<OfflineQueueItem[]> {
@@ -86,10 +91,12 @@ export async function flush(
     }
 
     // Preserve any items enqueued while this flush was running.
-    const current = await readQueue();
     const processedIds = new Set(queue.map((i) => i.id));
-    const newlyEnqueued = current.filter((i) => !processedIds.has(i.id));
-    await writeQueue([...remaining, ...newlyEnqueued]);
+    await mutateQueue(current => {
+      const currentIds = new Set(current.map(i => i.id));
+      const newlyEnqueued = current.filter(i => !processedIds.has(i.id));
+      return [...remaining.filter(i => currentIds.has(i.id)), ...newlyEnqueued];
+    });
   } finally {
     flushInFlight = false;
   }

@@ -75,7 +75,7 @@ const barStyles = StyleSheet.create({
   },
   track: {
     flex: 1,
-    height: 6,
+    height: 3,
     borderRadius: 3,
     overflow: 'hidden',
   },
@@ -160,7 +160,7 @@ const distStyles = StyleSheet.create({
   wrap: { marginTop: 12 },
   barRow: {
     flexDirection: 'row',
-    height: 6,
+    height: 3,
     borderRadius: 3,
     overflow: 'hidden',
     marginBottom: 6,

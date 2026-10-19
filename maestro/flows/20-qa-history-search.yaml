@@ -1,0 +1,66 @@
+appId: com.talktoode.app
+env:
+  QA_ENTRY_ID: "4904e2b1-1ef9-4b11-af98-0dabe886f156"
+tags:
+  - history
+  - search
+  - read-only
+---
+- stopApp
+- launchApp
+- extendedWaitUntil:
+    visible:
+      id: home-screen
+    timeout: 60000
+- tapOn:
+    id: tab-settings
+- tapOn:
+    id: settings-profile-card
+- assertQaIdentity:
+    timeout: 20000
+- tapOn:
+    id: settings-profile-modal-close
+- tapOn:
+    id: tab-home
+- openLink: ode://entries
+- extendedWaitUntil:
+    visible:
+      id: entries-search-input
+    timeout: 30000
+- tapOn:
+    id: entries-search-input
+- inputText: synthetic test content
+- hideKeyboard
+- extendedWaitUntil:
+    visible:
+      id: entry-card-${QA_ENTRY_ID}
+    timeout: 30000
+- tapOn:
+    id: entry-card-${QA_ENTRY_ID}
+- scrollUntilVisible:
+    element:
+      id: reflection-done-button
+    direction: DOWN
+    timeout: 30000
+- assertVisible:
+    id: reflection-tell-more-button
+- tapOn:
+    id: reflection-done-button
+- assertVisible:
+    id: home-screen
+- openLink: ode://entries
+- extendedWaitUntil:
+    visible:
+      id: entries-search-input
+    timeout: 30000
+- tapOn:
+    id: entries-search-input
+- inputText: zzqanoresults20261014
+- hideKeyboard
+- extendedWaitUntil:
+    visible: No matching entries.
+    timeout: 30000
+- tapOn:
+    id: entries-back
+- assertNotVisible:
+    id: entries-screen

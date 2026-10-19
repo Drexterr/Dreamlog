@@ -1,0 +1,34 @@
+appId: com.talktoode.app
+tags:
+  - reflection
+  - followup
+---
+# Precondition: harness opens the known synthetic QA entry's reflection deep link.
+- scrollUntilVisible:
+    element:
+      id: reflection-tell-more-button
+    direction: DOWN
+    timeout: 30000
+- assertVisible:
+    id: reflection-done-button
+- tapOn:
+    id: reflection-tell-more-button
+- extendedWaitUntil:
+    visible: You've reached the end of this conversation.
+    timeout: 30000
+- assertNotVisible:
+    id: followup-input
+- assertNotVisible:
+    id: followup-send
+- assertVisible:
+    id: followup-goodnight
+- tapOn:
+    id: followup-close
+- scrollUntilVisible:
+    element:
+      id: reflection-done-button
+    direction: DOWN
+- tapOn:
+    id: reflection-done-button
+- assertVisible:
+    id: home-screen

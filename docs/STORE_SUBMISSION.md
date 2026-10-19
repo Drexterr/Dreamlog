@@ -12,12 +12,12 @@ Drafted 2026-07-20 — review the wording before pasting; anything in [brackets]
 | Name | Ode — Voice Journal |
 | Subtitle (iOS, 30 chars) | Speak. Reflect. Understand. |
 | Short description (Play, 80 chars) | Voice journaling with AI reflections that understand your emotional patterns. |
-| Bundle / package | com.ode.app |
+| Bundle / package | com.talktoode.app |
 | Category | Health & Fitness (primary) · Lifestyle (secondary) |
 | Support email | talktoode.dev@gmail.com (inbox must exist before submission) |
-| Privacy policy URL | https://dreamlog.app/privacy |
-| Terms URL | https://dreamlog.app/terms |
-| Marketing URL | https://dreamlog.app |
+| Privacy policy URL | https://dreamlog-48f94.web.app/privacy (dreamlog.app isn't DNS-pointed at Firebase Hosting yet — this *.web.app URL resolves today and is safe to submit with; see item 8 below) |
+| Terms URL | https://dreamlog-48f94.web.app/terms |
+| Marketing URL | https://dreamlog-48f94.web.app |
 
 ---
 
@@ -161,7 +161,10 @@ Sizes: iOS 6.7" (1290×2796) + 5.5" (1242×2208); Play phone + 7" & 10" tablet, 
 
 ## 8. Things to verify before pasting
 
-- [ ] https://dreamlog.app/privacy and /terms actually resolve on the production domain (pages exist in `therapist-portal/src/app/`; the domain must point at the Firebase Hosting site, project `dreamlog-48f94`)
+- [x] Privacy/terms now resolve at https://dreamlog-48f94.web.app/privacy and /terms (pages
+      live in `therapist-portal/src/app/`) — usable as-is for store submission today.
+      🟢 Fast follow, not a blocker: point `dreamlog.app` at the Firebase Hosting site so the
+      branded domain works too, then swap the URLs above.
 - [ ] talktoode.dev@gmail.com inbox exists
 - [ ] Demo account email confirmed + 3–5 entries recorded
 - [ ] Privacy policy text actually covers: audio processing, AI processors (Anthropic/OpenAI/Azure), health data, retention, deletion, children's policy

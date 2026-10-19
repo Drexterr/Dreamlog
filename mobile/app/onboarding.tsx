@@ -23,6 +23,7 @@ import {
   markTourPending,
 } from '../src/services/guestStorage';
 import { setRegionFromCountry } from '../src/services/region';
+import { logQaOnboardingStep } from '../src/services/qaDiagnostics';
 import { T, onboardingGoalID, onboardingAgeID } from '../src/testIDs';
 import type { AgeRange, UserGoal } from '../src/types';
 
@@ -208,6 +209,7 @@ export default function OnboardingScreen() {
   const { colors, setTheme } = useTheme();
 
   const [step, setStep] = useState<Step>(0);
+  useEffect(() => { logQaOnboardingStep(step); }, [step]);
   const [selectedGoal, setSelectedGoal] = useState<UserGoal | null>(null);
   const [preferredName, setPreferredName] = useState('');
   const [selectedAgeRange, setSelectedAgeRange] = useState<AgeRange | null>(null);

@@ -216,6 +216,7 @@ export default function RecordScreen() {
   const { colors } = useTheme();
   const [phase, setPhase] = useState<'idle' | 'recording' | 'uploading'>('idle');
   const [uploadLabel, setUploadLabel] = useState('');
+  const orbBusy = useRef(false);
   const [mode, setMode] = useState<EntryMode | null>(
     VALID_MODES.includes(params.mode as EntryMode) ? (params.mode as EntryMode) : null,
   );
@@ -259,19 +260,26 @@ export default function RecordScreen() {
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Upload failed';
       Alert.alert('Something went wrong', msg, [
-        { text: 'Try again', onPress: () => { setPhase('recording'); recorder.startRecording(); } },
+        { text: 'Try again', onPress: async () => {
+          if (orbBusy.current) return;
+          orbBusy.current = true;
+          try { setPhase(await recorder.startRecording() ? 'recording' : 'idle'); }
+          finally { orbBusy.current = false; }
+        } },
       ]);
     }
   }, [phase, recorder, router, mode]);
 
   const handleOrbPress = useCallback(async () => {
-    if (!mode) return; // mode must be selected first
-    if (phase === 'idle') {
-      await recorder.startRecording();
-      setPhase('recording');
-    } else if (phase === 'recording') {
-      await handleStop();
-    }
+    if (!mode || orbBusy.current) return;
+    orbBusy.current = true;
+    try {
+      if (phase === 'idle') {
+        if (await recorder.startRecording()) setPhase('recording');
+      } else if (phase === 'recording') {
+        await handleStop();
+      }
+    } finally { orbBusy.current = false; }
   }, [phase, mode, recorder, handleStop]);
 
   const handleCancel = useCallback(async () => {

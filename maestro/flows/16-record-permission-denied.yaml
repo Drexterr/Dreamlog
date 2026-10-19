@@ -1,0 +1,26 @@
+appId: com.talktoode.app
+tags:
+  - recording
+  - negative
+---
+# Harness precondition: Ode microphone permission denied and user-fixed.
+- launchApp
+- tapOn:
+    id: tab-home
+- tapOn:
+    id: home-record-button
+- assertVisible:
+    id: record-screen
+- tapOn:
+    id: record-mode-processing
+- tapOn:
+    id: record-orb
+- extendedWaitUntil:
+    visible: Microphone permission denied
+    timeout: 10000
+- assertNotVisible: listening
+- assertVisible: tap to begin
+- tapOn:
+    id: record-cancel
+- assertVisible:
+    id: home-screen

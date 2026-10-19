@@ -27,13 +27,13 @@
 #     recommended for deterministic behavior.
 #   • A seeded Supabase account for EMAIL_THERAPIST (see flow 08 header).
 # ═══════════════════════════════════════════════════════════════════════════
-appId: com.ode.app
+appId: com.talktoode.app
 env:
   EMAIL_THERAPIST: "bharatbanthia2207+maestro-therapist@gmail.com"
   PASSWORD_THERAPIST: "DreamTest!2026"
   THERAPIST_NAME: "Dr. Maestro Test"
   THERAPIST_CREDENTIALS: "M.Phil Clinical Psychology"
-  CLIENT_NAME: "Rohan M (QA Dashboard)"
+  CLIENT_NAME: "Ode QA Dashboard D (20261014)"
   SESSION_BULLET_TYPED: "Reviewed coping strategies from last week"
 tags:
   - therapist
@@ -74,8 +74,10 @@ tags:
 - tapOn:
     id: "therapist-clients-add-submit"
 - extendedWaitUntil:
-    visible: ${CLIENT_NAME}
+    visible: ${CLIENT_NAME_REGEX}
     timeout: 10000
+- waitForAnimationToEnd:
+    timeout: 1500
 
 # ─────────────────────────────────────────────────────────────────────────
 # DASHBOARD 3 — "＋ New session notes" quick action from the dashboard
@@ -88,7 +90,7 @@ tags:
 - tapOn:
     id: "therapist-dashboard-new-session"
 - assertVisible: "New session notes"
-- tapOn: ${CLIENT_NAME}                       # client chip, selected by name
+- tapOn: ${CLIENT_NAME_REGEX}                 # client chip, selected by name
 - tapOn:
     id: "therapist-add-session-type-tab"
 - tapOn:
@@ -111,16 +113,26 @@ tags:
 # ─────────────────────────────────────────────────────────────────────────
 - tapOn:
     id: "therapist-session-delete"
+- assertVisible: Delete session\?
 - tapOn:
-    text: "Delete"
+    id: android:id/button1
 - extendedWaitUntil:
     visible:
-      id: "therapist-client-detail-screen"
+      id: "therapist-dashboard-screen"
     timeout: 10000
 - tapOn:
-    id: "therapist-client-detail-delete"
+    id: therapist-dashboard-my-clients
+- extendedWaitUntil:
+    visible: ${CLIENT_NAME_REGEX}
+    timeout: 30000
+- tapOn: ${CLIENT_ROW_REGEX}
+- assertVisible:
+    id: therapist-client-detail-screen
 - tapOn:
-    text: "Delete everything"
+    id: "therapist-client-detail-delete"
+- assertVisible: Delete client\?
+- tapOn:
+    id: android:id/button1
 - extendedWaitUntil:
     visible:
       id: "therapist-clients-screen"
@@ -141,12 +153,19 @@ tags:
 - extendedWaitUntil:
     visible: "Archive Test Client"
     timeout: 10000
+- waitForAnimationToEnd:
+    timeout: 1500
 - longPressOn: "Archive Test Client"
 - extendedWaitUntil:
-    visible: "Archive client?"
+    visible: 'Archive client\?'
     timeout: 6000
 - tapOn:
-    text: "Archive"
+    id: android:id/button2
+- assertVisible: Archive Test Client
+- longPressOn: Archive Test Client
+- assertVisible: 'Archive client\?'
+- tapOn:
+    id: android:id/button1
 - extendedWaitUntil:
     notVisible: "Archive Test Client"
     timeout: 10000

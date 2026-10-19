@@ -1,0 +1,127 @@
+appId: com.talktoode.app
+incompleteReason: Journey reopen and export handoff/cancel scope only; PDF bytes, populated relationships and open follow-up remain unclosed.
+---
+- stopApp
+- launchApp
+- extendedWaitUntil:
+    visible:
+      id: home-screen
+    timeout: 60000
+- tapOn:
+    id: tab-settings
+- waitForAnimationToEnd:
+    timeout: 1500
+- scrollUntilVisible:
+    element:
+      id: settings-profile-card
+    direction: UP
+- tapOn:
+    id: settings-profile-card
+- assertQaIdentity:
+    timeout: 30000
+- tapOn:
+    id: settings-profile-modal-close
+- tapOn:
+    id: tab-explore
+- scrollUntilVisible:
+    element:
+      id: explore-header
+    direction: UP
+- scrollUntilVisible:
+    element:
+      id: explore-journeys
+    direction: DOWN
+- tapOn:
+    id: explore-journeys
+- extendedWaitUntil:
+    visible:
+      id: journeys-screen
+    timeout: 30000
+- tapOn:
+    id: journeys-start-stress_relief
+- extendedWaitUntil:
+    visible:
+      id: journey-session-screen
+    timeout: 30000
+- assertVisible:
+    id: journey-session-record
+- backgroundApp
+- launchApp
+- assertVisible:
+    id: journey-session-screen
+- assertVisible:
+    id: journey-session-record
+- tapOn:
+    id: journey-session-back
+- tapOn:
+    id: journeys-back
+- stopApp
+- launchApp
+- extendedWaitUntil:
+    visible:
+      id: home-screen
+    timeout: 60000
+- tapOn:
+    id: tab-explore
+- scrollUntilVisible:
+    element:
+      id: explore-header
+    direction: UP
+- scrollUntilVisible:
+    element:
+      id: explore-journeys
+    direction: DOWN
+- tapOn:
+    id: explore-journeys
+- extendedWaitUntil:
+    visible: 'Stress Relief, 0/3, Next: .*'
+    timeout: 30000
+- tapOn: 'Stress Relief, 0/3, Next: .*'
+- extendedWaitUntil:
+    visible:
+      id: journey-session-screen
+    timeout: 30000
+- assertVisible:
+    id: journey-session-record
+- tapOn:
+    id: journey-session-back
+- tapOn:
+    id: journeys-back
+- tapOn:
+    id: tab-settings
+- scrollUntilVisible:
+    element:
+      id: settings-export-row
+    direction: DOWN
+- tapOn:
+    id: settings-export-row
+- assertVisible:
+    id: export-screen
+- tapOn:
+    id: export-period-monthly
+- tapOn:
+    id: export-button
+- assertExportChooser:
+    timeout: 90000
+- dismissExportChooser
+- assertVisible:
+    id: export-screen
+- assertVisible: Generate & Download PDF
+- tapOn:
+    id: export-period-yearly
+- tapOn:
+    id: export-button
+- assertExportChooser:
+    timeout: 90000
+- dismissExportChooser
+- assertVisible:
+    id: export-screen
+- assertVisible: Generate & Download PDF
+- tapOn:
+    id: export-back
+- assertVisible:
+    id: settings-screen
+- tapOn:
+    id: tab-home
+- assertVisible:
+    id: home-screen

@@ -6,7 +6,8 @@
 #
 # `setAirplaneMode` is Android-only in Maestro — that block is platform-guarded.
 # ═══════════════════════════════════════════════════════════════════════════
-appId: com.ode.app
+appId: com.talktoode.app
+phoneFlow: ../subflows/guest-edge-qa-phone.yaml
 env:
   ENTRY_MODE_KEY: "rant"
 tags:
@@ -89,9 +90,25 @@ tags:
 # ── EDGE 6 — Empty-state resilience: tools open with zero data behind them.
 - tapOn:
     id: "tab-explore"
+- scrollUntilVisible:
+    element:
+      id: explore-header
+    direction: UP
+- scrollUntilVisible:
+    element:
+      id: explore-relationships
+    direction: DOWN
 - tapOn:
     id: "explore-relationships"
 - back
+- scrollUntilVisible:
+    element:
+      id: explore-header
+    direction: UP
+- scrollUntilVisible:
+    element:
+      id: explore-journeys
+    direction: DOWN
 - tapOn:
     id: "explore-journeys"
 - assertVisible:

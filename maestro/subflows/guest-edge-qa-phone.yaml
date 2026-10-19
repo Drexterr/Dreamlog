@@ -1,0 +1,76 @@
+appId: com.talktoode.app
+incompleteReason: App-scoped offline recovery, permission changes, and true OS background/restore remain required; no device-wide connectivity changes are made.
+---
+- clearState
+- launchApp
+- runFlow: complete-onboarding-guest.yaml
+- runFlow: open-auth-sheet.yaml
+- tapOn:
+    id: auth-later
+- assertVisible:
+    id: home-screen
+- assertNotVisible:
+    id: auth-sheet
+- tapOn:
+    id: home-record-button
+- tapOn:
+    id: auth-use-email
+- tapOn:
+    id: auth-email-input
+- inputText: keyboard@example.test
+- assertVisible: keyboard@example.test
+- hideKeyboard
+- assertVisible:
+    id: auth-submit
+- tapOn:
+    id: auth-later
+- assertVisible:
+    id: home-screen
+- tapOn:
+    id: tab-explore
+- scrollUntilVisible:
+    element:
+      id: explore-header
+    direction: UP
+- scrollUntilVisible:
+    element:
+      id: explore-relationships
+    direction: DOWN
+- tapOn:
+    id: explore-relationships
+- assertVisible:
+    id: relationships-screen
+- back
+- assertVisible:
+    id: explore-screen
+- scrollUntilVisible:
+    element:
+      id: explore-header
+    direction: UP
+- scrollUntilVisible:
+    element:
+      id: explore-journeys
+    direction: DOWN
+- tapOn:
+    id: explore-journeys
+- assertVisible:
+    id: journeys-screen
+- back
+- tapOn:
+    id: tab-home
+- tapOn:
+    id: tab-mood
+- tapOn:
+    id: tab-settings
+- tapOn:
+    id: tab-explore
+- tapOn:
+    id: tab-home
+- assertVisible:
+    id: home-screen
+- stopApp
+- launchApp
+- extendedWaitUntil:
+    visible:
+      id: home-screen
+    timeout: 60000

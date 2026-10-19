@@ -163,17 +163,27 @@ export default function ReflectionScreen() {
   const slideAnim = useRef(new Animated.Value(20)).current;
 
   useEffect(() => {
-    if (!id) return;
+    if (!id) {
+      setEntry(null);
+      setAnalysis(null);
+      setLoading(false);
+      fadeAnim.setValue(1);
+      slideAnim.setValue(0);
+      return;
+    }
+    let active = true;
     setLoading(true);
     // The entry can exist while its analysis isn't available yet (still
     // processing, or processing failed) - fetch both independently so a
     // missing analysis still renders a useful state instead of a blank screen.
     Promise.allSettled([api.getEntry(id), api.getAnalysis(id)])
       .then(([e, a]) => {
+        if (!active) return;
         setEntry(e.status === 'fulfilled' ? e.value : null);
         setAnalysis(a.status === 'fulfilled' ? a.value : null);
       })
       .finally(() => {
+        if (!active) return;
         setLoading(false);
         fadeAnim.setValue(0);
         slideAnim.setValue(20);
@@ -182,6 +192,7 @@ export default function ReflectionScreen() {
           Animated.timing(slideAnim, { toValue: 0, duration: 600, useNativeDriver: true }),
         ]).start();
       });
+    return () => { active = false; };
   }, [id, reloadKey]);
 
   // Stored-value indicator ("grounded in your N entries") - fail-silent.
@@ -330,7 +341,8 @@ export default function ReflectionScreen() {
 
   const isCrisis = analysis.is_crisis;
   const moodScore = analysis.mood_score ?? 50;
-  const paragraphs = analysis.reflection?.split('\n\n').filter(Boolean) ?? ['No reflection available yet.'];
+  const reflectionParagraphs = analysis.reflection?.split('\n\n').filter((paragraph) => paragraph.trim().length > 0) ?? [];
+  const paragraphs = reflectionParagraphs.length > 0 ? reflectionParagraphs : ['No reflection available yet.'];
 
   return (
     <View style={[styles.container, { backgroundColor: colors.bg }]}>

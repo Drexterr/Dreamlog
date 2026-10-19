@@ -1,0 +1,76 @@
+appId: com.talktoode.app
+---
+- stopApp
+- launchApp
+- runFlow: dismiss-startup-streak.yaml
+- extendedWaitUntil:
+    visible:
+      id: home-screen
+    timeout: 60000
+- tapOn:
+    id: tab-settings
+- tapOn:
+    id: settings-profile-card
+- assertQaIdentity:
+    timeout: 30000
+- tapOn:
+    id: settings-profile-modal-close
+- tapOn:
+    id: tab-mood
+- extendedWaitUntil:
+    visible:
+      id: mood-screen
+    timeout: 30000
+- scrollUntilVisible:
+    element:
+      id: mood-range-90d
+    direction: DOWN
+- assertSelected:
+    id: mood-range-30d
+- tapOn:
+    id: mood-range-90d
+# No scrolling after range changes: the controls must stay in the viewport.
+- assertVisible:
+    id: mood-range-90d
+- assertVisible:
+    id: mood-range-365d
+- assertSelected:
+    id: mood-range-90d
+- assertSelected:
+    id: mood-range-30d
+    selected: false
+- extendedWaitUntil:
+    notVisible:
+      id: mood-history-loading
+    timeout: 30000
+- assertVisible:
+    id: mood-range-90d
+- assertNotVisible: Could not load mood history\.
+- tapOn:
+    id: mood-range-365d
+- assertSelected:
+    id: mood-range-365d
+- assertVisible:
+    id: mood-range-30d
+- extendedWaitUntil:
+    notVisible:
+      id: mood-history-loading
+    timeout: 30000
+- assertVisible:
+    id: mood-range-365d
+- assertNotVisible: Could not load mood history\.
+- tapOn:
+    id: mood-range-30d
+- assertSelected:
+    id: mood-range-30d
+- extendedWaitUntil:
+    notVisible:
+      id: mood-history-loading
+    timeout: 30000
+- assertVisible:
+    id: mood-range-30d
+- assertNotVisible: Could not load mood history\.
+- tapOn:
+    id: tab-home
+- assertVisible:
+    id: home-screen

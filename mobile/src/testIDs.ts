@@ -80,11 +80,17 @@ export const T = {
   // ── Explore tab (app/(tabs)/timeline.tsx) ──
   explore: {
     screen:        'explore-screen',
+    header:        'explore-header',
     entries:       'explore-entries',
     therapy:       'explore-therapy',
     dream:         'explore-dream',
     journeys:      'explore-journeys',
     relationships: 'explore-relationships',
+    reflections:   'explore-reflections',
+    weeklyReview:  'explore-weekly-review',
+    annualReview:  'explore-annual-review',
+    shareReview:   'explore-share-review',
+    retryReviews:  'explore-retry-reviews',
   },
 
   // ── Settings tab (app/(tabs)/settings.tsx) ──
@@ -193,10 +199,13 @@ export const T = {
   // ── Mood tab (app/(tabs)/mood.tsx) ──
   mood: {
     screen:            'mood-screen',
-    freezeButton:      'mood-freeze-button',
-    shareStreak:        'mood-share-streak',
+    renewStreak:       'mood-renew-streak',
+    renewalDialog:     'streak-renewal-dialog',
+    freezeCount:       'renew-freeze-count',
+    renewConfirm:      'renew-streak-confirm',
+    renewDismiss:      'renew-streak-dismiss',
+    openReflections:   'mood-open-reflections',
     shareInsightButton: 'mood-share-insight-button',
-    milestoneShare:      'mood-milestone-share',
     milestoneContinue:   'mood-milestone-continue',
     shareModalCancel:    'mood-share-modal-cancel',
     shareModalShare:     'mood-share-modal-share',
@@ -239,6 +248,8 @@ export const T = {
     createButton:  'share-create-button',
     sendButton:    'share-send-button',
     revokeButton:  'share-revoke-button',
+    retryButton:   'share-retry-button',
+    linksLoading:  'share-links-loading',
   },
 
   // ── Journal entries list (app/entries.tsx) ──
@@ -311,6 +322,7 @@ export const recordModeID     = (mode: string) => `record-mode-${mode}`;
 export const personaCardID    = (persona: string) => `persona-card-${persona}`;
 export const moodRangeID      = (range: string) => `mood-range-${range}`;
 export const upgradePeriodID  = (period: string) => `upgrade-period-${period}`;
+export const entryCardID = (id: string) => `entry-card-${id}`;
 export const upgradeCtaID     = (plan: string) => `upgrade-cta-${plan}`;
 export const journeyStartID   = (journeyId: string) => `journeys-start-${journeyId}`;
 export const changeGoalID     = (goal: string) => `change-goal-${goal}`;

@@ -3,10 +3,9 @@
 # Closes the coverage gap on app/(tabs)/mood.tsx and app/upgrade.tsx — neither
 # had any Maestro coverage before this flow (see docs/TESTING.md discussion).
 #
-# Covers: streak cards, streak freeze, Life Graph range selector, weekly-review
-# share-insight modal (open + cancel — the "Share Card" / "Share streak"
-# buttons themselves open the native OS share sheet, which Maestro cannot
-# script; see 03-authentication.yaml for the same limitation with OAuth), and
+# Covers: streak cards, renewal dialog (no freeze consumed), Life Graph ranges,
+# reviews in Explore, and review share-card preview. Native sharing is not
+# scripted; see 03-authentication.yaml for the same limitation with OAuth. Also covers
 # the Upgrade screen's monthly/annual toggle + plan cards. The purchase CTA
 # itself is NOT tapped — it launches the native App Store / Google Play
 # purchase sheet, another un-scriptable OS modal (same category as the share sheet / OAuth dialogs).
@@ -17,7 +16,8 @@
 #     against a fresh/empty account.
 #   • A verified account (EMAIL_EXISTING / PASSWORD).
 # ═══════════════════════════════════════════════════════════════════════════
-appId: com.ode.app
+appId: com.talktoode.app
+incompleteReason: Lost-streak/populated-review device fixtures and Play sandbox remain unclosed; unit tests cover the new state transitions.
 env:
   EMAIL_EXISTING: "bharatbanthia2207+tester@gmail.com"
   PASSWORD: "DreamTest!2026"
@@ -25,26 +25,24 @@ tags:
   - mood
   - billing
 ---
-- clearState
+- stopApp
 - launchApp:
     clearKeychain: true
     permissions:
       notifications: allow
-- runFlow: ../subflows/complete-onboarding-guest.yaml
-- runFlow: ../subflows/open-auth-sheet.yaml
-- runFlow: ../subflows/sign-in-email.yaml
-# Sign-in resumes the record intent (guest tapped record to trigger the
-# sheet) — cancel back to Home explicitly, same pattern as 07/05.
-- extendedWaitUntil:
-    visible:
-      id: "record-screen"
-    timeout: 20000
-- tapOn:
-    id: "record-cancel"
+- runFlow: ../subflows/dismiss-startup-streak.yaml
 - extendedWaitUntil:
     visible:
       id: "home-screen"
-    timeout: 10000
+    timeout: 60000
+- tapOn:
+    id: tab-settings
+- tapOn:
+    id: settings-profile-card
+- assertQaIdentity:
+    timeout: 30000
+- tapOn:
+    id: settings-profile-modal-close
 
 # ─────────────────────────────────────────────────────────────────────────
 # MOOD 1 — Mood tab renders (streaks, chart, Life Graph)
@@ -75,37 +73,36 @@ tags:
 - assertVisible: "Mood Map"
 - takeScreenshot: "mood-screen"
 
-# ─────────────────────────────────────────────────────────────────────────
-# MOOD 2 — Streak freeze (only rendered when the streak is broken AND a
-# freeze is available — data-dependent, optional)
-# ─────────────────────────────────────────────────────────────────────────
+# Renewal is available for active or broken streaks. Inspect, then dismiss;
+# automated navigation checks must not consume an account's freeze.
 - runFlow:
     when:
       visible:
-        id: "mood-freeze-button"
+        id: mood-renew-streak
     commands:
       - tapOn:
-          id: "mood-freeze-button"
-      - extendedWaitUntil:
-          visible: "Freeze Applied"
-          timeout: 8000
-          optional: true
+          id: mood-renew-streak
+      - assertVisible:
+          id: streak-renewal-dialog
+      - assertVisible:
+          id: renew-freeze-count
+      - assertVisible:
+          id: renew-streak-confirm
       - tapOn:
-          text: "OK"
-          optional: true
-      - takeScreenshot: "mood-freeze-applied"
-
-# ─────────────────────────────────────────────────────────────────────────
-# MOOD 3 — Share streak link renders (native share sheet — assert only)
-# ─────────────────────────────────────────────────────────────────────────
-- assertVisible:
-    id: "mood-share-streak"
-    optional: true
+          id: renew-streak-dismiss
+- assertNotVisible:
+    id: mood-share-streak
+- scrollUntilVisible:
+    element:
+      id: mood-range-90d
+    direction: DOWN
+    timeout: 30000
 
 # ─────────────────────────────────────────────────────────────────────────
 # MOOD 4 — Life Graph range selector (30D / 90D / 1Y)
 # ─────────────────────────────────────────────────────────────────────────
 - runFlow:
+    required: true
     when:
       visible:
         id: "mood-range-90d"
@@ -121,29 +118,57 @@ tags:
       - tapOn:
           id: "mood-range-30d"
       - takeScreenshot: "mood-life-graph-ranges"
-
-# ─────────────────────────────────────────────────────────────────────────
-# MOOD 5 — Share Insight modal opens and can be dismissed via Cancel
-# (only rendered once there's mood data — optional)
-# ─────────────────────────────────────────────────────────────────────────
+# Mood now links to reviews instead of rendering long-form review sections.
+- scrollUntilVisible:
+    element:
+      id: mood-open-reflections
+    direction: DOWN
+    timeout: 30000
+- assertNotVisible: WEEKLY REVIEW
+- assertNotVisible: YEAR IN REVIEW
+- tapOn:
+    id: mood-open-reflections
+- extendedWaitUntil:
+    visible:
+      id: explore-reflections
+    timeout: 10000
+- extendedWaitUntil:
+    notVisible:
+      id: explore-reviews-loading
+    timeout: 30000
+# Review availability depends on the account's generated data.
 - runFlow:
     when:
       visible:
-        id: "mood-share-insight-button"
+        id: explore-share-review
     commands:
       - tapOn:
-          id: "mood-share-insight-button"
+          id: explore-share-review
       - extendedWaitUntil:
           visible:
-            id: "mood-share-modal-cancel"
+            id: mood-share-modal-cancel
           timeout: 8000
-      - takeScreenshot: "mood-share-insight-modal"
       - tapOn:
-          id: "mood-share-modal-cancel"
-      - extendedWaitUntil:
-          visible:
-            id: "mood-screen"
-          timeout: 6000
+          id: mood-share-modal-cancel
+      - assertVisible:
+          id: explore-screen
+- runFlow:
+    when:
+      visible:
+        id: weekly-review-show-more
+    commands:
+      - tapOn:
+          id: weekly-review-show-more
+      - assertVisible: Show less
+      - tapOn:
+          id: weekly-review-show-more
+      - assertVisible: Show more
+- tapOn:
+    id: tab-mood
+- assertVisible:
+    id: mood-screen
+- assertNotVisible:
+    id: streak-renewal-dialog
 
 # ─────────────────────────────────────────────────────────────────────────
 # BILLING 1 — Upgrade screen: reached from Settings, plan cards + toggle
@@ -154,13 +179,17 @@ tags:
     visible:
       id: "settings-screen"
     timeout: 10000
+- openLink: ode://upgrade
+- extendedWaitUntil:
+    visible:
+      id: upgrade-screen
+    timeout: 30000
 - runFlow:
+    required: true
     when:
       visible:
-        id: "settings-upgrade"
+        id: "upgrade-screen"
     commands:
-      - tapOn:
-          id: "settings-upgrade"
       - assertVisible:
           id: "upgrade-screen"
       - assertVisible: "Choose a Plan"
@@ -169,6 +198,7 @@ tags:
       # Toggle to monthly pricing and back to annual (default).
       - tapOn:
           id: "upgrade-period-monthly"
+      - assertVisible: Monthly
       - extendedWaitUntil:
           visible:
             id: "upgrade-period-monthly"
@@ -176,6 +206,7 @@ tags:
       - takeScreenshot: "upgrade-screen-monthly"
       - tapOn:
           id: "upgrade-period-annual"
+      - assertVisible: Annual
 
       # CTA buttons render (not tapped — launches the native store purchase sheet).
       - assertVisible:

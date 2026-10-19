@@ -13,7 +13,8 @@
 #     data-dependent — assertions are `optional: true`.
 #   • A verified account (EMAIL_EXISTING / PASSWORD).
 # ═══════════════════════════════════════════════════════════════════════════
-appId: com.ode.app
+appId: com.talktoode.app
+phoneFlow: ../subflows/therapy-consent-qa-phone.yaml
 env:
   EMAIL_EXISTING: "bharatbanthia2207+tester@gmail.com"
   PASSWORD: "DreamTest!2026"
@@ -49,6 +50,14 @@ tags:
     visible:
       id: "explore-screen"
     timeout: 10000
+- scrollUntilVisible:
+    element:
+      id: explore-header
+    direction: UP
+- scrollUntilVisible:
+    element:
+      id: explore-therapy
+    direction: DOWN
 - tapOn:
     id: "explore-therapy"
 - extendedWaitUntil:

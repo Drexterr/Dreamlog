@@ -1,0 +1,65 @@
+appId: com.talktoode.app
+incompleteReason: Real background/restore scope only; permission and app-scoped network fault cases remain unclosed.
+---
+- stopApp
+- launchApp
+- extendedWaitUntil:
+    visible:
+      id: home-screen
+    timeout: 60000
+- tapOn:
+    id: tab-settings
+- waitForAnimationToEnd:
+    timeout: 1500
+- scrollUntilVisible:
+    element:
+      id: settings-profile-card
+    direction: UP
+- tapOn:
+    id: settings-profile-card
+- assertQaIdentity:
+    timeout: 30000
+- tapOn:
+    id: settings-profile-modal-close
+- backgroundApp
+- launchApp
+- assertVisible:
+    id: settings-screen
+- tapOn:
+    id: tab-home
+- tapOn:
+    id: home-record-button
+- assertVisible:
+    id: record-screen
+- tapOn:
+    id: record-mode-gratitude
+- assertVisible: tap to begin
+- backgroundApp
+- launchApp
+- assertVisible:
+    id: record-screen
+- assertVisible: tap to begin
+- tapOn:
+    id: record-cancel
+- assertVisible:
+    id: home-screen
+- backgroundApp
+- launchApp
+- assertVisible:
+    id: home-screen
+- tapOn:
+    id: tab-settings
+- tapOn:
+    id: settings-profile-card
+- assertQaIdentity:
+    timeout: 30000
+- tapOn:
+    id: settings-profile-modal-close
+- tapOn:
+    id: tab-home
+- stopApp
+- launchApp
+- extendedWaitUntil:
+    visible:
+      id: home-screen
+    timeout: 60000

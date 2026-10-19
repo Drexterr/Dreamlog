@@ -275,6 +275,7 @@ export function moodToColor(score: number, currentColors: ThemeColors = Colors):
 // Font families - loaded via expo-font in _layout.tsx
 export const Fonts = {
   serif:  'Erode_300Light',
+  serifRegular: 'Erode_400Regular',
   sans:   'HankenGrotesk_400Regular',
   sansSB: 'HankenGrotesk_600SemiBold',
   sansBold:'HankenGrotesk_700Bold',

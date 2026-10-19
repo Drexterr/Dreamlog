@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import {
   View,
   Text,
@@ -7,14 +7,15 @@ import {
   StatusBar,
   ActivityIndicator,
   TouchableOpacity,
-  Share,
-  Alert,
   Modal,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useFocusEffect, useRouter } from 'expo-router';
+import { sevenDaySlots, filterSevenDays } from '../../src/utils/moodDays';
+import { useStreak } from '../../src/context/StreakContext';
 import { api } from '../../src/api/client';
 import { useTheme } from '../../src/context/ThemeContext';
-import type { AnnualReview, DailyMood, MoodArcDay, MoodHistoryResponse, StreakInfo, WeeklyReview } from '../../src/types';
+import type { DailyMood, MoodArcDay, MoodHistoryResponse } from '../../src/types';
 import ShareInsightModal from '../../src/components/ShareInsightModal';
 import PatternRadar from '../../src/components/PatternRadar';
 import { T, moodRangeID } from '../../src/testIDs';
@@ -63,120 +64,20 @@ function StreakCard({
 function MoodSparkline({ days }: { days: DailyMood[] }) {
   const { colors, moodToColor } = useTheme();
   const styles = getStyles(colors);
-  if (days.length === 0) return null;
-  const maxScore = 100;
-  const chartH = 100;
-
+  const slots = sevenDaySlots(days);
   return (
-    <View style={styles.sparklineWrap}>
-      {[25, 50, 75].map((v) => (
-        <View key={v} style={[styles.gridLine, { bottom: (v / maxScore) * chartH }]} />
-      ))}
-      {days.map((day) => {
-        const h = Math.max(6, (day.avg_mood / maxScore) * chartH);
-        const color = moodToColor(day.avg_mood);
-        const label = new Date(day.day + 'T00:00:00Z').toLocaleDateString('en-US', {
-          weekday: 'short',
-          timeZone: 'UTC',
-        });
-        return (
-          <View key={day.day} style={styles.barCol}>
-            <View style={styles.barTrack}>
-              <View
-                style={[
-                  styles.bar,
-                  { height: h, backgroundColor: color + '55', borderTopColor: color },
-                ]}
-              />
-            </View>
-            <Text style={styles.barLabel}>{label.slice(0, 1)}</Text>
+    <View testID="mood-trend-seven-days" style={styles.sparklineWrap}>
+      {[25, 50, 75].map(value => <View key={value} style={[styles.gridLine, { bottom: value }]} />)}
+      {slots.map(({ date, day, value }) => (
+        <View key={day} testID={'mood-trend-day-' + day} accessible accessibilityLabel={day + ': ' + (value ? 'mood ' + value.avg_mood : 'no entry')} style={styles.barCol}>
+          <View style={styles.barTrack}>
+            {value ? <View testID={'mood-trend-bar-' + day} style={[styles.bar, {
+              height: Math.max(2, value.avg_mood), backgroundColor: moodToColor(value.avg_mood) + '55', borderTopColor: moodToColor(value.avg_mood),
+            }]} /> : <Text style={{ fontSize: 10, color: colors.textMuted }}>–</Text>}
           </View>
-        );
-      })}
-    </View>
-  );
-}
-
-function WeeklyReviewCard({ review }: { review: WeeklyReview }) {
-  const { colors } = useTheme();
-  const styles = getStyles(colors);
-  const date = new Date(review.week_start + 'T00:00:00Z');
-  const weekLabel = date.toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    timeZone: 'UTC',
-  });
-  return (
-    <View style={styles.reviewCard}>
-      <Text style={styles.reviewWeekLabel}>Week of {weekLabel}</Text>
-      <Text style={styles.reviewNarrative}>{review.narrative}</Text>
-      {review.top_emotions.length > 0 && (
-        <View style={styles.reviewEmotionRow}>
-          {review.top_emotions.map((e) => (
-            <View key={e} style={styles.reviewEmotionTag}>
-              <Text style={styles.reviewEmotionText}>{e}</Text>
-            </View>
-          ))}
+          <Text style={styles.barLabel}>{date.toLocaleDateString('en-US', { weekday: 'short', timeZone: 'UTC' })}</Text>
         </View>
-      )}
-    </View>
-  );
-}
-
-function YearInReviewCard({ review }: { review: AnnualReview }) {
-  const { colors } = useTheme();
-  const styles = getStyles(colors);
-
-  const maxMood = review.mood_arc.reduce((m, d) => Math.max(m, d.avg_mood), 1);
-
-  return (
-    <View style={styles.reviewCard}>
-      <Text style={styles.reviewWeekLabel}>{review.year} in Review</Text>
-      <View style={styles.yearReviewMeta}>
-        <Text style={styles.yearReviewMetaText}>{review.entry_count} entries</Text>
-        {review.avg_mood != null && (
-          <Text style={styles.yearReviewMetaText}>avg mood {review.avg_mood}</Text>
-        )}
-      </View>
-      <Text style={styles.reviewNarrative}>{review.narrative}</Text>
-
-      {/* Monthly mood arc - compact bar chart */}
-      {review.mood_arc.length > 0 && (
-        <View style={styles.yearArcWrap}>
-          {review.mood_arc.map((d) => {
-            const h = Math.max(4, (d.avg_mood / Math.max(maxMood, 1)) * 28);
-            const label = d.month.slice(5, 7);
-            return (
-              <View key={d.month} style={styles.yearArcCol}>
-                <View style={[styles.yearArcBar, { height: h, backgroundColor: colors.purple500 + 'AA' }]} />
-                <Text style={[styles.yearArcLabel, { color: colors.textFaint }]}>{label}</Text>
-              </View>
-            );
-          })}
-        </View>
-      )}
-
-      {/* Top emotions */}
-      {review.top_emotions.length > 0 && (
-        <View style={styles.reviewEmotionRow}>
-          {review.top_emotions.slice(0, 5).map((e) => (
-            <View key={e} style={styles.reviewEmotionTag}>
-              <Text style={styles.reviewEmotionText}>{e}</Text>
-            </View>
-          ))}
-        </View>
-      )}
-
-      {/* Top topics */}
-      {review.top_topics.length > 0 && (
-        <View style={[styles.reviewEmotionRow, { marginTop: 6 }]}>
-          {review.top_topics.slice(0, 5).map((t) => (
-            <View key={t} style={[styles.reviewEmotionTag, { backgroundColor: colors.card }]}>
-              <Text style={[styles.reviewEmotionText, { color: colors.textMuted }]}>{t}</Text>
-            </View>
-          ))}
-        </View>
-      )}
+      ))}
     </View>
   );
 }
@@ -184,11 +85,9 @@ function YearInReviewCard({ review }: { review: AnnualReview }) {
 function MilestoneModal({
   streak,
   onClose,
-  onShare,
 }: {
   streak: number;
   onClose: () => void;
-  onShare: () => void;
 }) {
   const { colors } = useTheme();
   const styles = getStyles(colors);
@@ -203,9 +102,6 @@ function MilestoneModal({
           <Text style={styles.milestoneTitle}>{label}</Text>
           <Text style={styles.milestoneMessage}>{message}</Text>
           <View style={styles.milestoneActions}>
-            <TouchableOpacity testID={T.mood.milestoneShare} style={styles.shareBtn} onPress={onShare}>
-              <Text style={styles.shareBtnText}>Share</Text>
-            </TouchableOpacity>
             <TouchableOpacity testID={T.mood.milestoneContinue} style={styles.closeBtn} onPress={onClose}>
               <Text style={styles.closeBtnText}>Continue</Text>
             </TouchableOpacity>
@@ -220,10 +116,13 @@ function MilestoneModal({
 
 type HistoryRange = '30d' | '90d' | '365d';
 
-function LifeGraph({ history, range, onRangeChange }: {
+function LifeGraph({ history, range, onRangeChange, loading, error, onRetry }: {
   history: MoodHistoryResponse | null;
   range: HistoryRange;
   onRangeChange: (r: HistoryRange) => void;
+  loading: boolean;
+  error: boolean;
+  onRetry: () => void;
 }) {
   const { colors, moodToColor } = useTheme();
   const styles = getStyles(colors);
@@ -243,6 +142,8 @@ function LifeGraph({ history, range, onRangeChange }: {
             <TouchableOpacity
               key={r}
               testID={moodRangeID(r)}
+              accessibilityRole="button"
+              accessibilityState={{ selected: range === r }}
               style={[styles.rangeBtn, range === r && styles.rangeBtnActive]}
               onPress={() => onRangeChange(r)}
             >
@@ -255,7 +156,7 @@ function LifeGraph({ history, range, onRangeChange }: {
       </View>
 
       {/* Delta summary */}
-      {history && history.avg_mood != null && (
+      {!loading && !error && history && history.avg_mood != null && (
         <View style={styles.lifeGraphSummary}>
           <Text style={styles.lifeGraphAvg}>
             Avg mood <Text style={{ color: moodToColor(history.avg_mood) }}>{history.avg_mood}</Text>
@@ -273,12 +174,23 @@ function LifeGraph({ history, range, onRangeChange }: {
       )}
 
       {/* Trendline chart */}
-      {days.length === 0 ? (
+      {loading ? (
+        <View style={{ height: chartH + 20, justifyContent: 'center' }}>
+          <ActivityIndicator testID="mood-history-loading" color={colors.purple400} />
+        </View>
+      ) : error ? (
+        <View style={{ minHeight: chartH + 20, justifyContent: 'center' }}>
+          <Text style={styles.chartEmpty}>Could not load mood history.</Text>
+          <TouchableOpacity testID="mood-history-retry" accessibilityRole="button" onPress={onRetry}>
+            <Text style={styles.shareLink}>Retry</Text>
+          </TouchableOpacity>
+        </View>
+      ) : days.length === 0 ? (
         <Text style={[styles.chartEmpty, { paddingVertical: 24 }]}>
           Keep journaling to see your life graph.
         </Text>
       ) : (
-        <View style={[styles.sparklineWrap, { height: chartH + 20, marginBottom: 0 }]}>
+        <View style={[styles.sparklineWrap, { height: chartH + 20, marginBottom: 0, gap:days.length>90?0:days.length>30?1:4 }]}>
           {[25, 50, 75].map((v) => (
             <View key={v} style={[styles.gridLine, { bottom: (v / maxScore) * chartH + 4 }]} />
           ))}
@@ -297,7 +209,7 @@ function LifeGraph({ history, range, onRangeChange }: {
       )}
 
       {/* Top emotions */}
-      {history && history.top_emotions.length > 0 && (
+      {!loading && !error && history && history.top_emotions.length > 0 && (
         <View style={[styles.emotionRow, { marginTop: 12 }]}>
           <Text style={[styles.lifeGraphEntries, { marginRight: 6, alignSelf: 'center' }]}>Top:</Text>
           {history.top_emotions.map((e) => (
@@ -314,90 +226,62 @@ function LifeGraph({ history, range, onRangeChange }: {
 // ── Main screen ───────────────────────────────────────────────────────────────
 
 export default function MoodScreen() {
+  const router = useRouter();
+  const { streak, renewed, openRenewal, refreshStreak } = useStreak();
+  useFocusEffect(useCallback(() => { refreshStreak(); }, [refreshStreak]));
   const { colors } = useTheme();
   const styles = getStyles(colors);
   const [moods, setMoods] = useState<DailyMood[]>([]);
-  const [streak, setStreak] = useState<StreakInfo | null>(null);
-  const [weeklyReview, setWeeklyReview] = useState<WeeklyReview | null>(null);
-  const [annualReview, setAnnualReview] = useState<AnnualReview | null>(null);
   const [loading, setLoading] = useState(true);
   const [showMilestone, setShowMilestone] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
-  const [usingFreeze, setUsingFreeze] = useState(false);
   const [historyRange, setHistoryRange] = useState<HistoryRange>('30d');
   const [moodHistory, setMoodHistory] = useState<MoodHistoryResponse | null>(null);
+  const [historyLoading, setHistoryLoading] = useState(true);
+  const [historyError, setHistoryError] = useState(false);
+  const [historyRetry, setHistoryRetry] = useState(0);
 
   const emotionColors = [colors.moodYellow, colors.moodGreen, colors.moodRed, colors.info, colors.moodOrange];
 
   const loadData = useCallback(() => {
+    let active = true;
     setLoading(true);
-    Promise.all([
-      api.weeklyMood(),
-      api.streak(),
-      api.getLatestWeeklyReview().catch(() => null),
-      api.moodHistory(historyRange).catch(() => null),
-      api.getLatestAnnualReview().catch(() => null),
-    ])
-      .then(([m, s, rv, hist, annual]) => {
-        setMoods(m.days ?? []);
-        setStreak(s);
-        setWeeklyReview(rv);
-        setMoodHistory(hist);
-        setAnnualReview(annual);
-        if (s && MILESTONES.includes(s.current_streak)) {
-          setShowMilestone(true);
-        }
+    api.weeklyMood()
+      .then(m => {
+        if (!active) return;
+        setMoods(filterSevenDays(m.days ?? []));
       })
       .catch(() => {})
-      .finally(() => setLoading(false));
-  }, [historyRange]);
+      .finally(() => { if (active) setLoading(false); });
+    return () => { active = false; };
+  }, []);
 
   const handleRangeChange = useCallback((r: HistoryRange) => {
     setHistoryRange(r);
-    api.moodHistory(r).then(setMoodHistory).catch(() => {});
   }, []);
 
   useEffect(() => {
-    loadData();
+    return loadData();
   }, [loadData]);
 
-  const handleUseFreeze = async () => {
-    if (!streak || streak.freeze_count <= 0) {
-      Alert.alert('No Freezes', 'You have no streak freezes available this week.');
-      return;
-    }
-    const yesterday = new Date();
-    yesterday.setDate(yesterday.getDate() - 1);
-    const dateStr = yesterday.toISOString().split('T')[0];
+  useEffect(() => {
+    let active = true;
+    setHistoryLoading(true);
+    setHistoryError(false);
+    setMoodHistory(null);
+    api.moodHistory(historyRange)
+      .then((history) => { if (active) setMoodHistory(history); })
+      .catch(() => { if (active) setHistoryError(true); })
+      .finally(() => { if (active) setHistoryLoading(false); });
+    return () => { active = false; };
+  }, [historyRange, historyRetry]);
 
-    setUsingFreeze(true);
-    try {
-      const result = await api.useStreakFreeze(dateStr);
-      setStreak((prev) =>
-        prev ? { ...prev, freeze_count: result.freeze_count } : prev
-      );
-      Alert.alert('Freeze Applied', 'Yesterday is protected. Your streak lives on.');
-      // Re-fetch streak to get updated current_streak.
-      const updated = await api.streak();
-      setStreak(updated);
-    } catch {
-      Alert.alert('Error', 'Could not apply freeze. Try again.');
-    } finally {
-      setUsingFreeze(false);
-    }
-  };
-
-  const handleShare = async () => {
-    if (!streak) return;
-    const message = streak.current_streak > 0
-      ? `I've journaled for ${streak.current_streak} days in a row on Ode. Building emotional awareness, one day at a time.`
-      : `I've logged ${streak.total_days} journal entries on Ode. Voice journaling is changing how I understand myself.`;
-    try {
-      await Share.share({ message });
-    } catch {
-      // Ignore share cancellation.
-    }
-  };
+  const milestoneChecked = useRef(false);
+  useEffect(() => {
+    if (!streak || milestoneChecked.current) return;
+    milestoneChecked.current = true;
+    if (MILESTONES.includes(streak.current_streak)) setShowMilestone(true);
+  }, [streak]);
 
   if (loading) {
     return (
@@ -440,18 +324,7 @@ export default function MoodScreen() {
                     You've journaled {streak.total_days} days total. That doesn't disappear.
                     Today is just day one of the next streak.
                   </Text>
-                  {streak.freeze_count > 0 && (
-                    <TouchableOpacity
-                      testID={T.mood.freezeButton}
-                      style={styles.freezeBtn}
-                      onPress={handleUseFreeze}
-                      disabled={usingFreeze}
-                    >
-                      <Text style={styles.freezeBtnText}>
-                        {usingFreeze ? 'Applying…' : `Use Freeze (${streak.freeze_count} left)`}
-                      </Text>
-                    </TouchableOpacity>
-                  )}
+                  <TouchableOpacity testID={T.mood.renewStreak} style={styles.freezeBtn} onPress={openRenewal}><Text style={styles.freezeBtnText}>Renew streak</Text></TouchableOpacity>
                 </View>
               ) : streak.current_streak > 0 ? (
                 <View style={styles.streakFooter}>
@@ -460,16 +333,9 @@ export default function MoodScreen() {
                       {streak.next_milestone - streak.current_streak} days to {streak.next_milestone}-day milestone
                     </Text>
                   )}
-                  <View style={styles.streakActions}>
-                    {streak.freeze_count > 0 && (
-                      <Text style={styles.freezeAvail}>
-                        ❄ {streak.freeze_count} freeze{streak.freeze_count !== 1 ? 's' : ''} available
-                      </Text>
-                    )}
-                    <TouchableOpacity testID={T.mood.shareStreak} onPress={handleShare}>
-                      <Text style={styles.shareLink}>Share streak</Text>
-                    </TouchableOpacity>
-                  </View>
+                  <View style={styles.streakActions}><TouchableOpacity testID={T.mood.renewStreak} accessibilityRole="button" style={{ minHeight: 44, justifyContent: 'center' }} onPress={openRenewal}><Text style={styles.shareLink}>Renew streak</Text></TouchableOpacity></View>
+                  {renewed&&<Text testID="streak-renewed-status" style={[styles.milestoneHint,{marginTop:8}]}>Streak renewed.</Text>}
+
                 </View>
               ) : null}
             </>
@@ -478,11 +344,8 @@ export default function MoodScreen() {
           {/* Mood chart */}
           <View style={styles.chartCard}>
             <Text style={styles.chartTitle}>MOOD TREND</Text>
-            {moods.length === 0 ? (
-              <Text style={styles.chartEmpty}>Keep journaling to see your mood trend.</Text>
-            ) : (
-              <MoodSparkline days={moods} />
-            )}
+            <MoodSparkline days={moods}/>
+            {moods.length===0&&<Text style={[styles.chartEmpty,{paddingVertical:12}]}>Keep journaling to see your mood trend.</Text>}
             {moods.length > 0 && (
               <View style={styles.emotionRow}>
                 {moods.slice(0, 5).map((d, i) => (
@@ -497,21 +360,8 @@ export default function MoodScreen() {
             )}
           </View>
 
-          {/* Weekly review */}
-          {weeklyReview && (
-            <>
-              <View style={styles.sectionHeader}>
-                <Text style={styles.sectionLabel}>WEEKLY REVIEW</Text>
-                <TouchableOpacity testID={T.mood.shareInsightButton} onPress={() => setShowShareModal(true)}>
-                  <Text style={styles.shareInsightLink}>Share card</Text>
-                </TouchableOpacity>
-              </View>
-              <WeeklyReviewCard review={weeklyReview} />
-            </>
-          )}
-
-          {/* Share insight button when there's mood data but no weekly review */}
-          {!weeklyReview && moods.length > 0 && (
+          {/* Share a current-week insight without loading long-form reviews here. */}
+          {moods.length > 0 && (
             <TouchableOpacity
               testID={T.mood.shareInsightButton}
               style={styles.shareInsightBtn}
@@ -524,32 +374,27 @@ export default function MoodScreen() {
           {/* Emotion Pattern Radar */}
           <PatternRadar />
 
-          {/* Year in Review */}
-          {annualReview && (
-            <>
-              <Text style={styles.sectionLabel}>YEAR IN REVIEW</Text>
-              <YearInReviewCard review={annualReview} />
-            </>
-          )}
-
           {/* Life Graph */}
           <LifeGraph
             history={moodHistory}
             range={historyRange}
             onRangeChange={handleRangeChange}
+            loading={historyLoading}
+            error={historyError}
+            onRetry={() => setHistoryRetry((value) => value + 1)}
           />
+          <TouchableOpacity testID={T.mood.openReflections} accessibilityRole="button" accessibilityLabel="View reflections in Explore" onPress={() => router.navigate({ pathname: '/(tabs)/timeline', params: { section: 'reflections' } })} style={{minHeight:44,justifyContent:'center',paddingVertical:10,marginBottom:8}}>
+            <Text style={{fontFamily:'HankenGrotesk_400Regular',fontSize:13,color:colors.purple300}}>View reflections in Explore →</Text>
+          </TouchableOpacity>
         </ScrollView>
       </SafeAreaView>
+
 
       {/* Milestone celebration modal */}
       {showMilestone && streak && MILESTONES.includes(streak.current_streak) && (
         <MilestoneModal
           streak={streak.current_streak}
           onClose={() => setShowMilestone(false)}
-          onShare={() => {
-            setShowMilestone(false);
-            handleShare();
-          }}
         />
       )}
 
@@ -557,14 +402,12 @@ export default function MoodScreen() {
       <ShareInsightModal
         visible={showShareModal}
         onClose={() => setShowShareModal(false)}
-        weekLabel={weeklyReview?.week_start
-          ? formatWeekLabel(weeklyReview.week_start)
-          : formatCurrentWeekLabel()}
-        weekStart={weeklyReview?.week_start ?? currentWeekStartISO()}
-        moodArc={weeklyReview?.mood_arc ?? currentWeekArc(moods)}
-        topEmotions={weeklyReview?.top_emotions ?? []}
+        weekLabel={formatCurrentWeekLabel()}
+        weekStart={currentWeekStartISO()}
+        moodArc={currentWeekArc(moods)}
+        topEmotions={[]}
         streak={streak?.current_streak ?? 0}
-        entryCount={weeklyReview?.entry_count ?? currentWeekEntryCount(moods)}
+        entryCount={currentWeekEntryCount(moods)}
       />
     </View>
   );
@@ -779,8 +622,8 @@ const getStyles = (colors: any) => StyleSheet.create({
     backgroundColor: 'rgba(139,92,246,0.06)',
   },
   barCol: { flex: 1, alignItems: 'center', height: '100%', justifyContent: 'flex-end' },
-  barTrack: { width: '100%', flex: 1, justifyContent: 'flex-end' },
-  bar: { width: '100%', borderRadius: 4, borderTopWidth: 2 },
+  barTrack: { width: '100%', flex: 1, justifyContent: 'flex-end', alignItems:'center' },
+  bar: { width: '100%', maxWidth:5, borderRadius: 2, borderTopWidth: 1 },
   barLabel: {
     fontSize: 9,
     color: colors.textMuted,
@@ -862,7 +705,7 @@ const getStyles = (colors: any) => StyleSheet.create({
     marginBottom: 12,
   },
   yearArcCol: { flex: 1, alignItems: 'center', justifyContent: 'flex-end', gap: 3 },
-  yearArcBar: { width: '100%', borderRadius: 2, minHeight: 4 },
+  yearArcBar: { width: 3, borderRadius: 1.5, minHeight: 4 },
   yearArcLabel: { fontSize: 8, fontFamily: 'HankenGrotesk_400Regular' },
 
   lifeGraphCard: {

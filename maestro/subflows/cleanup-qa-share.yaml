@@ -1,0 +1,72 @@
+# Resume only after this batch created one link from a previously empty list.
+appId: com.talktoode.app
+env:
+  QA_ENTRY_ID: "4904e2b1-1ef9-4b11-af98-0dabe886f156"
+---
+- stopApp
+- launchApp
+- extendedWaitUntil:
+    visible:
+      id: home-screen
+    timeout: 60000
+- tapOn:
+    id: tab-settings
+- tapOn:
+    id: settings-profile-card
+- assertQaIdentity:
+    timeout: 30000
+- tapOn:
+    id: settings-profile-modal-close
+- openLink: ode://reflection/${QA_ENTRY_ID}
+- scrollUntilVisible:
+    element:
+      id: reflection-share-therapist-button
+    direction: DOWN
+- tapOn:
+    id: reflection-share-therapist-button
+- extendedWaitUntil:
+    notVisible:
+      id: share-links-loading
+    timeout: 30000
+- scrollUntilVisible:
+    element:
+      id: share-revoke-button
+    direction: DOWN
+- tapOn:
+    id: share-revoke-button
+- assertVisible: Revoke link
+- tapOn:
+    id: android:id/button1
+- extendedWaitUntil:
+    notVisible:
+      id: share-revoke-button
+    timeout: 30000
+- assertNotVisible:
+    id: share-send-button
+- stopApp
+- launchApp
+- extendedWaitUntil:
+    visible:
+      id: home-screen
+    timeout: 60000
+- tapOn:
+    id: tab-settings
+- scrollUntilVisible:
+    element:
+      id: settings-export-row
+    direction: DOWN
+- tapOn:
+    id: settings-export-row
+- assertVisible:
+    id: export-screen
+- assertVisible: Export Journal
+- tapOn:
+    id: export-period-yearly
+- tapOn:
+    id: export-period-monthly
+- assertVisible:
+    id: export-button
+- tapOn:
+    id: export-back
+- assertVisible:
+    id: settings-screen

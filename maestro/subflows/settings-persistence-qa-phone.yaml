@@ -1,0 +1,96 @@
+appId: com.talktoode.app
+incompleteReason: Voice-language persistence scope only; failed-save rollback and broader settings remain unclosed.
+---
+- stopApp
+- launchApp
+- extendedWaitUntil:
+    visible:
+      id: home-screen
+    timeout: 60000
+- tapOn:
+    id: tab-settings
+- waitForAnimationToEnd:
+    timeout: 1500
+- scrollUntilVisible:
+    element:
+      id: settings-profile-card
+    direction: UP
+- tapOn:
+    id: settings-profile-card
+- assertQaIdentity:
+    timeout: 30000
+- tapOn:
+    id: settings-profile-modal-close
+- scrollUntilVisible:
+    element:
+      id: settings-voice-language-row
+    direction: DOWN
+- tapOn:
+    id: settings-voice-language-row
+# Fail closed unless the previously observed original preference is still Auto.
+- assertVisible: 'Auto, Replies in the language you speak each turn, ✓'
+- tapOn: Choose language
+- tapOn: Search languages…
+- inputText: QA_NO_LANGUAGE_987
+- hideKeyboard
+- assertVisible: 'No languages match.*QA_NO_LANGUAGE_987.*'
+- assertNotVisible: Hindi
+- back
+- tapOn:
+    id: settings-voice-language-row
+- tapOn: Choose language
+- tapOn: Search languages…
+- inputText: Hindi
+- hideKeyboard
+- tapOn: 'Hindi, हिंदी'
+- assertVisible:
+    id: settings-screen
+- assertVisible: Hindi
+- waitForAnimationToEnd:
+    timeout: 5000
+- assertNotVisible: Could not save
+- stopApp
+- launchApp
+- extendedWaitUntil:
+    visible:
+      id: home-screen
+    timeout: 60000
+- tapOn:
+    id: tab-settings
+- waitForAnimationToEnd:
+    timeout: 1500
+- scrollUntilVisible:
+    element:
+      id: settings-voice-language-row
+    direction: UP
+- assertVisible: Hindi
+- tapOn:
+    id: settings-voice-language-row
+- assertVisible: Currently Hindi
+- tapOn: Auto
+- waitForAnimationToEnd:
+    timeout: 5000
+- assertNotVisible: Could not save
+- stopApp
+- launchApp
+- extendedWaitUntil:
+    visible:
+      id: home-screen
+    timeout: 60000
+- tapOn:
+    id: tab-settings
+- waitForAnimationToEnd:
+    timeout: 1500
+- scrollUntilVisible:
+    element:
+      id: settings-voice-language-row
+    direction: UP
+- tapOn:
+    id: settings-voice-language-row
+- assertVisible: 'Auto, Replies in the language you speak each turn, ✓'
+- assertVisible: Always reply in one language
+- back
+- tapOn:
+    id: tab-home
+- assertVisible:
+    id: home-screen

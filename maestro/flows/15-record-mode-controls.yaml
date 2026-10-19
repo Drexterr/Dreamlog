@@ -1,0 +1,44 @@
+appId: com.talktoode.app
+tags:
+  - recording
+  - read-only
+---
+# Requires the authenticated QA session established by flow 14; no audio capture.
+- launchApp
+- tapOn:
+    id: tab-home
+- assertVisible:
+    id: home-screen
+- tapOn:
+    id: home-record-button
+- assertVisible:
+    id: record-screen
+- assertVisible: choose a mode above
+- tapOn:
+    id: record-mode-processing
+- assertVisible: tap to begin
+- tapOn:
+    id: record-mode-rant
+- assertVisible: tap to begin
+- tapOn:
+    id: record-mode-gratitude
+- assertVisible: tap to begin
+- tapOn:
+    id: record-mode-decision
+- assertVisible: tap to begin
+- tapOn:
+    id: record-mode-dream
+- assertVisible: tap to begin
+- tapOn:
+    id: record-cancel
+- assertVisible:
+    id: home-screen
+- tapOn:
+    id: home-record-button
+- assertVisible:
+    id: record-screen
+- assertVisible: choose a mode above
+- tapOn:
+    id: record-cancel
+- assertVisible:
+    id: home-screen

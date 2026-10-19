@@ -1,0 +1,15 @@
+appId: com.talktoode.app
+---
+# Signed-in startup flows may encounter the once-per-launch renewal notice.
+# This never consumes a freeze.
+- extendedWaitUntil:
+    visible:
+      text: "record|Renew your streak"
+    timeout: 60000
+- runFlow:
+    when:
+      visible:
+        id: renew-streak-dismiss
+    commands:
+      - tapOn:
+          id: renew-streak-dismiss

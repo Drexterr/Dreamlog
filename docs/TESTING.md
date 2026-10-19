@@ -1,5 +1,22 @@
 # DreamLog Testing Strategy
 
+## Mood and Explore refinement (19 October 2026)
+
+See [ODE_MOOD_REFINEMENT.md](ODE_MOOD_REFINEMENT.md) for the implemented behavior and verification limits.
+
+Run the mobile regression suite with `cd mobile` then `npm test -- --runInBand`, and run `npx tsc --noEmit`.
+If Windows sandbox temp-cache permissions fail, add `--cacheDirectory=../tmp/jest-mood-approved` to Jest.
+
+New/updated coverage:
+
+- `MoodScreen.test.tsx`: seven calendar slots with missing-day gaps; review endpoints are not fetched in Mood; Explore link; removed streak sharing; existing range loading/retry/out-of-order response checks.
+- `ExploreScreen.test.tsx`: weekly/yearly placement, original tool navigation and guest auth gating, review sharing data/cancel, absent/pending/error/partial-success states, retry and stale responses after sign-out.
+- `StreakStartup.test.tsx`: launch-only prompt before visiting Mood, startup overlay gating, dismissal/manual reopening, app relaunch, sign-out cleanup, active/new/zero-freeze cases, duplicate taps, acknowledgment-aware refresh retry, UTC freeze date, stale read/mutation protection and no mid-session auto-popup.
+- `WeeklyNarrative.test.tsx`: actual-line-count threshold, expanded accessibility state, collapse and reset on a new review.
+- `moodDays.test.ts`: UTC boundaries, leap days, year rollover and no fabricated mood scores.
+
+Device coverage remains a separate gate: run the Mood/billing and Mood range flows on a test device with active, broken, no-freeze and populated-review accounts. Test dismissing/reopening, background/resume, and a true cold launch. Use a dedicated disposable fixture before testing real freeze consumption; navigation-only flows intentionally do not spend freezes. Verify small screens and enlarged text, including scrolling the renewal dialog. A passing mocked component test does not replace this native/service check.
+
 ## Current State (updated 2026-06-11)
 
 **600+ unit/integration tests exist** covering Priorities 1–10 below. Coverage by package:

@@ -28,7 +28,7 @@ import {
 } from '../../src/services/updates';
 import { T } from '../../src/testIDs';
 import type { AgeRange, Plan, User, UserGoal, VoiceLanguage } from '../../src/types';
-import { cacheUserCountry } from '../../src/services/region';
+import { cacheUserCountry, detectUserCountry } from '../../src/services/region';
 import { helplinesForCountry, helplineHref } from '../../src/services/helplines';
 
 // dreamlog.app is not yet DNS-pointed at the Firebase Hosting site - use the
@@ -195,6 +195,7 @@ export default function SettingsScreen() {
   const [voiceLangSearch, setVoiceLangSearch] = useState('');
   const [showHourPicker, setShowHourPicker] = useState(false);
   const [showCrisisModal, setShowCrisisModal] = useState(false);
+  const [crisisCountry, setCrisisCountry] = useState<string | null>(null);
   const [showUpdateModal, setShowUpdateModal] = useState(false);
   const [updateSnapshot, setUpdateSnapshot] = useState<UpdateSnapshot | null>(null);
   const [updateLog, setUpdateLog] = useState<string[]>([]);
@@ -235,6 +236,15 @@ export default function SettingsScreen() {
   };
 
   useEffect(() => { if (isAuthenticated) loadProfile(); }, [isAuthenticated]);
+
+  useEffect(() => {
+    if (!showCrisisModal) return;
+    let active = true;
+    detectUserCountry()
+      .then(country => { if (active) setCrisisCountry(country); })
+      .catch(() => { if (active) setCrisisCountry(null); });
+    return () => { active = false; };
+  }, [showCrisisModal, user?.country]);
 
   const openUpdateModal = () => {
     setUpdateSnapshot(getUpdateSnapshot());
@@ -884,7 +894,7 @@ export default function SettingsScreen() {
               If you're in crisis or need to talk to someone right now, please reach out.
             </Text>
             {(() => {
-              const resource = helplinesForCountry(user?.country);
+              const resource = helplinesForCountry(user?.country || crisisCountry);
               return (
                 <>
                   {resource.lines.map((h) => (

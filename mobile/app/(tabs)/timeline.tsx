@@ -1,4 +1,4 @@
-import { useCallback } from 'react';
+import { useCallback, useRef } from 'react';
 import {
   View,
   Text,
@@ -8,7 +8,8 @@ import {
   StatusBar,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useRouter } from 'expo-router';
+import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
+import ReflectionsSection from '../../src/components/ReflectionsSection';
 import { useTheme } from '../../src/context/ThemeContext';
 import { useAuth } from '../../src/context/AuthContext';
 import { T } from '../../src/testIDs';
@@ -83,6 +84,11 @@ function EntriesCard({ onPress }: { onPress: () => void }) {
 // ── Explore screen ────────────────────────────────────────────────────────────
 export default function ExploreScreen() {
   const router = useRouter();
+  const scrollRef = useRef<ScrollView>(null);
+  const { section } = useLocalSearchParams<{ section?: string }>();
+  useFocusEffect(useCallback(() => {
+    if (section === 'reflections') scrollRef.current?.scrollTo({ y: 0, animated: false });
+  }, [section]));
   const { colors } = useTheme();
   const { isAuthenticated, requestAuth } = useAuth();
 
@@ -113,14 +119,17 @@ export default function ExploreScreen() {
       <StatusBar barStyle="light-content" />
       <SafeAreaView style={styles.safe}>
         <ScrollView
+          ref={scrollRef}
           contentContainerStyle={styles.scroll}
           showsVerticalScrollIndicator={false}
         >
           {/* Header */}
-          <View style={styles.header}>
+          <View testID={T.explore.header} style={styles.header}>
             <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>Explore</Text>
             <Text style={[styles.headerSub, { color: colors.textMuted }]}>tools & your journal</Text>
           </View>
+
+          <ReflectionsSection />
 
           {/* Entries */}
           <Text style={[styles.sectionLabel, { color: colors.textMuted }]}>YOUR JOURNAL</Text>

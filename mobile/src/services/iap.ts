@@ -8,12 +8,12 @@ import type { BillingPeriod } from '../types';
 // not auto-renewing subscriptions.
 export const IAP_PRODUCT_IDS: Record<'plus' | 'pro', Record<BillingPeriod, string>> = {
   plus: {
-    monthly: 'com.ode.app.plus.monthly',
-    annual: 'com.ode.app.plus.annual',
+    monthly: 'com.talktoode.app.plus.monthly',
+    annual: 'com.talktoode.app.plus.annual',
   },
   pro: {
-    monthly: 'com.ode.app.pro.monthly',
-    annual: 'com.ode.app.pro.annual',
+    monthly: 'com.talktoode.app.pro.monthly',
+    annual: 'com.talktoode.app.pro.annual',
   },
 };
 

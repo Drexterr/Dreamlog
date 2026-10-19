@@ -87,7 +87,7 @@ export default function FollowUpScreen() {
   }, [entryId]);
 
   const sendMessage = useCallback(async () => {
-    if (!conversation || !input.trim() || loading) return;
+    if (!conversation || conversation.is_closed || conversation.turn_count >= MAX_TURNS || !input.trim() || loading) return;
 
     const content = input.trim();
     setInput('');

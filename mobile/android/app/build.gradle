@@ -87,10 +87,10 @@ android {
     ndkVersion = rootProject.ext.ndkVersion
     buildToolsVersion = rootProject.ext.buildToolsVersion
     compileSdk = rootProject.ext.compileSdkVersion
-    namespace = 'com.ode.app'
+    namespace = 'com.talktoode.app'
     defaultConfig {
         missingDimensionStrategy "platform", "play"
-        applicationId = 'com.ode.app'
+        applicationId = 'com.talktoode.app'
         minSdk = rootProject.ext.minSdkVersion
         targetSdk = rootProject.ext.targetSdkVersion
         versionCode 1

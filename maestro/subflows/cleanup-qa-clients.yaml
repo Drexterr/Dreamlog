@@ -1,0 +1,77 @@
+# Only the two synthetic B clients created by the retained attempts.
+appId: com.talktoode.app
+---
+- stopApp
+- launchApp
+- extendedWaitUntil:
+    visible:
+      id: home-screen
+    timeout: 60000
+- tapOn:
+    id: tab-settings
+- tapOn:
+    id: settings-profile-card
+- assertQaIdentity:
+    email: bharatbanthia2207+odeqa-therapist-20261014@gmail.com
+    timeout: 30000
+- tapOn:
+    id: settings-profile-modal-close
+- scrollUntilVisible:
+    element:
+      text: Therapist workspace
+    direction: DOWN
+- tapOn: Therapist workspace
+- extendedWaitUntil:
+    visible:
+      id: therapist-dashboard-screen
+    timeout: 30000
+- tapOn:
+    id: therapist-dashboard-my-clients
+- assertVisible:
+    id: therapist-clients-screen
+- extendedWaitUntil:
+    visible: 'Ode QA Portal B \(20261014\)'
+    timeout: 30000
+- runFlow:
+    when:
+      visible: 'Ode QA Portal B \(20261014\)'
+    commands:
+      - tapOn: '[^,]+, Ode QA Portal B \(20261014\), .*'
+      - assertVisible:
+          id: therapist-client-detail-screen
+      - tapOn:
+          id: therapist-client-detail-delete
+      - assertVisible: 'Delete client\?'
+      - tapOn:
+          id: android:id/button1
+      - extendedWaitUntil:
+          visible:
+            id: therapist-clients-screen
+          timeout: 30000
+      - extendedWaitUntil:
+          notVisible: 'Ode QA Portal B \(20261014\)'
+          timeout: 30000
+- extendedWaitUntil:
+    visible: 'Ode QA Dashboard B \(20261014\)'
+    timeout: 30000
+- runFlow:
+    when:
+      visible: 'Ode QA Dashboard B \(20261014\)'
+    commands:
+      - tapOn: '[^,]+, Ode QA Dashboard B \(20261014\), .*'
+      - assertVisible:
+          id: therapist-client-detail-screen
+      - tapOn:
+          id: therapist-client-detail-delete
+      - assertVisible: 'Delete client\?'
+      - tapOn:
+          id: android:id/button1
+      - extendedWaitUntil:
+          visible:
+            id: therapist-clients-screen
+          timeout: 30000
+      - extendedWaitUntil:
+          notVisible: 'Ode QA Dashboard B \(20261014\)'
+          timeout: 30000
+- assertVisible:
+    id: therapist-clients-screen

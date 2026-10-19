@@ -25,10 +25,10 @@ import (
 // Passes are sold as consumable products (a 30-day or 365-day pass), not
 // auto-renewing subscriptions, matching the existing one-time-pass model.
 const (
-	IAPProductPlusMonthly = "com.ode.app.plus.monthly"
-	IAPProductPlusAnnual  = "com.ode.app.plus.annual"
-	IAPProductProMonthly  = "com.ode.app.pro.monthly"
-	IAPProductProAnnual   = "com.ode.app.pro.annual"
+	IAPProductPlusMonthly = "com.talktoode.app.plus.monthly"
+	IAPProductPlusAnnual  = "com.talktoode.app.plus.annual"
+	IAPProductProMonthly  = "com.talktoode.app.pro.monthly"
+	IAPProductProAnnual   = "com.talktoode.app.pro.annual"
 )
 
 // IAPProduct describes what a store product ID grants.

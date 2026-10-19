@@ -1,7 +1,7 @@
 import 'react-native-gesture-handler';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { View } from 'react-native';
-import { Slot, SplashScreen, useRouter, useSegments } from 'expo-router';
+import { Stack, SplashScreen, useRouter, useSegments } from 'expo-router';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import * as Sentry from '@sentry/react-native';
 
@@ -30,6 +30,7 @@ import {
 import NetInfo from '@react-native-community/netinfo';
 import { api, storeToken, clearToken } from '../src/api/client';
 import { supabase, deepLinkReady } from '../src/lib/supabase';
+import { StreakProvider } from '../src/context/StreakContext';
 import { ThemeProvider } from '../src/context/ThemeContext';
 import { AuthContext } from '../src/context/AuthContext';
 import { GuidedTourProvider } from '../src/context/GuidedTourContext';
@@ -41,6 +42,7 @@ import { registerForPushNotifications } from '../src/services/push';
 import { setupQuickActions } from '../src/services/quickActions';
 import { checkForceUpdate } from '../src/services/version';
 import { runStartupUpdateCheck } from '../src/services/updates';
+import { logQaScreen } from '../src/services/qaDiagnostics';
 import {
   hasCompletedOnboarding,
   markOnboardingDone,
@@ -67,6 +69,7 @@ function RootLayout() {
   const router = useRouter();
   const segments = useSegments();
   const redirected = useRef(false);
+  useEffect(() => { logQaScreen(segments); }, [segments]);
 
   const [fontsLoaded, fontError] = useFonts({
     // Erode (Fontshare, ITF FFL) — matches the website's heading face
@@ -294,19 +297,24 @@ function RootLayout() {
   return (
     <ThemeProvider>
       <AuthContext.Provider value={{ isAuthenticated: hasToken, requestAuth }}>
-        <GuidedTourProvider>
-          <Slot />
-          <GuidedTour />
-          {showSplash ? (
-            <BrandSplash name={greetingName} onDone={() => setShowSplash(false)} />
-          ) : null}
-          {forceUpdate ? <ForceUpdateScreen info={forceUpdate} /> : null}
-          <AuthSheet
-            visible={showAuthSheet}
-            prompt="Sign in to continue"
-            onClose={closeAuthSheet}
-          />
-        </GuidedTourProvider>
+        <StreakProvider
+          enabled={hasToken}
+          startupReady={!showSplash && !forceUpdate && !showAuthSheet && segments[0] === '(tabs)'}
+        >
+          <GuidedTourProvider>
+            <Stack screenOptions={{ headerShown: false, animation: 'none' }} />
+            <GuidedTour />
+            {showSplash ? (
+              <BrandSplash name={greetingName} onDone={() => setShowSplash(false)} />
+            ) : null}
+            {forceUpdate ? <ForceUpdateScreen info={forceUpdate} /> : null}
+            <AuthSheet
+              visible={showAuthSheet}
+              prompt="Sign in to continue"
+              onClose={closeAuthSheet}
+            />
+          </GuidedTourProvider>
+        </StreakProvider>
       </AuthContext.Provider>
     </ThemeProvider>
   );

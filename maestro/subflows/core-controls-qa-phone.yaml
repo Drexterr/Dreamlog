@@ -1,0 +1,77 @@
+appId: com.talktoode.app
+incompleteReason: Controlled recording upload is deferred by the user; preference-save rollback and live therapy messaging remain required.
+---
+- stopApp
+- launchApp
+- extendedWaitUntil:
+    visible:
+      id: home-screen
+    timeout: 60000
+- tapOn:
+    id: tab-settings
+- tapOn:
+    id: settings-profile-card
+- assertQaIdentity:
+    timeout: 30000
+- tapOn:
+    id: settings-profile-modal-close
+- tapOn:
+    id: settings-goal-row
+- assertVisible: Emotional Goal
+- assertVisible: Managing stress
+- back
+- assertVisible:
+    id: settings-screen
+- scrollUntilVisible:
+    element:
+      id: settings-nudge-hour-row
+    direction: DOWN
+- tapOn:
+    id: settings-nudge-hour-row
+- assertVisible: Morning Nudge Time
+- back
+- assertVisible:
+    id: settings-screen
+- scrollUntilVisible:
+    element:
+      id: settings-voice-language-row
+    direction: DOWN
+- tapOn:
+    id: settings-voice-language-row
+- assertVisible: Voice Language
+- tapOn: Choose language
+- assertVisible: Choose a language
+- tapOn: Search languages…
+- inputText: Hindi
+- hideKeyboard
+- assertVisible: Hindi
+# Close without committing a preference change.
+- back
+- assertVisible:
+    id: settings-screen
+- tapOn:
+    id: tab-home
+- tapOn:
+    id: home-record-button
+- assertVisible:
+    id: record-screen
+- assertVisible: choose a mode above
+- tapOn:
+    id: record-mode-processing
+- assertVisible: tap to begin
+- tapOn:
+    id: record-mode-gratitude
+- assertVisible: tap to begin
+- tapOn:
+    id: record-mode-rant
+- assertVisible: tap to begin
+- tapOn:
+    id: record-mode-decision
+- assertVisible: tap to begin
+- tapOn:
+    id: record-mode-dream
+- assertVisible: tap to begin
+- tapOn:
+    id: record-cancel
+- assertVisible:
+    id: home-screen

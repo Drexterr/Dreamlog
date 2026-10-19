@@ -1,0 +1,40 @@
+appId: com.talktoode.app
+tags:
+  - recording
+  - hardware
+---
+# Precondition: Ode microphone permission granted. Captured audio is discarded, never uploaded.
+- launchApp
+- tapOn:
+    id: tab-home
+- tapOn:
+    id: home-record-button
+- tapOn:
+    id: record-mode-processing
+- tapOn:
+    id: record-orb
+- extendedWaitUntil:
+    visible: listening
+    timeout: 15000
+- assertNotVisible: Microphone permission denied
+- assertNotVisible:
+    id: record-mode-grid
+- assertVisible: tap the button when you're done
+- tapOn:
+    id: record-cancel
+- assertVisible:
+    id: home-screen
+- tapOn:
+    id: home-record-button
+- assertVisible: choose a mode above
+- tapOn:
+    id: record-mode-gratitude
+- tapOn:
+    id: record-orb
+- extendedWaitUntil:
+    visible: listening
+    timeout: 15000
+- tapOn:
+    id: record-cancel
+- assertVisible:
+    id: home-screen

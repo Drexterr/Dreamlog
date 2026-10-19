@@ -15,7 +15,7 @@ import { useRouter } from 'expo-router';
 import { api } from '../src/api/client';
 import { useTheme } from '../src/context/ThemeContext';
 import type { TimelineEntry } from '../src/types';
-import { T } from '../src/testIDs';
+import { T, entryCardID } from '../src/testIDs';
 
 function MoodDot({ score, size = 8 }: { score: number; size?: number }) {
   const { moodToColor } = useTheme();
@@ -59,6 +59,7 @@ function EntryCard({ item, index, onPress }: { item: TimelineEntry; index: numbe
 
   return (
     <TouchableOpacity
+      testID={entryCardID(entry.id)}
       onPress={onPress}
       activeOpacity={0.8}
       style={[
@@ -113,46 +114,71 @@ export default function EntriesScreen() {
   const [searching, setSearching] = useState(false);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const requestId = useRef(0);
+  const mounted = useRef(true);
 
   const loadTimeline = useCallback(async () => {
+    const request = ++requestId.current;
+    setError(null);
+    setSearching(false);
     try {
       const resp = await api.getTimeline(1, 30);
-      setEntries(resp.entries);
+      if (!Array.isArray(resp.entries)) throw new Error('Invalid timeline response');
+      if (mounted.current && request === requestId.current) setEntries(resp.entries);
     } catch {
-      // keep existing state
+      if (mounted.current && request === requestId.current) setError('Could not load entries.');
     } finally {
-      setLoading(false);
-      setRefreshing(false);
+      if (mounted.current && request === requestId.current) {
+        setLoading(false);
+        setRefreshing(false);
+      }
     }
   }, []);
 
-  useEffect(() => { loadTimeline(); }, []);
-
-  const onRefresh = useCallback(() => {
-    setRefreshing(true);
+  useEffect(() => {
+    mounted.current = true;
     loadTimeline();
+    return () => {
+      mounted.current = false;
+      ++requestId.current;
+      if (searchTimer.current) clearTimeout(searchTimer.current);
+    };
   }, [loadTimeline]);
 
   const handleSearch = useCallback((q: string) => {
     setSearchQuery(q);
     if (searchTimer.current) clearTimeout(searchTimer.current);
+    const request = ++requestId.current;
+    setError(null);
     if (!q.trim()) {
       loadTimeline();
       return;
     }
+    setSearching(true);
     searchTimer.current = setTimeout(async () => {
-      setSearching(true);
+      if (!mounted.current || request !== requestId.current) return;
       try {
         const res = await api.searchEntries(q.trim(), 20);
-        setEntries(res.entries.map((e) => ({ entry: e })));
+        if (!Array.isArray(res.entries)) throw new Error('Invalid search response');
+        if (mounted.current && request === requestId.current) setEntries(res.entries.map((e) => ({ entry: e })));
       } catch {
-        // keep current results
+        if (mounted.current && request === requestId.current) setError('Search failed. Try again.');
       } finally {
-        setSearching(false);
+        if (mounted.current && request === requestId.current) {
+          setSearching(false);
+          setRefreshing(false);
+        }
       }
     }, 400);
   }, [loadTimeline]);
+
+  const onRefresh = useCallback(() => {
+    setRefreshing(true);
+    if (searchQuery.trim()) handleSearch(searchQuery);
+    else loadTimeline();
+  }, [searchQuery, handleSearch, loadTimeline]);
 
   if (loading) {
     return (
@@ -203,6 +229,14 @@ export default function EntriesScreen() {
         </View>
 
         {/* List */}
+        {error && (
+          <View style={{ paddingHorizontal: 20, paddingVertical: 12 }}>
+            <Text accessibilityRole="alert" style={{ color: colors.textSecondary }}>{error}</Text>
+            <TouchableOpacity onPress={onRefresh} accessibilityRole="button" style={{ paddingVertical: 10 }}>
+              <Text style={{ color: colors.purple400 }}>Retry</Text>
+            </TouchableOpacity>
+          </View>
+        )}
         <FlatList
           data={entries}
           keyExtractor={(item) => item.entry.id}
@@ -214,19 +248,20 @@ export default function EntriesScreen() {
           refreshControl={
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.purple400} />
           }
-          ListEmptyComponent={
+          ListEmptyComponent={!error && !searching ? (
             <View style={styles.emptyWrap}>
               <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
                 {searchQuery ? 'No matching entries.' : 'No entries yet.\nRecord your first journal.'}
               </Text>
             </View>
-          }
+          ) : null}
           renderItem={({ item, index }) => (
             <EntryCard
               item={item}
               index={index}
               onPress={() => {
-                if (item.analysis) router.push(`/reflection/${item.entry.id}`);
+                if (item.analysis || item.entry.status === 'completed') router.push(`/reflection/${item.entry.id}`);
+                else router.push(`/processing/${item.entry.id}`);
               }}
             />
           )}

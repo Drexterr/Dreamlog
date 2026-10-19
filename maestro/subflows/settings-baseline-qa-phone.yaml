@@ -1,0 +1,25 @@
+appId: com.talktoode.app
+---
+- stopApp
+- launchApp
+- extendedWaitUntil:
+    visible:
+      id: home-screen
+    timeout: 60000
+- tapOn:
+    id: tab-settings
+- tapOn:
+    id: settings-profile-card
+- assertQaIdentity:
+    timeout: 30000
+- tapOn:
+    id: settings-profile-modal-close
+- scrollUntilVisible:
+    element:
+      id: settings-voice-language-row
+    direction: DOWN
+- takeScreenshot: settings-language-baseline
+- tapOn:
+    id: settings-voice-language-row
+- takeScreenshot: settings-language-dialog-baseline
+- back

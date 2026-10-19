@@ -8,7 +8,7 @@
  * Also lists any existing active links so the user can revoke them.
  */
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -36,27 +36,49 @@ export default function ShareTherapistScreen() {
   const [newLink, setNewLink] = useState<CreateShareLinkResult | null>(null);
   const [activeLinks, setActiveLinks] = useState<ShareLink[]>([]);
   const [loadingLinks, setLoadingLinks] = useState(true);
+  const [linksError, setLinksError] = useState(false);
+  const [revoking, setRevoking] = useState<string[]>([]);
+  const mountedRef = useRef(false);
+  const listRequestRef = useRef(0);
+  const creatingRef = useRef(false);
+  const revokingRef = useRef(new Set<string>());
 
-  useEffect(() => {
-    api.listShareLinks()
-      .then((r) => setActiveLinks(r.links ?? []))
-      .catch(() => {})
-      .finally(() => setLoadingLinks(false));
+  const loadLinks = useCallback(async () => {
+    if (!mountedRef.current) return;
+    const request = ++listRequestRef.current;
+    setLoadingLinks(true);
+    setLinksError(false);
+    try {
+      const result = await api.listShareLinks();
+      if (mountedRef.current && request === listRequestRef.current) setActiveLinks(result.links ?? []);
+    } catch {
+      if (mountedRef.current && request === listRequestRef.current) setLinksError(true);
+    } finally {
+      if (mountedRef.current && request === listRequestRef.current) setLoadingLinks(false);
+    }
   }, []);
 
+  useEffect(() => {
+    mountedRef.current = true;
+    void loadLinks();
+    return () => { mountedRef.current = false; listRequestRef.current++; };
+  }, [loadLinks]);
+
   const handleCreate = async () => {
+    if (creatingRef.current || newLink) return;
+    creatingRef.current = true;
     setCreating(true);
     try {
       const result = await api.createShareLink();
+      if (!mountedRef.current) return;
       setNewLink(result);
-      setActiveLinks((prev) => [
-        { id: result.token, token: result.token, url: result.url, expires_at: result.expires_at },
-        ...prev,
-      ]);
+      // Creation returns a public token, not the UUID required for revocation.
+      await loadLinks();
     } catch {
-      Alert.alert('Error', 'Failed to create share link. Please try again.');
+      if (mountedRef.current) Alert.alert('Error', 'Failed to create share link. Please try again.');
     } finally {
-      setCreating(false);
+      creatingRef.current = false;
+      if (mountedRef.current) setCreating(false);
     }
   };
 
@@ -76,11 +98,22 @@ export default function ShareTherapistScreen() {
         text: 'Revoke',
         style: 'destructive',
         onPress: async () => {
+          if (revokingRef.current.has(linkId)) return;
+          revokingRef.current.add(linkId);
+          setRevoking((prev) => [...prev, linkId]);
           try {
             await api.revokeShareLink(linkId);
+            if (!mountedRef.current) return;
+            listRequestRef.current++;
+            setLoadingLinks(false);
+            const revokedToken = activeLinks.find((link) => link.id === linkId)?.token;
+            setNewLink((current) => current?.token === revokedToken ? null : current);
             setActiveLinks((prev) => prev.filter((l) => l.id !== linkId));
           } catch {
-            Alert.alert('Error', 'Failed to revoke link.');
+            if (mountedRef.current) Alert.alert('Error', 'Failed to revoke link.');
+          } finally {
+            revokingRef.current.delete(linkId);
+            if (mountedRef.current) setRevoking((prev) => prev.filter((id) => id !== linkId));
           }
         },
       },
@@ -112,11 +145,11 @@ export default function ShareTherapistScreen() {
           {/* What's shared info box */}
           <View style={[styles.infoBox, { backgroundColor: colors.card, borderColor: colors.borderFaint }]}>
             <Text style={[styles.infoTitle, { color: colors.brand }]}>What's included</Text>
-            {['30-day mood arc (anonymized)', 'AI-generated entry summaries', 'Top emotions for the period', 'Entry count'].map((item) => (
+            {['30-day mood arc', 'AI-generated entry summaries', 'Top emotions for the period', 'Your display name'].map((item) => (
               <Text key={item} style={[styles.infoItem, { color: colors.textSecondary }]}>✓  {item}</Text>
             ))}
             <Text style={[styles.infoExclude, { color: colors.textMuted }]}>
-              Not included: raw transcripts, voice recordings, reflections, personal details
+              Not included: raw transcripts, voice recordings, reflections
             </Text>
           </View>
 
@@ -156,6 +189,15 @@ export default function ShareTherapistScreen() {
           )}
 
           {/* Active links */}
+          {loadingLinks && <ActivityIndicator testID={T.share.linksLoading} color={colors.brand} />}
+          {linksError && (
+            <View>
+              <Text style={[styles.footer, { color: colors.textSecondary }]}>Could not load active links.</Text>
+              <TouchableOpacity testID={T.share.retryButton} onPress={() => void loadLinks()} style={styles.backBtn}>
+                <Text style={[styles.backText, { color: colors.brand }]}>Retry</Text>
+              </TouchableOpacity>
+            </View>
+          )}
           {!loadingLinks && activeLinks.length > 0 && (
             <>
               <Text style={[styles.sectionLabel, { color: colors.textMuted }]}>ACTIVE LINKS</Text>
@@ -172,8 +214,8 @@ export default function ShareTherapistScreen() {
                           Expires {formatExpiry(link.expires_at)}
                         </Text>
                       </View>
-                      <TouchableOpacity testID={T.share.revokeButton} onPress={() => handleRevoke(link.id)} activeOpacity={0.7}>
-                        <Text style={styles.revokeText}>Revoke</Text>
+                      <TouchableOpacity testID={T.share.revokeButton} onPress={() => handleRevoke(link.id)} disabled={revoking.includes(link.id)} activeOpacity={0.7}>
+                        <Text style={styles.revokeText}>{revoking.includes(link.id) ? 'Revoking...' : 'Revoke'}</Text>
                       </TouchableOpacity>
                     </View>
                   </View>

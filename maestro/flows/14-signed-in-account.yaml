@@ -1,0 +1,80 @@
+appId: com.talktoode.app
+tags:
+  - auth
+  - read-only
+---
+- clearState
+- launchApp:
+    clearKeychain: true
+- runFlow: ../subflows/complete-onboarding-guest.yaml
+- runFlow: ../subflows/open-auth-sheet.yaml
+- tapOn:
+    id: auth-use-email
+- tapOn:
+    id: auth-email-input
+- inputText: ${EMAIL_EXISTING}
+- hideKeyboard
+- scrollUntilVisible:
+    element:
+      id: auth-password-input
+    direction: DOWN
+- tapOn:
+    id: auth-password-input
+- inputText: ${PASSWORD}
+- hideKeyboard
+- tapOn:
+    id: auth-submit
+- extendedWaitUntil:
+    visible:
+      id: record-screen
+    timeout: 60000
+- tapOn:
+    id: record-cancel
+- extendedWaitUntil:
+    visible:
+      id: home-screen
+    timeout: 15000
+- stopApp
+- launchApp
+- extendedWaitUntil:
+    visible:
+      id: home-screen
+    timeout: 60000
+- tapOn:
+    id: tab-settings
+- extendedWaitUntil:
+    visible:
+      id: settings-screen
+    timeout: 15000
+- tapOn:
+    id: settings-profile-card
+- extendedWaitUntil:
+    visible: ${EMAIL_EXISTING_REGEX}
+    timeout: 30000
+- tapOn:
+    id: settings-profile-modal-close
+- assertVisible:
+    id: settings-screen
+- takeScreenshot: qa-account-verified
+- tapOn:
+    id: tab-explore
+- scrollUntilVisible:
+    element:
+      id: explore-header
+    direction: UP
+- scrollUntilVisible:
+    element:
+      id: explore-entries
+    direction: DOWN
+- tapOn:
+    id: explore-entries
+- extendedWaitUntil:
+    visible:
+      id: entries-screen
+    timeout: 30000
+- assertVisible:
+    id: entries-search-input
+- tapOn:
+    id: entries-back
+- assertVisible:
+    id: explore-screen

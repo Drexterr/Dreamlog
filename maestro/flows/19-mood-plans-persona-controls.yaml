@@ -1,0 +1,86 @@
+appId: com.talktoode.app
+tags:
+  - read-only
+  - mood
+  - billing
+  - therapy
+---
+- stopApp
+- launchApp
+- runFlow: ../subflows/dismiss-startup-streak.yaml
+- extendedWaitUntil:
+    visible:
+      id: home-screen
+    timeout: 20000
+- tapOn:
+    id: tab-mood
+- assertVisible:
+    id: mood-screen
+- tapOn:
+    id: tab-settings
+- openLink: ode://upgrade
+- extendedWaitUntil:
+    visible:
+      id: upgrade-screen
+    timeout: 20000
+- assertVisible: Choose a Plan
+- tapOn:
+    id: upgrade-period-monthly
+- assertVisible: Monthly
+- tapOn:
+    id: upgrade-period-annual
+- assertVisible: Annual
+- tapOn:
+    id: upgrade-back
+- assertVisible:
+    id: settings-screen
+- tapOn:
+    id: tab-explore
+- scrollUntilVisible:
+    element:
+      id: explore-header
+    direction: UP
+- scrollUntilVisible:
+    element:
+      id: explore-therapy
+    direction: DOWN
+- tapOn:
+    id: explore-therapy
+- extendedWaitUntil:
+    visible:
+      id: therapy-index-screen
+    timeout: 20000
+- tapOn:
+    id: therapy-index-start
+- assertVisible:
+    id: persona-screen
+- tapOn:
+    id: persona-card-comforting
+- assertVisible: Begin with Comforting
+- tapOn:
+    id: persona-card-rational
+- assertVisible: Begin with Rational
+- scrollUntilVisible:
+    element:
+      id: persona-card-cbt
+    direction: DOWN
+- tapOn:
+    id: persona-card-cbt
+- assertVisible: Begin with CBT-Style
+- scrollUntilVisible:
+    element:
+      id: persona-card-mindful
+    direction: DOWN
+- tapOn:
+    id: persona-card-mindful
+- assertVisible: Begin with Mindful
+- assertVisible:
+    id: persona-start
+# Do not tap persona-start: this flow makes no session or purchase.
+- tapOn:
+    id: persona-back
+- assertVisible:
+    id: therapy-index-screen
+- back
+- assertVisible:
+    id: explore-screen

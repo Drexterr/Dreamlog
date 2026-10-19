@@ -1,0 +1,1542 @@
+{
+  "targetPercent": 90,
+  "coverageDefinition": "Fully validated scoped scenarios / all scoped scenarios. Unit/provider/device evidence must not be substituted for one another.",
+  "cases": [
+    {
+      "id": "ODE-01P",
+      "feature": "Launch",
+      "polarity": "positive",
+      "scenario": "Fresh install reaches onboarding",
+      "methods": [
+        "U",
+        "A"
+      ],
+      "evidence": [],
+      "status": "not_executed"
+    },
+    {
+      "id": "ODE-01N",
+      "feature": "Launch",
+      "polarity": "negative",
+      "scenario": "API unavailable at startup yields recoverable UI",
+      "methods": [
+        "U",
+        "A"
+      ],
+      "evidence": [],
+      "status": "not_executed"
+    },
+    {
+      "id": "ODE-02P",
+      "feature": "Relaunch",
+      "polarity": "positive",
+      "scenario": "Existing session returns to intended screen",
+      "methods": [
+        "U",
+        "J"
+      ],
+      "evidence": [],
+      "status": "not_executed"
+    },
+    {
+      "id": "ODE-02N",
+      "feature": "Relaunch",
+      "polarity": "negative",
+      "scenario": "Force-stop while loading does not corrupt local state",
+      "methods": [
+        "U",
+        "J"
+      ],
+      "evidence": [],
+      "status": "not_executed"
+    },
+    {
+      "id": "ODE-03P",
+      "feature": "Version gate",
+      "polarity": "positive",
+      "scenario": "Supported version proceeds",
+      "methods": [
+        "U",
+        "A",
+        "H"
+      ],
+      "evidence": [],
+      "status": "not_executed"
+    },
+    {
+      "id": "ODE-03N",
+      "feature": "Version gate",
+      "polarity": "negative",
+      "scenario": "Unsupported version blocks and opens the correct store destination",
+      "methods": [
+        "U",
+        "A",
+        "H"
+      ],
+      "evidence": [],
+      "status": "not_executed"
+    },
+    {
+      "id": "ODE-04P",
+      "feature": "Onboarding",
+      "polarity": "positive",
+      "scenario": "Complete journal and therapy paths",
+      "methods": [
+        "U",
+        "J"
+      ],
+      "evidence": [],
+      "status": "not_executed"
+    },
+    {
+      "id": "ODE-04N",
+      "feature": "Onboarding",
+      "polarity": "negative",
+      "scenario": "Back/skip/restart preserves only intended answers",
+      "methods": [
+        "U",
+        "J"
+      ],
+      "evidence": [],
+      "status": "not_executed"
+    },
+    {
+      "id": "ODE-05P",
+      "feature": "Profile inputs",
+      "polarity": "positive",
+      "scenario": "Save valid name, country, age and goal",
+      "methods": [
+        "U",
+        "A"
+      ],
+      "evidence": [],
+      "status": "not_executed"
+    },
+    {
+      "id": "ODE-05N",
+      "feature": "Profile inputs",
+      "polarity": "negative",
+      "scenario": "Blank/oversized/Unicode values validate without broken layout",
+      "methods": [
+        "U",
+        "A"
+      ],
+      "evidence": [],
+      "status": "not_executed"
+    },
+    {
+      "id": "ODE-06P",
+      "feature": "Terms",
+      "polarity": "positive",
+      "scenario": "Acceptance persists after relaunch",
+      "methods": [
+        "U",
+        "A"
+      ],
+      "evidence": [],
+      "status": "not_executed"
+    },
+    {
+      "id": "ODE-06N",
+      "feature": "Terms",
+      "polarity": "negative",
+      "scenario": "Unchecked consent cannot continue; failed save is handled",
+      "methods": [
+        "U",
+        "A"
+      ],
+      "evidence": [],
+      "status": "not_executed"
+    },
+    {
+      "id": "ODE-07P",
+      "feature": "Guest gating",
+      "polarity": "positive",
+      "scenario": "Guest can browse permitted screens",
+      "methods": [
+        "U",
+        "A"
+      ],
+      "evidence": [],
+      "status": "not_executed"
+    },
+    {
+      "id": "ODE-07N",
+      "feature": "Guest gating",
+      "polarity": "negative",
+      "scenario": "Direct recording/paid/deep-link access prompts authentication",
+      "methods": [
+        "U",
+        "A"
+      ],
+      "evidence": [],
+      "status": "not_executed"
+    },
+    {
+      "id": "ODE-08P",
+      "feature": "Registration",
+      "polarity": "positive",
+      "scenario": "Unique valid account registers",
+      "methods": [
+        "U",
+        "A"
+      ],
+      "evidence": [],
+      "status": "not_executed"
+    },
+    {
+      "id": "ODE-08N",
+      "feature": "Registration",
+      "polarity": "negative",
+      "scenario": "Duplicate email, missing name and weak password fail clearly",
+      "methods": [
+        "U",
+        "A"
+      ],
+      "evidence": [],
+      "status": "not_executed"
+    },
+    {
+      "id": "ODE-09P",
+      "feature": "Login",
+      "polarity": "positive",
+      "scenario": "Valid account authenticates",
+      "methods": [
+        "U",
+        "A"
+      ],
+      "evidence": [
+        "test-results/qa-account-2026-10-13T07-14-58.708Z.json: QA Supabase sign-in and expected backend identity passed",
+        "test-results/ui-2026-10-13T12-20-32/results.json: device flow failed before password entry, with ANR diagnostics retained",
+        "test-results/qa-account-2026-10-14T05-38-17.871Z.json: existing live QA Supabase authentication and expected backend identity checks passed",
+        "test-results/phone-2026-10-14T07-00-21.231Z/results.json: mandatory flow 03 valid sign-in, main tester identity and cold restart passed on the history-fix APK"
+      ],
+      "status": "passed",
+      "remaining": "This narrow valid-login U/A outline is signed off. OAuth, negative credentials/rate limits, refresh/revocation and account-isolation outlines remain separate and unclosed."
+    },
+    {
+      "id": "ODE-09N",
+      "feature": "Login",
+      "polarity": "negative",
+      "scenario": "Wrong password, malformed email and rate limits are handled",
+      "methods": [
+        "U",
+        "A"
+      ],
+      "evidence": [],
+      "status": "not_executed"
+    },
+    {
+      "id": "ODE-10P",
+      "feature": "Social auth",
+      "polarity": "positive",
+      "scenario": "Google sign-in returns to original intent",
+      "methods": [
+        "U",
+        "H"
+      ],
+      "evidence": [],
+      "status": "not_executed"
+    },
+    {
+      "id": "ODE-10N",
+      "feature": "Social auth",
+      "polarity": "negative",
+      "scenario": "Cancelled/provider-failed sign-in leaves a usable app",
+      "methods": [
+        "U",
+        "H"
+      ],
+      "evidence": [],
+      "status": "not_executed"
+    },
+    {
+      "id": "ODE-11P",
+      "feature": "Session tokens",
+      "polarity": "positive",
+      "scenario": "Valid refresh retains user session",
+      "methods": [
+        "U",
+        "A",
+        "J"
+      ],
+      "evidence": [],
+      "status": "not_executed"
+    },
+    {
+      "id": "ODE-11N",
+      "feature": "Session tokens",
+      "polarity": "negative",
+      "scenario": "Expired/revoked token does not expose another user's data",
+      "methods": [
+        "U",
+        "A",
+        "J"
+      ],
+      "evidence": [],
+      "status": "not_executed"
+    },
+    {
+      "id": "ODE-12P",
+      "feature": "Logout/role",
+      "polarity": "positive",
+      "scenario": "Logout and user/therapist switch work",
+      "methods": [
+        "U",
+        "A",
+        "J"
+      ],
+      "evidence": [],
+      "status": "not_executed"
+    },
+    {
+      "id": "ODE-12N",
+      "feature": "Logout/role",
+      "polarity": "negative",
+      "scenario": "Account switching does not leak cached journal or role state",
+      "methods": [
+        "U",
+        "A",
+        "J"
+      ],
+      "evidence": [],
+      "status": "not_executed"
+    },
+    {
+      "id": "ODE-13P",
+      "feature": "Navigation",
+      "polarity": "positive",
+      "scenario": "Every tab and back/close control reaches its destination",
+      "methods": [
+        "U"
+      ],
+      "evidence": [
+        "test-results/ui-2026-10-13T11-26-51/command-results.json: 04-navigation passed, 23 mandatory assertions and 26 taps"
+      ],
+      "status": "partial",
+      "remaining": "All tabs and selected Entries/Journeys/Relationships back paths and Settings modals passed; every remaining screen back/close control is not yet verified."
+    },
+    {
+      "id": "ODE-13N",
+      "feature": "Navigation",
+      "polarity": "negative",
+      "scenario": "Rapid switching and nested back do not strand the user",
+      "methods": [
+        "U"
+      ],
+      "evidence": [],
+      "status": "not_executed"
+    },
+    {
+      "id": "ODE-14P",
+      "feature": "Mode gate",
+      "polarity": "positive",
+      "scenario": "Select each of five modes and start recording",
+      "methods": [
+        "U",
+        "J"
+      ],
+      "evidence": [],
+      "status": "not_executed"
+    },
+    {
+      "id": "ODE-14N",
+      "feature": "Mode gate",
+      "polarity": "negative",
+      "scenario": "No mode selected prevents recording",
+      "methods": [
+        "U",
+        "J"
+      ],
+      "evidence": [],
+      "status": "not_executed"
+    },
+    {
+      "id": "ODE-15P",
+      "feature": "Microphone",
+      "polarity": "positive",
+      "scenario": "Authenticated user grants permission and records",
+      "methods": [
+        "U",
+        "J",
+        "H"
+      ],
+      "evidence": ["mobile/__tests__/RecordScreen.test.tsx", "test-results/phone-2026-10-13T12-34-35.187Z/results.json"],
+      "status": "partial",
+      "remaining": "Fresh OS permission-dialog grant and wider hardware/device matrix remain untested."
+    },
+    {
+      "id": "ODE-15N",
+      "feature": "Microphone",
+      "polarity": "negative",
+      "scenario": "Denial/permanent denial/revocation produces usable recovery",
+      "methods": [
+        "U",
+        "J",
+        "H"
+      ],
+      "evidence": ["mobile/__tests__/RecordScreen.test.tsx", "test-results/phone-2026-10-13T12-32-53.704Z/results.json"],
+      "status": "partial",
+      "remaining": "Permanent denial via Ode-only permission flags passed; first prompt denial and revocation during active recording remain."
+    },
+    {
+      "id": "ODE-16P",
+      "feature": "Recording",
+      "polarity": "positive",
+      "scenario": "Start/stop produces playable nonzero-duration audio",
+      "methods": [
+        "U",
+        "J",
+        "A"
+      ],
+      "evidence": [],
+      "status": "not_executed"
+    },
+    {
+      "id": "ODE-16N",
+      "feature": "Recording",
+      "polarity": "negative",
+      "scenario": "Instant stop or repeated taps do not submit invalid/duplicate audio",
+      "methods": [
+        "U",
+        "J",
+        "A"
+      ],
+      "evidence": [],
+      "status": "not_executed"
+    },
+    {
+      "id": "ODE-17P",
+      "feature": "Discard",
+      "polarity": "positive",
+      "scenario": "Cancel discards recording and releases microphone",
+      "methods": [
+        "U",
+        "J",
+        "H"
+      ],
+      "evidence": [],
+      "status": "not_executed"
+    },
+    {
+      "id": "ODE-17N",
+      "feature": "Discard",
+      "polarity": "negative",
+      "scenario": "Back/unmount during recording does not leave capture active",
+      "methods": [
+        "U",
+        "J",
+        "H"
+      ],
+      "evidence": [],
+      "status": "not_executed"
+    },
+    {
+      "id": "ODE-18P",
+      "feature": "Duration",
+      "polarity": "positive",
+      "scenario": "Recording below 30 minutes submits",
+      "methods": [
+        "U",
+        "J",
+        "A"
+      ],
+      "evidence": [],
+      "status": "not_executed"
+    },
+    {
+      "id": "ODE-18N",
+      "feature": "Duration",
+      "polarity": "negative",
+      "scenario": "At/above 30-minute boundary auto-stop and server validation agree",
+      "methods": [
+        "U",
+        "J",
+        "A"
+      ],
+      "evidence": [],
+      "status": "not_executed"
+    },
+    {
+      "id": "ODE-19P",
+      "feature": "Interruptions",
+      "polarity": "positive",
+      "scenario": "Background and return follows declared recording policy",
+      "methods": [
+        "U",
+        "J",
+        "H"
+      ],
+      "evidence": [],
+      "status": "not_executed"
+    },
+    {
+      "id": "ODE-19N",
+      "feature": "Interruptions",
+      "polarity": "negative",
+      "scenario": "Screen lock/call/audio-focus loss does not silently lose audio",
+      "methods": [
+        "U",
+        "J",
+        "H"
+      ],
+      "evidence": [],
+      "status": "not_executed"
+    },
+    {
+      "id": "ODE-20P",
+      "feature": "Presign/upload",
+      "polarity": "positive",
+      "scenario": "Native binary upload creates a processable entry",
+      "methods": [
+        "U",
+        "A",
+        "J"
+      ],
+      "evidence": [],
+      "status": "not_executed"
+    },
+    {
+      "id": "ODE-20N",
+      "feature": "Presign/upload",
+      "polarity": "negative",
+      "scenario": "Expired URL, missing file, wrong media type and oversized audio fail",
+      "methods": [
+        "U",
+        "A",
+        "J"
+      ],
+      "evidence": [],
+      "status": "not_executed"
+    },
+    {
+      "id": "ODE-21P",
+      "feature": "Upload retries",
+      "polarity": "positive",
+      "scenario": "Temporary failure recovers within retry policy",
+      "methods": [
+        "A",
+        "J",
+        "U"
+      ],
+      "evidence": [],
+      "status": "not_executed"
+    },
+    {
+      "id": "ODE-21N",
+      "feature": "Upload retries",
+      "polarity": "negative",
+      "scenario": "Permanent 4xx is not retried; lost response does not duplicate entry",
+      "methods": [
+        "A",
+        "J",
+        "U"
+      ],
+      "evidence": [],
+      "status": "not_executed"
+    },
+    {
+      "id": "ODE-22P",
+      "feature": "Offline capture",
+      "polarity": "positive",
+      "scenario": "Queued recording survives restart and reconnects",
+      "methods": [
+        "U",
+        "J",
+        "A"
+      ],
+      "evidence": [],
+      "status": "not_executed"
+    },
+    {
+      "id": "ODE-22N",
+      "feature": "Offline capture",
+      "polarity": "negative",
+      "scenario": "Missing local file or exhausted retry budget is visible to user",
+      "methods": [
+        "U",
+        "J",
+        "A"
+      ],
+      "evidence": [],
+      "status": "not_executed"
+    },
+    {
+      "id": "ODE-23P",
+      "feature": "Queue concurrency",
+      "polarity": "positive",
+      "scenario": "Multiple recordings flush once each",
+      "methods": [
+        "J",
+        "A",
+        "U"
+      ],
+      "evidence": [],
+      "status": "not_executed"
+    },
+    {
+      "id": "ODE-23N",
+      "feature": "Queue concurrency",
+      "polarity": "negative",
+      "scenario": "Concurrent enqueue/flush/reconnect loses no items and creates no duplicates",
+      "methods": [
+        "J",
+        "A",
+        "U"
+      ],
+      "evidence": [],
+      "status": "not_executed"
+    },
+    {
+      "id": "ODE-24P",
+      "feature": "Processing",
+      "polarity": "positive",
+      "scenario": "Queued entry becomes complete with transcript and analysis",
+      "methods": [
+        "U",
+        "A"
+      ],
+      "evidence": ["backend/internal/workers/transcription_test.go", "test-results/qa-pipeline-2026-10-13T12-27-09.243Z.json", "test-results/qa-pipeline-2026-10-13T12-30-49.352Z.json"],
+      "status": "partial",
+      "remaining": "Live early-completion race reproduced; local fix passed worker tests but deployment and real database verification are pending."
+    },
+    {
+      "id": "ODE-24N",
+      "feature": "Processing",
+      "polarity": "negative",
+      "scenario": "Failed worker/poll timeout offers clear recovery",
+      "methods": [
+        "U",
+        "A"
+      ],
+      "evidence": [],
+      "status": "not_executed"
+    },
+    {
+      "id": "ODE-25P",
+      "feature": "Worker retry",
+      "polarity": "positive",
+      "scenario": "Transient provider failure retries successfully",
+      "methods": [
+        "A"
+      ],
+      "evidence": [],
+      "status": "not_executed"
+    },
+    {
+      "id": "ODE-25N",
+      "feature": "Worker retry",
+      "polarity": "negative",
+      "scenario": "Retry exhaustion reaches failed state/DLQ without hanging",
+      "methods": [
+        "A"
+      ],
+      "evidence": [],
+      "status": "not_executed"
+    },
+    {
+      "id": "ODE-26P",
+      "feature": "Worker idempotency",
+      "polarity": "positive",
+      "scenario": "Redelivered completed job causes no duplicate writes",
+      "methods": [
+        "A"
+      ],
+      "evidence": [],
+      "status": "not_executed"
+    },
+    {
+      "id": "ODE-26N",
+      "feature": "Worker idempotency",
+      "polarity": "negative",
+      "scenario": "Analysis failure after transcript persistence can recover correctly",
+      "methods": [
+        "A"
+      ],
+      "evidence": [],
+      "status": "not_executed"
+    },
+    {
+      "id": "ODE-27P",
+      "feature": "English transcription",
+      "polarity": "positive",
+      "scenario": "Clear reference clips preserve words and key entities",
+      "methods": [
+        "E",
+        "A"
+      ],
+      "evidence": ["test-results/qa-pipeline-2026-10-13T12-30-49.352Z.json"],
+      "status": "partial",
+      "remaining": "One synthetic English fixture passed four keyword anchors; full corpus and word/entity accuracy scoring are pending."
+    },
+    {
+      "id": "ODE-27N",
+      "feature": "English transcription",
+      "polarity": "negative",
+      "scenario": "Noise/quiet speech scores against declared error thresholds",
+      "methods": [
+        "E",
+        "A"
+      ],
+      "evidence": [],
+      "status": "not_executed"
+    },
+    {
+      "id": "ODE-28P",
+      "feature": "Multilingual transcription",
+      "polarity": "positive",
+      "scenario": "Hindi and mixed-language reference clips transcribe",
+      "methods": [
+        "E",
+        "A"
+      ],
+      "evidence": [],
+      "status": "not_executed"
+    },
+    {
+      "id": "ODE-28N",
+      "feature": "Multilingual transcription",
+      "polarity": "negative",
+      "scenario": "Accent/code-switching/misdetected language is measured, not silently accepted",
+      "methods": [
+        "E",
+        "A"
+      ],
+      "evidence": [],
+      "status": "not_executed"
+    },
+    {
+      "id": "ODE-29P",
+      "feature": "No speech",
+      "polarity": "positive",
+      "scenario": "Speech after initial silence remains in transcript",
+      "methods": [
+        "E",
+        "A"
+      ],
+      "evidence": [],
+      "status": "not_executed"
+    },
+    {
+      "id": "ODE-29N",
+      "feature": "No speech",
+      "polarity": "negative",
+      "scenario": "Silence/music/ambient noise does not produce unchecked invented speech",
+      "methods": [
+        "E",
+        "A"
+      ],
+      "evidence": [],
+      "status": "not_executed"
+    },
+    {
+      "id": "ODE-30P",
+      "feature": "Audio boundaries",
+      "polarity": "positive",
+      "scenario": "Short/long supported clips return usable transcripts",
+      "methods": [
+        "A",
+        "E"
+      ],
+      "evidence": [],
+      "status": "not_executed"
+    },
+    {
+      "id": "ODE-30N",
+      "feature": "Audio boundaries",
+      "polarity": "negative",
+      "scenario": "Empty/truncated/corrupt/unsupported clips produce clear failure",
+      "methods": [
+        "A",
+        "E"
+      ],
+      "evidence": [],
+      "status": "not_executed"
+    },
+    {
+      "id": "ODE-31P",
+      "feature": "Transcription provider",
+      "polarity": "positive",
+      "scenario": "Correct multipart payload and response persist language/text",
+      "methods": [
+        "A"
+      ],
+      "evidence": [],
+      "status": "not_executed"
+    },
+    {
+      "id": "ODE-31N",
+      "feature": "Transcription provider",
+      "polarity": "negative",
+      "scenario": "Provider 401/429/500, timeout and malformed JSON are handled",
+      "methods": [
+        "A"
+      ],
+      "evidence": [],
+      "status": "not_executed"
+    },
+    {
+      "id": "ODE-32P",
+      "feature": "Reflection modes",
+      "polarity": "positive",
+      "scenario": "Each mode receives its expected response structure",
+      "methods": [
+        "U",
+        "A",
+        "J"
+      ],
+      "evidence": [],
+      "status": "not_executed"
+    },
+    {
+      "id": "ODE-32N",
+      "feature": "Reflection modes",
+      "polarity": "negative",
+      "scenario": "Wrong-mode fields, invalid JSON and missing required content fail safely",
+      "methods": [
+        "U",
+        "A",
+        "J"
+      ],
+      "evidence": [
+        "test-results/reflection-race-reproduction.json: missing route, empty content and stale-route failures reproduced",
+        "test-results/mobile-reflection-batch.json: 44 reflection fixture tests passed after fixes"
+      ],
+      "status": "partial",
+      "remaining": "Missing/empty screen content and load failures are unit-verified. Wrong-mode provider fields, invalid JSON across the pipeline and device rendering remain unverified."
+    },
+    {
+      "id": "ODE-33P",
+      "feature": "Reflection quality",
+      "polarity": "positive",
+      "scenario": "Reply stays grounded in transcript and mode",
+      "methods": [
+        "E",
+        "H"
+      ],
+      "evidence": [],
+      "status": "not_executed"
+    },
+    {
+      "id": "ODE-33N",
+      "feature": "Reflection quality",
+      "polarity": "negative",
+      "scenario": "Fabricated people/facts, diagnoses and prompt injection are evaluated",
+      "methods": [
+        "E",
+        "H"
+      ],
+      "evidence": [],
+      "status": "not_executed"
+    },
+    {
+      "id": "ODE-34P",
+      "feature": "Journal context",
+      "polarity": "positive",
+      "scenario": "Relevant prior entries influence reflection",
+      "methods": [
+        "A",
+        "E"
+      ],
+      "evidence": [],
+      "status": "not_executed"
+    },
+    {
+      "id": "ODE-34N",
+      "feature": "Journal context",
+      "polarity": "negative",
+      "scenario": "Another account's history or irrelevant private notes never enter context",
+      "methods": [
+        "A",
+        "E"
+      ],
+      "evidence": [],
+      "status": "not_executed"
+    },
+    {
+      "id": "ODE-35P",
+      "feature": "Follow-up",
+      "polarity": "positive",
+      "scenario": "Three ordered user/reply turns persist after reopening",
+      "methods": [
+        "U",
+        "A",
+        "J"
+      ],
+      "evidence": ["test-results/qa-pipeline-2026-10-13T12-30-49.352Z.json", "test-results/phone-2026-10-13T12-38-25.700Z/results.json"],
+      "status": "partial",
+      "remaining": "Three live turns and reopened closed UI passed; full message-history ordering and provider retry/persistence faults remain."
+    },
+    {
+      "id": "ODE-35N",
+      "feature": "Follow-up",
+      "polarity": "negative",
+      "scenario": "Fourth turn, empty message and closed conversation are rejected",
+      "methods": [
+        "U",
+        "A",
+        "J"
+      ],
+      "evidence": ["test-results/qa-pipeline-2026-10-13T12-30-49.352Z.json", "test-results/phone-2026-10-13T12-38-25.700Z/results.json"],
+      "status": "partial",
+      "remaining": "Empty body 400, fourth turn 409 and closed phone UI passed; concurrent/boundary permutations remain."
+    },
+    {
+      "id": "ODE-36P",
+      "feature": "Follow-up failure",
+      "polarity": "positive",
+      "scenario": "Temporary reply failure supports retry",
+      "methods": [
+        "U",
+        "A",
+        "J"
+      ],
+      "evidence": [],
+      "status": "not_executed"
+    },
+    {
+      "id": "ODE-36N",
+      "feature": "Follow-up failure",
+      "polarity": "negative",
+      "scenario": "Double send or partial persistence does not duplicate/reorder turns",
+      "methods": [
+        "U",
+        "A",
+        "J"
+      ],
+      "evidence": [],
+      "status": "not_executed"
+    },
+    {
+      "id": "ODE-37P",
+      "feature": "Therapy persona",
+      "polarity": "positive",
+      "scenario": "Start sessions for comforting/rational/CBT/mindful",
+      "methods": [
+        "U",
+        "A"
+      ],
+      "evidence": [],
+      "status": "not_executed"
+    },
+    {
+      "id": "ODE-37N",
+      "feature": "Therapy persona",
+      "polarity": "negative",
+      "scenario": "Invalid persona and unavailable entitlement do not create usable sessions",
+      "methods": [
+        "U",
+        "A"
+      ],
+      "evidence": [],
+      "status": "not_executed"
+    },
+    {
+      "id": "ODE-38P",
+      "feature": "Therapy text",
+      "polarity": "positive",
+      "scenario": "Text reply appears in order and history reloads",
+      "methods": [
+        "U",
+        "A",
+        "J"
+      ],
+      "evidence": [],
+      "status": "not_executed"
+    },
+    {
+      "id": "ODE-38N",
+      "feature": "Therapy text",
+      "polarity": "negative",
+      "scenario": "Blank/oversized message, 409/410 and send timeout recover clearly",
+      "methods": [
+        "U",
+        "A",
+        "J"
+      ],
+      "evidence": [],
+      "status": "not_executed"
+    },
+    {
+      "id": "ODE-39P",
+      "feature": "Therapy voice",
+      "polarity": "positive",
+      "scenario": "Record-upload-transcribe-reply completes",
+      "methods": [
+        "U",
+        "A",
+        "E"
+      ],
+      "evidence": [],
+      "status": "not_executed"
+    },
+    {
+      "id": "ODE-39N",
+      "feature": "Therapy voice",
+      "polarity": "negative",
+      "scenario": "Missing/foreign audio key and failed upload/transcription fail safely",
+      "methods": [
+        "U",
+        "A",
+        "E"
+      ],
+      "evidence": [],
+      "status": "not_executed"
+    },
+    {
+      "id": "ODE-40P",
+      "feature": "Voice/text switch",
+      "polarity": "positive",
+      "scenario": "Switch input modes during an active session",
+      "methods": [
+        "U",
+        "J",
+        "H"
+      ],
+      "evidence": [],
+      "status": "not_executed"
+    },
+    {
+      "id": "ODE-40N",
+      "feature": "Voice/text switch",
+      "polarity": "negative",
+      "scenario": "Switch while sending/recording does not lose draft or overlap capture",
+      "methods": [
+        "U",
+        "J",
+        "H"
+      ],
+      "evidence": [],
+      "status": "not_executed"
+    },
+    {
+      "id": "ODE-41P",
+      "feature": "Therapy expiry",
+      "polarity": "positive",
+      "scenario": "End session and load summary/history",
+      "methods": [
+        "U",
+        "A",
+        "J"
+      ],
+      "evidence": [],
+      "status": "not_executed"
+    },
+    {
+      "id": "ODE-41N",
+      "feature": "Therapy expiry",
+      "polarity": "negative",
+      "scenario": "One-hour expiry rejects new messages and repeated end is handled",
+      "methods": [
+        "U",
+        "A",
+        "J"
+      ],
+      "evidence": [],
+      "status": "not_executed"
+    },
+    {
+      "id": "ODE-42P",
+      "feature": "TTS",
+      "polarity": "positive",
+      "scenario": "Selected language/persona yields playable speech",
+      "methods": [
+        "U",
+        "A",
+        "E",
+        "H"
+      ],
+      "evidence": [],
+      "status": "not_executed"
+    },
+    {
+      "id": "ODE-42N",
+      "feature": "TTS",
+      "polarity": "negative",
+      "scenario": "TTS/playback failure preserves readable text and usable controls",
+      "methods": [
+        "U",
+        "A",
+        "E",
+        "H"
+      ],
+      "evidence": [],
+      "status": "not_executed"
+    },
+    {
+      "id": "ODE-43P",
+      "feature": "Audio focus",
+      "polarity": "positive",
+      "scenario": "Reply ends cleanly before next capture",
+      "methods": [
+        "U",
+        "H"
+      ],
+      "evidence": [],
+      "status": "not_executed"
+    },
+    {
+      "id": "ODE-43N",
+      "feature": "Audio focus",
+      "polarity": "negative",
+      "scenario": "Bluetooth/headset/speaker changes and interrupted playback avoid overlap",
+      "methods": [
+        "U",
+        "H"
+      ],
+      "evidence": [],
+      "status": "not_executed"
+    },
+    {
+      "id": "ODE-44P",
+      "feature": "Crisis mechanics",
+      "polarity": "positive",
+      "scenario": "Benign input follows normal path",
+      "methods": [
+        "U",
+        "A",
+        "E",
+        "H"
+      ],
+      "evidence": [],
+      "status": "not_executed"
+    },
+    {
+      "id": "ODE-44N",
+      "feature": "Crisis mechanics",
+      "polarity": "negative",
+      "scenario": "Seeded crisis inputs follow warning/hard-stop and screener fail-safe policy",
+      "methods": [
+        "U",
+        "A",
+        "E",
+        "H"
+      ],
+      "evidence": [],
+      "status": "not_executed"
+    },
+    {
+      "id": "ODE-45P",
+      "feature": "Safety UI",
+      "polarity": "positive",
+      "scenario": "Relevant resources render and link intent is correct",
+      "methods": [
+        "U",
+        "A",
+        "E",
+        "H"
+      ],
+      "evidence": [
+        "test-results/ui-2026-10-13T11-26-51/command-results.json: India resource assertion passed after guest onboarding",
+        "test-results/mobile-resume.json: Settings resource localization unit tests passed"
+      ],
+      "status": "partial",
+      "remaining": "Resource rendering is verified for the exercised guest country. Link intents, full country matrix, provider evaluations and hardware checks remain unexecuted; no live resource calls were made."
+    },
+    {
+      "id": "ODE-45N",
+      "feature": "Safety UI",
+      "polarity": "negative",
+      "scenario": "Missing country, unavailable handler and indirect crisis language are checked",
+      "methods": [
+        "U",
+        "A",
+        "E",
+        "H"
+      ],
+      "evidence": [],
+      "status": "not_executed"
+    },
+    {
+      "id": "ODE-46P",
+      "feature": "History/search",
+      "polarity": "positive",
+      "scenario": "Entries paginate/search and open correct reflection",
+      "methods": [
+        "U",
+        "A"
+      ],
+      "evidence": ["mobile/__tests__/EntriesScreen.test.tsx", "test-results/qa-account-2026-10-14T05-38-17.871Z.json", "test-results/phone-2026-10-14T06-00-35.971Z/results.json"],
+      "status": "partial",
+      "remaining": "Matching-APK search-result navigation passed; multi-page UI behavior and larger-history permutations remain pending."
+    },
+    {
+      "id": "ODE-46N",
+      "feature": "History/search",
+      "polarity": "negative",
+      "scenario": "Empty/no-match/Unicode queries and another user's IDs are handled",
+      "methods": [
+        "U",
+        "A"
+      ],
+      "evidence": ["mobile/__tests__/EntriesScreen.test.tsx", "test-results/qa-account-2026-10-14T05-38-17.871Z.json", "test-results/phone-2026-10-14T06-00-35.971Z/results.json"],
+      "status": "partial",
+      "remaining": "Local/API empty/no-match/Unicode and matching-APK no-match/Back checks passed; device offline/recovery and a second authorized QA account for live foreign-ID rejection remain pending."
+    },
+    {
+      "id": "ODE-47P",
+      "feature": "Mood analytics",
+      "polarity": "positive",
+      "scenario": "Seeded records yield expected chart/range statistics",
+      "methods": [
+        "U",
+        "A",
+        "J"
+      ],
+      "evidence": [],
+      "status": "not_executed"
+    },
+    {
+      "id": "ODE-47N",
+      "feature": "Mood analytics",
+      "polarity": "negative",
+      "scenario": "Empty data, date boundaries and malformed data do not mislead or crash",
+      "methods": [
+        "U",
+        "A",
+        "J"
+      ],
+      "evidence": [],
+      "status": "not_executed"
+    },
+    {
+      "id": "ODE-48P",
+      "feature": "Habit loop",
+      "polarity": "positive",
+      "scenario": "Streak, flashback and scheduled check-in render correctly",
+      "methods": [
+        "U",
+        "A",
+        "J"
+      ],
+      "evidence": [],
+      "status": "not_executed"
+    },
+    {
+      "id": "ODE-48N",
+      "feature": "Habit loop",
+      "polarity": "negative",
+      "scenario": "Timezone/DST/missed-day/duplicate scheduler run preserve rules",
+      "methods": [
+        "U",
+        "A",
+        "J"
+      ],
+      "evidence": [],
+      "status": "not_executed"
+    },
+    {
+      "id": "ODE-49P",
+      "feature": "Notifications",
+      "polarity": "positive",
+      "scenario": "Test push opens intended entry/session",
+      "methods": [
+        "U",
+        "A",
+        "H"
+      ],
+      "evidence": [],
+      "status": "not_executed"
+    },
+    {
+      "id": "ODE-49N",
+      "feature": "Notifications",
+      "polarity": "negative",
+      "scenario": "Denied permission, stale token and deleted target recover",
+      "methods": [
+        "U",
+        "A",
+        "H"
+      ],
+      "evidence": [],
+      "status": "not_executed"
+    },
+    {
+      "id": "ODE-50P",
+      "feature": "Guided journeys",
+      "polarity": "positive",
+      "scenario": "Start, record and advance a seeded journey",
+      "methods": [
+        "U",
+        "A"
+      ],
+      "evidence": [],
+      "status": "not_executed"
+    },
+    {
+      "id": "ODE-50N",
+      "feature": "Guided journeys",
+      "polarity": "negative",
+      "scenario": "Invalid session, incomplete previous step and retry preserve progress",
+      "methods": [
+        "U",
+        "A"
+      ],
+      "evidence": [],
+      "status": "not_executed"
+    },
+    {
+      "id": "ODE-51P",
+      "feature": "Relationships/reviews",
+      "polarity": "positive",
+      "scenario": "Seeded extraction/map and weekly/yearly reviews agree with fixtures",
+      "methods": [
+        "U",
+        "A",
+        "E"
+      ],
+      "evidence": [],
+      "status": "not_executed"
+    },
+    {
+      "id": "ODE-51N",
+      "feature": "Relationships/reviews",
+      "polarity": "negative",
+      "scenario": "Empty data, duplicate people and provider failure are handled",
+      "methods": [
+        "U",
+        "A",
+        "E"
+      ],
+      "evidence": [],
+      "status": "not_executed"
+    },
+    {
+      "id": "ODE-52P",
+      "feature": "Sharing/consent",
+      "polarity": "positive",
+      "scenario": "Create permitted share and accept/reject therapist request",
+      "methods": [
+        "U",
+        "A"
+      ],
+      "evidence": [
+        "test-results/share-expanded.json: sharing creation, native share payload, UUID revocation and list recovery passed",
+        "test-results/2026-10-13T06-34-55.565Z/backend.log: sharing handler and real repository integration checks passed"
+      ],
+      "status": "partial",
+      "remaining": "Share mechanics have unit and repository evidence. Signed-in device create/revoke flows and therapist-request acceptance/rejection remain unverified."
+    },
+    {
+      "id": "ODE-52N",
+      "feature": "Sharing/consent",
+      "polarity": "negative",
+      "scenario": "Wrong passcode, expired/revoked link and revoked consent prevent access",
+      "methods": [
+        "U",
+        "A"
+      ],
+      "evidence": [
+        "test-results/share-reproduction.json: four screen defects reproduced",
+        "test-results/share-expanded.json: screen failure/retry and revocation cases passed after fixes",
+        "test-results/share-postgres.log: foreign ownership, expiry, revoked-token filtering, concurrent lockout/reset and private-data filtering passed"
+      ],
+      "status": "partial",
+      "remaining": "Existing handler checks cover passcodes; real repository checks cover expiry, revocation and ownership. Full HTTP/DB/device combinations and revoked therapist consent still need execution."
+    },
+    {
+      "id": "ODE-53P",
+      "feature": "Export",
+      "polarity": "positive",
+      "scenario": "Date-filtered journal export has correct content",
+      "methods": [
+        "U",
+        "A",
+        "H"
+      ],
+      "evidence": [],
+      "status": "not_executed"
+    },
+    {
+      "id": "ODE-53N",
+      "feature": "Export",
+      "polarity": "negative",
+      "scenario": "No records, offline failure and unauthorized data access are handled",
+      "methods": [
+        "U",
+        "A",
+        "H"
+      ],
+      "evidence": [],
+      "status": "not_executed"
+    },
+    {
+      "id": "ODE-54P",
+      "feature": "Settings",
+      "polarity": "positive",
+      "scenario": "Goal/nudge/time/language/theme persist after restart",
+      "methods": [
+        "U",
+        "A",
+        "J"
+      ],
+      "evidence": [],
+      "status": "not_executed"
+    },
+    {
+      "id": "ODE-54N",
+      "feature": "Settings",
+      "polarity": "negative",
+      "scenario": "Save failure, invalid values and account switch preserve correct settings",
+      "methods": [
+        "U",
+        "A",
+        "J"
+      ],
+      "evidence": [],
+      "status": "not_executed"
+    },
+    {
+      "id": "ODE-55P",
+      "feature": "Billing",
+      "polarity": "positive",
+      "scenario": "Sandbox purchase grants correct verified entitlement",
+      "methods": [
+        "U",
+        "A",
+        "H"
+      ],
+      "evidence": [],
+      "status": "not_executed"
+    },
+    {
+      "id": "ODE-55N",
+      "feature": "Billing",
+      "polarity": "negative",
+      "scenario": "Cancelled/forged/replayed receipt or store outage grants no false plan",
+      "methods": [
+        "U",
+        "A",
+        "H"
+      ],
+      "evidence": [],
+      "status": "not_executed"
+    },
+    {
+      "id": "ODE-56P",
+      "feature": "Entitlements",
+      "polarity": "positive",
+      "scenario": "Plan limits/expiry and implemented purchase recovery behave correctly",
+      "methods": [
+        "U",
+        "A",
+        "H"
+      ],
+      "evidence": [],
+      "status": "not_executed"
+    },
+    {
+      "id": "ODE-56N",
+      "feature": "Entitlements",
+      "polarity": "negative",
+      "scenario": "Duplicate callback/concurrent use/expired plan cannot bypass limits",
+      "methods": [
+        "U",
+        "A",
+        "H"
+      ],
+      "evidence": [],
+      "status": "not_executed"
+    },
+    {
+      "id": "ODE-57P",
+      "feature": "Therapist registration",
+      "polarity": "positive",
+      "scenario": "Required professional fields and consent create workspace",
+      "methods": [
+        "U",
+        "A"
+      ],
+      "evidence": [],
+      "status": "not_executed"
+    },
+    {
+      "id": "ODE-57N",
+      "feature": "Therapist registration",
+      "polarity": "negative",
+      "scenario": "Missing fields/consent and non-therapist access are rejected",
+      "methods": [
+        "U",
+        "A"
+      ],
+      "evidence": [],
+      "status": "not_executed"
+    },
+    {
+      "id": "ODE-58P",
+      "feature": "Clients/notes/OCR",
+      "polarity": "positive",
+      "scenario": "Add client, save/edit note and process seeded image",
+      "methods": [
+        "U",
+        "A",
+        "E"
+      ],
+      "evidence": [],
+      "status": "not_executed"
+    },
+    {
+      "id": "ODE-58N",
+      "feature": "Clients/notes/OCR",
+      "polarity": "negative",
+      "scenario": "Invalid image, OCR failure, unauthorized client and bad encryption key fail safely",
+      "methods": [
+        "U",
+        "A",
+        "E"
+      ],
+      "evidence": [],
+      "status": "not_executed"
+    },
+    {
+      "id": "ODE-59P",
+      "feature": "Therapist archive/portal",
+      "polarity": "positive",
+      "scenario": "Archive/restore clients and browse permitted web records",
+      "methods": [
+        "U",
+        "A",
+        "browser"
+      ],
+      "evidence": [],
+      "status": "not_executed"
+    },
+    {
+      "id": "ODE-59N",
+      "feature": "Therapist archive/portal",
+      "polarity": "negative",
+      "scenario": "Consent withdrawal, direct URL access and role mismatch block private data",
+      "methods": [
+        "U",
+        "A",
+        "browser"
+      ],
+      "evidence": [],
+      "status": "not_executed"
+    },
+    {
+      "id": "ODE-60P",
+      "feature": "Account deletion",
+      "polarity": "positive",
+      "scenario": "Disposable account and associated data follow deletion policy",
+      "methods": [
+        "U",
+        "A"
+      ],
+      "evidence": [],
+      "status": "not_executed"
+    },
+    {
+      "id": "ODE-60N",
+      "feature": "Account deletion",
+      "polarity": "negative",
+      "scenario": "Cancel or backend partial failure does not falsely report completion",
+      "methods": [
+        "U",
+        "A"
+      ],
+      "evidence": [],
+      "status": "not_executed"
+    }
+  ]
+}

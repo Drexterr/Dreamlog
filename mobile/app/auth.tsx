@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -87,6 +87,7 @@ export default function AuthScreen() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [emailModal, setEmailModal] = useState('');
+  const authInFlight = useRef(false);
   const router = useRouter();
   const { colors } = useTheme();
 
@@ -113,6 +114,8 @@ export default function AuthScreen() {
   };
 
   const handleGoogleSignIn = async () => {
+    if (authInFlight.current) return;
+    authInFlight.current = true;
     // Browser-based OAuth (not native @react-native-google-signin): on iOS the
     // Google SDK injects a nonce into the ID token that Supabase can't verify
     // ("nonce mismatch"). The browser flow lets Supabase own the PKCE nonce, so
@@ -136,11 +139,14 @@ export default function AuthScreen() {
     } catch (err: any) {
       setError(err?.message ?? 'Google sign-in failed. Please try again.');
     } finally {
+      authInFlight.current = false;
       setLoading(false);
     }
   };
 
   const handleAppleSignIn = async () => {
+    if (authInFlight.current) return;
+    authInFlight.current = true;
     setError('');
     setLoading(true);
     try {
@@ -164,16 +170,18 @@ export default function AuthScreen() {
       if (err?.code === 'ERR_REQUEST_CANCELED') return;
       setError(err?.message ?? 'Apple sign-in failed. Please try again.');
     } finally {
+      authInFlight.current = false;
       setLoading(false);
     }
   };
 
   const handleSubmit = async () => {
+    if (authInFlight.current) return;
     const emailTrimmed = email.trim();
-    const passwordTrimmed = password.trim();
+    const passwordValue = password;
     const nameTrimmed = name.trim();
 
-    if (!emailTrimmed || !passwordTrimmed) {
+    if (!emailTrimmed || !passwordValue.trim()) {
       setError('Email and password are required.');
       return;
     }
@@ -181,7 +189,7 @@ export default function AuthScreen() {
       setError('Name is required.');
       return;
     }
-    if (mode === 'register' && passwordTrimmed.length < 6) {
+    if (mode === 'register' && passwordValue.length < 6) {
       setError('Password must be at least 6 characters.');
       return;
     }
@@ -191,12 +199,13 @@ export default function AuthScreen() {
     }
 
     setError('');
+    authInFlight.current = true;
     setLoading(true);
     try {
       if (mode === 'register') {
         const { data, error: signUpError } = await supabase.auth.signUp({
           email: emailTrimmed,
-          password: passwordTrimmed,
+          password: passwordValue,
           options: {
             data: { full_name: nameTrimmed },
             emailRedirectTo: 'ode://auth/callback',
@@ -217,7 +226,7 @@ export default function AuthScreen() {
       } else {
         const { error: signInError } = await supabase.auth.signInWithPassword({
           email: emailTrimmed,
-          password: passwordTrimmed,
+          password: passwordValue,
         });
 
         if (signInError) throw signInError;
@@ -227,6 +236,7 @@ export default function AuthScreen() {
     } catch (err: any) {
       setError(err?.message ?? (mode === 'login' ? 'Invalid email or password.' : 'Registration failed.'));
     } finally {
+      authInFlight.current = false;
       setLoading(false);
     }
   };

@@ -1,0 +1,71 @@
+appId: com.talktoode.app
+incompleteReason: Active-session resume and disposable therapist approve/decline fixtures remain required.
+---
+- stopApp
+- launchApp
+- extendedWaitUntil:
+    visible:
+      id: home-screen
+    timeout: 60000
+- tapOn:
+    id: tab-settings
+- tapOn:
+    id: settings-profile-card
+- assertQaIdentity:
+    timeout: 30000
+- tapOn:
+    id: settings-profile-modal-close
+- tapOn:
+    id: tab-explore
+- scrollUntilVisible:
+    element:
+      id: explore-header
+    direction: UP
+- scrollUntilVisible:
+    element:
+      id: explore-therapy
+    direction: DOWN
+- tapOn:
+    id: explore-therapy
+- extendedWaitUntil:
+    visible:
+      id: therapy-index-screen
+    timeout: 30000
+- assertVisible: Start a Session
+- tapOn:
+    id: therapy-index-plans-link
+- assertVisible:
+    id: therapy-pricing-screen
+- assertVisible: THERAPY SESSIONS
+- assertNotVisible:
+    id: therapy-pricing-cta-single
+- assertVisible:
+    id: therapy-pricing-cta-pro
+- tapOn:
+    id: therapy-pricing-back
+- assertVisible:
+    id: therapy-index-screen
+- tapOn:
+    id: therapy-index-start
+- assertVisible:
+    id: persona-screen
+- tapOn:
+    id: persona-back
+- back
+- tapOn:
+    id: tab-settings
+- scrollUntilVisible:
+    element:
+      text: Therapist requests
+    direction: DOWN
+- tapOn: Therapist requests
+- extendedWaitUntil:
+    visible:
+      id: therapist-requests-screen
+    timeout: 30000
+- assertVisible: Therapist Requests
+# Do not approve or decline any pre-existing, unidentified request.
+- tapOn:
+    id: therapist-requests-back
+- assertVisible:
+    id: settings-screen

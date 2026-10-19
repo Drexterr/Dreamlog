@@ -13,6 +13,28 @@ jobs:
   backend:
     name: Backend (go vet + race tests)
     runs-on: ubuntu-latest
+    env:
+      ODE_TEST_DATABASE_URL: postgres://ode_test:regression-local-only@127.0.0.1:54331/ode_test?sslmode=disable
+      ODE_TEST_REDIS_ADDR: 127.0.0.1:63791
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: ode_test
+          POSTGRES_USER: ode_test
+          POSTGRES_PASSWORD: regression-local-only
+        ports:
+          - 54331:5432
+        options: >-
+          --health-cmd "pg_isready -U ode_test -d ode_test"
+          --health-interval 2s --health-timeout 3s --health-retries 30
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 63791:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 2s --health-timeout 3s --health-retries 30
     steps:
       - uses: actions/checkout@v4
 
@@ -26,11 +48,18 @@ jobs:
         working-directory: backend
 
       - name: go test -race
-        run: go test -race ./...
+        run: go test -race -tags=integration -coverprofile=coverage.out ./...
         working-directory: backend
 
+      - name: Upload backend coverage
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-coverage
+          path: backend/coverage.out
+
   mobile-typecheck:
-    name: Mobile (tsc --noEmit)
+    name: Mobile (types + regression tests)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -48,6 +77,26 @@ jobs:
       - name: TypeScript check
         run: npx tsc --noEmit
         working-directory: mobile
+
+      - name: Regression harness tests
+        run: node --test scripts/regression/redact-ui.test.mjs scripts/regression/coverage-checkpoint.test.mjs scripts/regression/phone-ui.test.mjs
+
+      - name: Mobile regression tests
+        run: >-
+          npm test -- --runInBand --coverage
+          --collectCoverageFrom='src/**/*.{ts,tsx}'
+          --collectCoverageFrom='app/**/*.{ts,tsx}'
+          --collectCoverageFrom='!**/__tests__/**'
+          --collectCoverageFrom='!src/types/**'
+          --collectCoverageFrom='!src/testIDs.ts'
+        working-directory: mobile
+
+      - name: Upload mobile coverage
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mobile-coverage
+          path: mobile/coverage/
 
   portal-typecheck:
     name: Therapist portal (tsc --noEmit)

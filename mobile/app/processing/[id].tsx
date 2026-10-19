@@ -62,17 +62,27 @@ export default function ProcessingScreen() {
 
   useEffect(() => {
     if (!id) return;
+    let active = true;
+    let inFlight = false;
+    const startedAt = Date.now();
+    pollCount.current = 0;
 
     const iv = setInterval(async () => {
-      pollCount.current += 1;
-      if (pollCount.current > MAX_POLLS) {
+      if (!active) return;
+      if (Date.now() - startedAt > MAX_POLLS * POLL_INTERVAL_MS) {
+        active = false;
         clearInterval(iv);
         setFailed(true);
         return;
       }
+      if (inFlight) return;
+      inFlight = true;
+      pollCount.current += 1;
       try {
         const entry = await api.getEntry(id);
+        if (!active) return;
         if (entry.status === 'completed') {
+          active = false;
           clearInterval(iv);
           const endDate = new Date();
           const durationSec = entry.duration_sec ?? 300;
@@ -80,15 +90,18 @@ export default function ProcessingScreen() {
           writeMindfulSession({ startDate, endDate });
           router.replace(`/reflection/${id}`);
         } else if (entry.status === 'failed') {
+          active = false;
           clearInterval(iv);
           setFailed(true);
         }
       } catch {
         // network blip - keep trying
+      } finally {
+        inFlight = false;
       }
     }, POLL_INTERVAL_MS);
 
-    return () => clearInterval(iv);
+    return () => { active = false; clearInterval(iv); };
   }, [id]);
 
   return (

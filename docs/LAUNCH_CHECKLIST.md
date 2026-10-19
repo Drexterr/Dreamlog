@@ -25,15 +25,15 @@ Left to do (needs your store accounts):
 - [ ] **Create the 4 IAP products** in App Store Connect and the Play Console, as
       *consumable* products with these exact IDs (they must match
       `backend/internal/services/iap.go` and `mobile/src/services/iap.ts`):
-      `com.ode.app.plus.monthly`, `com.ode.app.plus.annual`,
-      `com.ode.app.pro.monthly`, `com.ode.app.pro.annual`.
+      `com.talktoode.app.plus.monthly`, `com.talktoode.app.plus.annual`,
+      `com.talktoode.app.pro.monthly`, `com.talktoode.app.pro.annual`.
       List prices per docs/PRICING.md.
 - [ ] **Set backend env on Railway (API process):** `APPLE_SHARED_SECRET` (App Store
       Connect → App → App Information → App-Specific Shared Secret) and
       `GOOGLE_PLAY_CREDENTIALS_JSON` (service account with Play Console access —
       Monetization → "View financial data" permission; can reuse the FCM service
       account if granted). Optional: `GOOGLE_PLAY_PACKAGE_NAME` (defaults to
-      `com.ode.app`). While unset, `/billing/upgrade` grants plans WITHOUT
+      `com.talktoode.app`). While unset, `/billing/upgrade` grants plans WITHOUT
       verification (dev stub) — do not launch without these.
 - [ ] **Rebuild both apps** (`eas build`) — `expo-iap` is a native module; purchases do
       not work in Expo Go or via OTA update.
@@ -73,9 +73,9 @@ Left to do (needs your store accounts):
 
 ## 2. Store compliance 🔴
 
-- [ ] **Host a privacy policy** and add the URL to App Store Connect + Play Console. Required —
-      the app records voice, stores mental-health content, and writes to HealthKit. Add
-      Privacy Policy / Terms links to the Settings screen too (reviewers look for them).
+- [x] ✅ **Privacy policy hosted** at https://dreamlog-48f94.web.app/privacy and /terms
+      (`dreamlog.app` itself isn't DNS-pointed at Firebase Hosting yet - use the *.web.app
+      URL for store submission now, repoint later). Settings screen links updated to match.
 - [ ] **Fill the Play Console Data Safety form** (audio collected, transcripts stored,
       health data, account deletion available).
 - [ ] **Fill Apple's App Privacy "nutrition label"** (data linked to user: audio → transcripts,
@@ -110,8 +110,8 @@ produces the iOS binary from the same code. The items below are the iOS-only set
 - [ ] **Enroll in the Apple Developer Program** ($99/year) — do this first, approval can take
       1–2 days. Everything below needs it.
 - [ ] **Supabase: enable the Apple provider** (Dashboard → Authentication → Providers → Apple,
-      bundle ID `com.ode.app`). Without this, the new Apple button returns an error.
-- [ ] **Firebase: add an iOS app** (bundle `com.ode.app`) and download
+      bundle ID `com.talktoode.app`). Without this, the new Apple button returns an error.
+- [ ] **Firebase: add an iOS app** (bundle `com.talktoode.app`) and download
       `GoogleService-Info.plist` → save as `mobile/GoogleService-Info.plist` and add
       `"googleServicesFile": "./GoogleService-Info.plist"` under `ios` in `app.json`.
       ⚠️ iOS EAS builds will FAIL until this file exists (the RN Firebase plugin requires it).

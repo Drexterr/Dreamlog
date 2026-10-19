@@ -1,0 +1,48 @@
+# Remove only the known zero-note C fixture left by the route-expectation failure.
+appId: com.talktoode.app
+env:
+  CLIENT_NAME: "Ode QA Dashboard C (20261014)"
+---
+- stopApp
+- launchApp
+- extendedWaitUntil:
+    visible:
+      id: home-screen
+    timeout: 60000
+- tapOn:
+    id: tab-settings
+- tapOn:
+    id: settings-profile-card
+- assertQaIdentity:
+    email: bharatbanthia2207+odeqa-therapist-20261014@gmail.com
+    timeout: 30000
+- tapOn:
+    id: settings-profile-modal-close
+- scrollUntilVisible:
+    element:
+      text: Therapist workspace
+    direction: DOWN
+- tapOn: Therapist workspace
+- extendedWaitUntil:
+    visible:
+      id: therapist-dashboard-screen
+    timeout: 30000
+- tapOn:
+    id: therapist-dashboard-my-clients
+- extendedWaitUntil:
+    visible: ${CLIENT_NAME_REGEX}
+    timeout: 30000
+- tapOn: ${CLIENT_ROW_REGEX}
+- assertVisible:
+    id: therapist-client-detail-screen
+- assertVisible: No sessions recorded yet\.
+- tapOn:
+    id: therapist-client-detail-delete
+- assertVisible: Delete client\?
+- tapOn:
+    id: android:id/button1
+- extendedWaitUntil:
+    visible:
+      id: therapist-clients-screen
+    timeout: 30000
+- assertNotVisible: ${CLIENT_NAME_REGEX}

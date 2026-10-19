@@ -16,21 +16,26 @@ CI test gate (`.github/workflows/test.yml`) · portal build artifacts untracked 
 store content drafted (`docs/STORE_SUBMISSION.md`) · confirmed **Railway is production** (Fly target is dead).
 
 **Only you can do (accounts/dashboards):**
-1. Play Console account ($25) + app record + internal testing track
-2. Create the 4 IAP consumable products; service account with financial-data access →
+1. ✅ Play Console account ($25) — done. Still needed: app record + internal testing track.
+   If it's a Personal account, also start the closed-test 12-tester/14-day clock ASAP (§2).
+2. Create the 4 IAP **one-time products** (not subscriptions — see docs/PRICING.md) as
+   Play Console **In-app products**; service account with financial-data access →
    `GOOGLE_PLAY_CREDENTIALS_JSON` on Railway
 3. `FCM_CREDENTIALS_JSON` + `FCM_PROJECT_ID` + `SENTRY_DSN` + real AI keys on Railway (API **and** worker)
-4. Point https://dreamlog.app at the portal hosting so /privacy and /terms resolve; create support@ inbox
+4. ✅ Privacy/terms already resolve at https://dreamlog-48f94.web.app/privacy + /terms — use
+   as-is. Fast follow (not a blocker): point https://dreamlog.app at the portal hosting; create
+   talktoode.dev@gmail.com support inbox
 5. Data Safety form + Health apps declaration + content rating (drafted answers in `docs/STORE_SUBMISSION.md`)
 6. Screenshots + feature graphic; seed demo account
 7. `eas build` (native modules: push, IAP, Sentry need a rebuild — OTA is not enough) → license-tester
-   IAP test → internal track soak → staged production rollout
+   IAP test → closed-test tester recruitment (if Personal account) → internal track soak → staged
+   production rollout
 
 ---
 
 ## 1. Code readiness — ✅ done (verified in repo)
 
-- [x] Package `com.ode.app` set in `app.json` → `android.package`
+- [x] Package `com.talktoode.app` set in `app.json` → `android.package`
 - [x] `google-services.json` present (gitignored, injected at build) — Android Firebase config works
 - [x] Permissions declared: `RECORD_AUDIO`, `MODIFY_AUDIO_SETTINGS`, `POST_NOTIFICATIONS` (Android 13 runtime prompt handled in `src/services/push.ts`)
 - [x] Push client code done: FCM token fetch + `POST /devices` + token-rotation re-registration, fail-silent
@@ -46,19 +51,27 @@ store content drafted (`docs/STORE_SUBMISSION.md`) · confirmed **Railway is pro
 
 ## 2. Play Console setup 🔴
 
-- [ ] 🔴 **Play Console developer account** ($25 one-time) + create the app (package `com.ode.app`)
+- [x] ✅ **Play Console developer account** ($25 one-time) — approved.
+      If this was a **Personal** account (created after Nov 13, 2023), Google requires a
+      **closed test with ≥12 testers, opted in continuously for 14 days**, before granting
+      production/public-listing access. Start recruiting testers now (§7 below) - this is
+      the long pole in the whole timeline, not code or store-listing work. Organization
+      accounts are exempt from this.
+- [ ] 🔴 **Create the app record** in Play Console (package `com.talktoode.app`)
 - [ ] 🔴 **Upload signing**: let EAS manage the upload keystore; opt in to Play App Signing on first upload
 - [ ] 🟡 Set up an **internal testing track** first — required anyway for IAP license testers
+      (internal testing has no tester-count/duration requirement; it's the *closed* track that
+      needs the 12/14-day minimum before production access)
 
 ## 3. Payments (IAP) 🔴
 
 - [ ] 🔴 **Create the 4 consumable products in Play Console** with these exact IDs
       (must match `backend/internal/services/iap.go` + `mobile/src/services/iap.ts`):
-      `com.ode.app.plus.monthly`, `com.ode.app.plus.annual`,
-      `com.ode.app.pro.monthly`, `com.ode.app.pro.annual` — prices per docs/PRICING.md
+      `com.talktoode.app.plus.monthly`, `com.talktoode.app.plus.annual`,
+      `com.talktoode.app.pro.monthly`, `com.talktoode.app.pro.annual` — prices per docs/PRICING.md
 - [ ] 🔴 **Set `GOOGLE_PLAY_CREDENTIALS_JSON` on the backend** — service account with Play Console
       "View financial data" permission (can reuse the FCM service account if granted).
-      Optional `GOOGLE_PLAY_PACKAGE_NAME` (defaults to `com.ode.app`).
+      Optional `GOOGLE_PLAY_PACKAGE_NAME` (defaults to `com.talktoode.app`).
       While unset, `/billing/upgrade` grants plans WITHOUT verification — do not launch without it
 - [x] ✅ **Therapy pay-per-use gap defused for v1 (2026-07-20)**: unbuyable "Single Session" card hidden;
       therapy ships free-first-session + Pro-only. 🟢 Fast follow: wire a session consumable SKU through IAP
@@ -78,8 +91,10 @@ store content drafted (`docs/STORE_SUBMISSION.md`) · confirmed **Railway is pro
 
 ## 5. Store compliance & listing 🟡
 
-- [ ] 🔴 **Host privacy policy + terms at a public URL** and add to the Play Console store listing.
-      Pages exist in the portal (`therapist-portal/src/app/privacy`, `/terms`) — use the deployed URLs
+- [x] ✅ **Privacy policy + terms are live** at https://dreamlog-48f94.web.app/privacy and /terms
+      (pages exist in `therapist-portal/src/app/`) — use these URLs in the Play Console store
+      listing now. 🟢 Fast follow: point `dreamlog.app` at Firebase Hosting and swap to the
+      branded domain later; not a blocker.
 - [x] ✅ **Privacy Policy / Terms links added to Settings** (2026-07-20) — domain must serve the portal pages
 - [ ] 🔴 **Data Safety form**: audio collected (processed, then deleted), transcripts stored, health data,
       email, mental-health content, account deletion available in-app
@@ -105,7 +120,14 @@ store content drafted (`docs/STORE_SUBMISSION.md`) · confirmed **Railway is pro
 - [ ] Add `SENTRY_AUTH_TOKEN` to EAS env so release builds upload source maps
 - [ ] Production build: `make mobile-build-prod` (.aab)
 - [ ] `make mobile-submit-android` → internal testing track
+- [ ] 🔴 **If the Play Console account is Personal**: create a **closed testing** track,
+      add ≥12 testers by email, and get them to actually install + open the app and stay
+      opted in continuously for 14 days. This is a hard Play requirement before production
+      access is granted (see §2) — start this the moment you have a working internal build;
+      it's the longest lead time in this whole checklist, longer than any code work left.
 - [ ] 🟢 Soak on internal/closed track ≥1 week; watch Android Vitals + Sentry
+- [ ] Apply for production access on the Play Console dashboard once the closed-test
+      requirement is met (skip if Organization account)
 - [ ] Promote to production rollout (staged %, e.g. 20% → 100%)
 
 ## 8. Repo hygiene / CI (pre-launch should-do) 🟡
