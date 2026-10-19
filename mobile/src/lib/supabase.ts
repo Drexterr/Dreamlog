@@ -1,18 +1,36 @@
 import { createClient } from '@supabase/supabase-js';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Linking } from 'react-native';
-import { storeToken, clearToken } from '../api/client';
+import { AppState, Linking } from 'react-native';
+import { storeToken, clearToken, setAuthRefresher } from '../api/client';
+import { secureSessionStorage } from './secureStorage';
 
 const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY!;
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
-    storage: AsyncStorage,
+    // Keychain / keystore, not plaintext AsyncStorage: the session holds the
+    // long-lived refresh token (migrated from AsyncStorage on first read).
+    storage: secureSessionStorage,
     autoRefreshToken: true,
     persistSession: true,
     detectSessionInUrl: false,
   },
+});
+
+// Supabase's React Native guide: only auto-refresh while foregrounded, and
+// refresh immediately on resume so the first request after a long background
+// doesn't go out with an expired token.
+if (AppState.currentState === 'active') supabase.auth.startAutoRefresh();
+AppState.addEventListener('change', (state) => {
+  if (state === 'active') supabase.auth.startAutoRefresh();
+  else supabase.auth.stopAutoRefresh();
+});
+
+// Lets the API client recover from a 401 by refreshing the session once.
+setAuthRefresher(async () => {
+  const { data, error } = await supabase.auth.refreshSession();
+  if (error) return null;
+  return data.session?.access_token ?? null;
 });
 
 // Keep the axios bearer token in sync with Supabase session changes.

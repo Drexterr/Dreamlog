@@ -65,6 +65,31 @@ http.interceptors.request.use(async (config) => {
   return config;
 });
 
+// ── 401 → refresh once and retry ─────────────────────────────────────────────
+// The access token goes stale while the app is backgrounded. The auth layer
+// (src/lib/supabase.ts) registers a refresher; it is injected rather than
+// imported to avoid an import cycle. Concurrent 401s share one refresh.
+let authRefresher: (() => Promise<string | null>) | null = null;
+let refreshInFlight: Promise<string | null> | null = null;
+
+export function setAuthRefresher(fn: () => Promise<string | null>): void {
+  authRefresher = fn;
+}
+
+http.interceptors.response.use(undefined, async (error) => {
+  const original = error?.config as (typeof error.config & { _authRetried?: boolean }) | undefined;
+  if (error?.response?.status !== 401 || !original || original._authRetried || !authRefresher) {
+    throw error;
+  }
+  original._authRetried = true;
+  refreshInFlight ??= authRefresher().finally(() => { refreshInFlight = null; });
+  const fresh = await refreshInFlight.catch(() => null);
+  if (!fresh) throw error;
+  await storeToken(fresh);
+  original.headers = { ...original.headers, Authorization: `Bearer ${fresh}` };
+  return http.request(original);
+});
+
 // ── Auth API response ────────────────────────────────────────────────────────
 export interface AuthResponse {
   user: User;
