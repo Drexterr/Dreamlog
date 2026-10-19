@@ -16,8 +16,8 @@ import (
 
 // TranscriptionWorker is the main pipeline worker.
 // Phase 2 pipeline:
-//   Audio download → Whisper → Crisis screen → Context build → Claude analysis
-//   → Store analysis → Schedule nudge → Delete audio
+//   Audio download → Whisper → Store transcript → Delete audio → Crisis screen
+//   → Context build → Claude analysis → Store analysis → Schedule nudge
 type TranscriptionWorker struct {
 	queue           jobQueue
 	entryRepo       entryStore
@@ -128,27 +128,38 @@ func (w *TranscriptionWorker) processJob(ctx context.Context, payload []byte) {
 	if err := w.handle(ctx, &job, log); err != nil {
 		log.Warn("worker: job failed", zap.Error(err), zap.Duration("elapsed", time.Since(start)))
 
+		// Final status writes must survive a shutdown-cancelled ctx, otherwise a
+		// deploy leaves the entry stuck in 'processing' forever.
+		wctx := context.WithoutCancel(ctx)
+
 		if job.Attempt >= w.maxRetries-1 {
 			log.Error("worker: max retries reached, moving to DLQ")
 			monitoring.CaptureErr(err, map[string]string{
 				"job":      "entry_pipeline",
 				"entry_id": job.EntryID.String(),
 			})
-			_ = w.entryRepo.SetFailed(ctx, job.EntryID, "max retries exceeded: "+err.Error())
-			_ = w.queue.EnqueueDLQ(ctx, payload, err.Error())
+			_ = w.entryRepo.SetFailed(wctx, job.EntryID, "max retries exceeded: "+err.Error())
+			_ = w.queue.EnqueueDLQ(wctx, payload, err.Error())
 			return
 		}
 
 		backoff := time.Duration(math.Pow(2, float64(job.Attempt))) * 2 * time.Second
 		log.Info("worker: retrying after backoff", zap.Duration("backoff", backoff))
-		time.Sleep(backoff)
+		select {
+		case <-time.After(backoff):
+		case <-ctx.Done():
+		}
 
+		// Put the entry back to 'pending' BEFORE re-enqueueing, so whichever
+		// worker picks the job up can claim it. 'failed' is reserved for the
+		// terminal DLQ path - the client stops polling on it.
+		if serr := w.entryRepo.SetRetrying(wctx, job.EntryID, err.Error()); serr != nil {
+			log.Error("worker: failed to mark entry for retry", zap.Error(serr))
+		}
 		job.Attempt++
-		if enqErr := w.queue.Enqueue(ctx, &job); enqErr != nil {
+		if enqErr := w.queue.Enqueue(wctx, &job); enqErr != nil {
 			log.Error("worker: failed to re-enqueue", zap.Error(enqErr))
-			_ = w.entryRepo.SetFailed(ctx, job.EntryID, "re-enqueue failed: "+enqErr.Error())
-		} else {
-			_ = w.entryRepo.SetFailed(ctx, job.EntryID, err.Error())
+			_ = w.entryRepo.SetFailed(wctx, job.EntryID, "re-enqueue failed: "+enqErr.Error())
 		}
 		return
 	}
@@ -179,31 +190,50 @@ func (w *TranscriptionWorker) handle(ctx context.Context, job *models.Transcript
 		return fmt.Errorf("audio exceeds 30-minute limit")
 	}
 
-	// ── 3. Download + Whisper transcription ────────────────────────────────
-	log.Info("worker: downloading audio")
-	audioReader, err := w.storage.Download(ctx, job.AudioKey)
-	if err != nil {
-		return fmt.Errorf("download audio: %w", err)
-	}
-	defer audioReader.Close()
+	// ── 3. Transcript: reuse from a previous attempt, or Whisper it ────────
+	var transcript, language string
+	if entry.Transcript != nil && *entry.Transcript != "" {
+		// A previous attempt already transcribed (and deleted) the audio.
+		// Don't re-download or pay for Whisper again.
+		log.Info("worker: reusing transcript from previous attempt")
+		transcript = *entry.Transcript
+		if entry.Language != nil {
+			language = *entry.Language
+		}
+	} else {
+		log.Info("worker: downloading audio")
+		audioReader, err := w.storage.Download(ctx, job.AudioKey)
+		if err != nil {
+			return fmt.Errorf("download audio: %w", err)
+		}
+		log.Info("worker: transcribing via whisper")
+		whisperResult, err := w.transcriber.Transcribe(ctx, audioReader, job.EntryID.String()+".m4a")
+		audioReader.Close()
+		if err != nil {
+			return fmt.Errorf("whisper: %w", err)
+		}
+		if whisperResult.Text == "" {
+			return fmt.Errorf("whisper returned empty transcript")
+		}
+		transcript, language = whisperResult.Text, whisperResult.Language
 
-	log.Info("worker: transcribing via whisper")
-	whisperResult, err := w.transcriber.Transcribe(ctx, audioReader, job.EntryID.String()+".m4a")
-	if err != nil {
-		return fmt.Errorf("whisper: %w", err)
-	}
-	if whisperResult.Text == "" {
-		return fmt.Errorf("whisper returned empty transcript")
-	}
+		// Persist transcript immediately - before AI analysis.
+		if err := w.entryRepo.SetTranscript(ctx, job.EntryID, transcript, language); err != nil {
+			return fmt.Errorf("store transcript: %w", err)
+		}
 
-	// Persist transcript immediately - before AI analysis.
-	if err := w.entryRepo.SetTranscript(ctx, job.EntryID, whisperResult.Text, whisperResult.Language); err != nil {
-		return fmt.Errorf("store transcript: %w", err)
+		// ADR-005: audio is deleted as soon as the transcript is safely stored -
+		// before crisis screening or analysis, so no later failure (crash, DLQ,
+		// crisis branch) can leave the recording behind.
+		log.Info("worker: deleting audio")
+		if err := w.storage.Delete(ctx, job.AudioKey); err != nil {
+			log.Warn("worker: delete audio failed (non-fatal)", zap.Error(err))
+		}
 	}
 
 	// ── 4. Crisis detection ─────────────────────────────────────────────────
 	log.Info("worker: crisis screening")
-	crisis, err := w.crisisDetector.Screen(ctx, whisperResult.Text, job.UserCountry)
+	crisis, err := w.crisisDetector.Screen(ctx, transcript, job.UserCountry)
 	if err != nil {
 		// ADR-002 fail-safe: if the screener errors, uncertain = crisis.
 		log.Warn("worker: crisis detector error, failing safe (treating as crisis)", zap.Error(err))
@@ -212,23 +242,7 @@ func (w *TranscriptionWorker) handle(ctx context.Context, job *models.Transcript
 
 	if crisis.Detected {
 		log.Warn("worker: crisis detected, storing safe response")
-		analysis := &models.EntryAnalysis{
-			EntryID:    job.EntryID,
-			IsCrisis:   true,
-			Reflection: crisis.Response,
-			Summary:    "Entry flagged for immediate support.",
-			MoodScore:  10,
-			Topics:     []string{},
-			KeyQuotes:  []string{},
-		}
-		if _, err := w.analysisRepo.Upsert(ctx, job.EntryID, analysis); err != nil {
-			return fmt.Errorf("store crisis analysis: %w", err)
-		}
-		if err := w.entryRepo.SetCompleted(ctx, job.EntryID, whisperResult.Text, whisperResult.Language); err != nil {
-			return fmt.Errorf("complete crisis entry: %w", err)
-		}
-		// No nudge for crisis entries. Skip audio deletion for safety audit trail.
-		return nil
+		return w.storeCrisis(ctx, job, transcript, language, crisis.Response)
 	}
 
 	// ── 5. Build context + Claude analysis ─────────────────────────────────
@@ -242,6 +256,12 @@ func (w *TranscriptionWorker) handle(ctx context.Context, job *models.Transcript
 	claudeOut, err := w.claude.AnalyzeEntry(ctx, *ctxInput)
 	if err != nil {
 		return fmt.Errorf("claude analysis: %w", err)
+	}
+	if claudeOut.Crisis {
+		// The analysis model's SAFETY OVERRIDE fired even though the screener
+		// didn't - this is a crisis, never a blank normal reflection (ADR-002).
+		log.Warn("worker: analysis model flagged crisis, storing safe response")
+		return w.storeCrisis(ctx, job, transcript, language, services.CrisisResponse(job.UserCountry))
 	}
 
 	// ── 5b. Connection insight (cross-entry pattern) - non-fatal ────────────
@@ -276,7 +296,7 @@ func (w *TranscriptionWorker) handle(ctx context.Context, job *models.Transcript
 	if _, err := w.analysisRepo.Upsert(ctx, job.EntryID, analysis); err != nil {
 		return fmt.Errorf("store analysis: %w", err)
 	}
-	if err := w.entryRepo.SetCompleted(ctx, job.EntryID, whisperResult.Text, whisperResult.Language); err != nil {
+	if err := w.entryRepo.SetCompleted(ctx, job.EntryID, transcript, language); err != nil {
 		return fmt.Errorf("complete entry: %w", err)
 	}
 
@@ -288,15 +308,9 @@ func (w *TranscriptionWorker) handle(ctx context.Context, job *models.Transcript
 		}
 	}
 
-	// ── 8. Delete audio from storage ────────────────────────────────────────
-	log.Info("worker: deleting audio")
-	if err := w.storage.Delete(ctx, job.AudioKey); err != nil {
-		log.Warn("worker: delete audio failed (non-fatal)", zap.Error(err))
-	}
-
-	// ── 9. Extract people (relationship map) - non-fatal ────────────────────
-	if w.personExtractor != nil && w.personRepo != nil && whisperResult.Text != "" {
-		extracted, err := w.personExtractor.ExtractPeople(ctx, whisperResult.Text)
+	// ── 8. Extract people (relationship map) - non-fatal ────────────────────
+	if w.personExtractor != nil && w.personRepo != nil && transcript != "" {
+		extracted, err := w.personExtractor.ExtractPeople(ctx, transcript)
 		if err != nil {
 			log.Warn("worker: person extraction failed (non-fatal)", zap.Error(err))
 		} else if len(extracted.People) > 0 {
@@ -306,5 +320,27 @@ func (w *TranscriptionWorker) handle(ctx context.Context, job *models.Transcript
 		}
 	}
 
+	return nil
+}
+
+// storeCrisis persists the crisis-resource analysis and completes the entry.
+// No nudge is scheduled for crisis entries. The audio was already deleted
+// right after transcription - ADR-005 makes no exception for crisis entries.
+func (w *TranscriptionWorker) storeCrisis(ctx context.Context, job *models.TranscriptionJob, transcript, language, response string) error {
+	analysis := &models.EntryAnalysis{
+		EntryID:    job.EntryID,
+		IsCrisis:   true,
+		Reflection: response,
+		Summary:    "Entry flagged for immediate support.",
+		MoodScore:  10,
+		Topics:     []string{},
+		KeyQuotes:  []string{},
+	}
+	if _, err := w.analysisRepo.Upsert(ctx, job.EntryID, analysis); err != nil {
+		return fmt.Errorf("store crisis analysis: %w", err)
+	}
+	if err := w.entryRepo.SetCompleted(ctx, job.EntryID, transcript, language); err != nil {
+		return fmt.Errorf("complete crisis entry: %w", err)
+	}
 	return nil
 }

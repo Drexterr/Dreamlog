@@ -118,6 +118,17 @@ func (s *ClaudeService) AnalyzeEntry(ctx context.Context, input AnalyzeEntryInpu
 		return nil, fmt.Errorf("claude.AnalyzeEntry: unmarshal response: %w (raw: %s)", err, truncate(result, 200))
 	}
 
+	// The model's own SAFETY OVERRIDE. Return it as-is so the worker routes
+	// the entry down the crisis branch (ADR-002) instead of storing a blank reflection.
+	if output.Crisis {
+		return &output, nil
+	}
+
+	// A structurally empty analysis is a failure, never a silent success.
+	if strings.TrimSpace(output.Reflection) == "" && strings.TrimSpace(output.Summary) == "" {
+		return nil, fmt.Errorf("claude.AnalyzeEntry: response has no reflection or summary")
+	}
+
 	// Clamp mood_score to valid range.
 	if output.MoodScore < 1 {
 		output.MoodScore = 1

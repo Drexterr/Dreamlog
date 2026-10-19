@@ -26,6 +26,7 @@ type entryStore interface {
 	SetCompleted(ctx context.Context, id uuid.UUID, transcript, language string) error
 	SetTranscript(ctx context.Context, id uuid.UUID, transcript, language string) error
 	SetFailed(ctx context.Context, id uuid.UUID, errMsg string) error
+	SetRetrying(ctx context.Context, id uuid.UUID, errMsg string) error
 }
 
 type analysisStore interface {

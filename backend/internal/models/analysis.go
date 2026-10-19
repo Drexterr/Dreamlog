@@ -40,6 +40,10 @@ type EntryAnalysis struct {
 // ClaudeAnalysisOutput is the JSON structure Claude must return.
 // Field names match the prompt schema exactly.
 type ClaudeAnalysisOutput struct {
+	// Crisis is set when the model obeys the prompt's SAFETY OVERRIDE and
+	// returns {"crisis": true}. The worker must treat it exactly like a
+	// crisis-detector hit (ADR-002) - every other field is empty in that case.
+	Crisis        bool            `json:"crisis,omitempty"`
 	EmotionalTone []EmotionalTone `json:"emotional_tone"`
 	Topics        []string        `json:"topics"`
 	MoodScore     int             `json:"mood_score"`

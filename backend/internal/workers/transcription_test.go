@@ -55,6 +55,7 @@ type fakeEntryStore struct {
 	mu           sync.Mutex
 	entry        *models.Entry
 	setFailed    []string
+	setRetrying  []string
 	setCompleted bool
 	deleted      bool
 }
@@ -108,6 +109,17 @@ func (s *fakeEntryStore) SetFailed(_ context.Context, _ uuid.UUID, errMsg string
 	s.setFailed = append(s.setFailed, errMsg)
 	if s.entry != nil {
 		s.entry.Status = models.EntryStatusFailed
+		s.entry.RetryCount++
+	}
+	return nil
+}
+
+func (s *fakeEntryStore) SetRetrying(_ context.Context, _ uuid.UUID, errMsg string) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.setRetrying = append(s.setRetrying, errMsg)
+	if s.entry != nil && s.entry.Status != models.EntryStatusCompleted {
+		s.entry.Status = models.EntryStatusPending
 		s.entry.RetryCount++
 	}
 	return nil
@@ -455,7 +467,7 @@ func TestWorker_CrisisScreenerError_FailsSafeAsCrisis(t *testing.T) {
 	}
 }
 
-func TestWorker_CrisisDetected_AudioNotDeletedForAudit(t *testing.T) {
+func TestWorker_CrisisDetected_AudioDeleted(t *testing.T) {
 	entryID := uuid.New()
 	userID := uuid.New()
 	audioKey := "audio/test/crisis.aac"
@@ -466,8 +478,87 @@ func TestWorker_CrisisDetected_AudioNotDeletedForAudit(t *testing.T) {
 	payload := makeJobPayload(t, entryID, userID, audioKey)
 	f.worker.processJob(context.Background(), payload)
 
-	if len(f.storage.deleted) > 0 {
-		t.Error("audio must NOT be deleted for crisis entries (kept for safety audit trail)")
+	// ADR-005 has no crisis exception: the most sensitive recordings must not linger.
+	if len(f.storage.deleted) != 1 || f.storage.deleted[0] != audioKey {
+		t.Errorf("crisis entry audio must be deleted; deleted=%v", f.storage.deleted)
+	}
+}
+
+// C1: the analysis model's own {"crisis": true} must produce a crisis entry.
+func TestWorker_AnalysisModelCrisisFlag_StoresCrisisEntry(t *testing.T) {
+	entryID, userID := uuid.New(), uuid.New()
+	f := newWorkerFixture(entryID, userID, "audio/key")
+	f.ai.result = &models.ClaudeAnalysisOutput{Crisis: true}
+
+	f.worker.processJob(context.Background(), makeJobPayload(t, entryID, userID, "audio/key"))
+
+	if len(f.analysisStore.upserted) != 1 {
+		t.Fatalf("want one stored analysis, got %d", len(f.analysisStore.upserted))
+	}
+	got := f.analysisStore.upserted[0]
+	if !got.IsCrisis {
+		t.Error("model crisis flag must store is_crisis=true")
+	}
+	if got.Reflection == "" {
+		t.Error("model crisis flag must store crisis resources, not an empty reflection")
+	}
+	if f.nudge.calls > 0 {
+		t.Error("no nudge for a model-flagged crisis entry")
+	}
+	if f.entryStore.entry.Status != models.EntryStatusCompleted {
+		t.Errorf("entry status: want completed, got %s", f.entryStore.entry.Status)
+	}
+}
+
+// H3: a failure after the transcript is stored must not leave audio behind,
+// and the retry must reuse the transcript instead of re-running Whisper.
+func TestWorker_AnalysisFailure_AudioAlreadyDeleted_RetrySkipsWhisper(t *testing.T) {
+	entryID, userID := uuid.New(), uuid.New()
+	f := newWorkerFixture(entryID, userID, "audio/key")
+	f.ai.err = errors.New("claude down")
+
+	err := f.worker.handle(context.Background(), &models.TranscriptionJob{EntryID: entryID, UserID: userID, AudioKey: "audio/key"}, zap.NewNop())
+	if err == nil {
+		t.Fatal("analysis failure must be returned for retry")
+	}
+	if len(f.storage.deleted) != 1 {
+		t.Fatalf("audio must be deleted once the transcript is stored; deleted=%v", f.storage.deleted)
+	}
+
+	// Retry: Whisper would now fail (audio gone) - it must not be called.
+	f.ai.err = nil
+	f.ai.result = nil
+	f.transcriber.err = errors.New("whisper must not be called on retry")
+	f.entryStore.entry.Status = models.EntryStatusPending
+	if err := f.worker.handle(context.Background(), &models.TranscriptionJob{EntryID: entryID, UserID: userID, AudioKey: "audio/key", Attempt: 1}, zap.NewNop()); err != nil {
+		t.Fatalf("retry with stored transcript should succeed: %v", err)
+	}
+	if f.entryStore.entry.Status != models.EntryStatusCompleted {
+		t.Errorf("entry status: want completed, got %s", f.entryStore.entry.Status)
+	}
+}
+
+// H8: the entry is put back to pending (not failed) before re-enqueue, so the
+// retried job can be claimed and the client keeps polling.
+func TestWorker_Retry_SetsPendingBeforeEnqueue(t *testing.T) {
+	entryID, userID := uuid.New(), uuid.New()
+	f := newWorkerFixture(entryID, userID, "audio/key")
+	f.transcriber.err = errors.New("temporary")
+	f.transcriber.result = nil
+
+	f.worker.processJob(context.Background(), makeJobPayload(t, entryID, userID, "audio/key"))
+
+	if len(f.entryStore.setRetrying) != 1 {
+		t.Fatalf("want SetRetrying once, got %v", f.entryStore.setRetrying)
+	}
+	if len(f.entryStore.setFailed) != 0 {
+		t.Errorf("non-terminal retry must not mark the entry failed: %v", f.entryStore.setFailed)
+	}
+	if f.entryStore.entry.Status != models.EntryStatusPending {
+		t.Errorf("entry status: want pending, got %s", f.entryStore.entry.Status)
+	}
+	if ok, _ := f.entryStore.SetProcessing(context.Background(), entryID); !ok {
+		t.Error("re-enqueued job must be able to claim the entry")
 	}
 }
 
@@ -714,9 +805,10 @@ func TestWorker_ClaudeAnalysisFails_NoAnalysisStoredAndRetried(t *testing.T) {
 		t.Error("analysis must not be stored when Claude analysis fails")
 	}
 
-	// Audio must NOT be deleted - the job failed before the delete step.
-	if len(f.storage.deleted) > 0 {
-		t.Error("audio must not be deleted when Claude analysis fails")
+	// Audio IS deleted - the transcript was stored before analysis ran, and the
+	// retry reuses it (ADR-005, backend/CLAUDE.md invariant 3).
+	if len(f.storage.deleted) != 1 {
+		t.Error("audio must be deleted once the transcript is stored, even if analysis fails")
 	}
 
 	// Must be re-queued for retry (attempt 0 < maxRetries-1=2) or set failed.

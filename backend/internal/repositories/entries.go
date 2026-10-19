@@ -188,6 +188,22 @@ func (r *EntryRepository) SetCompleted(ctx context.Context, id uuid.UUID, transc
 }
 
 // SetFailed increments retry_count and stores the error message.
+// SetRetrying records a failed attempt and returns the entry to 'pending' so the
+// re-enqueued job can claim it. Called BEFORE the job is re-enqueued.
+func (r *EntryRepository) SetRetrying(ctx context.Context, id uuid.UUID, errMsg string) error {
+	const q = `
+		UPDATE entries
+		SET status = 'pending',
+		    error_msg = $2,
+		    retry_count = retry_count + 1
+		WHERE id = $1 AND status <> 'completed'`
+
+	if _, err := r.db.Exec(ctx, q, id, errMsg); err != nil {
+		return fmt.Errorf("entries.SetRetrying: %w", err)
+	}
+	return nil
+}
+
 func (r *EntryRepository) SetFailed(ctx context.Context, id uuid.UUID, errMsg string) error {
 	const q = `
 		UPDATE entries

@@ -134,8 +134,14 @@ func TestExpansionTranscriptionFailureBoundaries(t *testing.T) {
 			if err == nil || !strings.Contains(err.Error(), tc.want) {
 				t.Fatalf("want %q, got %v", tc.want, err)
 			}
-			if f.entryStore.setCompleted || len(f.storage.deleted) != 0 || f.nudge.calls != 0 {
+			if f.entryStore.setCompleted || f.nudge.calls != 0 {
 				t.Fatal("failed pipeline completed or ran success side effects")
+			}
+			// Audio is deleted as soon as the transcript is stored (ADR-005), so
+			// only failures before that point may leave it in storage.
+			afterTranscript := map[string]bool{"context": true, "analysis": true, "complete": true, "crisis complete": true}[tc.stage]
+			if afterTranscript != (len(f.storage.deleted) == 1) {
+				t.Fatalf("stage %q: unexpected audio deletion state %v", tc.stage, f.storage.deleted)
 			}
 		})
 	}

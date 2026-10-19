@@ -101,7 +101,7 @@ func TestAnalyzeEntry_ParsesAllSevenFields(t *testing.T) {
 }
 
 func TestAnalyzeEntry_MoodScoreClampedBelow1(t *testing.T) {
-	out := models.ClaudeAnalysisOutput{MoodScore: -10}
+	out := models.ClaudeAnalysisOutput{MoodScore: -10, Summary: "s", Reflection: "r"}
 	b, _ := json.Marshal(out)
 
 	srv := chatCompletionServer(t, string(b))
@@ -121,7 +121,7 @@ func TestAnalyzeEntry_MoodScoreClampedBelow1(t *testing.T) {
 }
 
 func TestAnalyzeEntry_MoodScoreClampedAbove100(t *testing.T) {
-	out := models.ClaudeAnalysisOutput{MoodScore: 150}
+	out := models.ClaudeAnalysisOutput{MoodScore: 150, Summary: "s", Reflection: "r"}
 	b, _ := json.Marshal(out)
 
 	srv := chatCompletionServer(t, string(b))
@@ -755,5 +755,30 @@ func TestAnalyzeEntry_DreamMode_StubReturnsDreamFields(t *testing.T) {
 	}
 	if out.VedicLens == "" {
 		t.Error("stub dream mode must return a non-empty vedic_lens")
+	}
+}
+
+// C1: the prompt's SAFETY OVERRIDE reply must surface as a crisis flag.
+func TestAnalyzeEntry_CrisisJSON(t *testing.T) {
+	srv := chatCompletionServer(t, `{"crisis": true}`)
+	defer srv.Close()
+	svc := NewClaudeService(&appconfig.AnthropicConfig{BaseURL: srv.URL, APIKey: "k", Model: "m"})
+
+	out, err := svc.AnalyzeEntry(context.Background(), AnalyzeEntryInput{Transcript: "test"})
+	if err != nil {
+		t.Fatalf("crisis reply must not error: %v", err)
+	}
+	if !out.Crisis {
+		t.Error(`{"crisis": true} must set Crisis`)
+	}
+}
+
+func TestAnalyzeEntry_EmptyAnalysis_ReturnsError(t *testing.T) {
+	srv := chatCompletionServer(t, `{"mood_score": 50}`)
+	defer srv.Close()
+	svc := NewClaudeService(&appconfig.AnthropicConfig{BaseURL: srv.URL, APIKey: "k", Model: "m"})
+
+	if _, err := svc.AnalyzeEntry(context.Background(), AnalyzeEntryInput{Transcript: "test"}); err == nil {
+		t.Error("an analysis with no reflection or summary must be an error, not a success")
 	}
 }
