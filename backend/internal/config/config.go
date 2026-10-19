@@ -12,6 +12,17 @@ import (
 // Config holds all runtime configuration loaded from environment variables.
 // No global state: pass *Config through dependency injection.
 type Config struct {
+	// AppEnv is "production" in prod. Production refuses to start with dev
+	// stubs or missing safety-critical secrets (see ProductionProblems).
+	AppEnv string
+	// TrustedProxies are the CIDRs whose X-Forwarded-For hops are trusted when
+	// resolving the client IP (rate limits, security logs). Defaults to private
+	// ranges: the platform edge appends the real client IP after any
+	// client-supplied (spoofable) entries.
+	TrustedProxies []string
+	// TrustedPlatformHeader, when set, is read for the client IP instead
+	// (e.g. "CF-Connecting-IP", "Fly-Client-IP").
+	TrustedPlatformHeader string
 	Server    ServerConfig
 	Database  DatabaseConfig
 	Redis     RedisConfig
@@ -143,6 +154,9 @@ type WorkerConfig struct {
 
 func Load() (*Config, error) {
 	cfg := &Config{
+		AppEnv:                getEnv("APP_ENV", "development"),
+		TrustedProxies:        splitCommaList(getEnv("TRUSTED_PROXIES", "10.0.0.0/8,172.16.0.0/12,192.168.0.0/16,100.64.0.0/10,127.0.0.0/8,fc00::/7,::1/128")),
+		TrustedPlatformHeader: getEnv("TRUSTED_PLATFORM_HEADER", ""),
 		Server: ServerConfig{
 			Port:         getEnv("PORT", "8080"),
 			ReadTimeout:  parseDuration("SERVER_READ_TIMEOUT", 30*time.Second),
@@ -300,4 +314,37 @@ func splitCommaList(v string) []string {
 		}
 	}
 	return out
+}
+
+// IsProduction reports whether APP_ENV=production.
+func (c *Config) IsProduction() bool { return c.AppEnv == "production" }
+
+// ProductionProblems lists configuration that is unsafe in production: dev
+// stubs that grant paid plans or fake AI output, and missing secrets that
+// would silently weaken safety or encryption. Empty outside production.
+// api=true also checks API-only settings (store verification).
+func (c *Config) ProductionProblems(api bool) []string {
+	if !c.IsProduction() {
+		return nil
+	}
+	var p []string
+	if c.Anthropic.StubAnalysis {
+		p = append(p, "STUB_AI_ANALYSIS must be false")
+	}
+	if c.Anthropic.APIKey == "" {
+		p = append(p, "ANTHROPIC_API_KEY is required (crisis Stage 2 and reflections)")
+	}
+	if c.Security.MasterEncryptionKey == "" {
+		p = append(p, "MASTER_ENCRYPTION_KEY is required (no JWT-secret-derived fallback in production)")
+	}
+	if c.Supabase.URL == "" {
+		p = append(p, "SUPABASE_URL is required")
+	}
+	if c.Storage.ProxyBaseURL != "" {
+		p = append(p, "STORAGE_PROXY_BASE_URL must be unset (dev-only unauthenticated upload proxy)")
+	}
+	if api && (c.IAP.AppleSharedSecret == "" || c.IAP.GooglePlayCredentialsJSON == "") {
+		p = append(p, "APPLE_SHARED_SECRET and GOOGLE_PLAY_CREDENTIALS_JSON are required (otherwise /billing/upgrade grants plans without a purchase)")
+	}
+	return p
 }

@@ -40,6 +40,9 @@ func main() {
 	if err != nil {
 		log.Fatal("config load failed", zap.Error(err))
 	}
+	if problems := cfg.ProductionProblems(true); len(problems) > 0 {
+		log.Fatal("unsafe production configuration (APP_ENV=production)", zap.Strings("problems", problems))
+	}
 
 	// ── Sentry (no-op when SENTRY_DSN unset) ──────────────────────────────────
 	defer monitoring.InitSentry(cfg.Sentry.DSN, "api", log)()
@@ -184,6 +187,8 @@ func main() {
 		IAPSvc:               iapSvc,
 		JWTSecret:            cfg.Supabase.JWTSecret,
 		SupabaseJWKSURL:      supabaseJWKSURL(cfg.Supabase.URL),
+		TrustedProxies:       cfg.TrustedProxies,
+		TrustedPlatform:      cfg.TrustedPlatformHeader,
 		AppBaseURL:           cfg.App.BaseURL,
 		MinimumAppVersion:    cfg.App.MinimumAppVersion,
 		AndroidStoreURL:      cfg.App.AndroidStoreURL,

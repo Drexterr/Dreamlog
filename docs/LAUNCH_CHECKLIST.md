@@ -183,6 +183,13 @@ Password: DreamTest!2026
 
 Backend on Railway (`https://dreamlog-production-f9e2.up.railway.app`):
 
+- [ ] **`APP_ENV=production` on the API and worker.** With it set, both refuse to start if a
+      dev stub is on or a safety-critical secret is missing (see `Config.ProductionProblems`):
+      STUB_AI_ANALYSIS, unset ANTHROPIC_API_KEY / MASTER_ENCRYPTION_KEY / SUPABASE_URL,
+      STORAGE_PROXY_BASE_URL, and (API only) missing IAP verification credentials.
+- [ ] Verify client IPs resolve correctly behind Railway (rate limits key on them): check the
+      `ip` field in security logs. Adjust `TRUSTED_PROXIES` / `TRUSTED_PLATFORM_HEADER` if needed.
+
 - [ ] `STUB_AI_ANALYSIS=false` and real `ANTHROPIC_API_KEY` set (reflections are canned stubs otherwise).
 - [ ] `OPENAI_API_KEY` + `WHISPER_API_URL` pointing at the real Whisper API.
 - [ ] `AZURE_TTS_KEY` + `AZURE_TTS_REGION` set for therapy voice output (Azure Speech:

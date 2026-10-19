@@ -49,12 +49,23 @@ type Deps struct {
 	AndroidStoreURL      string
 	IOSStoreURL          string
 	StorageProxyBaseURL  string
+	TrustedProxies       []string // CIDRs whose X-Forwarded-For hops are trusted
+	TrustedPlatform      string   // optional client-IP header set by the platform edge
 	Log                  *zap.Logger
 }
 
 func NewRouter(deps Deps) http.Handler {
 	gin.SetMode(gin.ReleaseMode)
 	r := gin.New()
+	// Client IP (rate limits, security logs) must not come from a
+	// client-supplied X-Forwarded-For entry: only hops from trusted proxy
+	// ranges are skipped, so the IP the platform edge appended wins.
+	if err := r.SetTrustedProxies(deps.TrustedProxies); err != nil {
+		deps.Log.Fatal("invalid TRUSTED_PROXIES", zap.Error(err))
+	}
+	if deps.TrustedPlatform != "" {
+		r.TrustedPlatform = deps.TrustedPlatform
+	}
 
 	r.Use(middleware.SecurityHeaders())
 	r.Use(middleware.MaxBodySize(middleware.MaxRequestBodyBytes))

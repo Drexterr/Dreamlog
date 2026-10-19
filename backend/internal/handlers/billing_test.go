@@ -301,7 +301,8 @@ func TestBillingHandler_GetPlan_ProUser_Returns200WithProPlan(t *testing.T) {
 	}
 }
 
-func TestBillingHandler_Upgrade_ToB2B_Returns200(t *testing.T) {
+// M9: b2b is never self-serve, even in the dev stub (it would be permanent).
+func TestBillingHandler_Upgrade_ToB2B_DevStub_Returns400(t *testing.T) {
 	user := billingTestUser(models.PlanFree)
 	svc := &fakePlanManager{}
 	r := newBillingTestRouter(t, svc, user)
@@ -313,11 +314,11 @@ func TestBillingHandler_Upgrade_ToB2B_Returns200(t *testing.T) {
 	req.Header.Set("Content-Type", "application/json")
 	r.ServeHTTP(w, req)
 
-	if w.Code != http.StatusOK {
-		t.Fatalf("expected 200, got %d: %s", w.Code, w.Body.String())
+	if w.Code != http.StatusBadRequest {
+		t.Fatalf("expected 400, got %d: %s", w.Code, w.Body.String())
 	}
-	if svc.upgradedPlan != models.PlanB2B {
-		t.Fatalf("expected plan upgraded to b2b, got %s", svc.upgradedPlan)
+	if svc.upgradedPlan == models.PlanB2B {
+		t.Fatal("b2b must not be granted")
 	}
 }
 

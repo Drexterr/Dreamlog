@@ -159,16 +159,17 @@ func (h *BillingHandler) Upgrade(c *gin.Context) {
 	case req.Plan == models.PlanFree:
 		// Self-downgrade: no purchase, no expiry.
 
-	case h.iap == nil || !h.iap.Configured():
-		// Dev stub: grant paid plans with a server-set expiry for the period.
-		if req.Plan != models.PlanB2B {
-			t := time.Now().Add(planDuration(period))
-			expiresAt = &t
-		}
-
 	case req.Plan == models.PlanB2B:
+		// Never self-serve - not even in the dev stub, where it would grant a
+		// permanent (no-expiry) b2b plan to anyone who asks.
 		_ = c.Error(apierr.BadRequest("b2b plans are provisioned by sales, not self-serve"))
 		return
+
+	case h.iap == nil || !h.iap.Configured():
+		// Dev stub: grant paid plans with a server-set expiry for the period.
+		// Production refuses to start without store credentials (APP_ENV=production).
+		t := time.Now().Add(planDuration(period))
+		expiresAt = &t
 
 	default:
 		// Production: verify the purchase with the store before granting anything.
