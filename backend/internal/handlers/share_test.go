@@ -176,8 +176,14 @@ func TestShareHandler_Create_Returns201WithTokenAndPasscode(t *testing.T) {
 	if resp.Passcode == "" {
 		t.Error("response must include a passcode")
 	}
-	if len(resp.Passcode) != 4 {
-		t.Errorf("passcode must be 4 digits, got %q", resp.Passcode)
+	// M15: 8 characters from the unambiguous alphabet (not a 4-digit PIN).
+	if len(resp.Passcode) != passcodeLength {
+		t.Errorf("passcode must be %d characters, got %q", passcodeLength, resp.Passcode)
+	}
+	for _, ch := range resp.Passcode {
+		if !strings.ContainsRune(passcodeAlphabet, ch) {
+			t.Errorf("passcode %q has character %q outside the alphabet", resp.Passcode, ch)
+		}
 	}
 	if resp.URL == "" {
 		t.Error("response must include a url")
@@ -557,5 +563,25 @@ func TestShareHandler_View_WrongPasscode_NotYetLocked_Returns401(t *testing.T) {
 
 	if w.Code != http.StatusUnauthorized {
 		t.Errorf("wrong passcode below lock threshold: want 401, got %d", w.Code)
+	}
+}
+
+// M15: the passcode can travel in a header (kept out of URL logs) and is
+// matched case-insensitively.
+func TestShareHandler_View_PasscodeHeader_Returns200(t *testing.T) {
+	repo := &fakeShareRepo{
+		getByTokenResp: &models.ShareLink{
+			ID: uuid.New(), UserID: uuid.New(), Token: "validtoken",
+			PasscodeHash: bcryptHash(t, "ABCD2345"),
+			ExpiresAt:    time.Now().Add(24 * time.Hour),
+		},
+	}
+	r := newShareTestRouter(t, repo, shareTestUser())
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest(http.MethodGet, "/view/validtoken", nil)
+	req.Header.Set("X-Share-Passcode", "abcd2345")
+	r.ServeHTTP(w, req)
+	if w.Code != http.StatusOK {
+		t.Fatalf("header passcode: want 200, got %d: %s", w.Code, w.Body.String())
 	}
 }

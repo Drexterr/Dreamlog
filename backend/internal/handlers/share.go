@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"math/big"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/dreamlog/backend/internal/middleware"
@@ -69,7 +70,7 @@ func (h *ShareHandler) Create(c *gin.Context) {
 	}
 	token := hex.EncodeToString(tokenBytes)
 
-	// Generate a 4-digit numeric passcode.
+	// Generate an 8-character alphanumeric passcode.
 	passcode, err := randomPasscode()
 	if err != nil {
 		_ = c.Error(apierr.Internal("failed to generate passcode"))
@@ -145,10 +146,16 @@ func (h *ShareHandler) Revoke(c *gin.Context) {
 }
 
 // GET /share/:token - public endpoint; validates passcode and returns shared data.
-// Passcode is passed as query param ?p=1234.
+// The passcode is read from the X-Share-Passcode header (preferred: headers
+// don't land in proxy, CDN or browser-history logs) or, for existing
+// viewers, the ?p= query param. Matching is case-insensitive.
 func (h *ShareHandler) View(c *gin.Context) {
 	token := c.Param("token")
-	passcode := c.Query("p")
+	passcode := c.GetHeader("X-Share-Passcode")
+	if passcode == "" {
+		passcode = c.Query("p")
+	}
+	passcode = strings.ToUpper(strings.TrimSpace(passcode))
 	if passcode == "" {
 		_ = c.Error(apierr.Unauthorized("passcode required"))
 		return
@@ -198,11 +205,22 @@ func (h *ShareHandler) View(c *gin.Context) {
 	c.JSON(http.StatusOK, view)
 }
 
-// randomPasscode returns a cryptographically random 4-digit string.
+// passcodeAlphabet omits look-alikes (0/O, 1/I/L) so the code can be read
+// out or retyped. 31 symbols ^ 8 ≈ 8.5e11 combinations - with the per-link
+// lifetime cap of 20 wrong guesses, brute force is not a realistic path.
+const passcodeAlphabet = "23456789ABCDEFGHJKMNPQRSTUVWXYZ"
+
+const passcodeLength = 8
+
+// randomPasscode returns a cryptographically random 8-character code.
 func randomPasscode() (string, error) {
-	n, err := rand.Int(rand.Reader, big.NewInt(10000))
-	if err != nil {
-		return "", err
+	out := make([]byte, passcodeLength)
+	for i := range out {
+		n, err := rand.Int(rand.Reader, big.NewInt(int64(len(passcodeAlphabet))))
+		if err != nil {
+			return "", err
+		}
+		out[i] = passcodeAlphabet[n.Int64()]
 	}
-	return fmt.Sprintf("%04d", n.Int64()), nil
+	return string(out), nil
 }

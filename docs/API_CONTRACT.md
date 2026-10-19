@@ -41,7 +41,9 @@ Response `200`:
 > `GET /share/:token` are rate-limited per client IP (HTTP `429` with a
 > `Retry-After` header when exceeded). Additionally, a share link locks itself
 > for 15 minutes after 5 consecutive incorrect passcodes (`429`), independent of
-> source IP. Local-auth accounts (`POST /auth/login`) get the same protection:
+> source IP, and expires permanently after 20 incorrect passcodes in total. Share passcodes
+> are 8 characters (A-Z without O/I/L, digits 2-9, case-insensitive) and should be sent in the
+> `X-Share-Passcode` header; `?p=` is still accepted for older viewers. Local-auth accounts (`POST /auth/login`) get the same protection:
 > after 5 consecutive wrong passwords for the same email, that account is
 > locked for 15 minutes (`429` with `Retry-After`), independent of source IP -
 > mirrors the share-link lockout. Unknown emails never accumulate a lockout

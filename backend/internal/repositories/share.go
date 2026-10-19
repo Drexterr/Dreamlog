@@ -54,6 +54,10 @@ func (r *ShareRepository) GetByToken(ctx context.Context, token string) (*models
 	return &sl, nil
 }
 
+// ShareMaxTotalFailures is the lifetime cap on wrong passcodes for one link;
+// reaching it expires the link permanently.
+const ShareMaxTotalFailures = 20
+
 // RecordFailedPasscode increments the failed-attempt counter for a link and,
 // once maxAttempts is reached, sets locked_until to now + lockDuration. It
 // returns the resulting locked_until (nil when not yet locked) so the caller
@@ -67,7 +71,13 @@ func (r *ShareRepository) RecordFailedPasscode(ctx context.Context, id uuid.UUID
 	// (Go's Duration.String(), e.g. "15m0s", is NOT valid Postgres interval input).
 	const q = `
 		UPDATE share_links
-		SET failed_attempts = CASE
+		SET total_failed_attempts = total_failed_attempts + 1,
+		    -- Lifetime cap reached: kill the link for good.
+		    expires_at = CASE
+		        WHEN total_failed_attempts + 1 >= $4 THEN LEAST(expires_at, NOW())
+		        ELSE expires_at
+		    END,
+		    failed_attempts = CASE
 		        WHEN failed_attempts + 1 >= $2 THEN 0
 		        ELSE failed_attempts + 1
 		    END,
@@ -79,7 +89,7 @@ func (r *ShareRepository) RecordFailedPasscode(ctx context.Context, id uuid.UUID
 		RETURNING locked_until`
 
 	var lockedUntil *time.Time
-	err := r.db.QueryRow(ctx, q, id, maxAttempts, lockDuration.Seconds()).Scan(&lockedUntil)
+	err := r.db.QueryRow(ctx, q, id, maxAttempts, lockDuration.Seconds(), ShareMaxTotalFailures).Scan(&lockedUntil)
 	if err != nil {
 		return nil, err
 	}
