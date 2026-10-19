@@ -223,6 +223,7 @@ func newNotesTestRouter(t *testing.T, lookup *fakeTherapistLookup, consent *fake
 func notesTestJWT(t *testing.T) string {
 	t.Helper()
 	claims := jwt.MapClaims{
+		"aud": "authenticated",
 		"sub":   "notes-test-sub",
 		"email": "notes@test.com",
 		"exp":   time.Now().Add(time.Hour).Unix(),

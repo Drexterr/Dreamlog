@@ -69,6 +69,7 @@ func relTestRouter(repo relationshipMapRepo) *gin.Engine {
 func relJWT(t *testing.T) string {
 	t.Helper()
 	claims := jwt.MapClaims{
+		"aud": "authenticated",
 		"sub":   "test-sub-rel-001",
 		"email": "test@dreamlog.dev",
 		"exp":   time.Now().Add(time.Hour).Unix(),

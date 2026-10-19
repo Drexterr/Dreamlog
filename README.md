@@ -289,7 +289,7 @@ The app opens a JWT paste screen. Generate a test token at **[jwt.io](https://jw
 | Field | Value |
 |---|---|
 | Algorithm | HS256 |
-| Payload | `{"sub":"test-user-001","email":"test@dreamlog.dev"}` |
+| Payload | `{"sub":"test-user-001","email":"test@dreamlog.dev","aud":"authenticated","exp":<unix time in the future>}` (`aud` and `exp` are required) |
 | Secret | your `SUPABASE_JWT_SECRET` from `.env` |
 
 Copy the encoded token and paste it into the app.

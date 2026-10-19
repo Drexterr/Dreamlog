@@ -19,6 +19,7 @@ import (
 func mintTestJWT(t *testing.T, secret, sub, email string, expiry time.Duration) string {
 	t.Helper()
 	claims := jwt.MapClaims{
+		"aud": "authenticated",
 		"sub":   sub,
 		"email": email,
 		"exp":   time.Now().Add(expiry).Unix(),
@@ -205,6 +206,7 @@ func TestAuthMiddleware_MissingSub_Returns401(t *testing.T) {
 	const secret = "my-jwt-secret"
 	// Token without a "sub" claim
 	claims := jwt.MapClaims{
+		"aud": "authenticated",
 		"email": "user@test.com",
 		"exp":   time.Now().Add(time.Hour).Unix(),
 	}

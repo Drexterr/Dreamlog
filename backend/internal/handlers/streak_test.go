@@ -56,6 +56,7 @@ func streakTestRouter(t *testing.T, freezer streakFreezer, aq analysisQuerier, t
 func streakTestJWT(t *testing.T) string {
 	t.Helper()
 	claims := jwt.MapClaims{
+		"aud": "authenticated",
 		"sub":   "test-sub-streak-001",
 		"email": "streak@test.com",
 		"exp":   time.Now().Add(time.Hour).Unix(),

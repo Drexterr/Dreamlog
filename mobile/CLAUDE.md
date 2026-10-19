@@ -149,7 +149,7 @@ EXPO_PUBLIC_API_URL=http://10.0.2.2:8080    # Android emulator
 EXPO_PUBLIC_API_URL=http://localhost:8080    # iOS simulator / web
 ```
 
-Auth in dev: generate JWT at jwt.io with payload `{"sub":"test-user-001","email":"test@dreamlog.dev"}` signed with `SUPABASE_JWT_SECRET` from root `.env`. Paste into the auth screen.
+Auth in dev: generate JWT at jwt.io with payload `{"sub":"test-user-001","email":"test@dreamlog.dev","aud":"authenticated","exp":<future unix time>}` signed with `SUPABASE_JWT_SECRET` from root `.env` (the backend rejects tokens without `aud: authenticated` or `exp`). Paste into the auth screen.
 
 ---
 

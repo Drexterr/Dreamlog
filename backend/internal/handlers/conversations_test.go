@@ -139,6 +139,7 @@ func newConvTestRouter(t *testing.T, cr services.ConvRepository, er services.Ent
 func convTestJWT(t *testing.T) string {
 	t.Helper()
 	claims := jwt.MapClaims{
+		"aud": "authenticated",
 		"sub":   "test-sub-001",
 		"email": "conv@test.com",
 		"exp":   time.Now().Add(time.Hour).Unix(),

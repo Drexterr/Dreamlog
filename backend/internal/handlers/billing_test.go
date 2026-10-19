@@ -67,6 +67,7 @@ func newBillingTestRouter(t *testing.T, svc planManager, testUser *models.User) 
 func billingTestJWT(t *testing.T) string {
 	t.Helper()
 	claims := jwt.MapClaims{
+		"aud": "authenticated",
 		"sub":   "test-sub-billing-001",
 		"email": "billing@test.com",
 		"exp":   time.Now().Add(time.Hour).Unix(),

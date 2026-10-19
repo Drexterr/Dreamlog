@@ -126,6 +126,7 @@ func newShareTestRouter(t *testing.T, repo *fakeShareRepo, testUser *models.User
 func shareTestJWT(t *testing.T) string {
 	t.Helper()
 	claims := jwt.MapClaims{
+		"aud": "authenticated",
 		"sub":   "test-sub-share-001",
 		"email": "share@test.com",
 		"exp":   time.Now().Add(time.Hour).Unix(),

@@ -103,6 +103,7 @@ func chapterTestRouter(repo lifeChapterRepo, claude chapterSummarizer, plan mode
 func chapterJWT(t *testing.T) string {
 	t.Helper()
 	claims := jwt.MapClaims{
+		"aud": "authenticated",
 		"sub":   "test-sub-chapter-001",
 		"email": "test@dreamlog.dev",
 		"exp":   time.Now().Add(time.Hour).Unix(),

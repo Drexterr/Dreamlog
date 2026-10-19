@@ -76,6 +76,7 @@ func newB2BTestRouter(t *testing.T, repo *fakeCompanyRepo, testUser *models.User
 func b2bTestJWT(t *testing.T) string {
 	t.Helper()
 	claims := jwt.MapClaims{
+		"aud": "authenticated",
 		"sub":   "test-sub-b2b-001",
 		"email": "b2b@test.com",
 		"exp":   time.Now().Add(time.Hour).Unix(),

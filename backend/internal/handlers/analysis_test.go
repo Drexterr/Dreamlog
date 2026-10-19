@@ -148,6 +148,7 @@ func newMoodTestRouter(t *testing.T, aq analysisQuerier, dr deviceRegistrar, tes
 func analysisTestJWT(t *testing.T) string {
 	t.Helper()
 	claims := jwt.MapClaims{
+		"aud": "authenticated",
 		"sub":   "test-sub-analysis-001",
 		"email": "analysis@test.com",
 		"exp":   time.Now().Add(time.Hour).Unix(),

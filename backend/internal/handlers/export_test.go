@@ -84,6 +84,7 @@ func newExportTestRouter(t *testing.T, eRepo *fakeExportRepo, uRepo *fakeUserNam
 func exportTestJWT(t *testing.T) string {
 	t.Helper()
 	claims := jwt.MapClaims{
+		"aud": "authenticated",
 		"sub":   "test-sub-export-001",
 		"email": "export@test.com",
 		"exp":   time.Now().Add(time.Hour).Unix(),

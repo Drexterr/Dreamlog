@@ -56,14 +56,25 @@ type jwksResponse struct {
 }
 
 // jwksCache fetches and caches EC public keys from a JWKS endpoint.
+//
+// Network fetches never happen under the lock, use a bounded HTTP timeout, and
+// a refresh for an unknown kid is rate-limited (jwksMinRefresh), so a flood of
+// tokens with random kids can neither stall every authenticated request nor
+// make the API hammer Supabase.
 type jwksCache struct {
-	mu        sync.RWMutex
-	byKid     map[string]*ecdsa.PublicKey
-	all       []*ecdsa.PublicKey
-	fetchedAt time.Time
-	ttl       time.Duration
-	endpoint  string
+	mu          sync.RWMutex
+	byKid       map[string]*ecdsa.PublicKey
+	all         []*ecdsa.PublicKey
+	fetchedAt   time.Time
+	lastAttempt time.Time
+	ttl         time.Duration
+	endpoint    string
+	refreshMu   sync.Mutex // serializes fetches (one in flight at a time)
 }
+
+const jwksMinRefresh = time.Minute
+
+var jwksHTTPClient = &http.Client{Timeout: 5 * time.Second}
 
 func newJWKSCache(endpoint string) *jwksCache {
 	return &jwksCache{
@@ -73,70 +84,57 @@ func newJWKSCache(endpoint string) *jwksCache {
 	}
 }
 
-func (c *jwksCache) get(kid string) (*ecdsa.PublicKey, error) {
+// lookup returns the key for kid from the current cache (kid "" = first key).
+func (c *jwksCache) lookup(kid string) (*ecdsa.PublicKey, bool, bool) {
 	c.mu.RLock()
+	defer c.mu.RUnlock()
 	fresh := time.Since(c.fetchedAt) < c.ttl && len(c.all) > 0
-	if fresh {
-		if kid != "" {
-			if k, ok := c.byKid[kid]; ok {
-				c.mu.RUnlock()
-				return k, nil
-			}
-		} else if len(c.all) > 0 {
-			k := c.all[0]
-			c.mu.RUnlock()
-			return k, nil
-		}
-	}
-	c.mu.RUnlock()
-
-	// Refresh.
-	c.mu.Lock()
-	defer c.mu.Unlock()
-
-	// Double-check after acquiring write lock.
-	if time.Since(c.fetchedAt) < c.ttl && len(c.all) > 0 {
-		if kid != "" {
-			if k, ok := c.byKid[kid]; ok {
-				return k, nil
-			}
-		} else if len(c.all) > 0 {
-			return c.all[0], nil
-		}
-	}
-
-	byKid, all, err := fetchJWKS(c.endpoint)
-	if err != nil {
-		// Return stale keys if we have them rather than failing hard.
+	if kid == "" {
 		if len(c.all) > 0 {
-			if kid != "" {
-				if k, ok := c.byKid[kid]; ok {
-					return k, nil
-				}
-				return c.all[0], nil
-			}
-			return c.all[0], nil
+			return c.all[0], true, fresh
 		}
-		return nil, err
+		return nil, false, fresh
+	}
+	k, ok := c.byKid[kid]
+	return k, ok, fresh
+}
+
+func (c *jwksCache) get(kid string) (*ecdsa.PublicKey, error) {
+	if k, ok, fresh := c.lookup(kid); ok && fresh {
+		return k, nil
 	}
 
-	c.byKid = byKid
-	c.all = all
-	c.fetchedAt = time.Now()
-
-	if kid != "" {
-		if k, ok := c.byKid[kid]; ok {
-			return k, nil
+	// Miss or stale: refresh, at most one fetch in flight and at most one per
+	// jwksMinRefresh. Concurrent callers wait for the in-flight fetch.
+	c.refreshMu.Lock()
+	if k, ok, fresh := c.lookup(kid); ok && fresh {
+		c.refreshMu.Unlock()
+		return k, nil
+	}
+	c.mu.RLock()
+	throttled := time.Since(c.lastAttempt) < jwksMinRefresh
+	c.mu.RUnlock()
+	if !throttled {
+		byKid, all, err := fetchJWKS(c.endpoint)
+		c.mu.Lock()
+		c.lastAttempt = time.Now()
+		if err == nil {
+			c.byKid, c.all, c.fetchedAt = byKid, all, time.Now()
 		}
+		c.mu.Unlock()
 	}
-	if len(c.all) > 0 {
-		return c.all[0], nil
+	c.refreshMu.Unlock()
+
+	// Stale keys are still served when a refresh fails, but an unknown kid is
+	// never mapped to some other key.
+	if k, ok, _ := c.lookup(kid); ok {
+		return k, nil
 	}
-	return nil, fmt.Errorf("no matching key found in JWKS")
+	return nil, fmt.Errorf("no JWKS key matches kid %q", kid)
 }
 
 func fetchJWKS(endpoint string) (map[string]*ecdsa.PublicKey, []*ecdsa.PublicKey, error) {
-	resp, err := http.Get(endpoint) //nolint:noctx
+	resp, err := jwksHTTPClient.Get(endpoint) //nolint:noctx
 	if err != nil {
 		return nil, nil, fmt.Errorf("fetch jwks: %w", err)
 	}
@@ -186,8 +184,14 @@ func AuthMiddleware(jwtSecret, jwksURL string, userSvc userProvisioner, log *zap
 	hsKey := []byte(jwtSecret)
 
 	var cache *jwksCache
+	// Supabase issues ES256 tokens with iss = <SUPABASE_URL>/auth/v1, which is
+	// the JWKS URL minus its well-known suffix.
+	esIssuer := ""
 	if jwksURL != "" {
 		cache = newJWKSCache(jwksURL)
+		if strings.HasSuffix(jwksURL, "/.well-known/jwks.json") {
+			esIssuer = strings.TrimSuffix(jwksURL, "/.well-known/jwks.json")
+		}
 	}
 
 	keyFunc := func(token *jwt.Token) (interface{}, error) {
@@ -215,7 +219,14 @@ func AuthMiddleware(jwtSecret, jwksURL string, userSvc userProvisioner, log *zap
 		claims := &supabaseClaims{}
 		token, err := jwt.ParseWithClaims(rawToken, claims, keyFunc,
 			jwt.WithValidMethods([]string{"HS256", "ES256"}),
+			// Tokens without exp would otherwise be valid forever, and any token
+			// signed with the shared secret for another audience would pass.
+			jwt.WithExpirationRequired(),
+			jwt.WithAudience("authenticated"),
 		)
+		if err == nil && token.Method.Alg() == "ES256" && esIssuer != "" && claims.Issuer != esIssuer {
+			err = fmt.Errorf("unexpected issuer %q", claims.Issuer)
+		}
 		if err != nil || !token.Valid {
 			log.Warn("invalid jwt", zap.Error(err))
 			c.AbortWithStatusJSON(http.StatusUnauthorized, apierr.Unauthorized("invalid or expired token"))

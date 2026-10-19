@@ -115,6 +115,7 @@ func newTherapyTestRouter(t *testing.T, svc therapyServicer, presigner therapyPr
 func therapyTestJWT(t *testing.T) string {
 	t.Helper()
 	claims := jwt.MapClaims{
+		"aud": "authenticated",
 		"sub": "test-sub-therapy-001", "email": "t@test.com",
 		"exp": time.Now().Add(time.Hour).Unix(),
 	}

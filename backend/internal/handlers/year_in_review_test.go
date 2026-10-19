@@ -57,6 +57,7 @@ func annualReviewTestRouter(repo annualReviewListRepo, plan models.Plan) (*gin.E
 func annualReviewJWT(t *testing.T) string {
 	t.Helper()
 	claims := jwt.MapClaims{
+		"aud": "authenticated",
 		"sub":   "test-sub-annual-001",
 		"email": "test@dreamlog.dev",
 		"exp":   time.Now().Add(time.Hour).Unix(),

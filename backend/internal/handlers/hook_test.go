@@ -84,6 +84,7 @@ func newHookTestRouter(t *testing.T, h *HookHandler, testUser *models.User) *gin
 func hookTestJWT(t *testing.T) string {
 	t.Helper()
 	claims := jwt.MapClaims{
+		"aud": "authenticated",
 		"sub":   "hook-test-sub",
 		"email": "hook@test.com",
 		"exp":   time.Now().Add(time.Hour).Unix(),

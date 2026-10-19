@@ -49,6 +49,7 @@ func jwksServer(t *testing.T, key *ecdsa.PrivateKey, kid string) *httptest.Serve
 func mintES256JWT(t *testing.T, key *ecdsa.PrivateKey, kid, sub string, expiry time.Duration) string {
 	t.Helper()
 	claims := jwt.MapClaims{
+		"aud": "authenticated",
 		"sub":   sub,
 		"email": "es256@test.com",
 		"exp":   time.Now().Add(expiry).Unix(),
@@ -193,5 +194,73 @@ func TestAuthHS256_StillWorksWhenJWKSConfigured(t *testing.T) {
 	w := doPing(r, mintTestJWT(t, "hs-secret", "hs-user", "hs@test.com", time.Hour))
 	if w.Code != http.StatusOK {
 		t.Fatalf("HS256 token must still be accepted, got %d", w.Code)
+	}
+}
+
+func mintHS256(t *testing.T, secret string, claims jwt.MapClaims) string {
+	t.Helper()
+	s, err := jwt.NewWithClaims(jwt.SigningMethodHS256, claims).SignedString([]byte(secret))
+	if err != nil {
+		t.Fatal(err)
+	}
+	return s
+}
+
+// M1: a token without exp would be valid forever; a token for another
+// audience must not be accepted just because it shares the secret.
+func TestAuth_RequiresExpAndAudience(t *testing.T) {
+	r := newJWKSTestRouter("hs-secret", "", &fakeUserProvisioner{})
+	cases := map[string]jwt.MapClaims{
+		"no exp":    {"sub": "u", "aud": "authenticated"},
+		"wrong aud": {"sub": "u", "aud": "service_role", "exp": time.Now().Add(time.Hour).Unix()},
+		"no aud":    {"sub": "u", "exp": time.Now().Add(time.Hour).Unix()},
+	}
+	for name, claims := range cases {
+		if w := doPing(r, mintHS256(t, "hs-secret", claims)); w.Code != http.StatusUnauthorized {
+			t.Errorf("%s: want 401, got %d", name, w.Code)
+		}
+	}
+	ok := jwt.MapClaims{"sub": "u", "aud": "authenticated", "exp": time.Now().Add(time.Hour).Unix()}
+	if w := doPing(r, mintHS256(t, "hs-secret", ok)); w.Code != http.StatusOK {
+		t.Errorf("valid token: want 200, got %d", w.Code)
+	}
+}
+
+// M2: an unknown kid is rejected, never mapped to some other key.
+func TestAuthES256_UnknownKid_Rejected(t *testing.T) {
+	key := newES256Key(t)
+	srv := jwksServer(t, key, "kid-1")
+	defer srv.Close()
+
+	r := newJWKSTestRouter("hs-secret", srv.URL, &fakeUserProvisioner{})
+	if w := doPing(r, mintES256JWT(t, key, "kid-unknown", "u", time.Hour)); w.Code != http.StatusUnauthorized {
+		t.Fatalf("unknown kid must be rejected, got %d", w.Code)
+	}
+}
+
+// M1: with a real Supabase JWKS URL, the ES256 issuer must match the project.
+func TestAuthES256_WrongIssuer_Rejected(t *testing.T) {
+	key := newES256Key(t)
+	srv := jwksServer(t, key, "kid-1")
+	defer srv.Close()
+	jwksURL := srv.URL + "/auth/v1/.well-known/jwks.json"
+	r := newJWKSTestRouter("hs-secret", jwksURL, &fakeUserProvisioner{})
+
+	sign := func(iss string) string {
+		tok := jwt.NewWithClaims(jwt.SigningMethodES256, jwt.MapClaims{
+			"sub": "u", "aud": "authenticated", "iss": iss, "exp": time.Now().Add(time.Hour).Unix(),
+		})
+		tok.Header["kid"] = "kid-1"
+		s, err := tok.SignedString(key)
+		if err != nil {
+			t.Fatal(err)
+		}
+		return s
+	}
+	if w := doPing(r, sign("https://other.supabase.co/auth/v1")); w.Code != http.StatusUnauthorized {
+		t.Errorf("foreign issuer: want 401, got %d", w.Code)
+	}
+	if w := doPing(r, sign(srv.URL+"/auth/v1")); w.Code != http.StatusOK {
+		t.Errorf("own issuer: want 200, got %d: %s", w.Code, w.Body.String())
 	}
 }

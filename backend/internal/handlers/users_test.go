@@ -54,6 +54,7 @@ func newUserTestRouter(t *testing.T, svc userProfiler, testUser *models.User) *g
 func userTestJWT(t *testing.T) string {
 	t.Helper()
 	claims := jwt.MapClaims{
+		"aud": "authenticated",
 		"sub":   "test-sub-user-001",
 		"email": "user@test.com",
 		"exp":   time.Now().Add(time.Hour).Unix(),

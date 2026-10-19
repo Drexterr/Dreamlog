@@ -57,6 +57,7 @@ func weeklyReviewTestRouter(repo weeklyReviewListRepo) (*gin.Engine, *models.Use
 func weeklyReviewJWT(t *testing.T) string {
 	t.Helper()
 	claims := jwt.MapClaims{
+		"aud": "authenticated",
 		"sub":   "test-sub-weekly-001",
 		"email": "test@dreamlog.dev",
 		"exp":   time.Now().Add(time.Hour).Unix(),

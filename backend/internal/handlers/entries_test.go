@@ -91,6 +91,7 @@ func newEntryTestRouter(t *testing.T, svc entryServicer, store storageUploader, 
 func entryTestJWT(t *testing.T) string {
 	t.Helper()
 	claims := jwt.MapClaims{
+		"aud":   "authenticated",
 		"sub":   "test-sub-entry-001",
 		"email": "entry@test.com",
 		"exp":   time.Now().Add(time.Hour).Unix(),

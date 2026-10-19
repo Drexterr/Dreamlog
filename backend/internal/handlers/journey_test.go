@@ -85,6 +85,7 @@ func newJourneyTestRouter(t *testing.T, svc journeyManager, testUser *models.Use
 func journeyTestJWT(t *testing.T) string {
 	t.Helper()
 	claims := jwt.MapClaims{
+		"aud": "authenticated",
 		"sub":   "test-sub-journey-001",
 		"email": "journey@test.com",
 		"exp":   time.Now().Add(time.Hour).Unix(),

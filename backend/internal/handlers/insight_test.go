@@ -72,6 +72,7 @@ func newInsightTestRouter(t *testing.T, repo insightRepo, streak insightStreakQu
 func insightTestJWT(t *testing.T) string {
 	t.Helper()
 	claims := jwt.MapClaims{
+		"aud": "authenticated",
 		"sub":   "test-sub-insight-001",
 		"email": "insight@test.com",
 		"exp":   time.Now().Add(time.Hour).Unix(),
