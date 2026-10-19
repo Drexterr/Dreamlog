@@ -866,14 +866,16 @@ Errors: `400` if period is not `monthly` or `yearly`.
 ## B2B Corporate Wellness
 
 ### POST /b2b/companies/:slug/join
-Adds the authenticated user to a company by its slug. Idempotent.
+Adds the authenticated user to a company by its slug. Idempotent. Only users whose email
+is on the company's domain (the domain of `companies.admin_email`) may self-join; the seat
+check and insert are atomic.
 
 Response `200`:
 ```json
 { "company_id": "uuid", "company_name": "string", "role": "member" }
 ```
 
-Errors: `404` company not found · `409` seat limit reached.
+Errors: `403` email domain does not match the company · `404` company not found · `409` seat limit reached.
 
 ### GET /b2b/companies/:slug/mood?range=30d|90d
 Anonymised team mood summary. Requires the requesting user to be a company **admin**.
@@ -885,7 +887,8 @@ Response `200`:
   "company_name": "string",
   "total_members": 47,
   "days": [
-    { "day": "2026-05-01", "avg_mood": 64, "active_members": 12, "entry_count": 18 }
+    { "day": "2026-05-01", "avg_mood": 64, "active_members": 12, "entry_count": 18 },
+    { "day": "2026-05-02", "avg_mood": null, "active_members": 2, "entry_count": 0 }  // suppressed: < 5 members
   ],
   "avg_mood": 64,
   "prev_avg_mood": 58,
@@ -894,6 +897,10 @@ Response `200`:
   "is_alerted": false
 }
 ```
+
+**k-anonymity:** any day with fewer than 5 distinct journalling members (`models.TeamMinGroupSize`)
+has `avg_mood: null` and `entry_count: 0`, and is excluded from `avg_mood` / `prev_avg_mood` /
+`is_alerted`. Only entries created after the member joined the company are counted.
 
 Errors: `403` not an admin · `404` company not found.
 

@@ -47,8 +47,11 @@ func (f *fakeCompanyRepo) TeamMoodHistory(_ context.Context, _ uuid.UUID, _, _ t
 	return f.teamMoodResp, f.teamMoodErr
 }
 
-func (f *fakeCompanyRepo) JoinCompany(_ context.Context, _, _ uuid.UUID) error {
-	return f.joinErr
+func (f *fakeCompanyRepo) JoinCompany(_ context.Context, _, _ uuid.UUID, seatLimit int) (bool, error) {
+	if f.joinErr != nil {
+		return false, f.joinErr
+	}
+	return f.totalMembersResp < seatLimit, nil
 }
 
 // ── router builder ────────────────────────────────────────────────────────────
@@ -93,8 +96,25 @@ func defaultCompany() *models.Company {
 	return &models.Company{
 		ID:        uuid.New(),
 		Name:      "Acme Corp",
-		Slug:      "acme",
-		SeatLimit: 100,
+		Slug:       "acme",
+		AdminEmail: "hr@test.com", // same domain as b2bTestUser
+		SeatLimit:  100,
+	}
+}
+
+// M12: knowing the slug is not enough - the email domain must match.
+func TestB2BHandler_Join_OtherDomain_Returns403(t *testing.T) {
+	company := defaultCompany()
+	company.AdminEmail = "hr@acme.example"
+	repo := &fakeCompanyRepo{getBySlugResp: company}
+	r := newB2BTestRouter(t, repo, b2bTestUser())
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest(http.MethodPost, "/b2b/companies/acme/join", nil)
+	req.Header.Set("Authorization", "Bearer "+b2bTestJWT(t))
+	r.ServeHTTP(w, req)
+
+	if w.Code != http.StatusForbidden {
+		t.Errorf("other-domain join: want 403, got %d", w.Code)
 	}
 }
 
@@ -221,8 +241,8 @@ func TestB2BHandler_TeamMood_AdminUser_Returns200WithData(t *testing.T) {
 		},
 		totalMembersResp: 25,
 		teamMoodResp: []*models.TeamDailyMood{
-			{Day: "2026-05-21", AvgMood: 64, ActiveMembers: 10, EntryCount: 18},
-			{Day: "2026-05-22", AvgMood: 70, ActiveMembers: 12, EntryCount: 20},
+			{Day: "2026-05-21", AvgMood: b2bIntPtr(64), ActiveMembers: 10, EntryCount: 18},
+			{Day: "2026-05-22", AvgMood: b2bIntPtr(70), ActiveMembers: 12, EntryCount: 20},
 		},
 	}
 	r := newB2BTestRouter(t, repo, b2bTestUser())
@@ -306,7 +326,7 @@ func TestB2BHandler_TeamMood_AlertFiredWhenAvgBelow40(t *testing.T) {
 		getBySlugResp: company,
 		isMemberResp:  &models.CompanyMember{Role: "admin"},
 		teamMoodResp: []*models.TeamDailyMood{
-			{Day: "2026-05-21", AvgMood: 35, ActiveMembers: 8, EntryCount: 10},
+			{Day: "2026-05-21", AvgMood: b2bIntPtr(35), ActiveMembers: 8, EntryCount: 10},
 		},
 	}
 	r := newB2BTestRouter(t, repo, b2bTestUser())
@@ -333,7 +353,7 @@ func TestB2BHandler_TeamMood_NoAlertWhenAvgAbove40(t *testing.T) {
 		getBySlugResp: company,
 		isMemberResp:  &models.CompanyMember{Role: "admin"},
 		teamMoodResp: []*models.TeamDailyMood{
-			{Day: "2026-05-21", AvgMood: 65, ActiveMembers: 8, EntryCount: 10},
+			{Day: "2026-05-21", AvgMood: b2bIntPtr(65), ActiveMembers: 8, EntryCount: 10},
 		},
 	}
 	r := newB2BTestRouter(t, repo, b2bTestUser())
@@ -376,5 +396,39 @@ func TestB2BHandler_TeamMood_NoData_ReturnsNilAvgMood(t *testing.T) {
 	}
 	if resp.AvgMood != nil {
 		t.Errorf("avg_mood: want nil when no data, got %v", resp.AvgMood)
+	}
+}
+
+func b2bIntPtr(v int) *int { return &v }
+
+// C3: a day where fewer than TeamMinGroupSize people journalled must not
+// expose a mood score - neither per day nor in the window aggregates.
+func TestB2BHandler_TeamMood_SuppressesSmallGroups(t *testing.T) {
+	company := defaultCompany()
+	repo := &fakeCompanyRepo{
+		getBySlugResp: company,
+		isMemberResp:  &models.CompanyMember{Role: "admin"},
+		teamMoodResp: []*models.TeamDailyMood{
+			{Day: "2026-05-21", AvgMood: b2bIntPtr(12), ActiveMembers: 1, EntryCount: 1},
+		},
+	}
+	r := newB2BTestRouter(t, repo, b2bTestUser())
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest(http.MethodGet, "/b2b/companies/acme/mood", nil)
+	req.Header.Set("Authorization", "Bearer "+b2bTestJWT(t))
+	r.ServeHTTP(w, req)
+
+	if w.Code != http.StatusOK {
+		t.Fatalf("want 200, got %d", w.Code)
+	}
+	var resp models.TeamMoodSummary
+	if err := json.NewDecoder(w.Body).Decode(&resp); err != nil {
+		t.Fatalf("decode: %v", err)
+	}
+	if len(resp.Days) != 1 || resp.Days[0].AvgMood != nil {
+		t.Errorf("single-member day must have its mood suppressed: %+v", resp.Days)
+	}
+	if resp.AvgMood != nil || resp.IsAlerted {
+		t.Errorf("window aggregates must not include suppressed days: avg=%v alerted=%v", resp.AvgMood, resp.IsAlerted)
 	}
 }

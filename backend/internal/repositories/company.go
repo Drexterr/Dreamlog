@@ -92,14 +92,44 @@ func (r *CompanyRepository) TeamMoodHistory(ctx context.Context, companyID uuid.
 	return result, rows.Err()
 }
 
-// JoinCompany adds a user as a member of a company (idempotent via ON CONFLICT DO NOTHING).
-func (r *CompanyRepository) JoinCompany(ctx context.Context, companyID, userID uuid.UUID) error {
-	_, err := r.db.Exec(ctx,
-		`INSERT INTO company_members (company_id, user_id) VALUES ($1, $2) ON CONFLICT DO NOTHING`,
-		companyID, userID,
-	)
+// JoinCompany adds a user as a member of a company (idempotent for existing
+// members). The seat check and insert run under a per-company advisory lock so
+// parallel joins can't exceed seatLimit. Returns false when the company is full.
+func (r *CompanyRepository) JoinCompany(ctx context.Context, companyID, userID uuid.UUID, seatLimit int) (bool, error) {
+	tx, err := r.db.Begin(ctx)
 	if err != nil {
-		return fmt.Errorf("company.JoinCompany: %w", err)
+		return false, fmt.Errorf("company.JoinCompany begin: %w", err)
 	}
-	return nil
+	defer tx.Rollback(ctx) //nolint:errcheck
+
+	if _, err := tx.Exec(ctx, `SELECT pg_advisory_xact_lock(hashtext($1::text))`, companyID); err != nil {
+		return false, fmt.Errorf("company.JoinCompany lock: %w", err)
+	}
+
+	var already bool
+	if err := tx.QueryRow(ctx,
+		`SELECT EXISTS (SELECT 1 FROM company_members WHERE company_id = $1 AND user_id = $2)`,
+		companyID, userID,
+	).Scan(&already); err != nil {
+		return false, fmt.Errorf("company.JoinCompany member check: %w", err)
+	}
+	if !already {
+		var n int
+		if err := tx.QueryRow(ctx, `SELECT COUNT(*) FROM company_members WHERE company_id = $1`, companyID).Scan(&n); err != nil {
+			return false, fmt.Errorf("company.JoinCompany count: %w", err)
+		}
+		if n >= seatLimit {
+			return false, nil
+		}
+		if _, err := tx.Exec(ctx,
+			`INSERT INTO company_members (company_id, user_id) VALUES ($1, $2) ON CONFLICT DO NOTHING`,
+			companyID, userID,
+		); err != nil {
+			return false, fmt.Errorf("company.JoinCompany insert: %w", err)
+		}
+	}
+	if err := tx.Commit(ctx); err != nil {
+		return false, fmt.Errorf("company.JoinCompany commit: %w", err)
+	}
+	return true, nil
 }

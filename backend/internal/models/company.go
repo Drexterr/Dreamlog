@@ -28,7 +28,7 @@ type CompanyMember struct {
 // TeamDailyMood is one row from v_team_daily_mood - fully anonymised.
 type TeamDailyMood struct {
 	Day           string `json:"day"`            // YYYY-MM-DD
-	AvgMood       int    `json:"avg_mood"`
+	AvgMood       *int   `json:"avg_mood"`       // nil when suppressed (fewer than TeamMinGroupSize members)
 	ActiveMembers int    `json:"active_members"` // distinct users who journalled
 	EntryCount    int    `json:"entry_count"`
 }
@@ -45,3 +45,8 @@ type TeamMoodSummary struct {
 	AlertThreshold int             `json:"alert_threshold"` // 0 = no alert configured
 	IsAlerted     bool             `json:"is_alerted"`      // avg_mood < alert_threshold
 }
+
+// TeamMinGroupSize is the k-anonymity floor for the B2B dashboard: any day or
+// window with fewer distinct journalling members than this has its mood
+// suppressed, so an admin can never read one employee's score.
+const TeamMinGroupSize = 5
