@@ -7,6 +7,7 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
+	"unicode/utf8"
 
 	appconfig "github.com/dreamlog/backend/internal/config"
 	"go.uber.org/zap"
@@ -324,5 +325,136 @@ func TestCrisisResponse_ContainsCrisisResources(t *testing.T) {
 		if !strings.Contains(buildCrisisResponse(country), "Emergency:") {
 			t.Errorf("crisis response for %s must include an emergency number", country)
 		}
+	}
+}
+
+// claudeReplyServer returns a chat completion with the given content and
+// records the user prompt it received.
+func claudeReplyServer(t *testing.T, reply string, gotPrompt *string) *httptest.Server {
+	t.Helper()
+	return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		var req struct {
+			Messages []struct {
+				Role    string `json:"role"`
+				Content string `json:"content"`
+			} `json:"messages"`
+		}
+		_ = json.NewDecoder(r.Body).Decode(&req)
+		if gotPrompt != nil && len(req.Messages) > 0 {
+			*gotPrompt = req.Messages[len(req.Messages)-1].Content
+		}
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(chatResponse{
+			Choices: []struct {
+				Message struct {
+					Content string `json:"content"`
+				} `json:"message"`
+				FinishReason string `json:"finish_reason"`
+			}{
+				{Message: struct {
+					Content string `json:"content"`
+				}{Content: reply}},
+			},
+		})
+	}))
+}
+
+// H6: iOS Smart Punctuation / Whisper curly quotes must still match Stage 1.
+func TestCrisisStage1_TypographicApostrophes(t *testing.T) {
+	detector := NewCrisisDetector(nil, nil)
+	for _, transcript := range []string{
+		"I don’t want to be here anymore",
+		"I DON‘T   WANT TO EXIST",
+		"honestly I just want to end it all",
+	} {
+		result, err := detector.Screen(context.Background(), transcript, "IN")
+		if err != nil {
+			t.Fatal(err)
+		}
+		if !result.Detected {
+			t.Errorf("%q must be detected", transcript)
+		}
+	}
+}
+
+// H6: suicide mentions, Hindi/Hinglish and "kms" reach Stage 2 (fail-safe on error).
+func TestCrisisStage1b_NewSignalsReachStage2(t *testing.T) {
+	srv := claudeErrorServer(t)
+	defer srv.Close()
+	detector := NewCrisisDetector(newClaudeWithServer(srv), nil)
+	for _, transcript := range []string{
+		"I've been feeling suicidal lately",
+		"main ab jeena nahi chahti",
+		"मैं मरना चाहता हूँ",
+		"honestly i might just kms",
+	} {
+		result, err := detector.Screen(context.Background(), transcript, "IN")
+		if err != nil {
+			t.Fatal(err)
+		}
+		if !result.Detected {
+			t.Errorf("%q must reach Stage 2 and fail safe to crisis", transcript)
+		}
+	}
+	// Whole-word only: distances are not a crisis signal.
+	if res, _ := NewCrisisDetector(nil, nil).Screen(context.Background(), "ran 10 kms today", "IN"); res.Detected {
+		t.Error(`"10 kms" must not trigger the kms token`)
+	}
+}
+
+// H5: only an explicit "no" clears an ambiguous entry.
+func TestCrisisStage2_UnclearReplies_FailSafe(t *testing.T) {
+	for _, reply := range []string{"", "I can't help with that.", "Not sure", "maybe"} {
+		srv := claudeReplyServer(t, reply, nil)
+		detector := NewCrisisDetector(newClaudeWithServer(srv), nil)
+		result, err := detector.Screen(context.Background(), "I can't go on like this", "IN")
+		srv.Close()
+		if err != nil {
+			t.Fatal(err)
+		}
+		if !result.Detected {
+			t.Errorf("reply %q must be treated as crisis", reply)
+		}
+	}
+	for _, reply := range []string{"no", "No.", "**No**"} {
+		srv := claudeReplyServer(t, reply, nil)
+		detector := NewCrisisDetector(newClaudeWithServer(srv), nil)
+		result, _ := detector.Screen(context.Background(), "I can't go on with this project", "IN")
+		srv.Close()
+		if result.Detected {
+			t.Errorf("explicit %q must clear the entry", reply)
+		}
+	}
+}
+
+// H5: a signal deep in a long entry must be inside what the classifier sees.
+func TestCrisisStage2_LatePhraseIsSentToClassifier(t *testing.T) {
+	var got string
+	srv := claudeReplyServer(t, "no", &got)
+	defer srv.Close()
+	detector := NewCrisisDetector(newClaudeWithServer(srv), nil)
+
+	transcript := strings.Repeat("एक लंबा दिन था और मैं थक गया। ", 400) + "sometimes I feel like there's no reason to live."
+	if _, err := detector.Screen(context.Background(), transcript, "IN"); err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(got, "no reason to live") {
+		t.Error("the matched phrase must be included in the Stage 2 excerpt")
+	}
+	if !utf8.ValidString(got) {
+		t.Error("Stage 2 excerpt must be valid UTF-8 (rune-safe)")
+	}
+}
+
+// M11: the classifier prompt carries the injection guard and labels the data.
+func TestCrisisClassifierPrompt_HasInjectionGuard(t *testing.T) {
+	if !strings.Contains(buildCrisisClassifierSystemPrompt(), promptInjectionGuard) {
+		t.Error("classifier system prompt must include promptInjectionGuard")
+	}
+	if !strings.Contains(buildCrisisClassifierUserPrompt("x"), "USER-SUPPLIED DATA") {
+		t.Error("classifier user prompt must label the entry as USER-SUPPLIED DATA")
+	}
+	if !strings.Contains(buildDeEscalationPrompt(), promptInjectionGuard) {
+		t.Error("de-escalation prompt must include promptInjectionGuard")
 	}
 }

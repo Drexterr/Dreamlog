@@ -2,7 +2,9 @@ package services
 
 import (
 	"context"
+	"errors"
 	"strings"
+	"unicode/utf8"
 
 	"github.com/dreamlog/backend/pkg/monitoring"
 	"go.uber.org/zap"
@@ -33,6 +35,8 @@ func NewCrisisDetector(claude *ClaudeService, log *zap.Logger) *CrisisDetector {
 }
 
 // highCertaintyPhrases trigger crisis response immediately - no ambiguity.
+// Matched against normalizeForCrisis(text): lowercase, typographic quotes
+// folded to ASCII, whitespace collapsed.
 var highCertaintyPhrases = []string{
 	"kill myself", "killing myself",
 	"end my life", "ending my life",
@@ -40,8 +44,8 @@ var highCertaintyPhrases = []string{
 	"take my life", "taking my life",
 	"commit suicide", "committing suicide",
 	"suicide note",
-	"don't want to be here anymore",
-	"don't want to exist",
+	"don't want to be here anymore", "dont want to be here anymore",
+	"don't want to exist", "dont want to exist",
 	"hurt myself", "hurting myself",
 	"cut myself", "cutting myself",
 	"harm myself", "harming myself",
@@ -49,83 +53,192 @@ var highCertaintyPhrases = []string{
 	"overdose on",
 	"hurt someone", "hurt them", "hurt him", "hurt her",
 	"kill him", "kill her", "kill them",
+	"end it all", "ending it all",
 }
 
-// ambiguousPhrases need Claude to decide - may be metaphorical.
+// ambiguousPhrases need Claude to decide - may be metaphorical. Stage 2 fails
+// safe, so anything broad that could be a genuine signal belongs here rather
+// than nowhere (e.g. any "suicid…" mention, Hindi/Hinglish phrasing).
 var ambiguousPhrases = []string{
 	"not worth living",
-	"can't go on",
-	"can't do this anymore",
-	"what's the point",
+	"can't go on", "cant go on",
+	"can't do this anymore", "cant do this anymore",
+	"what's the point", "whats the point",
 	"nobody cares if i",
 	"better off without me",
 	"no reason to live",
-	"don't care what happens to me",
+	"don't care what happens to me", "dont care what happens to me",
+	"suicid", // suicide, suicidal
+	// Hindi / Hinglish (romanised)
+	"marna chahta", "marna chahti", "mar jana chahta", "mar jana chahti",
+	"jeena nahi chahta", "jeena nahi chahti", "jina nahi chahta", "jina nahi chahti",
+	"khudkushi", "aatmahatya", "atmahatya",
+	"zindagi khatam", "sab khatam kar",
+	// Hindi (Devanagari)
+	"आत्महत्या", "खुदकुशी", "ख़ुदकुशी",
+	"मरना चाहता", "मरना चाहती", "मर जाना चाहता", "मर जाना चाहती",
+	"जीना नहीं चाहता", "जीना नहीं चाहती", "ज़िंदगी खत्म", "जिंदगी खत्म",
 }
+
+// ambiguousWords are short tokens that only count as whole words.
+var ambiguousWords = []string{"kms"}
+
+// crisisQuoteFolder maps typographic apostrophes/quotes (iOS Smart Punctuation,
+// some Whisper output) to ASCII so "don’t" matches "don't".
+var crisisQuoteFolder = strings.NewReplacer("’", "'", "‘", "'", "ʼ", "'", "′", "'", "`", "'")
+
+func normalizeForCrisis(s string) string {
+	return strings.Join(strings.Fields(crisisQuoteFolder.Replace(strings.ToLower(s))), " ")
+}
+
+// crisisStage2MaxRunes bounds the transcript excerpt sent to the classifier.
+const crisisStage2MaxRunes = 6000
 
 // Screen checks a transcript for crisis signals.
 // country is an ISO 3166-1 alpha-2 code (e.g. "IN", "US", "GB"); empty string = international fallback.
 // It is synchronous and fast for the common (non-crisis) path.
 func (d *CrisisDetector) Screen(ctx context.Context, transcript, country string) (*CrisisResult, error) {
-	lower := strings.ToLower(transcript)
+	norm := normalizeForCrisis(transcript)
 
 	// Stage 1a: high-certainty phrases → immediate crisis response.
 	for _, phrase := range highCertaintyPhrases {
-		if strings.Contains(lower, phrase) {
+		if strings.Contains(norm, phrase) {
 			return &CrisisResult{Detected: true, Response: buildCrisisResponse(country)}, nil
 		}
 	}
 
-	// Stage 1b: ambiguous phrases → Claude confirmation prompt.
-	for _, phrase := range ambiguousPhrases {
-		if strings.Contains(lower, phrase) {
-			confirmed, err := d.confirmWithClaude(ctx, transcript)
-			if err != nil {
-				// Fail safe: treat as crisis if Claude is unavailable (ADR-002).
-				// This must never be silent - a broad Claude outage would
-				// otherwise flood every ambiguous entry as a false-positive
-				// crisis with zero operator visibility to explain why.
-				d.log.Warn("crisis: stage 2 claude confirmation unavailable, failing safe to crisis (ADR-002)",
-					zap.Error(err),
-				)
-				monitoring.CaptureErr(err, map[string]string{"component": "crisis_stage2_failsafe"})
-				return &CrisisResult{Detected: true, Response: buildCrisisResponse(country)}, nil
-			}
-			if confirmed {
-				return &CrisisResult{Detected: true, Response: buildCrisisResponse(country)}, nil
-			}
-			break // Only call Claude once even if multiple ambiguous phrases match.
+	// Stage 1b: ambiguous phrases → Claude confirmation prompt (once).
+	if idx := ambiguousMatch(norm); idx >= 0 {
+		confirmed, err := d.confirmWithClaude(ctx, excerptAround(norm, idx, crisisStage2MaxRunes))
+		if err != nil {
+			// Fail safe: treat as crisis if Claude is unavailable (ADR-002).
+			// This must never be silent - a broad Claude outage would
+			// otherwise flood every ambiguous entry as a false-positive
+			// crisis with zero operator visibility to explain why.
+			d.log.Warn("crisis: stage 2 claude confirmation unavailable, failing safe to crisis (ADR-002)",
+				zap.Error(err),
+			)
+			monitoring.CaptureErr(err, map[string]string{"component": "crisis_stage2_failsafe"})
+			return &CrisisResult{Detected: true, Response: buildCrisisResponse(country)}, nil
+		}
+		if confirmed {
+			return &CrisisResult{Detected: true, Response: buildCrisisResponse(country)}, nil
 		}
 	}
 
 	return &CrisisResult{Detected: false}, nil
 }
 
-// confirmWithClaude uses a minimal prompt to disambiguate.
-func (d *CrisisDetector) confirmWithClaude(ctx context.Context, transcript string) (bool, error) {
-	system := `You are a safety classifier. Your only job is to determine if a journal entry contains genuine expressions of suicidal ideation, self-harm intent, or intent to harm others.
+// ambiguousMatch returns the byte index of the first ambiguous signal in the
+// normalized text, or -1.
+func ambiguousMatch(norm string) int {
+	best := -1
+	for _, phrase := range ambiguousPhrases {
+		if i := strings.Index(norm, phrase); i >= 0 && (best < 0 || i < best) {
+			best = i
+		}
+	}
+	for _, word := range ambiguousWords {
+		for _, i := range wordIndexes(norm, word) {
+			// "10 kms" is a distance, not a signal.
+			if prev := strings.TrimRight(norm[:i], " "); prev != "" && prev[len(prev)-1] >= '0' && prev[len(prev)-1] <= '9' {
+				continue
+			}
+			if best < 0 || i < best {
+				best = i
+			}
+			break
+		}
+	}
+	return best
+}
 
-Answer ONLY with "yes" or "no".
-- "yes" = the text contains what appears to be genuine crisis-level distress, not metaphor
-- "no" = the language is metaphorical, hyperbolic, or does not indicate genuine risk
+// wordIndexes returns the byte offsets where word appears as a whole word.
+func wordIndexes(s, word string) []int {
+	var out []int
+	for start := 0; ; {
+		i := strings.Index(s[start:], word)
+		if i < 0 {
+			return out
+		}
+		i += start
+		end := i + len(word)
+		before := i == 0 || !isWordByte(s[i-1])
+		after := end == len(s) || !isWordByte(s[end])
+		if before && after {
+			out = append(out, i)
+		}
+		start = i + 1
+	}
+}
 
-Examples:
-"I could kill him" → no (common hyperbole)
-"I've been thinking about hurting myself" → yes
-"I'm so dead at work" → no
-"I don't want to be here anymore and I've been thinking about how to do it" → yes`
+func isWordByte(b byte) bool {
+	return b == '_' || (b >= '0' && b <= '9') || (b >= 'a' && b <= 'z')
+}
 
-	prompt := "Journal entry:\n" + truncate(transcript, 1000) + "\n\nIs this a genuine crisis? Answer only yes or no."
+// excerptAround returns the whole text when it fits in maxRunes, otherwise a
+// rune-safe window centred on byte offset idx, so the classifier always sees
+// the matched signal (never a 1000-byte prefix that cut it off).
+func excerptAround(s string, idx, maxRunes int) string {
+	runes := []rune(s)
+	if len(runes) <= maxRunes {
+		return s
+	}
+	center := utf8.RuneCountInString(s[:idx])
+	start := center - maxRunes/2
+	if start < 0 {
+		start = 0
+	}
+	end := start + maxRunes
+	if end > len(runes) {
+		end = len(runes)
+		start = end - maxRunes
+	}
+	return "…" + string(runes[start:end]) + "…"
+}
 
-	reply, err := d.claude.call(ctx, system, []anthropicMessage{
-		{Role: "user", Content: prompt},
+// confirmWithClaude asks the safety classifier to disambiguate.
+//
+// Inverted, fail-safe decision (ADR-002): only an explicit "no" clears the
+// entry. An empty reply, a refusal, a truncated or unexpected answer, or a
+// transport error all count as crisis.
+func (d *CrisisDetector) confirmWithClaude(ctx context.Context, excerpt string) (bool, error) {
+	if d.claude == nil {
+		return true, errors.New("crisis: no classifier configured")
+	}
+	reply, err := d.claude.call(ctx, buildCrisisClassifierSystemPrompt(), []anthropicMessage{
+		{Role: "user", Content: buildCrisisClassifierUserPrompt(excerpt)},
 	}, 10)
 	if err != nil {
 		return true, err // fail safe
 	}
 
-	answer := strings.ToLower(strings.TrimSpace(reply))
-	return strings.HasPrefix(answer, "yes"), nil
+	switch firstWord(reply) {
+	case "no", "nope":
+		return false, nil
+	case "yes":
+		return true, nil
+	default:
+		d.log.Warn("crisis: stage 2 classifier gave no clear answer, failing safe to crisis (ADR-002)",
+			zap.Int("reply_len", len(reply)),
+		)
+		return true, nil
+	}
+}
+
+// firstWord returns the first run of ASCII letters in s, lowercased
+// ("No." → "no", "**Yes**" → "yes", "" → "").
+func firstWord(s string) string {
+	s = strings.ToLower(s)
+	start := strings.IndexFunc(s, func(r rune) bool { return r >= 'a' && r <= 'z' })
+	if start < 0 {
+		return ""
+	}
+	end := strings.IndexFunc(s[start:], func(r rune) bool { return r < 'a' || r > 'z' })
+	if end < 0 {
+		return s[start:]
+	}
+	return s[start : start+end]
 }
 
 // countryHelplines maps ISO 3166-1 alpha-2 country codes to localised crisis resources.
