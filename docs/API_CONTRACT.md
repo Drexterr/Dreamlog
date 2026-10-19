@@ -265,7 +265,7 @@ learned timing until the user re-enables auto.
 ### GET /entries
 Paginated list, newest first.
 
-Query params: `?page=1&limit=20`
+Query params: `?page=1&page_size=20`
 
 Response `200`:
 ```json
@@ -282,7 +282,8 @@ Response `200`:
   ],
   "total": 42,
   "page": 1,
-  "limit": 20
+  "page_size": 20,
+  "has_more": true
 }
 ```
 
@@ -300,9 +301,12 @@ Errors: `404` if not found or belongs to different user.
 ### GET /entries/search?q=
 Full-text search via PostgreSQL tsvector.
 
-Query params: `?q=anxiety+work&page=1&limit=20`
+Query params: `?q=anxiety+work&limit=20` (limit 1-50, default 20)
 
-Response `200` - same shape as GET /entries list.
+Response `200`:
+```json
+{ "entries": [ /* Entry, same shape as GET /entries items */ ], "query": "anxiety work" }
+```
 
 ---
 
@@ -381,20 +385,21 @@ disabled.
 ### GET /timeline
 Entries combined with their analyses. Newest first.
 
-Query params: `?page=1&limit=20`
+Query params: `?page=1&page_size=20`
 
 Response `200`:
 ```json
 {
-  "items": [
+  "entries": [
     {
       "entry": { /* same as GET /entries/:id */ },
-      "analysis": { /* same as GET /entries/:id/analysis, or null if not complete */ }
+      "analysis": { /* same as GET /entries/:id/analysis; omitted if not complete */ }
     }
   ],
   "total": 42,
   "page": 1,
-  "limit": 20
+  "page_size": 20,
+  "has_more": true
 }
 ```
 
@@ -425,22 +430,19 @@ Errors: `404` if entry not found or not completed.
 // Request
 { "content": "string" }
 
-// Response 201
+// Response 200 - the whole updated Conversation
 {
-  "user_message": {
-    "id": "uuid",
-    "role": "user",
-    "content": "string",
-    "created_at": "RFC3339"
-  },
-  "assistant_message": {
-    "id": "uuid",
-    "role": "assistant",
-    "content": "string",
-    "created_at": "RFC3339"
-  },
+  "id": "uuid",
+  "entry_id": "uuid",
+  "user_id": "uuid",
   "turn_count": 1,
-  "is_closed": false          // true when turn_count reaches 3 after this message
+  "is_closed": false,         // true when turn_count reaches 3 after this message
+  "is_crisis": true,          // present only when this message triggered crisis screening
+  "messages": [
+    { "id": "uuid", "conversation_id": "uuid", "role": "user | assistant", "content": "string", "created_at": "RFC3339" }
+  ],
+  "created_at": "RFC3339",
+  "updated_at": "RFC3339"
 }
 ```
 

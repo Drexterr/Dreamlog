@@ -28,16 +28,18 @@ Mobile
   │
   │   [Worker picks up job via BRPOP]
   │     → Whisper transcribe audio
-  │     → Update entry: transcript, status=processing
+  │     → Update entry: transcript (status=processing)
+  │     → DELETE audio from storage (right after the transcript is stored - ADR-005;
+  │       retries reuse the stored transcript and never re-run Whisper)
   │     → Stage 1 crisis: keyword match (<1 ms)
   │     → Stage 2 crisis: Claude yes/no if ambiguous (~1 s)
   │     → If crisis: store is_crisis=true, skip reflection, send crisis response
   │     → Context builder: fetch last 5 completed entries for this user
   │     → Claude AnalyzeEntry: structured JSON reflection
+  │       (a {"crisis": true} SAFETY OVERRIDE reply is routed to the crisis branch)
   │     → INSERT entry_analysis (mood_score, emotional_tone, topics, key_quotes, reflection, morning_nudge)
   │     → Update entry: status=completed
   │     → Schedule morning nudge (INSERT nudges, scheduled_at = user's local 8 AM next day)
-  │     → DELETE audio from storage
   │
   ├─ GET /entries/:id (polls until status=completed)
   │
@@ -454,7 +456,11 @@ Key properties:
 - Scale horizontally: `make scale-worker N=3` runs 3 worker replicas
 - Each worker is stateless - safe to run N replicas
 - Redis queue is the coordination point - atomic BRPOP ensures no double-processing
-- Failed jobs: after `WORKER_MAX_RETRIES` attempts → inserted into `dead_letter_jobs`
+- Failed jobs: after `WORKER_MAX_RETRIES` attempts the entry is marked `failed` and the job
+  payload is pushed to the Redis DLQ list (`WORKER_DLQ_KEY`) - not the `dead_letter_jobs` table.
+- Lost jobs (crash / deploy mid-job, lost enqueue): `workers.EntryReconciler` requeues entries
+  stuck in `pending` > 15 min or `processing` > 30 min every 5 minutes; a worker drops duplicate
+  jobs for entries another worker holds.
 
 ---
 
