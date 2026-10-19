@@ -9,6 +9,7 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"strings"
 	"sync"
 	"time"
 
@@ -65,6 +66,9 @@ const (
 	// Apple verifyReceipt status codes we branch on.
 	appleStatusOK          = 0
 	appleStatusSandboxUsed = 21007 // production endpoint received a sandbox receipt
+
+	// defaultAppleBundleID is the iOS bundle identifier receipts must carry.
+	defaultAppleBundleID = "com.talktoode.app"
 )
 
 // IAPService verifies In-App Purchases server-side before any plan is granted.
@@ -99,29 +103,59 @@ func (s *IAPService) Configured() bool {
 	return s.cfg.AppleSharedSecret != "" || s.cfg.GooglePlayCredentialsJSON != ""
 }
 
-// VerifyPurchase validates a store purchase and returns the store's unique
-// transaction ID, used for replay protection (payments.transaction_id UNIQUE).
+// VerifiedPurchase is the result of a successful store verification.
+type VerifiedPurchase struct {
+	// TransactionID is the store's unique transaction ID, used for replay
+	// protection (payments.transaction_id UNIQUE).
+	TransactionID string
+	// Sandbox is true for App Store sandbox / TestFlight receipts and Play
+	// license-tester purchases - no money changed hands. The handler only
+	// honours these for allowlisted accounts (SandboxAllowed).
+	Sandbox bool
+}
+
+// VerifyPurchase validates a store purchase.
 //
-//	platform "ios":     purchaseToken is the base64 app receipt (transactionReceipt)
+//	platform "ios":     purchaseToken is the base64 app receipt (transactionReceipt);
+//	                    transactionID (optional) pins the exact transaction to redeem
 //	platform "android": purchaseToken is the Play Billing purchase token
-func (s *IAPService) VerifyPurchase(ctx context.Context, platform, productID, purchaseToken string) (string, error) {
+func (s *IAPService) VerifyPurchase(ctx context.Context, platform, productID, purchaseToken, transactionID string) (*VerifiedPurchase, error) {
 	switch platform {
 	case "ios":
-		return s.verifyApple(ctx, productID, purchaseToken)
+		return s.verifyApple(ctx, productID, purchaseToken, transactionID)
 	case "android":
 		return s.verifyGoogle(ctx, productID, purchaseToken)
 	default:
-		return "", fmt.Errorf("iap: unsupported platform %q", platform)
+		return nil, fmt.Errorf("iap: unsupported platform %q", platform)
 	}
+}
+
+// SandboxAllowed reports whether a sandbox/test purchase may grant a plan to
+// this account. Production only accepts them for allowlisted accounts (the App
+// Review demo account, internal testers) - otherwise any free TestFlight
+// purchase would unlock a real plan.
+func (s *IAPService) SandboxAllowed(email string) bool {
+	email = strings.ToLower(strings.TrimSpace(email))
+	if email == "" {
+		return false
+	}
+	for _, allowed := range s.cfg.SandboxAllowedEmails {
+		if strings.ToLower(strings.TrimSpace(allowed)) == email {
+			return true
+		}
+	}
+	return false
 }
 
 // ── Apple ─────────────────────────────────────────────────────────────────────
 
 type appleVerifyResponse struct {
 	Status            int              `json:"status"`
+	Environment       string           `json:"environment"` // "Production" | "Sandbox"
 	LatestReceiptInfo []appleInAppItem `json:"latest_receipt_info"`
 	Receipt           struct {
-		InApp []appleInAppItem `json:"in_app"`
+		BundleID string           `json:"bundle_id"`
+		InApp    []appleInAppItem `json:"in_app"`
 	} `json:"receipt"`
 }
 
@@ -135,9 +169,9 @@ type appleInAppItem struct {
 // returns the transaction ID of the newest purchase of productID. A sandbox
 // receipt sent to production (status 21007) is retried against the sandbox
 // endpoint - Apple's documented flow, and required for App Review.
-func (s *IAPService) verifyApple(ctx context.Context, productID, receipt string) (string, error) {
+func (s *IAPService) verifyApple(ctx context.Context, productID, receipt, transactionID string) (*VerifiedPurchase, error) {
 	if s.cfg.AppleSharedSecret == "" {
-		return "", ErrStoreNotConfigured
+		return nil, ErrStoreNotConfigured
 	}
 
 	base := s.appleBaseURL
@@ -146,24 +180,41 @@ func (s *IAPService) verifyApple(ctx context.Context, productID, receipt string)
 	}
 	resp, err := s.appleVerifyCall(ctx, base, receipt)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
+	sandbox := false
 	if resp.Status == appleStatusSandboxUsed {
-		sandbox := s.appleSandboxBaseURL
-		if sandbox == "" {
-			sandbox = appleSandboxVerifyURL
+		sandbox = true
+		sandboxURL := s.appleSandboxBaseURL
+		if sandboxURL == "" {
+			sandboxURL = appleSandboxVerifyURL
 		}
-		if resp, err = s.appleVerifyCall(ctx, sandbox, receipt); err != nil {
-			return "", err
+		if resp, err = s.appleVerifyCall(ctx, sandboxURL, receipt); err != nil {
+			return nil, err
 		}
 	}
 	if resp.Status != appleStatusOK {
-		return "", fmt.Errorf("%w: apple status %d", ErrPurchaseInvalid, resp.Status)
+		return nil, fmt.Errorf("%w: apple status %d", ErrPurchaseInvalid, resp.Status)
+	}
+	if strings.EqualFold(resp.Environment, "Sandbox") {
+		sandbox = true
 	}
 
-	// Prefer latest_receipt_info; fall back to receipt.in_app. Pick the most
-	// recent transaction for the requested product.
+	// Product IDs are only unique per app: a receipt from someone else's app
+	// with a same-named SKU must never grant a plan here.
+	wantBundle := s.cfg.AppleBundleID
+	if wantBundle == "" {
+		wantBundle = defaultAppleBundleID
+	}
+	if resp.Receipt.BundleID != wantBundle {
+		return nil, fmt.Errorf("%w: receipt bundle_id %q", ErrPurchaseInvalid, resp.Receipt.BundleID)
+	}
+
+	// Prefer latest_receipt_info; fall back to receipt.in_app. When the client
+	// names the transaction it is redeeming, match exactly that one - never
+	// fall back to an older (already used) transaction of the same product.
+	// Otherwise pick the most recent transaction for the product.
 	items := resp.LatestReceiptInfo
 	if len(items) == 0 {
 		items = resp.Receipt.InApp
@@ -173,14 +224,20 @@ func (s *IAPService) verifyApple(ctx context.Context, productID, receipt string)
 		if items[i].ProductID != productID {
 			continue
 		}
+		if transactionID != "" {
+			if items[i].TransactionID == transactionID {
+				best = &items[i]
+			}
+			continue
+		}
 		if best == nil || items[i].PurchaseDate > best.PurchaseDate {
 			best = &items[i]
 		}
 	}
 	if best == nil || best.TransactionID == "" {
-		return "", fmt.Errorf("%w: receipt contains no purchase of %s", ErrPurchaseInvalid, productID)
+		return nil, fmt.Errorf("%w: receipt contains no matching purchase of %s", ErrPurchaseInvalid, productID)
 	}
-	return best.TransactionID, nil
+	return &VerifiedPurchase{TransactionID: best.TransactionID, Sandbox: sandbox}, nil
 }
 
 func (s *IAPService) appleVerifyCall(ctx context.Context, baseURL, receipt string) (*appleVerifyResponse, error) {
@@ -221,18 +278,21 @@ func (s *IAPService) appleVerifyCall(ctx context.Context, baseURL, receipt strin
 type googleProductPurchase struct {
 	PurchaseState int    `json:"purchaseState"` // 0 purchased, 1 canceled, 2 pending
 	OrderID       string `json:"orderId"`
+	// PurchaseType is only present for non-real purchases: 0 = test
+	// (license tester), 1 = promo, 2 = rewarded.
+	PurchaseType *int `json:"purchaseType"`
 }
 
 // verifyGoogle validates a Play Billing purchase token via the Android
 // Publisher API (purchases.products.get) and returns the order ID.
-func (s *IAPService) verifyGoogle(ctx context.Context, productID, purchaseToken string) (string, error) {
+func (s *IAPService) verifyGoogle(ctx context.Context, productID, purchaseToken string) (*VerifiedPurchase, error) {
 	if s.cfg.GooglePlayCredentialsJSON == "" {
-		return "", ErrStoreNotConfigured
+		return nil, ErrStoreNotConfigured
 	}
 
 	accessToken, err := s.googleAccessToken()
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	base := s.googleBaseURL
@@ -248,44 +308,45 @@ func (s *IAPService) verifyGoogle(ctx context.Context, productID, purchaseToken 
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, endpoint, nil)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	req.Header.Set("Authorization", "Bearer "+accessToken)
 
 	httpResp, err := s.httpClient.Do(req)
 	if err != nil {
-		return "", fmt.Errorf("iap: google verify: %w", err)
+		return nil, fmt.Errorf("iap: google verify: %w", err)
 	}
 	defer httpResp.Body.Close()
 
 	raw, err := io.ReadAll(httpResp.Body)
 	if err != nil {
-		return "", fmt.Errorf("iap: google verify read: %w", err)
+		return nil, fmt.Errorf("iap: google verify read: %w", err)
 	}
 
 	// Play returns 400/404 for tokens it has never issued - the client's
 	// fault, not an outage.
 	if httpResp.StatusCode == http.StatusBadRequest || httpResp.StatusCode == http.StatusNotFound {
-		return "", fmt.Errorf("%w: play returned %d", ErrPurchaseInvalid, httpResp.StatusCode)
+		return nil, fmt.Errorf("%w: play returned %d", ErrPurchaseInvalid, httpResp.StatusCode)
 	}
 	if httpResp.StatusCode != http.StatusOK {
-		return "", fmt.Errorf("iap: google verify returned %d: %s", httpResp.StatusCode, string(raw))
+		return nil, fmt.Errorf("iap: google verify returned %d: %s", httpResp.StatusCode, string(raw))
 	}
 
 	var purchase googleProductPurchase
 	if err := json.Unmarshal(raw, &purchase); err != nil {
-		return "", fmt.Errorf("iap: google verify decode: %w", err)
+		return nil, fmt.Errorf("iap: google verify decode: %w", err)
 	}
 	if purchase.PurchaseState != 0 {
-		return "", fmt.Errorf("%w: purchaseState %d", ErrPurchaseInvalid, purchase.PurchaseState)
+		return nil, fmt.Errorf("%w: purchaseState %d", ErrPurchaseInvalid, purchase.PurchaseState)
 	}
 
 	// orderId is unique per purchase; fall back to the token for test/promo
 	// purchases, which can lack one.
+	testPurchase := purchase.PurchaseType != nil && *purchase.PurchaseType == 0
 	if purchase.OrderID != "" {
-		return purchase.OrderID, nil
+		return &VerifiedPurchase{TransactionID: purchase.OrderID, Sandbox: testPurchase}, nil
 	}
-	return purchaseToken, nil
+	return &VerifiedPurchase{TransactionID: purchaseToken, Sandbox: testPurchase}, nil
 }
 
 // googleAccessToken exchanges the service account for a short-lived OAuth2

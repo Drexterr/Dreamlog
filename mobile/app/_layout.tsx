@@ -39,6 +39,7 @@ import { detectAndCacheRegion, setRegionFromCountry } from '../src/services/regi
 import { resolvePostAuthRoute } from '../src/services/postAuthRoute';
 import { flush as flushOfflineQueue } from '../src/services/offlineQueue';
 import { registerForPushNotifications } from '../src/services/push';
+import { recoverUnfinishedPurchases } from '../src/services/iap';
 import { setupQuickActions } from '../src/services/quickActions';
 import { checkForceUpdate } from '../src/services/version';
 import { runStartupUpdateCheck } from '../src/services/updates';
@@ -225,6 +226,20 @@ function RootLayout() {
   useEffect(() => {
     if (!ready || !hasToken) return;
     registerForPushNotifications();
+  }, [ready, hasToken]);
+
+  // Redeem store purchases left unfinished by a crash or network drop between
+  // the store charging and the backend granting the plan (fail-silent).
+  useEffect(() => {
+    if (!ready || !hasToken || E2E) return;
+    recoverUnfinishedPurchases(async (p, plan, period) => {
+      await api.upgradePlan(plan, period, {
+        platform: p.platform,
+        product_id: p.productId,
+        purchase_token: p.purchaseToken,
+        transaction_id: p.transactionId,
+      });
+    });
   }, [ready, hasToken]);
 
   // Home-screen quick action ("Record a moment") - registered for everyone,

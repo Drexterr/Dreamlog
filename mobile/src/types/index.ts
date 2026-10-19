@@ -483,6 +483,7 @@ export interface IAPVerification {
   platform: 'ios' | 'android';
   product_id: string;
   purchase_token: string;
+  transaction_id?: string;
 }
 
 export interface VersionInfo {

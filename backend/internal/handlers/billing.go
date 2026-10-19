@@ -8,8 +8,10 @@ import (
 
 	"github.com/dreamlog/backend/internal/middleware"
 	"github.com/dreamlog/backend/internal/models"
+	"github.com/dreamlog/backend/internal/repositories"
 	"github.com/dreamlog/backend/internal/services"
 	"github.com/dreamlog/backend/pkg/apierr"
+	"github.com/dreamlog/backend/pkg/monitoring"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 )
@@ -22,14 +24,16 @@ type planManager interface {
 
 // paymentRecorder is what BillingHandler needs from PaymentRepository.
 type paymentRecorder interface {
-	Record(ctx context.Context, userID uuid.UUID, transactionID string, plan models.Plan, store, productID string) (bool, error)
+	Record(ctx context.Context, userID uuid.UUID, transactionID string, plan models.Plan, store, productID string, sandbox bool) (repositories.RecordResult, error)
+	MarkGranted(ctx context.Context, transactionID string) error
 }
 
 // purchaseVerifier is what BillingHandler needs from IAPService: server-side
 // verification of App Store / Play Store purchases.
 type purchaseVerifier interface {
 	Configured() bool
-	VerifyPurchase(ctx context.Context, platform, productID, purchaseToken string) (string, error)
+	VerifyPurchase(ctx context.Context, platform, productID, purchaseToken, transactionID string) (*services.VerifiedPurchase, error)
+	SandboxAllowed(email string) bool
 }
 
 // Purchases are one-time store products (a 30-day or 365-day pass), not
@@ -125,6 +129,9 @@ func (h *BillingHandler) Upgrade(c *gin.Context) {
 		Platform      string      `json:"platform"`       // "ios" | "android"
 		ProductID     string      `json:"product_id"`     // store SKU, e.g. com.talktoode.app.plus.monthly
 		PurchaseToken string      `json:"purchase_token"` // iOS: base64 receipt; Android: Play purchase token
+		// TransactionID (iOS, optional): the exact store transaction being
+		// redeemed. Without it the newest receipt entry for the product is used.
+		TransactionID string `json:"transaction_id"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
 		_ = c.Error(apierr.BadRequest("invalid request body", err.Error()))
@@ -146,6 +153,7 @@ func (h *BillingHandler) Upgrade(c *gin.Context) {
 	}
 
 	var expiresAt *time.Time
+	var transactionID string // set for verified store purchases
 
 	switch {
 	case req.Plan == models.PlanFree:
@@ -182,7 +190,7 @@ func (h *BillingHandler) Upgrade(c *gin.Context) {
 			return
 		}
 
-		transactionID, err := h.iap.VerifyPurchase(c.Request.Context(), req.Platform, req.ProductID, req.PurchaseToken)
+		verified, err := h.iap.VerifyPurchase(c.Request.Context(), req.Platform, req.ProductID, req.PurchaseToken, req.TransactionID)
 		if err != nil {
 			if errors.Is(err, services.ErrPurchaseInvalid) {
 				_ = c.Error(apierr.New(http.StatusPaymentRequired, "purchase could not be verified"))
@@ -195,23 +203,53 @@ func (h *BillingHandler) Upgrade(c *gin.Context) {
 			return
 		}
 
+		// Sandbox / TestFlight / Play-tester purchases cost nothing; only
+		// allowlisted accounts (App Review demo, internal testers) may use them.
+		currentUser := middleware.UserFromCtx(c.Request.Context())
+		if verified.Sandbox && (currentUser == nil || !h.iap.SandboxAllowed(currentUser.Email)) {
+			_ = c.Error(apierr.New(http.StatusPaymentRequired, "test purchases are not accepted for this account"))
+			return
+		}
+
 		store := "apple"
 		if req.Platform == "android" {
 			store = "google"
 		}
-		inserted, err := h.payments.Record(c.Request.Context(), userID, transactionID, req.Plan, store, req.ProductID)
+		transactionID = verified.TransactionID
+		rec, err := h.payments.Record(c.Request.Context(), userID, transactionID, req.Plan, store, req.ProductID, verified.Sandbox)
 		if err != nil {
 			// A store transaction was just verified as paid but failed to
 			// record - this is the one case where silence is unacceptable.
 			_ = c.Error(apierr.InternalErr("failed to record purchase", err))
 			return
 		}
-		if !inserted {
-			_ = c.Error(apierr.Conflict("this purchase has already been used"))
-			return
+		if !rec.Inserted {
+			if rec.OwnerID != userID {
+				_ = c.Error(apierr.Conflict("this purchase has already been used"))
+				return
+			}
+			if rec.Granted && currentUser != nil {
+				// Same user replaying a purchase that was already granted
+				// (e.g. the app died before finishing the transaction):
+				// idempotent success, nothing is extended twice.
+				c.JSON(http.StatusOK, gin.H{
+					"plan":            currentUser.Plan,
+					"plan_expires_at": currentUser.PlanExpiresAt,
+					"limits":          h.svc.GetPlanDetails(currentUser.Plan),
+				})
+				return
+			}
+			// Recorded but the grant never committed: fall through and grant.
 		}
 
-		t := time.Now().Add(planDuration(period))
+		// A pass for the plan you already hold extends it from the current
+		// expiry, so no paid days are lost. Switching plans starts the new
+		// pass now (the mobile upgrade screen warns before a switch).
+		base := time.Now()
+		if currentUser != nil && currentUser.Plan == req.Plan && currentUser.PlanExpiresAt != nil && currentUser.PlanExpiresAt.After(base) {
+			base = *currentUser.PlanExpiresAt
+		}
+		t := base.Add(planDuration(period))
 		expiresAt = &t
 	}
 
@@ -226,6 +264,13 @@ func (h *BillingHandler) Upgrade(c *gin.Context) {
 	if user == nil {
 		_ = c.Error(apierr.NotFound("user"))
 		return
+	}
+	if transactionID != "" {
+		if err := h.payments.MarkGranted(c.Request.Context(), transactionID); err != nil {
+			// The plan is granted; a missing marker only means a replay of
+			// this transaction would extend once more. Log, don't fail.
+			monitoring.CaptureErr(err, map[string]string{"component": "billing_mark_granted"})
+		}
 	}
 
 	if h.analytics != nil {

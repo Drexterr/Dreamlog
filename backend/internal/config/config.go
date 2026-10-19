@@ -124,6 +124,11 @@ type IAPConfig struct {
 	AppleSharedSecret         string // App Store Connect shared secret for /verifyReceipt
 	GooglePlayCredentialsJSON string // service-account JSON with androidpublisher access
 	GooglePlayPackageName     string // Android application ID, e.g. com.talktoode.app
+	AppleBundleID             string // iOS bundle ID every receipt must carry (default com.talktoode.app)
+	// SandboxAllowedEmails may redeem sandbox / TestFlight / Play test
+	// purchases (App Review demo account, internal testers). Everyone else
+	// needs a real store purchase.
+	SandboxAllowedEmails []string
 }
 
 type WorkerConfig struct {
@@ -202,6 +207,8 @@ func Load() (*Config, error) {
 			AppleSharedSecret:         getEnv("APPLE_SHARED_SECRET", ""),
 			GooglePlayCredentialsJSON: getEnv("GOOGLE_PLAY_CREDENTIALS_JSON", ""),
 			GooglePlayPackageName:     getEnv("GOOGLE_PLAY_PACKAGE_NAME", "com.talktoode.app"),
+			AppleBundleID:             getEnv("APPLE_BUNDLE_ID", "com.talktoode.app"),
+			SandboxAllowedEmails:      splitCommaList(getEnv("IAP_SANDBOX_ALLOWED_EMAILS", "")),
 		},
 		Worker: WorkerConfig{
 			Concurrency:   parseInt("WORKER_CONCURRENCY", 4),
@@ -282,4 +289,15 @@ func parseDuration(key string, fallback time.Duration) time.Duration {
 		}
 	}
 	return fallback
+}
+
+// splitCommaList splits a comma-separated env value, dropping blanks.
+func splitCommaList(v string) []string {
+	var out []string
+	for _, part := range strings.Split(v, ",") {
+		if p := strings.TrimSpace(part); p != "" {
+			out = append(out, p)
+		}
+	}
+	return out
 }

@@ -25,6 +25,9 @@ export interface StorePurchase {
   // iOS: base64 app receipt (verified via Apple verifyReceipt).
   // Android: Play Billing purchase token (verified via the Play Developer API).
   purchaseToken: string;
+  // Store transaction ID (iOS): pins the exact receipt entry being redeemed so
+  // the backend never matches an older, already-used transaction.
+  transactionId?: string;
   raw: Purchase;
 }
 
@@ -90,7 +93,11 @@ export async function purchasePlanPass(
   if (!purchase) {
     throw new Error('The store did not return a purchase.');
   }
+  return toStorePurchase(iap, purchase, sku);
+}
 
+// Builds the verification payload for a store purchase.
+async function toStorePurchase(iap: IapModule, purchase: Purchase, sku: string): Promise<StorePurchase> {
   let purchaseToken: string | null | undefined;
   if (Platform.OS === 'ios') {
     // verifyReceipt takes the base64 app receipt; right after a first purchase
@@ -110,6 +117,7 @@ export async function purchasePlanPass(
     platform: Platform.OS === 'ios' ? 'ios' : 'android',
     productId: sku,
     purchaseToken,
+    transactionId: Platform.OS === 'ios' ? purchase.id : undefined,
     raw: purchase,
   };
 }
@@ -125,5 +133,51 @@ export async function finishPurchase(purchase: StorePurchase): Promise<void> {
     await iap.finishTransaction({ purchase: purchase.raw, isConsumable: true });
   } catch {
     // Non-fatal: the store re-delivers unfinished transactions.
+  }
+}
+
+// Maps a store SKU back to the plan pass it grants.
+export function planForSku(sku: string): { plan: 'plus' | 'pro'; period: BillingPeriod } | null {
+  for (const plan of ['plus', 'pro'] as const) {
+    for (const period of ['monthly', 'annual'] as const) {
+      if (IAP_PRODUCT_IDS[plan][period] === sku) return { plan, period };
+    }
+  }
+  return null;
+}
+
+let recovering = false;
+
+// Re-redeems purchases the store still holds as unfinished - the app was killed
+// or the network dropped between the store charging the user and the backend
+// granting the plan. Call on launch once the user is signed in. Each purchase
+// is redeemed through `redeem` (POST /billing/upgrade, idempotent for the same
+// user) and finished only after it succeeds. Fail-silent: anything that fails
+// stays unfinished and is retried on the next launch.
+export async function recoverUnfinishedPurchases(
+  redeem: (purchase: StorePurchase, plan: 'plus' | 'pro', period: BillingPeriod) => Promise<void>,
+): Promise<void> {
+  const iap = loadIap();
+  if (!iap || recovering) return;
+  recovering = true;
+  try {
+    await ensureConnected(iap);
+    const pending = await iap.getAvailablePurchases();
+    for (const purchase of pending ?? []) {
+      const target = planForSku(purchase.productId);
+      if (!target) continue;
+      try {
+        const storePurchase = await toStorePurchase(iap, purchase, purchase.productId);
+        await redeem(storePurchase, target.plan, target.period);
+        await finishPurchase(storePurchase);
+      } catch {
+        // Leave it unfinished - retried next launch, and on Android an
+        // unacknowledged purchase is refunded by Play if never granted.
+      }
+    }
+  } catch {
+    // Store unavailable - try again next launch.
+  } finally {
+    recovering = false;
   }
 }

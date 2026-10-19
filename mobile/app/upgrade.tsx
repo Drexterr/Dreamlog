@@ -135,6 +135,25 @@ export default function UpgradeScreen() {
 
   const handleUpgrade = useCallback(async (targetPlan: 'plus' | 'pro') => {
     if (purchasing) return;
+
+    // Buying the plan you already hold extends it from its expiry; buying a
+    // different plan starts the new pass now and replaces the current one.
+    // Make that explicit before the store charges anything.
+    if ((currentPlan === 'plus' || currentPlan === 'pro') && currentPlan !== targetPlan) {
+      const proceed = await new Promise<boolean>((resolve) => {
+        Alert.alert(
+          'Switch plans?',
+          `Your current ${currentPlan === 'plus' ? 'Ode+' : 'Ode Pro'} pass will be replaced by the new one, starting today. Any remaining days on it are not carried over.`,
+          [
+            { text: 'Cancel', style: 'cancel', onPress: () => resolve(false) },
+            { text: 'Switch', onPress: () => resolve(true) },
+          ],
+          { cancelable: true, onDismiss: () => resolve(false) },
+        );
+      });
+      if (!proceed) return;
+    }
+
     setPurchasing(targetPlan);
 
     try {
@@ -157,7 +176,7 @@ export default function UpgradeScreen() {
         targetPlan,
         period,
         purchase
-          ? { platform: purchase.platform, product_id: purchase.productId, purchase_token: purchase.purchaseToken }
+          ? { platform: purchase.platform, product_id: purchase.productId, purchase_token: purchase.purchaseToken, transaction_id: purchase.transactionId }
           : undefined,
       );
       setBilling(updated);
@@ -179,7 +198,7 @@ export default function UpgradeScreen() {
     } finally {
       setPurchasing(null);
     }
-  }, [period, purchasing, router]);
+  }, [currentPlan, period, purchasing, router]);
 
   if (loading) {
     return (

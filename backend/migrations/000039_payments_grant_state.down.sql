@@ -1,0 +1,2 @@
+ALTER TABLE payments DROP COLUMN IF EXISTS granted_at;
+ALTER TABLE payments DROP COLUMN IF EXISTS environment;

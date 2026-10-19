@@ -35,6 +35,10 @@ Left to do (needs your store accounts):
       account if granted). Optional: `GOOGLE_PLAY_PACKAGE_NAME` (defaults to
       `com.talktoode.app`). While unset, `/billing/upgrade` grants plans WITHOUT
       verification (dev stub) — do not launch without these.
+- [ ] **Set `IAP_SANDBOX_ALLOWED_EMAILS`** on the API to the App Review demo account (§2d)
+      and any internal testers. Since 2026-10-19 sandbox / TestFlight / Play license-tester
+      purchases are refused (402) for every other account, so App Review purchases fail
+      without this. Purchases must come from bundle `com.talktoode.app` (`APPLE_BUNDLE_ID`).
 - [ ] **Rebuild both apps** (`eas build`) — `expo-iap` is a native module; purchases do
       not work in Expo Go or via OTA update.
 - [ ] **Test end-to-end** with sandbox testers (App Store sandbox account / Play

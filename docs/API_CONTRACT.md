@@ -121,7 +121,8 @@ store-managed per product, so there is no amount check server-side.
   "period":         "monthly | annual",      // optional, defaults to "monthly"
   "platform":       "ios | android",
   "product_id":     "com.talktoode.app.plus.monthly",
-  "purchase_token": "..."   // iOS: base64 app receipt · Android: Play purchase token
+  "purchase_token": "...",  // iOS: base64 app receipt · Android: Play purchase token
+  "transaction_id": "..."   // iOS, optional: the exact store transaction being redeemed
 }
 
 // Response 200
@@ -133,7 +134,8 @@ store-managed per product, so there is no amount check server-side.
       not match the requested plan or billing period; b2b requested (b2b is
       provisioned by sales, not self-serve)
 402 - the store rejected the purchase (not purchased, pending, refunded, or forged)
-409 - store transaction already used to grant a plan (replay protection)
+402 - sandbox / TestFlight / Play test purchase from an account not on IAP_SANDBOX_ALLOWED_EMAILS
+409 - store transaction already used to grant a plan for ANOTHER user (replay protection)
 500 - store verification unavailable (retry later; the purchase is safe with the store)
 ```
 
@@ -150,6 +152,12 @@ Rules:
 - `plan: "free"` (self-downgrade) needs no purchase and clears the expiry.
 - For `plus`/`pro` the purchase is verified with the store for the exact
   `product_id`, and the product must map to the requested plan + period.
+- Replaying a transaction for the SAME user is idempotent: if its grant already
+  committed the current plan is returned unchanged (200); if the grant failed
+  after the payment was recorded it is granted now. Apple receipts must carry
+  bundle_id `com.talktoode.app`.
+- A pass for the plan the user already holds extends from the current expiry;
+  a pass for a different plan starts now and replaces the current one.
 - Each store transaction grants a plan exactly once (`payments` table, unique
   on `transaction_id` - Apple transaction_id / Play orderId).
 - The mobile app finishes (consumes) the store transaction only **after** this

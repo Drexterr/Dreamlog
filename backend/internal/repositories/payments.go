@@ -3,6 +3,7 @@ package repositories
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/dreamlog/backend/internal/models"
 	"github.com/google/uuid"
@@ -19,19 +20,55 @@ func NewPaymentRepository(db *pgxpool.Pool) *PaymentRepository {
 	return &PaymentRepository{db: db}
 }
 
+// RecordResult describes what Record found for a store transaction.
+type RecordResult struct {
+	Inserted bool      // first time this transaction was seen
+	OwnerID  uuid.UUID // user the transaction was recorded for (when !Inserted)
+	Granted  bool      // the plan grant for it already committed (when !Inserted)
+}
+
 // Record inserts the purchase if its store transaction_id has not been seen
-// before. Returns false when the transaction was already consumed.
-// Amount and currency are store-managed (the store collected the money), so
-// the row records provenance only: store + product_id + transaction_id.
-func (r *PaymentRepository) Record(ctx context.Context, userID uuid.UUID, transactionID string, plan models.Plan, store, productID string) (bool, error) {
+// before. When it has, it reports who owns it and whether its grant already
+// committed, so /billing/upgrade can be idempotent for the same user and
+// refuse it for anyone else. Amount and currency are store-managed.
+func (r *PaymentRepository) Record(ctx context.Context, userID uuid.UUID, transactionID string, plan models.Plan, store, productID string, sandbox bool) (RecordResult, error) {
+	env := "production"
+	if sandbox {
+		env = "sandbox"
+	}
 	tag, err := r.db.Exec(ctx, `
-		INSERT INTO payments (user_id, transaction_id, plan, amount, currency, store, product_id)
-		VALUES ($1, $2, $3, 0, '', $4, $5)
+		INSERT INTO payments (user_id, transaction_id, plan, amount, currency, store, product_id, environment)
+		VALUES ($1, $2, $3, 0, '', $4, $5, $6)
 		ON CONFLICT (transaction_id) DO NOTHING`,
-		userID, transactionID, plan, store, productID,
+		userID, transactionID, plan, store, productID, env,
 	)
 	if err != nil {
-		return false, fmt.Errorf("paymentRepo.Record: %w", err)
+		return RecordResult{}, fmt.Errorf("paymentRepo.Record: %w", err)
 	}
-	return tag.RowsAffected() > 0, nil
+	if tag.RowsAffected() > 0 {
+		return RecordResult{Inserted: true}, nil
+	}
+
+	var owner *uuid.UUID
+	var grantedAt *time.Time
+	if err := r.db.QueryRow(ctx,
+		`SELECT user_id, granted_at FROM payments WHERE transaction_id = $1`, transactionID,
+	).Scan(&owner, &grantedAt); err != nil {
+		return RecordResult{}, fmt.Errorf("paymentRepo.Record lookup: %w", err)
+	}
+	res := RecordResult{Granted: grantedAt != nil}
+	if owner != nil {
+		res.OwnerID = *owner
+	}
+	return res, nil
+}
+
+// MarkGranted records that the plan grant for a transaction committed.
+func (r *PaymentRepository) MarkGranted(ctx context.Context, transactionID string) error {
+	if _, err := r.db.Exec(ctx,
+		`UPDATE payments SET granted_at = NOW() WHERE transaction_id = $1 AND granted_at IS NULL`, transactionID,
+	); err != nil {
+		return fmt.Errorf("paymentRepo.MarkGranted: %w", err)
+	}
+	return nil
 }

@@ -12,6 +12,7 @@ import (
 
 	"github.com/dreamlog/backend/internal/middleware"
 	"github.com/dreamlog/backend/internal/models"
+	"github.com/dreamlog/backend/internal/repositories"
 	"github.com/dreamlog/backend/internal/services"
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
@@ -375,28 +376,39 @@ func TestBillingHandler_GetPlan_FreeLimitsHaveMonthlyEntries(t *testing.T) {
 // ── Verified (production) mode: purchase must be proven server-side ──────────
 
 type fakePaymentRecorder struct {
-	seen        map[string]bool
+	seen        map[string]uuid.UUID // transaction -> owner
+	granted     map[string]bool
 	lastStore   string
 	lastProduct string
+	lastSandbox bool
 }
 
-func (f *fakePaymentRecorder) Record(_ context.Context, _ uuid.UUID, transactionID string, _ models.Plan, store, productID string) (bool, error) {
+func (f *fakePaymentRecorder) Record(_ context.Context, userID uuid.UUID, transactionID string, _ models.Plan, store, productID string, sandbox bool) (repositories.RecordResult, error) {
 	if f.seen == nil {
-		f.seen = map[string]bool{}
+		f.seen = map[string]uuid.UUID{}
 	}
-	f.lastStore = store
-	f.lastProduct = productID
-	if f.seen[transactionID] {
-		return false, nil
+	f.lastStore, f.lastProduct, f.lastSandbox = store, productID, sandbox
+	if owner, ok := f.seen[transactionID]; ok {
+		return repositories.RecordResult{OwnerID: owner, Granted: f.granted[transactionID]}, nil
 	}
-	f.seen[transactionID] = true
-	return true, nil
+	f.seen[transactionID] = userID
+	return repositories.RecordResult{Inserted: true}, nil
+}
+
+func (f *fakePaymentRecorder) MarkGranted(_ context.Context, transactionID string) error {
+	if f.granted == nil {
+		f.granted = map[string]bool{}
+	}
+	f.granted[transactionID] = true
+	return nil
 }
 
 // fakeIAPVerifier stands in for IAPService: configured, and returns a fixed
 // transaction ID or error for any purchase token.
 type fakeIAPVerifier struct {
 	txID         string
+	sandbox      bool
+	allowSandbox bool
 	err          error
 	lastPlatform string
 	lastProduct  string
@@ -405,16 +417,19 @@ type fakeIAPVerifier struct {
 
 func (f *fakeIAPVerifier) Configured() bool { return true }
 
-func (f *fakeIAPVerifier) VerifyPurchase(_ context.Context, platform, productID, purchaseToken string) (string, error) {
+func (f *fakeIAPVerifier) VerifyPurchase(_ context.Context, platform, productID, purchaseToken, _ string) (*services.VerifiedPurchase, error) {
 	f.lastPlatform, f.lastProduct, f.lastToken = platform, productID, purchaseToken
 	if f.err != nil {
-		return "", f.err
+		return nil, f.err
 	}
-	if f.txID != "" {
-		return f.txID, nil
+	tx := f.txID
+	if tx == "" {
+		tx = "tx_" + purchaseToken
 	}
-	return "tx_" + purchaseToken, nil
+	return &services.VerifiedPurchase{TransactionID: tx, Sandbox: f.sandbox}, nil
 }
+
+func (f *fakeIAPVerifier) SandboxAllowed(string) bool { return f.allowSandbox }
 
 func newVerifiedBillingRouter(t *testing.T, svc planManager, payments paymentRecorder, iap purchaseVerifier, testUser *models.User) *gin.Engine {
 	t.Helper()
@@ -570,17 +585,85 @@ func TestBillingHandler_UpgradeVerified_Annual_GrantsYearExpiry(t *testing.T) {
 	}
 }
 
-func TestBillingHandler_UpgradeVerified_ReplayedTransaction_Returns409(t *testing.T) {
+func TestBillingHandler_UpgradeVerified_ReplayedTransaction_OtherUser_Returns409(t *testing.T) {
 	payments := &fakePaymentRecorder{}
 	// Fixed transaction ID: both requests resolve to the same store transaction.
 	iap := &fakeIAPVerifier{txID: "GPA.1234-5678"}
-	r := newVerifiedBillingRouter(t, &fakePlanManager{}, payments, iap, billingTestUser(models.PlanFree))
+	buyer := newVerifiedBillingRouter(t, &fakePlanManager{}, payments, iap, billingTestUser(models.PlanFree))
+	other := newVerifiedBillingRouter(t, &fakePlanManager{}, payments, iap, billingTestUser(models.PlanFree))
 
-	if w := postUpgrade(t, r, iapBody(nil)); w.Code != http.StatusOK {
+	if w := postUpgrade(t, buyer, iapBody(nil)); w.Code != http.StatusOK {
 		t.Fatalf("first use must succeed, got %d: %s", w.Code, w.Body.String())
 	}
-	if w := postUpgrade(t, r, iapBody(nil)); w.Code != http.StatusConflict {
-		t.Fatalf("replayed transaction must return 409, got %d: %s", w.Code, w.Body.String())
+	if w := postUpgrade(t, other, iapBody(nil)); w.Code != http.StatusConflict {
+		t.Fatalf("another user replaying the transaction must get 409, got %d: %s", w.Code, w.Body.String())
+	}
+}
+
+// H11: the same user retrying an already-granted purchase (app killed before
+// the store transaction was finished) gets 200 and is not extended twice.
+func TestBillingHandler_UpgradeVerified_SameUserReplay_IsIdempotent(t *testing.T) {
+	payments := &fakePaymentRecorder{}
+	iap := &fakeIAPVerifier{txID: "GPA.1234-5678"}
+	svc := &fakePlanManager{}
+	r := newVerifiedBillingRouter(t, svc, payments, iap, billingTestUser(models.PlanFree))
+
+	if w := postUpgrade(t, r, iapBody(nil)); w.Code != http.StatusOK {
+		t.Fatalf("first use must succeed, got %d", w.Code)
+	}
+	firstExpiry := svc.upgradedExpiry
+	svc.upgradedExpiry = nil
+	if w := postUpgrade(t, r, iapBody(nil)); w.Code != http.StatusOK {
+		t.Fatalf("same-user replay must be idempotent 200, got %d: %s", w.Code, w.Body.String())
+	}
+	if svc.upgradedExpiry != nil || firstExpiry == nil {
+		t.Error("a granted replay must not grant (extend) again")
+	}
+}
+
+// H11: recorded but never granted (plan update failed) - the retry grants.
+func TestBillingHandler_UpgradeVerified_RecordedButNotGranted_RetryGrants(t *testing.T) {
+	user := billingTestUser(models.PlanFree)
+	payments := &fakePaymentRecorder{seen: map[string]uuid.UUID{"GPA.1": user.ID}}
+	svc := &fakePlanManager{}
+	r := newVerifiedBillingRouter(t, svc, payments, &fakeIAPVerifier{txID: "GPA.1"}, user)
+	if w := postUpgrade(t, r, iapBody(nil)); w.Code != http.StatusOK || svc.upgradedPlan != models.PlanPlus {
+		t.Fatalf("ungranted purchase must be granted on retry: %d plan=%s", w.Code, svc.upgradedPlan)
+	}
+	if !payments.granted["GPA.1"] {
+		t.Error("grant must be marked after success")
+	}
+}
+
+// H12: sandbox / test purchases only for allowlisted accounts.
+func TestBillingHandler_UpgradeVerified_SandboxPurchase(t *testing.T) {
+	r := newVerifiedBillingRouter(t, &fakePlanManager{}, &fakePaymentRecorder{}, &fakeIAPVerifier{sandbox: true}, billingTestUser(models.PlanFree))
+	if w := postUpgrade(t, r, iapBody(nil)); w.Code != http.StatusPaymentRequired {
+		t.Fatalf("sandbox purchase from a normal account must be 402, got %d", w.Code)
+	}
+	payments := &fakePaymentRecorder{}
+	r = newVerifiedBillingRouter(t, &fakePlanManager{}, payments, &fakeIAPVerifier{sandbox: true, allowSandbox: true}, billingTestUser(models.PlanFree))
+	if w := postUpgrade(t, r, iapBody(nil)); w.Code != http.StatusOK {
+		t.Fatalf("allowlisted tester sandbox purchase must succeed, got %d", w.Code)
+	}
+	if !payments.lastSandbox {
+		t.Error("sandbox purchase must be recorded as sandbox")
+	}
+}
+
+// M14: a pass for the plan you hold extends from the current expiry.
+func TestBillingHandler_UpgradeVerified_SamePlanExtendsFromExpiry(t *testing.T) {
+	user := billingTestUser(models.PlanPlus)
+	current := time.Now().Add(20 * 24 * time.Hour)
+	user.PlanExpiresAt = &current
+	svc := &fakePlanManager{}
+	r := newVerifiedBillingRouter(t, svc, &fakePaymentRecorder{}, &fakeIAPVerifier{}, user)
+	if w := postUpgrade(t, r, iapBody(nil)); w.Code != http.StatusOK {
+		t.Fatalf("want 200, got %d", w.Code)
+	}
+	want := current.Add(monthlyPlanDuration)
+	if svc.upgradedExpiry == nil || svc.upgradedExpiry.Sub(want).Abs() > time.Minute {
+		t.Errorf("expiry must extend from the current expiry: want ~%v, got %v", want, svc.upgradedExpiry)
 	}
 }
 
