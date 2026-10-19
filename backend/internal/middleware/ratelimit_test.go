@@ -1,12 +1,15 @@
 package middleware
 
 import (
+	"context"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
+	"go.uber.org/zap"
 )
 
 func TestRateLimiter_AllowsBurstThenBlocks(t *testing.T) {
@@ -67,5 +70,37 @@ func TestRateLimiter_Middleware_Returns429(t *testing.T) {
 	r.ServeHTTP(second, httptest.NewRequest(http.MethodGet, "/x", nil))
 	if second.Code != http.StatusTooManyRequests {
 		t.Errorf("second request: want 429, got %d", second.Code)
+	}
+}
+
+// L8: AI endpoints are metered per user, not per IP.
+func TestRateLimiter_UserMiddleware_KeysOnUser(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	rl := NewRateLimiter(0.0001, 1, zap.NewNop())
+	userA, userB := uuid.New(), uuid.New()
+	r := gin.New()
+	r.Use(func(c *gin.Context) {
+		id := userA
+		if c.GetHeader("X-User") == "b" {
+			id = userB
+		}
+		c.Request = c.Request.WithContext(context.WithValue(c.Request.Context(), ctxUserIDKey, id))
+		c.Next()
+	})
+	r.Use(rl.UserMiddleware())
+	r.GET("/x", func(c *gin.Context) { c.Status(http.StatusOK) })
+
+	do := func(user string) int {
+		w := httptest.NewRecorder()
+		req, _ := http.NewRequest(http.MethodGet, "/x", nil)
+		req.Header.Set("X-User", user)
+		r.ServeHTTP(w, req)
+		return w.Code
+	}
+	if do("a") != http.StatusOK || do("a") != http.StatusTooManyRequests {
+		t.Error("user A's second call within the window must be limited")
+	}
+	if do("b") != http.StatusOK {
+		t.Error("user B (same IP) must have an independent bucket")
 	}
 }

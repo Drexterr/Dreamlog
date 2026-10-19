@@ -207,7 +207,9 @@ func NewRouter(deps Deps) http.Handler {
 	auth.PUT("/chapters/:id", chapterHandler.Update)
 	auth.DELETE("/chapters/:id", chapterHandler.Delete)
 	auth.GET("/chapters/:id/detail", chapterHandler.GetDetail)
-	auth.POST("/chapters/:id/summarize", chapterHandler.Summarize)
+	// On-demand Claude calls: metered per user so no plan can run up unbounded AI cost.
+	aiLimiter := middleware.NewRateLimiter(0.05, 5, deps.Log) // ~3/min sustained, burst 5
+	auth.POST("/chapters/:id/summarize", aiLimiter.UserMiddleware(), chapterHandler.Summarize)
 
 	// Relationship Map
 	relationshipHandler := NewRelationshipHandler(deps.RelationshipRepo)
@@ -245,7 +247,7 @@ func NewRouter(deps Deps) http.Handler {
 	auth.GET("/therapists/sessions", notesHandler.ListSessions)
 	auth.GET("/therapists/sessions/:id", notesHandler.GetSession)
 	auth.PATCH("/therapists/sessions/:id", notesHandler.UpdateSessionBullets)
-	auth.POST("/therapists/sessions/:id/summarize", notesHandler.SummarizeSession)
+	auth.POST("/therapists/sessions/:id/summarize", aiLimiter.UserMiddleware(), notesHandler.SummarizeSession)
 	auth.DELETE("/therapists/sessions/:id", notesHandler.DeleteSession)
 	// ToS / privacy acceptance (all users)
 	auth.POST("/me/accept-terms", notesHandler.AcceptUserTerms)

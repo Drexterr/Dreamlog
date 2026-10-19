@@ -7,6 +7,7 @@ import (
 
 	"github.com/dreamlog/backend/pkg/apierr"
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"go.uber.org/zap"
 )
 
@@ -101,6 +102,30 @@ func (rl *RateLimiter) Middleware() gin.HandlerFunc {
 				zap.String("ip", c.ClientIP()),
 				zap.String("path", c.Request.URL.Path),
 				zap.String("method", c.Request.Method),
+			)
+			c.Header("Retry-After", "60")
+			c.AbortWithStatusJSON(http.StatusTooManyRequests,
+				apierr.New(http.StatusTooManyRequests, "too many requests, please slow down"))
+			return
+		}
+		c.Next()
+	}
+}
+
+// UserMiddleware enforces the limit per authenticated user (falling back to
+// client IP), for expensive authenticated endpoints such as on-demand Claude
+// calls - one user can't run up unbounded AI cost from many IPs, and users
+// behind a shared IP don't throttle each other. Must run after AuthMiddleware.
+func (rl *RateLimiter) UserMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		key := "ip:" + c.ClientIP()
+		if id := UserIDFromCtx(c.Request.Context()); id != uuid.Nil {
+			key = "user:" + id.String()
+		}
+		if !rl.allow(key, time.Now()) {
+			rl.log.Warn("security event: per-user rate limit exceeded",
+				zap.String("key", key),
+				zap.String("path", c.Request.URL.Path),
 			)
 			c.Header("Retry-After", "60")
 			c.AbortWithStatusJSON(http.StatusTooManyRequests,
