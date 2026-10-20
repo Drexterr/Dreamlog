@@ -1,0 +1,11 @@
+version: 1
+id: 44ff64af-9772-46be-8315-3d6d599006d7
+name: Ode therapist portal contract
+slug: ode-therapist-portal-contract
+protocol: http
+port: 4921
+interceptRequests: true
+scenarios:
+  - name: default
+    path: ./stateful.js
+    default: true

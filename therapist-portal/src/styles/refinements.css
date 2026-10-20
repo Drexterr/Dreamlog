@@ -1,0 +1,9 @@
+.ode-site .toolbar input { width: 260px; }
+@media (max-width: 760px) {
+  .ode-site .toolbar input { width: 100%; }
+  .ode-site .sidebar-bottom { grid-column: 2; grid-row: 1; justify-self: end; }
+  .ode-site .sidebar-bottom strong { display: none; }
+  .ode-site .sidebar nav { grid-row: 2; }
+  .ode-site .stats-strip { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+  .ode-site .stats-strip span { font-size: 12px; }
+}

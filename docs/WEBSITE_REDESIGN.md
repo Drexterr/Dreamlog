@@ -1,0 +1,66 @@
+# Approved website redesign — 20 October 2026
+
+The approved homepage and supporting-page previews are implemented in the existing
+Next.js/Firebase website, including the therapist workspace. Backend contracts and
+mobile code are unchanged.
+
+## Structure
+
+- `src/content/landing-markup.json`: reviewed homepage markup; static, trusted content.
+- `src/components/landing-interactions.js`: approved ScrollCraft runtime and goal/
+  screenshot dialogs, mounted and disposed with the React page.
+- `src/content/public-pages.json`: reviewed public copy and the existing legal text.
+  Never insert API responses or user data into these HTML templates.
+- `SiteFrame`, `PublicPage`, `PortalShell`: public and authenticated page framing.
+- `src/styles/`: scoped website and homepage styling; locally hosted brand fonts.
+- Existing `/login`, `/dashboard`, client brief and session-note routes call the
+  existing typed Axios client. No preview passwords, fabricated clients or mock
+  authentication are included in the deployed app.
+
+Privacy and Terms keep all 26 existing sections and their existing dates. This
+change does not revise the policy text. The Teams page omits unsupported statistics
+and regulatory assertions and retains the existing pricing and pilot enquiry.
+Launch actions use email while store listings are unavailable. All existing public
+destinations remain discoverable from the footer.
+
+## Portal behavior
+
+The backend client summary supplies an average, not a longitudinal trend. The
+overview therefore labels that column **30-day mood**, without inferring a trend
+from the absolute score. The individual brief displays the actual server trend.
+
+Linking is a pending request: the client must approve it in the mobile app before
+access appears. Consent is unlocked only after the consent endpoint succeeds.
+Failed saves preserve unsaved text; failed deletions preserve session records.
+Session switching and leaving the page protect unsaved edits. Images retain the
+existing presign → PUT → create-session → poll OCR pipeline; notes and summaries
+are real API operations, not preview simulations.
+
+Firebase rewrites direct `/dashboard/clients/**` loads to the exported client-brief
+shell. The client ID is read from the actual browser URL, not the static `_`
+placeholder. Unknown/unshared IDs remain subject to backend authorization.
+
+## Verification
+
+- Production Next.js export with TypeScript checking.
+- `node scripts/check-website-export.cjs`: exported route, fragment and asset checks;
+  legal section counts; absence of review banners and preview credentials.
+- Start `postman simulation run postman/simulations/portal.sim.yaml --port 4920`,
+  then `node scripts/test-portal-ui.cjs`: actual React components and Axios client
+  over real loopback HTTP with fictional data. Covers login, clients, pending links,
+  consent failure/success, note save failures, summaries, deletion failures and
+  direct client brief paths. Requires the existing mobile/portal npm dependencies.
+- Browser checks cover public pages, real portal screens against that simulation,
+  goal selection, pricing, screenshot enlargement, and mobile widths 320/390px.
+
+The local mock is not a production backend test. Live checks avoid real client
+records, journal submissions, paid AI calls and account creation. Firebase Hosting
+deployment does not deploy backend services or publish a mobile OTA.
+
+## Deployment
+
+From `therapist-portal`, build with
+`NEXT_PUBLIC_API_URL=https://dreamlog-production-f9e2.up.railway.app` and run
+`firebase deploy --only hosting --project dreamlog-48f94` after checks pass.
+Never deploy a build pointed at the local simulation. Font assets and screenshots
+are hosted locally under `public/`; existing CSP and security headers are retained.

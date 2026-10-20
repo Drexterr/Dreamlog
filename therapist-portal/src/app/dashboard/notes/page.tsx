@@ -1,461 +1,249 @@
 'use client';
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState, type ChangeEvent } from 'react';
 import { useRouter } from 'next/navigation';
-import {
-  notesApi,
-  getToken,
-  type ExternalClient,
-  type ClientSession,
-} from '../../../lib/api';
-import PortalSidebar from '../../../components/PortalSidebar';
-
-const STATUS_LABEL: Record<string, string> = {
-  pending: 'Extracting…',
-  processing: 'Extracting…',
-  completed: 'Ready',
-  failed: 'Failed',
-};
-
-// Session Notes workspace: manage external clients, upload photographed
-// session notes (OCR → editable bullets), edit, and AI-summarize.
+import { getToken, notesApi, type ExternalClient, type ClientSession } from '../../../lib/api';
+import PortalShell from '../../../components/PortalShell';
 export default function SessionNotesPage() {
   const router = useRouter();
-  const [consented, setConsented] = useState<boolean | null>(null);
-  const [clients, setClients] = useState<ExternalClient[]>([]);
-  const [selected, setSelected] = useState<ExternalClient | null>(null);
-  const [sessions, setSessions] = useState<ClientSession[]>([]);
-  const [openSession, setOpenSession] = useState<ClientSession | null>(null);
-  const [bullets, setBullets] = useState<string[]>([]);
-  const [dirty, setDirty] = useState(false);
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState('');
-  const [newClientName, setNewClientName] = useState('');
-  const [showAddClient, setShowAddClient] = useState(false);
-  const fileInput = useRef<HTMLInputElement>(null);
-  const pollTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  const loadClients = useCallback(async () => {
-    const list = await notesApi.listExternalClients().catch(() => []);
-    setClients(list);
-    return list;
+  const [consent, setConsent] = useState<boolean | null>(null),
+    [clients, setClients] = useState<ExternalClient[]>([]),
+    [selected, setSelected] = useState<ExternalClient | null>(null),
+    [sessions, setSessions] = useState<ClientSession[]>([]),
+    [session, setSession] = useState<ClientSession | null>(null),
+    [text, setText] = useState(''),
+    [dirty, setDirty] = useState(false),
+    [busy, setBusy] = useState(false),
+    [loading, setLoading] = useState(true),
+    [error, setError] = useState(''),
+    [status, setStatus] = useState(''),
+    [newName, setNewName] = useState(''),
+    [adding, setAdding] = useState(false),
+    [sessionsLoading, setSessionsLoading] = useState(false);
+  const alive = useRef(false),
+    generation = useRef(0),
+    lock = useRef(false),
+    file = useRef<HTMLInputElement>(null);
+  const initial = useCallback(async () => {
+    setError('');
+    setLoading(true);
+    try {
+      const [me, list] = await Promise.all([notesApi.me(), notesApi.listExternalClients()]);
+      if (!alive.current) return;
+      setConsent(me.client_consent_accepted);
+      setClients(list);
+      setSelected(current => current && list.some(c => c.id === current.id) ? current : list.find(c => !c.archived) || null);
+    } catch {
+      if (alive.current) setError('Could not load the notes workspace. Please try again.');
+    } finally {
+      if (alive.current) setLoading(false);
+    }
   }, []);
-
   useEffect(() => {
+    alive.current = true;
     if (!getToken()) {
       router.replace('/login');
       return;
     }
-    notesApi
-      .me()
-      .then(resp => setConsented(resp.client_consent_accepted))
-      .catch(() => router.replace('/dashboard'));
-    loadClients();
-  }, [router, loadClients]);
-
-  // Load sessions when a client is selected.
+    void initial();
+    return () => {
+      alive.current = false;
+      generation.current++;
+    };
+  }, [initial, router]);
   useEffect(() => {
-    if (!selected) {
-      setSessions([]);
-      return;
-    }
-    notesApi
-      .listSessions({ external_client_id: selected.id })
-      .then(setSessions)
-      .catch(() => setSessions([]));
+    const run = ++generation.current;
+    setSessions([]);
+    setSession(null);
+    setText('');
+    setDirty(false);
+    setSessionsLoading(!!selected);
+    if (!selected) return;
+    notesApi.listSessions({
+      external_client_id: selected.id
+    }).then(list => {
+      if (!alive.current || run !== generation.current) return;
+      setSessions(list);
+      const first = list[0];
+      if (first) {
+        setSession(first);
+        setText(first.bullets.join('\n'));
+      }
+    }).catch(() => {
+      if (alive.current && run === generation.current) setError('Could not load sessions for this client. Select the client again to retry.');
+    }).finally(() => {
+      if (alive.current && run === generation.current) setSessionsLoading(false);
+    });
   }, [selected]);
-
-  // Poll an open session while OCR runs.
   useEffect(() => {
-    if (pollTimer.current) clearTimeout(pollTimer.current);
-    if (!openSession || (openSession.status !== 'pending' && openSession.status !== 'processing')) return;
-    pollTimer.current = setTimeout(async () => {
-      const fresh = await notesApi.getSession(openSession.id).catch(() => null);
-      if (fresh) {
-        setOpenSession(fresh);
-        setBullets(fresh.bullets);
-        setSessions(prev => prev.map(s => (s.id === fresh.id ? fresh : s)));
+    if (!session || !['pending', 'processing'].includes(session.status)) return;
+    let active = true;
+    const current = session.id;
+    const timer = setTimeout(async () => {
+      try {
+        const fresh = await notesApi.getSession(current);
+        if (!active || !alive.current) return;
+        setSession(fresh);
+        setText(fresh.bullets.join('\n'));
+        setSessions(list => list.map(s => s.id === fresh.id ? fresh : s));
+      } catch {
+        if (active && alive.current) setError('Extraction status is temporarily unavailable. Reopen the session to retry.');
       }
     }, 3000);
     return () => {
-      if (pollTimer.current) clearTimeout(pollTimer.current);
+      active = false;
+      clearTimeout(timer);
     };
-  }, [openSession]);
-
-  const handleAcceptConsent = async () => {
-    await notesApi.acceptConsent().catch(() => {});
-    setConsented(true);
-  };
-
-  const handleAddClient = async () => {
-    const name = newClientName.trim();
-    if (!name) return;
-    setBusy(true);
-    try {
-      await notesApi.createExternalClient(name);
-      setNewClientName('');
-      setShowAddClient(false);
-      await loadClients();
-    } catch {
-      setError('Could not add client.');
-    } finally {
-      setBusy(false);
-    }
-  };
-
-  const handleUpload = async (file: File) => {
-    if (!selected) return;
-    const allowed = ['image/jpeg', 'image/png', 'image/webp'];
-    if (!allowed.includes(file.type)) {
-      setError('Please upload a JPEG, PNG, or WebP photo.');
-      return;
-    }
-    if (file.size > 10 * 1024 * 1024) {
-      setError('Photo must be under 10 MB.');
-      return;
-    }
+  }, [session]);
+  const canLeave = () => !dirty || confirm('Discard unsaved changes to these notes?');
+  async function action(work: () => Promise<void>) {
+    if (lock.current) return;
+    lock.current = true;
     setBusy(true);
     setError('');
+    setStatus('');
     try {
-      const { upload_url, image_key } = await notesApi.presignNote(file.name, file.type);
-      const put = await fetch(upload_url, {
-        method: 'PUT',
-        headers: { 'Content-Type': file.type },
-        body: file,
-      });
-      if (!put.ok) throw new Error('upload failed');
-      const session = await notesApi.createSession({
-        external_client_id: selected.id,
-        image_key,
-      });
-      setSessions(prev => [session, ...prev]);
-      setOpenSession(session);
-      setBullets(session.bullets);
-      setDirty(false);
+      await work();
     } catch {
-      setError('Upload failed. Please try again.');
+      if (alive.current) setError('That action could not be completed. Your notes have not been discarded. Please try again.');
     } finally {
-      setBusy(false);
-      if (fileInput.current) fileInput.current.value = '';
+      lock.current = false;
+      if (alive.current) setBusy(false);
     }
-  };
-
-  const openSessionDetail = async (s: ClientSession) => {
-    const fresh = await notesApi.getSession(s.id).catch(() => s);
-    setOpenSession(fresh);
-    setBullets(fresh.bullets.length ? fresh.bullets : ['']);
+  }
+  function update(s: ClientSession) {
+    setSession(s);
+    setText(s.bullets.join('\n'));
     setDirty(false);
-    setError('');
-  };
-
-  const handleSaveBullets = async () => {
-    if (!openSession) return;
-    const cleaned = bullets.map(b => b.trim()).filter(Boolean);
-    if (!cleaned.length) {
-      setError('Notes cannot be empty.');
+    setSessions(list => list.some(x => x.id === s.id) ? list.map(x => x.id === s.id ? s : x) : [s, ...list]);
+  }
+  async function accept() {
+    await action(async () => {
+      const r = await notesApi.acceptConsent();
+      if (alive.current) setConsent(r.client_consent_accepted);
+    });
+  }
+  async function add() {
+    if (!newName.trim() || !consent) return;
+    await action(async () => {
+      const c = await notesApi.createExternalClient(newName.trim());
+      if (!alive.current) return;
+      setClients(list => [c, ...list]);
+      setSelected(c);
+      setAdding(false);
+      setNewName('');
+    });
+  }
+  async function open(s: ClientSession) {
+    if (!canLeave()) return;
+    await action(async () => {
+      const fresh = await notesApi.getSession(s.id);
+      if (alive.current) update(fresh);
+    });
+  }
+  async function save() {
+    if (!consent || !selected || sessionsLoading) return;
+    const bullets = text.split('\n').map(b => b.trim()).filter(Boolean);
+    if (!bullets.length) {
+      setError('Write at least one note before saving.');
       return;
     }
-    setBusy(true);
-    setError('');
-    try {
-      const updated = await notesApi.updateBullets(openSession.id, cleaned);
-      setOpenSession(updated);
-      setBullets(updated.bullets);
-      setDirty(false);
-      setSessions(prev => prev.map(s => (s.id === updated.id ? updated : s)));
-    } catch {
-      setError('Save failed.');
-    } finally {
-      setBusy(false);
+    await action(async () => {
+      const saved = session ? await notesApi.updateBullets(session.id, bullets) : await notesApi.createSession({
+        external_client_id: selected.id,
+        bullets
+      });
+      if (alive.current) {
+        update(saved);
+        setStatus('Notes saved.');
+      }
+    });
+  }
+  async function upload(e: ChangeEvent<HTMLInputElement>) {
+    const photo = e.target.files?.[0];
+    if (!photo || !selected || !consent) return;
+    if (!['image/jpeg', 'image/png', 'image/webp'].includes(photo.type) || photo.size > 10 * 1024 * 1024) {
+      setError('Choose a JPEG, PNG or WebP image under 10 MB.');
+      e.target.value = '';
+      return;
     }
-  };
-
-  const handleSummarize = async () => {
-    if (!openSession) return;
+    if (!canLeave()) {
+      e.target.value = '';
+      return;
+    }
+    await action(async () => {
+      const presign = await notesApi.presignNote(photo.name, photo.type);
+      const response = await fetch(presign.upload_url, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': photo.type
+        },
+        body: photo
+      });
+      if (!response.ok) throw new Error('upload failed');
+      const created = await notesApi.createSession({
+        external_client_id: selected.id,
+        image_key: presign.image_key
+      });
+      if (alive.current) {
+        update(created);
+        setStatus('Photo uploaded. Extracting your notes…');
+      }
+    });
+    if (file.current) file.current.value = '';
+  }
+  async function summarize() {
+    if (!session) return;
     if (dirty) {
-      setError('Save your edits first.');
+      setError('Save your edits before generating a summary.');
       return;
     }
-    setBusy(true);
-    setError('');
-    try {
-      const updated = await notesApi.summarize(openSession.id);
-      setOpenSession(updated);
-      setSessions(prev => prev.map(s => (s.id === updated.id ? updated : s)));
-    } catch {
-      setError('Summarization failed.');
-    } finally {
-      setBusy(false);
-    }
-  };
-
-  const handleDeleteSession = async () => {
-    if (!openSession) return;
-    if (!confirm('Delete these session notes permanently?')) return;
-    await notesApi.deleteSession(openSession.id).catch(() => {});
-    setSessions(prev => prev.filter(s => s.id !== openSession.id));
-    setOpenSession(null);
-    loadClients();
-  };
-
-  return (
-    <div className="flex min-h-screen" style={{ background: 'var(--bg, #0f0c1e)' }}>
-      <PortalSidebar />
-      <main className="flex-1 p-8 overflow-y-auto">
-        <h1 className="text-2xl font-semibold mb-1" style={{ color: 'var(--text-primary, #fff)' }}>
-          Session notes
-        </h1>
-        <p className="text-sm mb-6" style={{ color: 'var(--text-muted, #9ca3af)' }}>
-          Photograph your handwritten notes — Ode extracts them into editable bullets and can
-          summarize each session. Notes are encrypted at rest; photos are deleted after extraction.
-        </p>
-
-        {consented === false && (
-          <div className="rounded-xl border border-purple-500/40 bg-purple-500/10 p-5 mb-6 max-w-2xl">
-            <h2 className="font-semibold mb-2" style={{ color: 'var(--text-primary, #fff)' }}>
-              Client data responsibility
-            </h2>
-            <p className="text-sm mb-4" style={{ color: 'var(--text-muted, #9ca3af)' }}>
-              Before adding clients: you confirm you have your clients&apos; consent to store session
-              notes, you are responsible for the information you upload, and you&apos;ll use
-              identifiers your clients are comfortable with (first name or initials recommended).
-            </p>
-            <button
-              onClick={handleAcceptConsent}
-              className="rounded-lg bg-purple-600 hover:bg-purple-500 text-white text-sm font-medium px-4 py-2"
-            >
-              I understand and accept
-            </button>
-          </div>
-        )}
-
-        <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-6">
-          {/* Client list */}
-          <section>
-            <div className="flex items-center justify-between mb-3">
-              <h2 className="text-sm font-semibold uppercase tracking-wide" style={{ color: 'var(--text-muted, #9ca3af)' }}>
-                Clients
-              </h2>
-              <button
-                onClick={() => setShowAddClient(v => !v)}
-                disabled={consented !== true}
-                className="text-xs rounded-md bg-purple-600 hover:bg-purple-500 disabled:opacity-40 text-white px-3 py-1.5"
-              >
-                + Add
-              </button>
-            </div>
-            {showAddClient && (
-              <div className="mb-3 flex gap-2">
-                <input
-                  value={newClientName}
-                  onChange={e => setNewClientName(e.target.value)}
-                  onKeyDown={e => e.key === 'Enter' && handleAddClient()}
-                  placeholder="First name or initials"
-                  className="flex-1 rounded-md bg-white/5 border border-white/10 px-3 py-1.5 text-sm text-white placeholder:text-white/30"
-                />
-                <button onClick={handleAddClient} disabled={busy} className="text-xs rounded-md bg-purple-600 text-white px-3">
-                  Save
-                </button>
-              </div>
-            )}
-            <ul className="space-y-2">
-              {clients.map(c => (
-                <li key={c.id}>
-                  <button
-                    onClick={() => {
-                      setSelected(c);
-                      setOpenSession(null);
-                    }}
-                    className={`w-full text-left rounded-lg border px-3 py-2.5 transition ${
-                      selected?.id === c.id
-                        ? 'border-purple-500 bg-purple-500/15'
-                        : 'border-white/10 bg-white/5 hover:bg-white/10'
-                    }`}
-                  >
-                    <span className="block text-sm font-medium text-white">{c.name}</span>
-                    <span className="block text-xs text-white/40">
-                      {c.session_count} session{c.session_count === 1 ? '' : 's'}
-                    </span>
-                  </button>
-                </li>
-              ))}
-              {clients.length === 0 && (
-                <li className="text-xs text-white/40 border border-dashed border-white/10 rounded-lg p-4">
-                  No clients yet. Add your first client to start keeping notes.
-                </li>
-              )}
-            </ul>
-          </section>
-
-          {/* Sessions + detail */}
-          <section>
-            {!selected ? (
-              <div className="border border-dashed border-white/10 rounded-xl p-10 text-center text-sm text-white/40">
-                Select a client to view or add session notes.
-              </div>
-            ) : (
-              <>
-                <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-lg font-medium text-white">{selected.name}</h2>
-                  <div className="flex gap-2">
-                    <input
-                      ref={fileInput}
-                      type="file"
-                      accept="image/jpeg,image/png,image/webp"
-                      className="hidden"
-                      onChange={e => e.target.files?.[0] && handleUpload(e.target.files[0])}
-                    />
-                    <button
-                      onClick={() => fileInput.current?.click()}
-                      disabled={busy || consented !== true}
-                      className="rounded-lg bg-purple-600 hover:bg-purple-500 disabled:opacity-40 text-white text-sm font-medium px-4 py-2"
-                    >
-                      {busy ? 'Working…' : '📷 Upload note photo'}
-                    </button>
-                  </div>
-                </div>
-
-                {error && <p className="text-sm text-red-400 mb-3">{error}</p>}
-
-                <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
-                  {/* Session list */}
-                  <ul className="space-y-2">
-                    {sessions.map(s => (
-                      <li key={s.id}>
-                        <button
-                          onClick={() => openSessionDetail(s)}
-                          className={`w-full text-left rounded-lg border px-4 py-3 transition ${
-                            openSession?.id === s.id
-                              ? 'border-purple-500 bg-purple-500/15'
-                              : 'border-white/10 bg-white/5 hover:bg-white/10'
-                          }`}
-                        >
-                          <div className="flex justify-between">
-                            <span className="text-sm font-medium text-white">{s.session_date}</span>
-                            <span
-                              className={`text-xs ${
-                                s.status === 'completed'
-                                  ? 'text-emerald-400'
-                                  : s.status === 'failed'
-                                    ? 'text-red-400'
-                                    : 'text-white/40'
-                              }`}
-                            >
-                              {STATUS_LABEL[s.status]}
-                            </span>
-                          </div>
-                          {s.bullets[0] && (
-                            <span className="block text-xs text-white/50 mt-1 line-clamp-2">• {s.bullets[0]}</span>
-                          )}
-                        </button>
-                      </li>
-                    ))}
-                    {sessions.length === 0 && (
-                      <li className="text-xs text-white/40 border border-dashed border-white/10 rounded-lg p-4">
-                        No sessions for {selected.name} yet. Upload a photo of your notes to create one.
-                      </li>
-                    )}
-                  </ul>
-
-                  {/* Session detail */}
-                  {openSession && (
-                    <div className="rounded-xl border border-white/10 bg-white/5 p-5">
-                      <div className="flex items-center justify-between mb-4">
-                        <h3 className="text-sm font-semibold text-white">{openSession.session_date}</h3>
-                        <button onClick={handleDeleteSession} className="text-xs text-red-400 hover:text-red-300">
-                          Delete
-                        </button>
-                      </div>
-
-                      {(openSession.status === 'pending' || openSession.status === 'processing') && (
-                        <p className="text-sm text-white/50">Reading your notes… this usually takes a few seconds.</p>
-                      )}
-
-                      {openSession.status === 'failed' && (
-                        <p className="text-sm text-red-400">
-                          Extraction failed: {openSession.error_msg || 'photo unreadable'}. Delete and retake the photo.
-                        </p>
-                      )}
-
-                      {openSession.status === 'completed' && (
-                        <>
-                          {openSession.summary ? (
-                            <div className="rounded-lg border border-purple-500/40 bg-purple-500/10 p-3 mb-4">
-                              <p className="text-[10px] uppercase tracking-wider text-white/40 mb-1">✦ AI summary</p>
-                              <p className="text-sm text-white/80 leading-relaxed">{openSession.summary}</p>
-                            </div>
-                          ) : (
-                            <button
-                              onClick={handleSummarize}
-                              disabled={busy}
-                              className="mb-4 rounded-lg border border-purple-500 text-white text-xs font-medium px-3 py-2 hover:bg-purple-500/10 disabled:opacity-40"
-                            >
-                              ✦ Summarize with AI
-                            </button>
-                          )}
-
-                          <div className="space-y-2">
-                            {bullets.map((b, i) => (
-                              <div key={i} className="flex gap-2 items-start">
-                                <span className="text-white/40 mt-2">•</span>
-                                <textarea
-                                  value={b}
-                                  rows={2}
-                                  onChange={e => {
-                                    const v = e.target.value;
-                                    setBullets(prev => prev.map((x, j) => (j === i ? v : x)));
-                                    setDirty(true);
-                                  }}
-                                  className="flex-1 rounded-md bg-white/5 border border-white/10 px-3 py-2 text-sm text-white resize-y"
-                                />
-                                <button
-                                  onClick={() => {
-                                    setBullets(prev => prev.filter((_, j) => j !== i));
-                                    setDirty(true);
-                                  }}
-                                  className="text-white/40 hover:text-red-400 mt-2"
-                                >
-                                  ✕
-                                </button>
-                              </div>
-                            ))}
-                            <button
-                              onClick={() => {
-                                setBullets(prev => [...prev, '']);
-                                setDirty(true);
-                              }}
-                              className="text-xs text-white/50 hover:text-white"
-                            >
-                              + Add a note
-                            </button>
-                          </div>
-
-                          {dirty && (
-                            <button
-                              onClick={handleSaveBullets}
-                              disabled={busy}
-                              className="mt-4 rounded-lg bg-purple-600 hover:bg-purple-500 disabled:opacity-40 text-white text-sm font-medium px-4 py-2"
-                            >
-                              Save changes
-                            </button>
-                          )}
-
-                          {openSession.raw_text && (
-                            <details className="mt-4">
-                              <summary className="text-xs text-white/40 cursor-pointer">Original extracted text</summary>
-                              <p className="text-xs text-white/50 whitespace-pre-wrap mt-2">{openSession.raw_text}</p>
-                            </details>
-                          )}
-                        </>
-                      )}
-                    </div>
-                  )}
-                </div>
-              </>
-            )}
-          </section>
-        </div>
-      </main>
-    </div>
-  );
+    await action(async () => {
+      const fresh = await notesApi.summarize(session.id);
+      if (alive.current) {
+        update(fresh);
+        setStatus('Summary updated.');
+      }
+    });
+  }
+  async function remove() {
+    if (!session || !confirm('Permanently delete these session notes?')) return;
+    const id = session.id;
+    await action(async () => {
+      await notesApi.deleteSession(id);
+      if (!alive.current) return;
+      setSessions(list => list.filter(s => s.id !== id));
+      setSession(null);
+      setText('');
+      setDirty(false);
+      setStatus('Session notes deleted.');
+    });
+  }
+  const processing = !!session && ['pending', 'processing'].includes(session.status);
+  return <PortalShell title="Session notes" dirty={dirty}><div className="page-heading"><div><h1>Session notes.</h1><p>Bring your notes into a clear, editable record.</p></div><button className="btn small" disabled={!consent || busy || dirty} onClick={() => setAdding(!adding)}>Add client +</button></div>{error && <div className="notice" role="alert"><p className="error">{error}</p>{loading === false && consent === null && <button className="text-btn" onClick={() => void initial()}>Retry workspace</button>}</div>}{loading && <p role="status">Loading the notes workspace…</p>}{consent === false && <section className="consent-demo"><h2>Client data responsibility</h2><p>Before adding clients, confirm that you have their consent to store session notes, that you are responsible for the information you upload, and that you will use identifiers they are comfortable with. First names or initials are recommended.</p><button className="btn" disabled={busy} onClick={() => void accept()}>I understand and accept</button></section>}{adding && <form className="note-tools" onSubmit={e => {
+      e.preventDefault();
+      void add();
+    }}><label htmlFor="new-client">Client name or initials</label><input id="new-client" value={newName} onChange={e => setNewName(e.target.value)} required disabled={busy} maxLength={200} /><button className="btn small" disabled={busy}>Add client</button><button className="text-btn" type="button" disabled={busy} onClick={() => setAdding(false)}>Cancel</button></form>}<div className="notes-layout"><aside><h2 style={{
+          fontSize: 15
+        }}>Clients</h2><div className="notes-clients">{clients.filter(c => !c.archived).map(c => <button className="note-client" key={c.id} aria-pressed={selected?.id === c.id} disabled={busy} onClick={() => {
+            if (canLeave()) {
+              setError('');
+              setSelected({
+                ...c
+              });
+            }
+          }}>{c.name}<span className="subtext">{c.session_count} session{c.session_count === 1 ? '' : 's'}</span></button>)}</div>{!clients.length && !loading && <p className="small-note quiet">Add a client to start organising your session notes.</p>}</aside><section className="note-edit">{selected ? <><div className="page-heading"><div><h2 style={{
+                marginBottom: 4
+              }}>{selected.name}</h2><p>{session ? new Date(session.session_date).toLocaleDateString() : 'New session'}</p></div><span className="review-pill">{dirty ? 'Unsaved changes' : session ? processing ? 'Extracting…' : session.status === 'failed' ? 'Extraction failed' : 'Saved' : 'New note'}</span></div><div className="session-list" aria-label="Sessions">{sessions.map(s => <button key={s.id} className="session-choice" disabled={busy} aria-pressed={session?.id === s.id} onClick={() => void open(s)}>{new Date(s.session_date).toLocaleDateString()} · {s.status === 'completed' ? 'Ready' : s.status}</button>)}</div><div className="note-tools"><button className="text-btn" disabled={!consent || busy || sessionsLoading} onClick={() => {
+              if (canLeave()) {
+                setSession(null);
+                setText('');
+                setDirty(false);
+                setStatus('');
+              }
+            }}>New session +</button>{session && <button className="text-btn" disabled={busy} onClick={() => void remove()}>Delete session</button>}</div>{session?.status === 'failed' && <p role="alert" className="error">We could not extract this image. You can upload another photo or type your notes below.</p>}<label htmlFor="note-text">Session bullets · one per line</label><textarea id="note-text" value={text} onChange={e => {
+            setText(e.target.value);
+            setDirty(true);
+            setStatus('');
+          }} disabled={!consent || busy || processing || sessionsLoading} placeholder="Write your session notes…" /><div className="actions"><button className="btn" disabled={!consent || busy || processing || sessionsLoading} onClick={() => void save()}>{busy ? 'Please wait…' : 'Save notes'}</button><button className="btn outline" disabled={!session || !consent || busy || processing || dirty || sessionsLoading} onClick={() => void summarize()}>Generate summary</button></div><div className="note-upload"><label htmlFor="note-photo">Upload a note photo</label><input ref={file} id="note-photo" type="file" accept="image/jpeg,image/png,image/webp" disabled={!consent || busy || processing || sessionsLoading} onChange={e => void upload(e)} /><p className="small-note quiet">JPEG, PNG or WebP · up to 10 MB. Photos are deleted after extraction. Review extracted text before saving changes.</p></div>{session?.summary && <section className="notice"><h3>AI session summary</h3><p>{session.summary}</p><p className="small-note">Check this interpretation against your original notes and professional judgment.</p></section>}</> : <p className="empty">{loading ? 'Loading…' : 'Select a client to view their sessions.'}</p>}{status && <p className="status-message" role="status">{status}</p>}</section></div></PortalShell>;
 }

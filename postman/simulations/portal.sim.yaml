@@ -1,0 +1,5 @@
+simulation: ode-therapist-portal
+routing: path
+mocks:
+  - routeKey: ode
+    path: ../mocks/ode-portal/config.yaml

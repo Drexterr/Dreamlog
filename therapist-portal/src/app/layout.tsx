@@ -1,5 +1,8 @@
 import type { Metadata, Viewport } from 'next';
 import './globals.css';
+import '../styles/website.css';
+import '../styles/landing.css';
+import '../styles/refinements.css';
 
 export const viewport: Viewport = {
   themeColor: '#18150f',
@@ -20,7 +23,7 @@ export const metadata: Metadata = {
     template: '%s · Ode',
   },
   description:
-    'Talk for two minutes or twenty. Ode listens, transcribes, and reflects back something worth sitting with — grounded in everything you have shared before.',
+    'Record or write your journal. Ode offers AI reflections grounded in your recent entries and helps you notice recurring themes.',
   keywords: ['voice journaling', 'AI reflection', 'mental wellness', 'mood tracking', 'therapy companion'],
   openGraph: {
     title: 'Ode — Voice Journaling with AI Reflection',
@@ -33,21 +36,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link rel="preconnect" href="https://cdn.fontshare.com" crossOrigin="anonymous" />
-        {/* Hanken Grotesk: body/UI · Newsreader Italic: quotes & reflections */}
-        <link
-          href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700&family=Newsreader:ital,opsz,wght@1,6..72,400&display=swap"
-          rel="stylesheet"
-        />
-        {/* Erode: display & headings (Fontshare · ITF Free Font License) */}
-        <link
-          href="https://api.fontshare.com/v2/css?f[]=erode@300,400,401,500,600,700&display=swap"
-          rel="stylesheet"
-        />
-      </head>
+      <head><link rel="preload" href="/fonts/Erode-Regular.ttf" as="font" type="font/ttf" crossOrigin="anonymous" /></head>
       <body>{children}</body>
     </html>
   );

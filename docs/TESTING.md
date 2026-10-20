@@ -1,5 +1,14 @@
 # DreamLog Testing Strategy
 
+## Website and therapist portal redesign (20 October 2026)
+
+See [WEBSITE_REDESIGN.md](WEBSITE_REDESIGN.md). Run the production export and
+`node scripts/check-website-export.cjs`. For portal behavior, start the local
+Postman simulation at port 4920 and run `node scripts/test-portal-ui.cjs`; the
+real React components and Axios client use fictional records over HTTP. This
+includes failed consent, failed save and failed deletion regression checks.
+Browser verification covers desktop and mobile layouts without live patient data.
+
 ## Typed journals and therapy chat (20 October 2026)
 
 See [TYPED_JOURNAL_CHAT.md](TYPED_JOURNAL_CHAT.md) for the contract, UI behavior,
