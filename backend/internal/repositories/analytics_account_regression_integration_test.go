@@ -263,7 +263,7 @@ func TestIntegration_AnalyticsAccountIdentityAndLifecycle(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !strings.HasPrefix(user.SupabaseID, "local-") || user.Name != "Original" || user.IsDeleted {
+	if !strings.HasPrefix(user.SupabaseID, "local-") || user.Name != "Original" {
 		t.Fatalf("local creation: %+v", user)
 	}
 	if hash, err := r.GetPasswordHash(ctx, user.Email); err != nil || hash != "fixture-hash" {
@@ -276,7 +276,6 @@ func TestIntegration_AnalyticsAccountIdentityAndLifecycle(t *testing.T) {
 		"id":                      func() (*models.User, error) { return r.GetByID(ctx, user.ID) },
 		"supabase":                func() (*models.User, error) { return r.GetBySupabaseID(ctx, user.SupabaseID) },
 		"email":                   func() (*models.User, error) { return r.GetByEmail(ctx, user.Email) },
-		"email including deleted": func() (*models.User, error) { return r.GetByEmailIncDeleted(ctx, user.Email) },
 	} {
 		t.Run(name, func(t *testing.T) {
 			got, err := lookup()
@@ -310,7 +309,7 @@ func TestIntegration_AnalyticsAccountIdentityAndLifecycle(t *testing.T) {
 		t.Fatalf("deleted account is active: %+v %v", got, err)
 	}
 	// Account deletion is a hard delete: nothing is retained to be revived.
-	if deleted, err := r.GetByEmailIncDeleted(ctx, user.Email); err != nil || deleted != nil {
+	if deleted, err := r.GetByEmail(ctx, user.Email); err != nil || deleted != nil {
 		t.Fatalf("deleted account retained: %+v %v", deleted, err)
 	}
 	if err := r.Delete(ctx, user.ID); err == nil {
@@ -318,7 +317,7 @@ func TestIntegration_AnalyticsAccountIdentityAndLifecycle(t *testing.T) {
 	}
 	// Signing back in with the same identity yields a fresh, empty account.
 	fresh, err := r.Upsert(ctx, user.SupabaseID, user.Email, "Fresh")
-	if err != nil || fresh.ID == user.ID || fresh.IsDeleted {
+	if err != nil || fresh.ID == user.ID {
 		t.Fatalf("fresh account after deletion: %+v %v", fresh, err)
 	}
 	missing := uuid.New()
@@ -326,7 +325,6 @@ func TestIntegration_AnalyticsAccountIdentityAndLifecycle(t *testing.T) {
 		"id":            func() (*models.User, error) { return r.GetByID(ctx, missing) },
 		"supabase":      func() (*models.User, error) { return r.GetBySupabaseID(ctx, missing.String()) },
 		"email":         func() (*models.User, error) { return r.GetByEmail(ctx, "absent@example.test") },
-		"email deleted": func() (*models.User, error) { return r.GetByEmailIncDeleted(ctx, "absent@example.test") },
 		"rename":        func() (*models.User, error) { return r.UpdateName(ctx, missing, "Missing") },
 	} {
 		t.Run("missing "+name, func(t *testing.T) {
@@ -551,7 +549,6 @@ func TestIntegration_AnalyticsAccountCancellation(t *testing.T) {
 		"id":            func() error { _, err := r.GetByID(ctx, user); return err },
 		"supabase":      func() error { _, err := r.GetBySupabaseID(ctx, user.String()); return err },
 		"email":         func() error { _, err := r.GetByEmail(ctx, "x"); return err },
-		"email deleted": func() error { _, err := r.GetByEmailIncDeleted(ctx, "x"); return err },
 		"upsert":        func() error { _, err := r.Upsert(ctx, "x", "x@example.test", "X"); return err },
 		"create":        func() error { _, err := r.CreateLocal(ctx, "x@example.test", "X", "hash"); return err },
 		"rename":        func() error { _, err := r.UpdateName(ctx, user, "X"); return err },
@@ -561,7 +558,6 @@ func TestIntegration_AnalyticsAccountCancellation(t *testing.T) {
 		},
 		"preferences":   func() error { _, err := r.UpdatePreferences(ctx, user, "UTC", 8); return err },
 		"plan":          func() error { _, err := r.UpdatePlan(ctx, user, models.PlanPlus, nil); return err },
-		"purge deleted": func() error { return r.PurgeDeleted(ctx, user) },
 		"hash":          func() error { _, err := r.GetPasswordHash(ctx, "x"); return err },
 		"login lock":    func() error { _, err := r.GetLoginLockedUntil(ctx, "x"); return err },
 		"failed login":  func() error { _, err := r.RecordFailedLogin(ctx, "x", 3, time.Minute); return err },
@@ -579,7 +575,7 @@ func TestIntegration_AnalyticsAccountCancellation(t *testing.T) {
 			}
 		})
 	}
-	if got, err := r.GetByID(context.Background(), user); err != nil || got.IsDeleted || got.Name != "QA" || got.Plan != models.PlanFree {
+	if got, err := r.GetByID(context.Background(), user); err != nil || got.Name != "QA" || got.Plan != models.PlanFree {
 		t.Fatalf("canceled writes changed user: %+v %v", got, err)
 	}
 }

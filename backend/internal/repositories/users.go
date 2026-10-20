@@ -21,7 +21,7 @@ func NewUserRepository(db *pgxpool.Pool) *UserRepository {
 	return &UserRepository{db: db}
 }
 
-const userColumns = `id, supabase_id, email, name, timezone, fcm_nudge_hour, nudge_enabled, nudge_auto_time, goal, preferred_name, streak_freeze_count, plan, plan_expires_at, age_range, country, voice_language, is_deleted, deleted_at, first_joined_at, reregistered_at, reregistration_count, created_at, updated_at`
+const userColumns = `id, supabase_id, email, name, timezone, fcm_nudge_hour, nudge_enabled, nudge_auto_time, goal, preferred_name, streak_freeze_count, plan, plan_expires_at, age_range, country, voice_language, first_joined_at, created_at, updated_at`
 
 // rowScanner is satisfied by both pgx.Row and pgx.Rows - avoids a direct pgx type in the signature.
 type rowScanner interface {
@@ -37,7 +37,7 @@ func scanUser(row rowScanner) (*models.User, error) {
 		&u.StreakFreezeCount,
 		&u.Plan, &u.PlanExpiresAt,
 		&u.AgeRange, &u.Country, &u.VoiceLanguage,
-		&u.IsDeleted, &u.DeletedAt, &u.FirstJoinedAt, &u.ReregisteredAt, &u.ReregistrationCount,
+		&u.FirstJoinedAt,
 		&u.CreatedAt, &u.UpdatedAt,
 	)
 	if err != nil {
@@ -166,10 +166,6 @@ func (r *UserRepository) GetByID(ctx context.Context, id uuid.UUID) (*models.Use
 
 // Upsert creates or updates a user record (idempotent on supabase_id).
 //
-// A legacy soft-deleted row for this identity is purged first, so a user who
-// deleted their account signs back in to a fresh, empty account - never to
-// their old data.
-//
 // Called on every authenticated request, so the common path is a single read:
 // it only writes when the user is new or their email changed.
 func (r *UserRepository) Upsert(ctx context.Context, supabaseID, email, name string) (*models.User, error) {
@@ -179,10 +175,6 @@ func (r *UserRepository) Upsert(ctx context.Context, supabaseID, email, name str
 		// New user - fall through to the insert.
 	case err != nil:
 		return nil, fmt.Errorf("users.Upsert lookup: %w", err)
-	case existing.IsDeleted:
-		if _, err := r.db.Exec(ctx, `DELETE FROM users WHERE id = $1 AND is_deleted = true`, existing.ID); err != nil {
-			return nil, fmt.Errorf("users.Upsert purge deleted: %w", err)
-		}
 	case email == "" || existing.Email == email:
 		return existing, nil
 	}
@@ -221,27 +213,13 @@ func (r *UserRepository) UpdateName(ctx context.Context, id uuid.UUID, name stri
 
 // GetByEmail fetches an active (non-deleted) user by email address.
 func (r *UserRepository) GetByEmail(ctx context.Context, email string) (*models.User, error) {
-	q := `SELECT ` + userColumns + ` FROM users WHERE email = $1 AND is_deleted = false`
-	u, err := scanUser(r.db.QueryRow(ctx, q, email))
-	if errors.Is(err, pgx.ErrNoRows) {
-		return nil, nil
-	}
-	if err != nil {
-		return nil, fmt.Errorf("users.GetByEmail: %w", err)
-	}
-	return u, nil
-}
-
-// GetByEmailIncDeleted fetches a user by email regardless of deletion status.
-// Used during registration to find (and purge) legacy soft-deleted rows.
-func (r *UserRepository) GetByEmailIncDeleted(ctx context.Context, email string) (*models.User, error) {
 	q := `SELECT ` + userColumns + ` FROM users WHERE email = $1`
 	u, err := scanUser(r.db.QueryRow(ctx, q, email))
 	if errors.Is(err, pgx.ErrNoRows) {
 		return nil, nil
 	}
 	if err != nil {
-		return nil, fmt.Errorf("users.GetByEmailIncDeleted: %w", err)
+		return nil, fmt.Errorf("users.GetByEmail: %w", err)
 	}
 	return u, nil
 }
@@ -459,14 +437,6 @@ func (r *UserRepository) Delete(ctx context.Context, id uuid.UUID) error {
 	return nil
 }
 
-// PurgeDeleted hard-deletes a legacy soft-deleted user row (and, via cascade,
-// all of its data). It never touches an active account.
-func (r *UserRepository) PurgeDeleted(ctx context.Context, id uuid.UUID) error {
-	if _, err := r.db.Exec(ctx, `DELETE FROM users WHERE id = $1 AND is_deleted = true`, id); err != nil {
-		return fmt.Errorf("users.PurgeDeleted: %w", err)
-	}
-	return nil
-}
 
 // CountMonthlyEntries returns the number of entries created by the user in the current calendar month.
 func (r *UserRepository) CountMonthlyEntries(ctx context.Context, userID uuid.UUID) (int, error) {

@@ -24,6 +24,14 @@ import (
 
 func regressionDB(t *testing.T) *pgxpool.Pool {
 	t.Helper()
+	return regressionDBUpTo(t, "")
+}
+
+// regressionDBUpTo migrates a fresh schema through the migration whose file
+// name starts with last ("" = all), so a test can seed pre-migration state
+// and then apply the next migration itself.
+func regressionDBUpTo(t *testing.T, last string) *pgxpool.Pool {
+	t.Helper()
 	dsn := os.Getenv("ODE_TEST_DATABASE_URL")
 	if dsn == "" {
 		t.Fatal("ODE_TEST_DATABASE_URL required: use the isolated regression compose services")
@@ -69,6 +77,9 @@ func regressionDB(t *testing.T) *pgxpool.Pool {
 	}
 	sort.Strings(files)
 	for _, file := range files {
+		if last != "" && filepath.Base(file) > last+"~" {
+			break
+		}
 		sql, readErr := os.ReadFile(file)
 		if readErr != nil {
 			t.Fatal(readErr)

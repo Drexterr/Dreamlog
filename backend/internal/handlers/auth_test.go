@@ -37,14 +37,6 @@ func newHandlerFakeStore() *handlerFakeUserStore {
 }
 
 func (s *handlerFakeUserStore) GetByEmail(_ context.Context, email string) (*models.User, error) {
-	u := s.users[email]
-	if u != nil && u.IsDeleted {
-		return nil, nil
-	}
-	return u, nil
-}
-
-func (s *handlerFakeUserStore) GetByEmailIncDeleted(_ context.Context, email string) (*models.User, error) {
 	return s.users[email], nil
 }
 
@@ -89,15 +81,6 @@ func (s *handlerFakeUserStore) ResetLoginAttempts(_ context.Context, email strin
 	return nil
 }
 
-func (s *handlerFakeUserStore) PurgeDeleted(_ context.Context, id uuid.UUID) error {
-	for email, u := range s.users {
-		if u.ID == id && u.IsDeleted {
-			delete(s.users, email)
-			delete(s.hashes, email)
-		}
-	}
-	return nil
-}
 
 // ── Router builder ────────────────────────────────────────────────────────────
 

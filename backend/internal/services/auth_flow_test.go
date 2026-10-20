@@ -33,28 +33,7 @@ func (s *fakeUserStore) GetByEmail(_ context.Context, email string) (*models.Use
 	if s.getErr != nil {
 		return nil, s.getErr
 	}
-	u := s.users[email]
-	if u != nil && u.IsDeleted {
-		return nil, nil
-	}
-	return u, nil
-}
-
-func (s *fakeUserStore) GetByEmailIncDeleted(_ context.Context, email string) (*models.User, error) {
-	if s.getErr != nil {
-		return nil, s.getErr
-	}
 	return s.users[email], nil
-}
-
-func (s *fakeUserStore) PurgeDeleted(_ context.Context, id uuid.UUID) error {
-	for email, u := range s.users {
-		if u.ID == id && u.IsDeleted {
-			delete(s.users, email)
-			delete(s.hashes, email)
-		}
-	}
-	return nil
 }
 
 func (s *fakeUserStore) CreateLocal(_ context.Context, email, name, passwordHash string) (*models.User, error) {
@@ -359,20 +338,16 @@ func TestLogin_UnknownEmailNeverAccumulatesLockout(t *testing.T) {
 	}
 }
 
-// C2: registering a soft-deleted account's email must never hand back the old
-// account (its ID, supabase_id and therefore its journal data).
-func TestRegister_SoftDeletedEmail_CreatesFreshAccount(t *testing.T) {
+// C2/N2: there is no soft-deleted state any more - an existing email is
+// simply taken, never revived.
+func TestRegister_ExistingEmail_NeverRevivesOrReturnsAccount(t *testing.T) {
 	store := newFakeUserStore()
-	old := &models.User{ID: uuid.New(), SupabaseID: "supabase-victim", Email: "victim@test.com", Name: "Victim", IsDeleted: true}
+	old := &models.User{ID: uuid.New(), SupabaseID: "supabase-victim", Email: "victim@test.com", Name: "Victim"}
 	store.users[old.Email] = old
-	store.hashes[old.Email] = "old-hash"
 	svc := NewAuthService(store, "test-secret-32-bytes-minimum!!!!", nil)
 
-	user, _, err := svc.Register(context.Background(), old.Email, "Attacker", "password123")
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-	if user.ID == old.ID || user.SupabaseID == old.SupabaseID {
-		t.Fatal("register reactivated the deleted account - takeover of its data")
+	user, token, err := svc.Register(context.Background(), old.Email, "Attacker", "password123")
+	if !errors.Is(err, ErrEmailTaken) || user != nil || token != "" {
+		t.Fatalf("want ErrEmailTaken and no account, got %+v %q %v", user, token, err)
 	}
 }

@@ -12,10 +12,8 @@ import (
 // Satisfied by *repositories.UserRepository in production.
 type UserStore interface {
 	GetByEmail(ctx context.Context, email string) (*models.User, error)
-	GetByEmailIncDeleted(ctx context.Context, email string) (*models.User, error)
 	CreateLocal(ctx context.Context, email, name, passwordHash string) (*models.User, error)
 	GetPasswordHash(ctx context.Context, email string) (string, error)
-	PurgeDeleted(ctx context.Context, id uuid.UUID) error
 	GetLoginLockedUntil(ctx context.Context, email string) (*time.Time, error)
 	RecordFailedLogin(ctx context.Context, email string, maxAttempts int, lockDuration time.Duration) (*time.Time, error)
 	ResetLoginAttempts(ctx context.Context, email string) error

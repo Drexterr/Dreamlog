@@ -37,14 +37,14 @@ func (p Plan) AtLeast(required Plan) bool {
 // PlanLimits describes what a plan allows.
 type PlanLimits struct {
 	Plan              Plan   `json:"plan"`
-	MonthlyEntries    int    `json:"monthly_entries"`    // -1 = unlimited
-	MonthlyShares     int    `json:"monthly_shares"`     // -1 = unlimited; 0 = not allowed
+	MonthlyEntries    int    `json:"monthly_entries"` // -1 = unlimited
+	MonthlyShares     int    `json:"monthly_shares"`  // -1 = unlimited; 0 = not allowed
 	HasPDFExport      bool   `json:"has_pdf_export"`
 	HasWeeklyReview   bool   `json:"has_weekly_review"`
 	HasMoodHistory    bool   `json:"has_mood_history"`
 	HasHindi          bool   `json:"has_hindi"`
 	HasAllModes       bool   `json:"has_all_modes"`
-	HasStreakFreeze    bool   `json:"has_streak_freeze"`
+	HasStreakFreeze   bool   `json:"has_streak_freeze"`
 	HasTherapistShare bool   `json:"has_therapist_share"`
 	DisplayName       string `json:"display_name"`
 	Price             string `json:"price"`
@@ -88,29 +88,25 @@ func GetPlanLimits(p Plan) *PlanLimits {
 }
 
 type User struct {
-	ID                  uuid.UUID  `json:"id"`
-	SupabaseID          string     `json:"supabase_id"`
-	Email               string     `json:"email"`
-	Name                string     `json:"name"`
-	PreferredName       *string    `json:"preferred_name,omitempty"`
-	Timezone            string     `json:"timezone"`
-	FCMNudgeHour        int        `json:"fcm_nudge_hour"` // 0-23
-	NudgeEnabled        bool       `json:"nudge_enabled"`
-	NudgeAutoTime       bool       `json:"nudge_auto_time"` // true = nudge at the user's learned typical recording hour
-	Goal                *string    `json:"goal,omitempty"`
-	AgeRange            *string    `json:"age_range,omitempty"`
-	Country             *string    `json:"country,omitempty"`
-	VoiceLanguage       string     `json:"voice_language"` // therapy TTS voice: auto or any key in SupportedVoiceLanguages
-	StreakFreezeCount   int        `json:"streak_freeze_count"`
-	Plan                Plan       `json:"plan"`
-	PlanExpiresAt       *time.Time `json:"plan_expires_at,omitempty"`
-	IsDeleted           bool       `json:"is_deleted"`
-	DeletedAt           *time.Time `json:"deleted_at,omitempty"`
-	FirstJoinedAt       *time.Time `json:"first_joined_at,omitempty"`
-	ReregisteredAt      *time.Time `json:"reregistered_at,omitempty"`
-	ReregistrationCount int        `json:"reregistration_count"`
-	CreatedAt           time.Time  `json:"created_at"`
-	UpdatedAt           time.Time  `json:"updated_at"`
+	ID                uuid.UUID  `json:"id"`
+	SupabaseID        string     `json:"supabase_id"`
+	Email             string     `json:"email"`
+	Name              string     `json:"name"`
+	PreferredName     *string    `json:"preferred_name,omitempty"`
+	Timezone          string     `json:"timezone"`
+	FCMNudgeHour      int        `json:"fcm_nudge_hour"` // 0-23
+	NudgeEnabled      bool       `json:"nudge_enabled"`
+	NudgeAutoTime     bool       `json:"nudge_auto_time"` // true = nudge at the user's learned typical recording hour
+	Goal              *string    `json:"goal,omitempty"`
+	AgeRange          *string    `json:"age_range,omitempty"`
+	Country           *string    `json:"country,omitempty"`
+	VoiceLanguage     string     `json:"voice_language"` // therapy TTS voice: auto or any key in SupportedVoiceLanguages
+	StreakFreezeCount int        `json:"streak_freeze_count"`
+	Plan              Plan       `json:"plan"`
+	PlanExpiresAt     *time.Time `json:"plan_expires_at,omitempty"`
+	FirstJoinedAt     *time.Time `json:"first_joined_at,omitempty"`
+	CreatedAt         time.Time  `json:"created_at"`
+	UpdatedAt         time.Time  `json:"updated_at"`
 }
 
 // EffectivePlan returns the plan the user is actually entitled to right now.

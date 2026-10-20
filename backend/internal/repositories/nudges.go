@@ -122,7 +122,6 @@ func (r *NudgeRepository) LapsedUsersAtNudgeHour(ctx context.Context, lapseHours
 		FROM users u
 		JOIN user_devices ud ON ud.user_id = u.id
 		WHERE u.nudge_enabled = true
-		  AND u.deleted_at IS NULL
 		  -- at least one completed entry ever
 		  AND EXISTS (
 		      SELECT 1 FROM entries e
@@ -226,7 +225,6 @@ func (r *NudgeRepository) StreakRiskUsersAtLocalHour(ctx context.Context, localH
 		FROM users u
 		JOIN user_devices ud ON ud.user_id = u.id
 		WHERE u.nudge_enabled = true
-		  AND u.deleted_at IS NULL
 		  AND EXTRACT(HOUR FROM NOW() AT TIME ZONE COALESCE(NULLIF(u.timezone, ''), 'UTC'))::int = $1
 		  -- entry yesterday (local) - the streak is alive
 		  AND EXISTS (
@@ -288,7 +286,6 @@ func (r *NudgeRepository) PlanExpiringSoonUsersAtLocalHour(ctx context.Context, 
 		FROM users u
 		JOIN user_devices ud ON ud.user_id = u.id
 		WHERE u.nudge_enabled = true
-		  AND u.deleted_at IS NULL
 		  AND u.plan <> 'free'
 		  AND u.plan_expires_at IS NOT NULL
 		  AND u.plan_expires_at > NOW()
@@ -332,7 +329,6 @@ func (r *NudgeRepository) PlanExpiredUsersAtLocalHour(ctx context.Context, local
 		FROM users u
 		JOIN user_devices ud ON ud.user_id = u.id
 		WHERE u.nudge_enabled = true
-		  AND u.deleted_at IS NULL
 		  AND u.plan <> 'free'
 		  AND u.plan_expires_at IS NOT NULL
 		  AND u.plan_expires_at <= NOW()
