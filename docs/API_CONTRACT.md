@@ -262,6 +262,31 @@ learned timing until the user re-enables auto.
 }
 ```
 
+### POST /entries/text
+
+Creates one complete typed journal, using the same authentication, monthly entry
+quota, crisis screening and reflection pipeline as voice journals.
+
+```json
+{ "content": "The complete journal in one message", "request_id": "client-generated UUID", "mode": "processing" }
+```
+
+Content is trimmed and must contain 1–20,000 Unicode characters. All five journal
+modes are supported; `processing` is the default. Retain `request_id` on retry:
+identical content/mode returns the original entry, without another job/quota charge.
+Reusing it with different content/mode returns `409`. Tokens are scoped to the user.
+Concurrent identical retries converge on one entry.
+
+Response `201`: existing Entry shape, initially `pending`. Poll/fetch its analysis
+as usual. Size and duration are zero, content is stored as the transcript, and
+`audio_key` is a reserved `text/` identifier with no audio object. The worker skips
+Whisper/storage and runs the existing safety pipeline; the reconciler recovers lost
+queue submissions. After a safe reflection, the existing three follow-up exchanges
+apply. The initial journal does not consume a follow-up exchange.
+
+Errors: `400` invalid content/UUID/mode, `401` no auth, `409` quota/retry conflict,
+`500` persistence failure.
+
 ### GET /entries
 Paginated list, newest first.
 

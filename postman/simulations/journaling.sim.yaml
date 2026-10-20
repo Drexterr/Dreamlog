@@ -1,0 +1,5 @@
+simulation: ode-typed-journaling
+routing: path
+mocks:
+  - routeKey: ode
+    path: ../mocks/ode-journaling/config.yaml

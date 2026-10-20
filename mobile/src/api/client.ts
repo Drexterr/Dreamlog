@@ -143,6 +143,9 @@ export const api = {
   }): Promise<Entry> =>
     http.post<Entry>('/entries', payload).then((r) => r.data),
 
+  createTextEntry: (payload: { content: string; request_id: string; mode?: EntryMode }): Promise<Entry> =>
+    http.post<Entry>('/entries/text', payload).then(r => r.data),
+
   listEntries: (page = 1, pageSize = 20): Promise<ListEntriesResponse> =>
     http
       .get<ListEntriesResponse>('/entries', { params: { page, page_size: pageSize } })

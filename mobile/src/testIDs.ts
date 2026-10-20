@@ -58,6 +58,13 @@ export const T = {
     cancel:  'record-cancel',
     orb:     'record-orb',
     modeGrid:'record-mode-grid',
+    writeMode: 'record-write-mode',
+    voiceMode: 'record-voice-mode',
+    textScreen: 'text-journal-screen',
+    textInput: 'text-journal-input',
+    textSend: 'text-journal-send',
+    textCancel: 'text-journal-cancel',
+    textError: 'text-journal-error',
   },
 
   // ── AuthSheet (src/components/AuthSheet.tsx) ──

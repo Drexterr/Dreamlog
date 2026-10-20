@@ -253,6 +253,7 @@ export default function TherapySessionScreen() {
   const [country, setCountry] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
+  const sendingText = useRef(false);
   const [uploadingVoice, setUploadingVoice] = useState(false);
   const [draft, setDraft] = useState('');
   const [inputMode, setInputMode] = useState<'voice' | 'text'>('voice');
@@ -321,7 +322,8 @@ export default function TherapySessionScreen() {
 
   const handleSend = useCallback(async () => {
     const content = draft.trim();
-    if (!content || !id || sending || status !== 'active') return;
+    if (!content || !id || sending || sendingText.current || status !== 'active') return;
+    sendingText.current = true;
     setDraft('');
     setSending(true);
     try {
@@ -330,15 +332,15 @@ export default function TherapySessionScreen() {
       setStatus(resp.session_state.status);
       setTimeRemaining(resp.session_state.time_remaining_sec);
       setCrisisWarnings(resp.session_state.crisis_warnings ?? 0);
-      playTTS(resp.assistant_message.tts_url);
-      // Switch back to voice mode after sending so orb is the focus again
-      setInputMode('voice');
+      // A typed session stays in chat and does not unexpectedly play audio.
     } catch (err: unknown) {
+      setDraft(content);
       const s = httpStatus(err);
       if (s === 410) setStatus('expired');
       else if (s === 409) Alert.alert('Session ended', 'This session is no longer active.');
       else Alert.alert('Error', 'Could not send message. Please try again.');
     } finally {
+      sendingText.current = false;
       setSending(false);
     }
   }, [draft, id, sending, status]);
@@ -432,6 +434,7 @@ export default function TherapySessionScreen() {
           <TouchableOpacity
             testID={T.therapy.voiceButton}
             accessibilityLabel="Switch to voice mode"
+              disabled={sending}
             style={styles.backToVoice}
             onPress={() => setInputMode('voice')}
             activeOpacity={0.7}
@@ -637,8 +640,10 @@ export default function TherapySessionScreen() {
             <TouchableOpacity
               testID={T.therapy.chatButton}
               accessibilityLabel="Switch to chat mode"
+              accessibilityState={{ disabled: isBusy || isRecording }}
+              disabled={isBusy || isRecording}
               style={[styles.chatToggle, { backgroundColor: colors.card, borderColor: colors.border }]}
-              onPress={() => setInputMode('text')}
+              onPress={() => { if (!isBusy && !isRecording) { ttsSound.current?.stopAsync().catch(() => null); setInputMode('text'); } }}
               activeOpacity={0.75}
             >
               <Text style={[styles.chatToggleIcon, { color: colors.textMuted }]}>⌨️</Text>

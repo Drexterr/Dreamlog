@@ -69,6 +69,54 @@ func (h *EntryHandler) Create(c *gin.Context) {
 	c.JSON(http.StatusCreated, entry)
 }
 
+// POST /entries/text
+// CreateText accepts one complete written journal with a stable retry token.
+func (h *EntryHandler) CreateText(c *gin.Context) {
+	var input models.CreateTextEntryInput
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.Error(apierr.BadRequest("invalid typed journal request"))
+		return
+	}
+	if err := input.Validate(); err != nil {
+		c.Error(err)
+		return
+	}
+	user := middleware.UserFromCtx(c.Request.Context())
+	if user == nil {
+		c.Error(apierr.Unauthorized("user not found"))
+		return
+	}
+	// Resolve retries before quota checking: a lost response at the quota boundary
+	// must not prevent retrieval of the journal that was already saved.
+	existing, err := h.svc.Get(c.Request.Context(), models.TextEntryID(user.ID, input.RequestID), user.ID)
+	if err != nil {
+		c.Error(apierr.InternalErr("could not check journal submission", err))
+		return
+	}
+	if existing != nil {
+		if !input.Matches(existing) {
+			c.Error(apierr.Conflict("request_id was already used for a different journal"))
+			return
+		}
+		c.JSON(http.StatusCreated, existing)
+		return
+	}
+	if err := h.subscription.CheckEntryQuota(c.Request.Context(), user.ID, user.EffectivePlan()); err != nil {
+		c.Error(apierr.Conflict(err.Error()))
+		return
+	}
+	country := ""
+	if user.Country != nil {
+		country = *user.Country
+	}
+	entry, err := h.svc.CreateText(c.Request.Context(), user.ID, &input, country)
+	if err != nil {
+		c.Error(err)
+		return
+	}
+	c.JSON(http.StatusCreated, entry)
+}
+
 // GET /entries
 // Returns paginated entries for the authenticated user.
 func (h *EntryHandler) List(c *gin.Context) {

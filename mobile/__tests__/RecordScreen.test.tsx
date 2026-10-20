@@ -5,6 +5,7 @@ import RecordScreen from '../app/record';
 import { uploadRecording } from '../src/services/upload';
 import { enqueue } from '../src/services/offlineQueue';
 import NetInfo from '@react-native-community/netinfo';
+import { api } from '../src/api/client';
 
 const mockBack = jest.fn();
 const mockReplace = jest.fn();
@@ -15,6 +16,7 @@ jest.mock('../src/hooks/useRecorder', () => ({ useRecorder: () => mockRecorder }
 jest.mock('../src/context/AuthContext', () => ({ useAuth: () => ({ isAuthenticated: true, requestAuth: jest.fn() }) }));
 jest.mock('../src/context/ThemeContext', () => ({ useTheme: () => ({ colors: require('../src/theme').THEMES.curious }) }));
 jest.mock('../src/components/BrandOrbGlyph', () => () => null);
+jest.mock('../src/api/client', () => ({ api: { createTextEntry: jest.fn() } }));
 jest.mock('../src/services/upload', () => ({ uploadRecording: jest.fn() }));
 jest.mock('../src/services/offlineQueue', () => ({ enqueue: jest.fn() }));
 jest.mock('@react-native-community/netinfo', () => ({ fetch: jest.fn() }));
@@ -79,4 +81,16 @@ it('cancels without upload', async () => {
   const view = render(<RecordScreen />); await start(view);
   await act(async () => { fireEvent.press(view.getByTestId('record-cancel')); });
   expect(mockRecorder.discardRecording).toHaveBeenCalled(); expect(mockBack).toHaveBeenCalled(); expect(uploadRecording).not.toHaveBeenCalled();
+});
+
+it('opens typed journaling, preserves the chosen mode, and processes a saved entry without recording', async () => {
+  (api.createTextEntry as jest.Mock).mockResolvedValue({ id: 'typed' });
+  const view = render(<RecordScreen />);
+  fireEvent.press(view.getByTestId('record-mode-gratitude'));
+  fireEvent.press(view.getByTestId('record-write-mode'));
+  fireEvent.changeText(view.getByTestId('text-journal-input'), 'My gratitude journal');
+  await act(async () => { fireEvent.press(view.getByTestId('text-journal-send')); });
+  expect(api.createTextEntry).toHaveBeenCalledWith(expect.objectContaining({ mode: 'gratitude', content: 'My gratitude journal' }));
+  expect(mockReplace).toHaveBeenCalledWith({ pathname: '/processing/[id]', params: { id: 'typed' } });
+  expect(mockRecorder.startRecording).not.toHaveBeenCalled();
 });

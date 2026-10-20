@@ -1,0 +1,11 @@
+version: 1
+id: 3a35cdc7-2019-4553-a34a-e44815d9ae67
+name: Ode typed journaling (focused contract)
+slug: ode-typed-journaling-focused-con
+protocol: http
+port: 4918
+interceptRequests: true
+scenarios:
+  - name: default
+    path: ./stateful.js
+    default: true

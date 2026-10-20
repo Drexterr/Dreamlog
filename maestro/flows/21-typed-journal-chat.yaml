@@ -1,0 +1,44 @@
+appId: com.talktoode.app
+tags:
+  - journal
+  - chat
+  - read-only
+---
+# Requires a signed-in tester. Does not submit a journal or use entry quota.
+- launchApp
+- runFlow: ../subflows/dismiss-startup-streak.yaml
+- tapOn:
+    id: home-record-button
+- extendedWaitUntil:
+    visible:
+      id: record-screen
+    timeout: 15000
+- tapOn:
+    id: record-mode-processing
+- tapOn:
+    id: record-write-mode
+- assertVisible: Write your journal
+- assertVisible: 'Write your whole journal in one message.*3 follow-up exchanges.*'
+- tapOn:
+    id: text-journal-input
+- inputText: 'Fictional unsent journal for checking the writing screen.'
+- hideKeyboard
+- scrollUntilVisible:
+    element:
+      id: text-journal-send
+    direction: DOWN
+- assertVisible:
+    id: text-journal-send
+- tapOn:
+    id: text-journal-cancel
+- assertVisible: Discard this draft?
+- tapOn: Keep writing
+- assertVisible:
+    id: text-journal-input
+- tapOn:
+    id: record-voice-mode
+- tapOn: Discard
+- assertVisible:
+    id: record-orb
+- tapOn:
+    id: record-cancel

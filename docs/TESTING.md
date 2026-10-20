@@ -1,5 +1,15 @@
 # DreamLog Testing Strategy
 
+## Typed journals and therapy chat (20 October 2026)
+
+See [TYPED_JOURNAL_CHAT.md](TYPED_JOURNAL_CHAT.md) for the contract, UI behavior,
+APK configuration and verification limits. New coverage checks complete-message
+submission, auth cleanup, retry IDs, offline preservation, voice-flow continuity,
+continuous therapy chat, backend quota/idempotency, and typed-entry crisis handling.
+`postman/README.md` documents the real Axios-client HTTP simulation.
+The `integration` build-tagged PostgreSQL test exercises concurrent retries and
+ownership using the existing isolated CI database; it must not target production.
+
 ## Mood and Explore refinement (19 October 2026)
 
 See [ODE_MOOD_REFINEMENT.md](ODE_MOOD_REFINEMENT.md) for the implemented behavior and verification limits.

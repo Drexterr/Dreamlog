@@ -4,6 +4,11 @@
 
 Ode is a voice journaling app. The core pipeline: user speaks → audio uploaded to object storage → worker transcribes → AI analyzes → reflection stored → mobile displays.
 
+Typed journals use `POST /entries/text`: one complete message is saved directly as
+the entry transcript, with a user-scoped idempotency token. They skip storage and
+Whisper and join the same worker crisis-screening, context and reflection stages.
+The existing three follow-up exchanges are available after either entry type.
+
 Two independent runtimes:
 - **API** (`cmd/api`) - HTTP server, handles all client requests, runs DB migrations on startup
 - **Worker** (`cmd/worker`) - long-running process, BRPOPs jobs from Redis, runs the transcription + AI pipeline

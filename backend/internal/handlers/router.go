@@ -124,6 +124,7 @@ func NewRouter(deps Deps) http.Handler {
 	entries := auth.Group("/entries")
 	{
 		entries.POST("/presign", entryHandler.Presign)
+		entries.POST("/text", entryHandler.CreateText)
 		entries.POST("", entryHandler.Create)
 		entries.GET("", entryHandler.List)
 		entries.GET("/:id", entryHandler.Get)

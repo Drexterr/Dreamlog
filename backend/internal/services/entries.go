@@ -13,10 +13,21 @@ import (
 	"github.com/google/uuid"
 )
 
+type entryRepository interface {
+	Create(context.Context, uuid.UUID, string, int64, float64, models.EntryMode) (*models.Entry, error)
+	CreateText(context.Context, uuid.UUID, *models.CreateTextEntryInput) (*models.Entry, bool, error)
+	GetByID(context.Context, uuid.UUID, uuid.UUID) (*models.Entry, error)
+	GetByAudioKey(context.Context, uuid.UUID, string) (*models.Entry, error)
+	List(context.Context, repositories.ListEntriesOpts) ([]*models.Entry, int, error)
+}
+type entryJobQueue interface {
+	Enqueue(context.Context, any) error
+}
+
 type EntryService struct {
-	repo    *repositories.EntryRepository
+	repo    entryRepository
 	storage *StorageService
-	queue   *queue.Queue
+	queue   entryJobQueue
 }
 
 func NewEntryService(
@@ -99,6 +110,28 @@ func (s *EntryService) Create(ctx context.Context, userID uuid.UUID, input *mode
 	return entry, nil
 }
 
+// CreateText uses the existing safe analysis pipeline without Whisper or storage.
+func (s *EntryService) CreateText(ctx context.Context, userID uuid.UUID, input *models.CreateTextEntryInput, country string) (*models.Entry, error) {
+	if err := input.Validate(); err != nil {
+		return nil, err
+	}
+	entry, created, err := s.repo.CreateText(ctx, userID, input)
+	if err != nil || entry == nil {
+		return nil, apierr.InternalErr("could not save journal", err)
+	}
+	if !input.Matches(entry) {
+		return nil, apierr.Conflict("request_id was already used for a different journal")
+	}
+	if created {
+		job := &models.TranscriptionJob{EntryID: entry.ID, UserID: userID, AudioKey: entry.AudioKey, UserCountry: country}
+		if err := s.queue.Enqueue(ctx, job); err != nil {
+			// The existing stuck-entry reconciler recovers a lost enqueue.
+			monitoring.CaptureErr(err, map[string]string{"component": "text_entry_enqueue", "entry_id": entry.ID.String()})
+		}
+	}
+	return entry, nil
+}
+
 // Get returns a single entry, enforcing user ownership.
 func (s *EntryService) Get(ctx context.Context, id, userID uuid.UUID) (*models.Entry, error) {
 	entry, err := s.repo.GetByID(ctx, id, userID)
@@ -126,6 +159,6 @@ func (s *EntryService) List(ctx context.Context, userID uuid.UUID, page, pageSiz
 		Total:    total,
 		Page:     page,
 		PageSize: pageSize,
-		HasMore:  (page*pageSize) < total,
+		HasMore:  (page * pageSize) < total,
 	}, nil
 }

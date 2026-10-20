@@ -1,0 +1,65 @@
+openapi: 3.0.3
+info:
+  title: Ode typed journaling (focused contract)
+  version: 1.0.0
+servers:
+  - url: http://127.0.0.1:4917/ode
+security:
+  - bearerAuth: []
+paths:
+  /entries/text:
+    post:
+      operationId: createTextEntry
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [content, request_id]
+              properties:
+                content: {type: string, minLength: 1, maxLength: 20000}
+                request_id: {type: string, format: uuid}
+                mode: {type: string, enum: [processing, rant, gratitude, decision, dream], default: processing}
+      responses:
+        '201':
+          description: Original or newly queued journal
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Entry'}
+        '400': {description: Invalid input}
+        '401': {description: Authentication required}
+        '409': {description: Quota exceeded or conflicting retry}
+        '500': {description: Persistence failure}
+  /entries/{id}:
+    get:
+      operationId: getEntry
+      parameters:
+        - {name: id, in: path, required: true, schema: {type: string, format: uuid}}
+      responses:
+        '200':
+          description: Owned entry
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Entry'}
+        '404': {description: No owned entry}
+        '401': {description: Authentication required}
+components:
+  securitySchemes:
+    bearerAuth: {type: http, scheme: bearer}
+  schemas:
+    Entry:
+      type: object
+      required: [id, user_id, audio_key, audio_size_bytes, duration_sec, status, mode, created_at, updated_at, retry_count]
+      properties:
+        id: {type: string, format: uuid}
+        user_id: {type: string, format: uuid}
+        audio_key: {type: string}
+        audio_size_bytes: {type: integer}
+        duration_sec: {type: number}
+        status: {type: string, enum: [pending, processing, completed, failed]}
+        mode: {type: string}
+        transcript: {type: string}
+        created_at: {type: string, format: date-time}
+        updated_at: {type: string, format: date-time}
+        retry_count: {type: integer}

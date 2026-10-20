@@ -20,6 +20,8 @@ import { useAuth } from '../src/context/AuthContext';
 import { T, recordModeID } from '../src/testIDs';
 import type { EntryMode } from '../src/types';
 import BrandOrbGlyph from '../src/components/BrandOrbGlyph';
+import TextJournalComposer from '../src/components/TextJournalComposer';
+import { Fonts } from '../src/theme';
 import type { ThemeColors } from '../src/theme';
 
 // ── Ripple rings ──────────────────────────────────────────────────────────────
@@ -217,6 +219,7 @@ export default function RecordScreen() {
   const { colors } = useTheme();
   const [phase, setPhase] = useState<'idle' | 'recording' | 'uploading'>('idle');
   const [uploadLabel, setUploadLabel] = useState('');
+  const [writeJournal, setWriteJournal] = useState(false);
   const orbBusy = useRef(false);
   const [mode, setMode] = useState<EntryMode | null>(
     VALID_MODES.includes(params.mode as EntryMode) ? (params.mode as EntryMode) : null,
@@ -288,6 +291,11 @@ export default function RecordScreen() {
     router.back();
   }, [recorder, router]);
 
+  if (writeJournal) {
+    return <TextJournalComposer mode={mode} modes={MODES} onSelectMode={setMode} enabled={isAuthenticated} prompt={starterPrompt}
+      onCancel={() => router.back()} onVoice={() => setWriteJournal(false)} onSaved={id => router.replace({ pathname: '/processing/[id]', params: { id } })} />;
+  }
+
   const tagline = phase === 'idle'
     ? (mode
         ? (starterPrompt ?? 'Take your time.\nI\'m listening.')
@@ -308,6 +316,9 @@ export default function RecordScreen() {
               {phase === 'uploading' ? '' : 'Cancel'}
             </Text>
           </TouchableOpacity>
+          {phase === 'idle' && <TouchableOpacity testID={T.record.writeMode} accessibilityRole="button" onPress={() => { if (!orbBusy.current) setWriteJournal(true); }} style={{ minHeight: 44, justifyContent: 'center' }}>
+            <Text style={{ fontFamily: Fonts.sans, fontSize: 14, color: colors.purple300 }}>Write journal</Text>
+          </TouchableOpacity>}
           {phase === 'recording' && (
             <Text style={[styles.listeningLabel, { color: colors.textMuted }]}>listening</Text>
           )}

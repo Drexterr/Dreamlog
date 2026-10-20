@@ -70,3 +70,8 @@ test-results/
 # Maestro E2E screenshots - `maestro test` writes takeScreenshot output to the
 # cwd it's run from; only /maestro/screenshots/ is the intended destination.
 /*.png
+
+# Locally generated installable APKs (share the artifact, not a Git binary).
+/artifacts/*.apk
+mobile/android/.kotlin/
+mobile/android/app/src/main/assets/modules.json

@@ -22,6 +22,7 @@ import (
 // ── fake entryServicer ────────────────────────────────────────────────────────
 
 type fakeEntryServicer struct {
+	textCalls   int
 	presignResp *models.PresignResponse
 	presignErr  error
 	createResp  *models.Entry
@@ -37,6 +38,11 @@ func (f *fakeEntryServicer) PresignUpload(_ context.Context, _ uuid.UUID) (*mode
 }
 
 func (f *fakeEntryServicer) Create(_ context.Context, _ uuid.UUID, _ *models.CreateEntryInput, _ string) (*models.Entry, error) {
+	return f.createResp, f.createErr
+}
+
+func (f *fakeEntryServicer) CreateText(_ context.Context, _ uuid.UUID, _ *models.CreateTextEntryInput, _ string) (*models.Entry, error) {
+	f.textCalls++
 	return f.createResp, f.createErr
 }
 
@@ -58,9 +64,13 @@ func (f *fakeStorageUploader) Upload(_ context.Context, _ string, _ io.Reader) e
 
 // ── fake entryQuotaChecker ────────────────────────────────────────────────────
 
-type fakeEntryQuota struct{ err error }
+type fakeEntryQuota struct {
+	err   error
+	calls int
+}
 
 func (f *fakeEntryQuota) CheckEntryQuota(_ context.Context, _ uuid.UUID, _ models.Plan) error {
+	f.calls++
 	return f.err
 }
 
@@ -68,7 +78,7 @@ func (f *fakeEntryQuota) CheckEntryQuota(_ context.Context, _ uuid.UUID, _ model
 
 const entryTestSecret = "entry-test-jwt-secret-32-bytes!!"
 
-func newEntryTestRouter(t *testing.T, svc entryServicer, store storageUploader, testUser *models.User) *gin.Engine {
+func newEntryTestRouter(t *testing.T, svc entryServicer, store storageUploader, testUser *models.User, quotas ...entryQuotaChecker) *gin.Engine {
 	t.Helper()
 	gin.SetMode(gin.TestMode)
 	log := zap.NewNop()
@@ -77,10 +87,15 @@ func newEntryTestRouter(t *testing.T, svc entryServicer, store storageUploader, 
 	r.Use(middleware.ErrorHandler(log))
 	r.Use(middleware.AuthMiddleware(entryTestSecret, "", &fakeProvisioner{user: testUser}, log))
 
-	h := &EntryHandler{svc: svc, storage: store, subscription: &fakeEntryQuota{}}
+	var quota entryQuotaChecker = &fakeEntryQuota{}
+	if len(quotas) > 0 {
+		quota = quotas[0]
+	}
+	h := &EntryHandler{svc: svc, storage: store, subscription: quota}
 	entries := r.Group("/entries")
 	{
 		entries.POST("/presign", h.Presign)
+		entries.POST("/text", h.CreateText)
 		entries.POST("", h.Create)
 		entries.GET("", h.List)
 		entries.GET("/:id", h.Get)
