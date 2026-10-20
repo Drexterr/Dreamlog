@@ -4,8 +4,11 @@ name: Deploy
 # main (workflow_run), never in parallel with it - a red build must not ship.
 #
 # Production runs on Railway (see docs/LAUNCH_CHECKLIST.md), which deploys from
-# GitHub itself. The Fly.io jobs below are kept for an optional Fly target and
-# only run when the repository variable ENABLE_FLY_DEPLOY is 'true'.
+# GitHub itself - so it must NOT watch `main`, or every push ships in parallel
+# with CI. The promote-production job below fast-forwards the `production`
+# branch to a commit only after Test passed on it; point the Railway API and
+# worker services at the `production` branch. The Fly.io jobs are kept for an
+# optional Fly target and only run when ENABLE_FLY_DEPLOY is 'true'.
 #
 # OTA updates are NOT published automatically on every push: mobile/app.json
 # uses a static runtimeVersion, so an OTA built after a native-module change
@@ -27,6 +30,37 @@ on:
         default: false
 
 jobs:
+  promote-production:
+    name: Promote tested commit to the production branch
+    # Only a commit whose Test run passed on main ever reaches `production`,
+    # which is the branch Railway deploys from.
+    if: >-
+      github.event_name == 'workflow_run' &&
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.head_branch == 'main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+          fetch-depth: 0
+      - name: Fast-forward production to the tested commit
+        env:
+          TESTED_SHA: ${{ github.event.workflow_run.head_sha }}
+        run: |
+          git fetch origin production || true
+          if git rev-parse --verify -q origin/production >/dev/null; then
+            # Never move production backwards or sideways: the tested commit
+            # must contain the current production commit.
+            if ! git merge-base --is-ancestor origin/production "$TESTED_SHA"; then
+              echo "::notice::$TESTED_SHA does not descend from production; skipping (a newer tested commit was already promoted)."
+              exit 0
+            fi
+          fi
+          git push origin "$TESTED_SHA:refs/heads/production"
+
   deploy-api:
     name: Deploy API to Fly.io
     if: >-

@@ -185,6 +185,14 @@ Password: (in the team password manager - ODE_QA_PASSWORD in CI / EAS secrets; n
 
 Backend on Railway (`https://dreamlog-production-f9e2.up.railway.app`):
 
+- [ ] 🔴 **Deploy only tested commits (N1).** Railway's GitHub integration deploys every push
+      to the branch it watches, in parallel with CI. Since 2026-10-20 the Deploy workflow's
+      `promote-production` job fast-forwards a `production` branch to a commit only after the
+      Test workflow passed on it. In Railway, set **both** the API and worker services'
+      source branch to `production` (service → Settings → Source). Alternatively keep `main`
+      and enable "Wait for CI" on both services. Until one of these is done, a commit that
+      fails tests still ships.
+
 - [ ] **`APP_ENV=production` on the API and worker.** With it set, both refuse to start if a
       dev stub is on or a safety-critical secret is missing (see `Config.ProductionProblems`):
       STUB_AI_ANALYSIS, unset ANTHROPIC_API_KEY / MASTER_ENCRYPTION_KEY / SUPABASE_URL,
