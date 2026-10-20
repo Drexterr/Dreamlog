@@ -1,4 +1,52 @@
 .ode-site .toolbar input { width: 260px; }
+
+/* Keep the goal chooser on a shared grid; focus must not shift either column. */
+.ode-landing .goal-chooser[data-welcome="true"] { inset: 0; margin: auto; }
+.ode-landing .goal-chooser .goal-grid {
+  width: 100%;
+  max-width: none;
+  margin: 0;
+}
+.ode-landing .goal-chooser .goal-intro > p:not(.section-kicker) {
+  max-width: none;
+  margin: 0 0 24px;
+}
+.ode-landing .goal-chooser .goal-options {
+  column-gap: 16px;
+  border-top: 0;
+}
+.ode-landing .goal-chooser .goal-option,
+.ode-landing .goal-chooser .goal-option:nth-child(odd) {
+  width: 100%;
+  margin: 0;
+  min-height: 48px;
+  padding: 13px 10px;
+  gap: 8px;
+  border-radius: 6px;
+  transform: none;
+}
+.ode-landing .goal-chooser .goal-option:hover,
+.ode-landing .goal-chooser .goal-option[aria-pressed="true"] {
+  transform: none;
+  background: color-mix(in srgb, var(--goal-brand) 10%, transparent);
+}
+.ode-landing .goal-chooser .goal-option:focus-visible {
+  outline: 2px solid var(--amber);
+  outline-offset: -2px;
+}
+.ode-landing .goal-chooser .goal-option-label { gap: 10px; }
+.ode-landing .goal-chooser .goal-close { top: 18px; right: 18px; }
+.ode-landing .goal-chooser .goal-continue { margin-top: 24px; }
+@media (max-width: 600px) {
+  .ode-landing .goal-chooser .goal-option,
+  .ode-landing .goal-chooser .goal-option:nth-child(odd) {
+    padding: 13px 6px;
+    font-size: 13px;
+    gap: 0;
+  }
+  .ode-landing .goal-chooser .goal-option-label { gap: 8px; }
+  .ode-landing .goal-chooser .goal-option::after { display: none; }
+}
 @media (max-width: 760px) {
   .ode-site .toolbar input { width: 100%; }
   .ode-site .sidebar-bottom { grid-column: 2; grid-row: 1; justify-self: end; }
