@@ -57,6 +57,26 @@ The local mock is not a production backend test. Live checks avoid real client
 records, journal submissions, paid AI calls and account creation. Firebase Hosting
 deployment does not deploy backend services or publish a mobile OTA.
 
+### Responsive follow-up — 20 October 2026
+
+The homepage, therapist information, About, Teams, pricing, privacy, terms, login,
+client overview and session notes were checked at 320×700, 390×844, 600×800,
+768×1024, 1024×600, 1440×900, 2560×1440 and 844×390. Checks compare document
+width and visible content bounds with the usable viewport, alongside visual
+inspection of phone layouts and the goal dialog. The exported client brief is
+checked with fictional local API data because Next's development server does not
+apply Firebase's dynamic-client rewrite.
+
+Reopening the goal chooser now centres it vertically on short screens so its
+close button stays reachable; its contents scroll inside the viewport. The hero
+logo reveals through a left-to-right SVG clipping rectangle, avoiding normalized
+dash lengths that previously left a gap. Its final state retains the complete
+line and dot. The pre-animation state prevents a flash of the completed logo;
+reduced-motion users receive the complete static mark.
+The floating goal action appears after its header equivalent leaves view, keeping
+the hero's launch information clear. Its observer disconnects when leaving the
+homepage.
+
 ## Deployment
 
 From `therapist-portal`, build with

@@ -987,7 +987,17 @@
 
 @media (prefers-reduced-motion:no-preference) {
 
-.ode-landing .hero-art.is-ready .art-voice {
+.ode-landing .hero-art:not(.is-ready) .art-reveal {
+  transform: scaleX(0);
+  transform-origin: 0 0;
+}
+
+.ode-landing .hero-art:not(.is-ready) .art-dot,
+.ode-landing .hero-art:not(.is-ready) figcaption {
+  opacity: 0;
+}
+
+.ode-landing .hero-art.is-ready .art-reveal {
   animation: voice-settles 1.8s cubic-bezier(.25,.65,.3,1) .35s both;
 }
 
@@ -1016,13 +1026,13 @@ to {
 @keyframes voice-settles {
 
 from {
-  opacity: 0;
-  transform: translateY(4px);
+  transform: scaleX(0);
+  transform-origin: 0 0;
 }
 
 to {
-  opacity: 1;
-  transform: translateY(0);
+  transform: scaleX(1);
+  transform-origin: 0 0;
 }
 }
 

@@ -37,6 +37,13 @@
 .ode-landing .goal-chooser .goal-option-label { gap: 10px; }
 .ode-landing .goal-chooser .goal-close { top: 18px; right: 18px; }
 .ode-landing .goal-chooser .goal-continue { margin-top: 24px; }
+/* A bottom offset must not push a tall chooser above a landscape viewport. */
+@media (max-height: 720px) {
+  .ode-landing .goal-chooser[data-welcome="false"] {
+    inset: 0;
+    margin: auto 16px auto auto;
+  }
+}
 @media (max-width: 600px) {
   .ode-landing .goal-chooser .goal-option,
   .ode-landing .goal-chooser .goal-option:nth-child(odd) {

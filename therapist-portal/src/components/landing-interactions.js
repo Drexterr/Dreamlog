@@ -1,6 +1,7 @@
 // Approved ScrollCraft interaction runtime. Keep paired with landing.css.
 export function mountLanding(root) {
 const overflow = document.documentElement.style.overflow;
+let goalNavigationObserver;
 /* ============================================================================
    scrollcraft: a scroll-driven interaction runtime
    ----------------------------------------------------------------------------
@@ -1327,7 +1328,7 @@ const overflow = document.documentElement.style.overflow;
     function revealHeroArt() { document.querySelector('.hero-art').classList.add('is-ready'); }
     function openGoals(welcome, opener) {
       if (dialog.open) return;
-      returnFocus = opener || bubble;
+      returnFocus = opener || root.querySelector('.nav [data-open-goals]') || bubble;
       dialog.setAttribute('data-welcome', String(welcome));
       skip.hidden = !welcome;
       dialog.showModal();
@@ -1374,6 +1375,15 @@ const overflow = document.documentElement.style.overflow;
     chooseGoal(Object.prototype.hasOwnProperty.call(goals, saved) ? saved : 'curious', false);
     if (typeof dialog.showModal === 'function') {
       bubble.hidden = false;
+      // The header already provides this action. Show the floating alternative
+      // only after it leaves view, so it cannot cover the hero's launch copy.
+      var headerGoal = root.querySelector('.nav [data-open-goals]');
+      if (headerGoal && typeof IntersectionObserver === 'function') {
+        goalNavigationObserver = new IntersectionObserver(function (entries) {
+          bubble.hidden = entries[0].isIntersecting;
+        });
+        goalNavigationObserver.observe(headerGoal);
+      }
       if (firstVisit) openGoals(true);
       else revealHeroArt();
     }
@@ -1420,5 +1430,5 @@ const overflow = document.documentElement.style.overflow;
     });
   })();
 
-return () => { if (window.ScrollCraft) window.ScrollCraft.instances.slice().forEach(instance => instance.destroy()); root.querySelectorAll('dialog[open]').forEach(dialog => dialog.close()); document.documentElement.style.overflow = overflow; document.documentElement.classList.remove('motion-fallback'); };
+return () => { if (goalNavigationObserver) goalNavigationObserver.disconnect(); if (window.ScrollCraft) window.ScrollCraft.instances.slice().forEach(instance => instance.destroy()); root.querySelectorAll('dialog[open]').forEach(dialog => dialog.close()); document.documentElement.style.overflow = overflow; document.documentElement.classList.remove('motion-fallback'); };
 }
