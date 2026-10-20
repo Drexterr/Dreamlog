@@ -26,6 +26,9 @@ import { PERSONA_META } from '../../src/types';
 import { detectUserCountry } from '../../src/services/region';
 import { helplinesForCountry, helplineHref, type CountryHelplines } from '../../src/services/helplines';
 import BrandOrbGlyph from '../../src/components/BrandOrbGlyph';
+import { Palette } from '../../src/theme';
+import type { ThemeColors } from '../../src/theme';
+import { httpStatus } from '../../src/utils/errors';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -55,7 +58,7 @@ function SessionOrb({
   recording: boolean;
   thinking: boolean;
   onPress: () => void;
-  colors: any;
+  colors: ThemeColors;
 }) {
   const pulseAnim = useRef(new Animated.Value(1)).current;
   const glowAnim = useRef(new Animated.Value(0.35)).current;
@@ -157,7 +160,7 @@ const orbStyles = StyleSheet.create({
 
 // ── Message bubble ────────────────────────────────────────────────────────────
 
-function MessageBubble({ msg, colors }: { msg: TherapySessionMessage; colors: any }) {
+function MessageBubble({ msg, colors }: { msg: TherapySessionMessage; colors: ThemeColors }) {
   const isUser = msg.role === 'user';
   return (
     <View
@@ -168,7 +171,7 @@ function MessageBubble({ msg, colors }: { msg: TherapySessionMessage; colors: an
           : [bubbleStyles.assistant, { backgroundColor: colors.card, borderColor: colors.border }],
       ]}
     >
-      <Text style={[bubbleStyles.text, { color: isUser ? '#fff' : colors.textPrimary }]}>
+      <Text style={[bubbleStyles.text, { color: isUser ? Palette.onBrand : colors.textPrimary }]}>
         {msg.content}
       </Text>
       {msg.input_mode === 'voice' && isUser && (
@@ -204,7 +207,7 @@ const bubbleStyles = StyleSheet.create({
 
 // ── Crisis screen ─────────────────────────────────────────────────────────────
 
-function CrisisScreen({ colors, resource }: { colors: any; resource: CountryHelplines }) {
+function CrisisScreen({ colors, resource }: { colors: ThemeColors; resource: CountryHelplines }) {
   return (
     <View style={{ gap: 14, padding: 24 }}>
       <Text style={[{ fontSize: 26, fontFamily: 'Erode_600SemiBold', color: colors.textPrimary }]}>
@@ -330,8 +333,8 @@ export default function TherapySessionScreen() {
       playTTS(resp.assistant_message.tts_url);
       // Switch back to voice mode after sending so orb is the focus again
       setInputMode('voice');
-    } catch (err: any) {
-      const s = err?.response?.status;
+    } catch (err: unknown) {
+      const s = httpStatus(err);
       if (s === 410) setStatus('expired');
       else if (s === 409) Alert.alert('Session ended', 'This session is no longer active.');
       else Alert.alert('Error', 'Could not send message. Please try again.');
@@ -363,8 +366,8 @@ export default function TherapySessionScreen() {
         setTimeRemaining(resp.session_state.time_remaining_sec);
         setCrisisWarnings(resp.session_state.crisis_warnings ?? 0);
         playTTS(resp.assistant_message.tts_url);
-      } catch (err: any) {
-        if (err?.response?.status === 410) setStatus('expired');
+      } catch (err: unknown) {
+        if (httpStatus(err) === 410) setStatus('expired');
         else Alert.alert('Error', 'Could not send voice message. Please try again.');
         await recorder.discardRecording();
       } finally {
@@ -387,7 +390,7 @@ export default function TherapySessionScreen() {
           if (isRecording) await recorder.discardRecording();
           try {
             await api.endTherapySession(id);
-            router.replace({ pathname: '/therapy/summary/[id]', params: { id } } as any);
+            router.replace({ pathname: '/therapy/summary/[id]', params: { id } });
           } catch {
             Alert.alert('Error', 'Could not end session. Please try again.');
           }
@@ -618,7 +621,7 @@ export default function TherapySessionScreen() {
               </Text>
               <TouchableOpacity
                 style={[styles.summaryBtn, { backgroundColor: colors.brand }]}
-                onPress={() => router.replace({ pathname: '/therapy/summary/[id]', params: { id } } as any)}
+                onPress={() => router.replace({ pathname: '/therapy/summary/[id]', params: { id } })}
                 activeOpacity={0.85}
               >
                 <Text style={styles.summaryBtnText}>View Summary →</Text>
@@ -729,7 +732,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 32,
   },
   summaryBtnText: {
-    color: '#fff',
+    color: Palette.onBrand,
     fontSize: 15,
     fontFamily: 'HankenGrotesk_700Bold',
   },
@@ -793,5 +796,5 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  sendBtnText: { color: '#fff', fontSize: 18, fontFamily: 'HankenGrotesk_700Bold' },
+  sendBtnText: { color: Palette.onBrand, fontSize: 18, fontFamily: 'HankenGrotesk_700Bold' },
 });

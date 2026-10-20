@@ -15,6 +15,7 @@ import { api } from '../../../src/api/client';
 import { useTheme } from '../../../src/context/ThemeContext';
 import type { TherapySession } from '../../../src/types';
 import { T } from '../../../src/testIDs';
+import { Palette } from '../../../src/theme';
 
 function formatDuration(sec?: number): string {
   if (!sec) return '-';
@@ -64,7 +65,7 @@ export default function TherapySummaryScreen() {
 
   return (
     <SafeAreaView style={[styles.safe, { backgroundColor: colors.bg }]}>
-      <TouchableOpacity style={styles.backBtn} onPress={() => router.replace('/therapy' as any)} activeOpacity={0.7}>
+      <TouchableOpacity style={styles.backBtn} onPress={() => router.replace('/therapy')} activeOpacity={0.7}>
         <Text style={[styles.backBtnText, { color: colors.textMuted }]}>← Sessions</Text>
       </TouchableOpacity>
       <ScrollView contentContainerStyle={styles.container}>
@@ -118,7 +119,7 @@ export default function TherapySummaryScreen() {
         <TouchableOpacity
           testID={T.therapySummary.newSessionButton}
           style={[styles.primaryBtn, { backgroundColor: colors.brand }]}
-          onPress={() => router.replace('/therapy' as any)}
+          onPress={() => router.replace('/therapy')}
           activeOpacity={0.8}
         >
           <Text style={styles.primaryBtnText}>Start a New Session</Text>
@@ -127,7 +128,7 @@ export default function TherapySummaryScreen() {
         <TouchableOpacity
           testID={T.therapySummary.backToJournal}
           style={styles.secondaryBtn}
-          onPress={() => router.replace('/(tabs)' as any)}
+          onPress={() => router.replace('/(tabs)')}
           activeOpacity={0.7}
         >
           <Text style={[styles.secondaryBtnText, { color: colors.textSecondary }]}>Back to Journal</Text>
@@ -170,7 +171,7 @@ const styles = StyleSheet.create({
   shareBtnText: { fontSize: 14, fontFamily: 'HankenGrotesk_600SemiBold' },
   disclaimer: { fontSize: 12, fontFamily: 'HankenGrotesk_400Regular', lineHeight: 18, textAlign: 'center', marginBottom: 32 },
   primaryBtn: { borderRadius: 12, paddingVertical: 16, alignItems: 'center', marginBottom: 12 },
-  primaryBtnText: { color: '#fff', fontSize: 17, fontFamily: 'HankenGrotesk_700Bold' },
+  primaryBtnText: { color: Palette.onBrand, fontSize: 17, fontFamily: 'HankenGrotesk_700Bold' },
   secondaryBtn: { alignItems: 'center', paddingVertical: 12 },
   secondaryBtnText: { fontSize: 15, fontFamily: 'HankenGrotesk_400Regular' },
   errorText: { textAlign: 'center', marginTop: 100, fontSize: 16, fontFamily: 'HankenGrotesk_400Regular' },

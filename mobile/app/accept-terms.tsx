@@ -14,6 +14,7 @@ import { api } from '../src/api/client';
 import { useTheme } from '../src/context/ThemeContext';
 import { resolvePostAuthRoute } from '../src/services/postAuthRoute';
 import { T } from '../src/testIDs';
+import { Palette } from '../src/theme';
 
 // dreamlog.app is not yet DNS-pointed at the Firebase Hosting site - use the
 // working *.web.app URL until that's done (see docs/LAUNCH_CHECKLIST.md).
@@ -37,8 +38,7 @@ export default function AcceptTermsScreen() {
     try {
       await api.acceptTerms();
       const dest = await resolvePostAuthRoute({ skipTermsGate: true });
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      router.replace(dest as any);
+      router.replace(dest);
     } catch {
       setError('Could not save your acceptance. Please check your connection and try again.');
       setLoading(false);
@@ -98,7 +98,7 @@ export default function AcceptTermsScreen() {
           activeOpacity={0.8}
         >
           {loading ? (
-            <ActivityIndicator color="#fff" size="small" />
+            <ActivityIndicator color={Palette.onBrand} size="small" />
           ) : (
             <Text style={styles.buttonText}>Agree and continue</Text>
           )}
@@ -172,7 +172,7 @@ const styles = StyleSheet.create({
     marginTop: 1,
   },
   checkboxTick: {
-    color: '#fff',
+    color: Palette.onBrand,
     fontSize: 13,
     fontWeight: '700',
     lineHeight: 16,
@@ -186,7 +186,7 @@ const styles = StyleSheet.create({
   errorText: {
     fontSize: 13,
     fontFamily: 'HankenGrotesk_400Regular',
-    color: '#ef4444',
+    color: Palette.error,
     marginBottom: 12,
     textAlign: 'center',
   },
@@ -202,7 +202,7 @@ const styles = StyleSheet.create({
   },
   buttonDisabled: { opacity: 0.5 },
   buttonText: {
-    color: '#fff',
+    color: Palette.onBrand,
     fontSize: 16,
     fontFamily: 'HankenGrotesk_600SemiBold',
     letterSpacing: 0.5,

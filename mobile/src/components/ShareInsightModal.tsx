@@ -25,6 +25,7 @@ import type { ThemeColors } from '../theme';
 import { api } from '../api/client';
 import { T } from '../testIDs';
 import type { MoodArcDay } from '../types';
+import { Palette } from '../theme';
 
 /** Warm, shareable caption that accompanies the card image. */
 function buildShareMessage(weekLabel: string, streak: number, entryCount: number): string {
@@ -145,7 +146,7 @@ export default function ShareInsightModal({
               disabled={sharing}
             >
               {sharing ? (
-                <ActivityIndicator color="#fff" size="small" />
+                <ActivityIndicator color={Palette.onBrand} size="small" />
               ) : (
                 <Text style={styles.shareText}>Share Card</Text>
               )}
@@ -228,7 +229,7 @@ const getStyles = (colors: ThemeColors) =>
       opacity: 0.6,
     },
     shareText: {
-      color: '#fff',
+      color: Palette.onBrand,
       fontFamily: 'HankenGrotesk_600SemiBold',
       fontSize: 15,
     },

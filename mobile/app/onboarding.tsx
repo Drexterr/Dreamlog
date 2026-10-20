@@ -14,7 +14,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { Fonts, THEMES } from '../src/theme';
+import { Fonts, THEMES, Palette } from '../src/theme';
 import { useTheme } from '../src/context/ThemeContext';
 import type { ThemeColors } from '../src/theme';
 import {
@@ -795,8 +795,7 @@ export default function OnboardingScreen() {
               testID={T.onboarding.modeTherapy}
               accessibilityLabel="Begin with Reflection Session"
               style={[styles.modeCard, { backgroundColor: colors.card, borderColor: colors.border }]}
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              onPress={() => router.push('/therapy/persona-picker' as any)}
+              onPress={() => router.push('/therapy/persona-picker')}
               activeOpacity={0.75}
             >
               <Text style={[styles.modeLabel, { color: colors.textPrimary }]}>Reflection Session</Text>
@@ -1056,7 +1055,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     overflow: 'hidden',
     zIndex: 20,
-    shadowColor: '#000',
+    shadowColor: Palette.shadow,
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.35,
     shadowRadius: 12,

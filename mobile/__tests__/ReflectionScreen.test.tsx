@@ -152,7 +152,7 @@ describe('reflection content and navigation', () => {
   });
   it('returns home and routes sharing to the correct entry', async () => {
     const view = await normal(); fireEvent.press(view.getByTestId(T.reflection.shareTherapistButton));
-    expect(mockPush).toHaveBeenCalledWith('/share/entry-fixture');
+    expect(mockPush).toHaveBeenCalledWith({ pathname: '/share/[id]', params: { id: 'entry-fixture' } });
     fireEvent.press(view.getByTestId(T.reflection.doneButton)); expect(mockReplace).toHaveBeenCalledWith('/(tabs)');
   });
   it('builds the follow-up seed with summary, emotions, two topics and one quote', async () => {

@@ -16,6 +16,7 @@ import { api } from '../../src/api/client';
 import { useTheme } from '../../src/context/ThemeContext';
 import { T } from '../../src/testIDs';
 import type { ExternalClient } from '../../src/types';
+import { Palette } from '../../src/theme';
 
 type NoteMode = 'photo' | 'type';
 
@@ -96,15 +97,13 @@ export default function AddSessionScreen() {
           external_client_id: selectedClient,
           image_key,
         });
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        router.replace(`/therapist/session/${session.id}` as any);
+        router.replace({ pathname: '/therapist/session/[id]', params: { id: session.id } });
       } else {
         const session = await api.createClientSession({
           external_client_id: selectedClient,
           bullets,
         });
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        router.replace(`/therapist/session/${session.id}` as any);
+        router.replace({ pathname: '/therapist/session/[id]', params: { id: session.id } });
       }
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Could not create the session.');
@@ -134,7 +133,7 @@ export default function AddSessionScreen() {
                 style={[
                   styles.clientChipText,
                   { color: colors.textSecondary },
-                  selectedClient === c.id && { color: '#fff' },
+                  selectedClient === c.id && { color: Palette.onBrand },
                 ]}
               >
                 {c.name}
@@ -143,8 +142,7 @@ export default function AddSessionScreen() {
           ))}
           <TouchableOpacity
             style={[styles.clientChip, { backgroundColor: 'transparent', borderColor: colors.border, borderStyle: 'dashed' }]}
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            onPress={() => router.push('/therapist/clients' as any)}
+            onPress={() => router.push('/therapist/clients')}
           >
             <Text style={[styles.clientChipText, { color: colors.textMuted }]}>＋ New client</Text>
           </TouchableOpacity>
@@ -158,7 +156,7 @@ export default function AddSessionScreen() {
             style={[styles.modeTab, noteMode === 'photo' && { backgroundColor: colors.purple600 }]}
             onPress={() => setNoteMode('photo')}
           >
-            <Text style={[styles.modeTabText, { color: colors.textMuted }, noteMode === 'photo' && { color: '#fff' }]}>
+            <Text style={[styles.modeTabText, { color: colors.textMuted }, noteMode === 'photo' && { color: Palette.onBrand }]}>
               📷 Photo of notes
             </Text>
           </TouchableOpacity>
@@ -167,7 +165,7 @@ export default function AddSessionScreen() {
             style={[styles.modeTab, noteMode === 'type' && { backgroundColor: colors.purple600 }]}
             onPress={() => setNoteMode('type')}
           >
-            <Text style={[styles.modeTabText, { color: colors.textMuted }, noteMode === 'type' && { color: '#fff' }]}>
+            <Text style={[styles.modeTabText, { color: colors.textMuted }, noteMode === 'type' && { color: Palette.onBrand }]}>
               ⌨️ Type notes
             </Text>
           </TouchableOpacity>
@@ -231,7 +229,7 @@ export default function AddSessionScreen() {
           activeOpacity={0.85}
         >
           {submitting ? (
-            <ActivityIndicator color="#fff" size="small" />
+            <ActivityIndicator color={Palette.onBrand} size="small" />
           ) : (
             <Text style={styles.buttonText}>{noteMode === 'photo' ? 'Upload & extract' : 'Save notes'}</Text>
           )}
@@ -284,7 +282,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 6,
   },
-  removePhotoText: { color: '#fff', fontSize: 12, fontFamily: 'HankenGrotesk_600SemiBold' },
+  removePhotoText: { color: Palette.onBrand, fontSize: 12, fontFamily: 'HankenGrotesk_600SemiBold' },
   hint: { fontSize: 12, fontFamily: 'HankenGrotesk_400Regular', lineHeight: 17, marginTop: 10 },
   notesInput: {
     borderRadius: 16,
@@ -295,7 +293,7 @@ const styles = StyleSheet.create({
     fontFamily: 'HankenGrotesk_400Regular',
     lineHeight: 21,
   },
-  errorText: { fontSize: 13, color: '#ef4444', fontFamily: 'HankenGrotesk_400Regular', marginTop: 14 },
+  errorText: { fontSize: 13, color: Palette.error, fontFamily: 'HankenGrotesk_400Regular', marginTop: 14 },
   button: {
     borderRadius: 14,
     paddingVertical: 16,
@@ -307,5 +305,5 @@ const styles = StyleSheet.create({
     elevation: 6,
   },
   buttonDisabled: { opacity: 0.6 },
-  buttonText: { color: '#fff', fontSize: 16, fontFamily: 'HankenGrotesk_600SemiBold', letterSpacing: 0.5 },
+  buttonText: { color: Palette.onBrand, fontSize: 16, fontFamily: 'HankenGrotesk_600SemiBold', letterSpacing: 0.5 },
 });

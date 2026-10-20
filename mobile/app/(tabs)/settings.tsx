@@ -30,6 +30,7 @@ import { T } from '../../src/testIDs';
 import type { AgeRange, Plan, User, UserGoal, VoiceLanguage } from '../../src/types';
 import { cacheUserCountry, detectUserCountry } from '../../src/services/region';
 import { helplinesForCountry, helplineHref } from '../../src/services/helplines';
+import { Palette, PlanColors } from '../../src/theme';
 
 // dreamlog.app is not yet DNS-pointed at the Firebase Hosting site - use the
 // working *.web.app URL until that's done (see docs/LAUNCH_CHECKLIST.md).
@@ -54,12 +55,7 @@ const PLAN_LABELS: Record<Plan, string> = {
   b2b:  'B2B Wellness',
 };
 
-const PLAN_BADGE_COLORS: Record<Plan, string> = {
-  free: '#6b7280',
-  plus: '#a78bfa',
-  pro:  '#c084fc',
-  b2b:  '#34d399',
-};
+const PLAN_BADGE_COLORS: Record<Plan, string> = PlanColors;
 
 const AGE_RANGE_LABELS: Record<AgeRange, string> = {
   under_18: 'Under 18',
@@ -1153,7 +1149,7 @@ export default function SettingsScreen() {
               activeOpacity={0.85}
             >
               {checkingUpdate ? (
-                <ActivityIndicator color="#fff" size="small" />
+                <ActivityIndicator color={Palette.onBrand} size="small" />
               ) : (
                 <Text style={styles.updateActionBtnText}>Check for updates now</Text>
               )}
@@ -1231,7 +1227,7 @@ const styles = StyleSheet.create({
   },
   avatarText: {
     fontSize: 18,
-    color: '#fff',
+    color: Palette.onBrand,
     fontFamily: 'Erode_500Medium',
   },
   profileName: {
@@ -1439,7 +1435,7 @@ const styles = StyleSheet.create({
   },
   profileModalAvatarText: {
     fontSize: 24,
-    color: '#fff',
+    color: Palette.onBrand,
     fontFamily: 'Erode_500Medium',
   },
   profileModalName: {
@@ -1528,7 +1524,7 @@ const styles = StyleSheet.create({
     elevation: 6,
   },
   updateActionBtnText: {
-    color: '#fff',
+    color: Palette.onBrand,
     fontSize: 15,
     fontFamily: 'HankenGrotesk_600SemiBold',
     letterSpacing: 0.3,

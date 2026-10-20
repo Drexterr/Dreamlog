@@ -19,6 +19,7 @@ import type { DailyMood, MoodArcDay, MoodHistoryResponse } from '../../src/types
 import ShareInsightModal from '../../src/components/ShareInsightModal';
 import PatternRadar from '../../src/components/PatternRadar';
 import { T, moodRangeID } from '../../src/testIDs';
+import type { ThemeColors } from '../../src/theme';
 
 // ── Milestone data ─────────────────────────────────────────────────────────────
 
@@ -475,7 +476,7 @@ function currentWeekEntryCount(moods: DailyMood[]): number {
 
 // ── Styles ────────────────────────────────────────────────────────────────────
 
-const getStyles = (colors: any) => StyleSheet.create({
+const getStyles = (colors: ThemeColors) => StyleSheet.create({
   container: { flex: 1 },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   scroll: { padding: 20, paddingBottom: 60 },

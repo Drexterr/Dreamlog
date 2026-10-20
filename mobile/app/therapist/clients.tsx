@@ -16,6 +16,7 @@ import { api } from '../../src/api/client';
 import { useTheme } from '../../src/context/ThemeContext';
 import { T } from '../../src/testIDs';
 import type { ExternalClient, ClientSummary } from '../../src/types';
+import { Palette } from '../../src/theme';
 
 // Client list: the therapist's own (external) clients plus Ode users who
 // consented to share their journal (linked clients).
@@ -114,8 +115,7 @@ export default function TherapistClientsScreen() {
             <TouchableOpacity
               key={c.id}
               style={[styles.clientCard, { backgroundColor: colors.card, borderColor: colors.border }]}
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              onPress={() => router.push(`/therapist/client/${c.id}` as any)}
+              onPress={() => router.push({ pathname: '/therapist/client/[id]', params: { id: c.id } })}
               onLongPress={() => handleArchive(c)}
             >
               <View style={[styles.avatar, { backgroundColor: colors.purple600 + '33' }]}>
@@ -153,7 +153,7 @@ export default function TherapistClientsScreen() {
               key={c.client_id}
               style={[styles.clientCard, { backgroundColor: colors.card, borderColor: colors.border }]}
             >
-              <View style={[styles.avatar, { backgroundColor: '#34d39933' }]}>
+              <View style={[styles.avatar, { backgroundColor: Palette.successSoft }]}>
                 <Text style={[styles.avatarText, { color: colors.textPrimary }]}>
                   {c.name.slice(0, 2).toUpperCase()}
                 </Text>
@@ -198,7 +198,7 @@ export default function TherapistClientsScreen() {
                 onPress={handleAdd}
                 disabled={saving}
               >
-                {saving ? <ActivityIndicator color="#fff" size="small" /> : <Text style={styles.modalSaveText}>Add client</Text>}
+                {saving ? <ActivityIndicator color={Palette.onBrand} size="small" /> : <Text style={styles.modalSaveText}>Add client</Text>}
               </TouchableOpacity>
             </View>
           </View>
@@ -214,7 +214,7 @@ const styles = StyleSheet.create({
   headerRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
   title: { fontSize: 30, fontFamily: 'Erode_500Medium' },
   addBtn: { borderRadius: 12, paddingHorizontal: 16, paddingVertical: 10 },
-  addBtnText: { color: '#fff', fontSize: 14, fontFamily: 'HankenGrotesk_600SemiBold' },
+  addBtnText: { color: Palette.onBrand, fontSize: 14, fontFamily: 'HankenGrotesk_600SemiBold' },
   privacyHint: { fontSize: 12, fontFamily: 'HankenGrotesk_400Regular', lineHeight: 17, marginBottom: 16 },
   sectionTitle: { fontSize: 19, fontFamily: 'Erode_500Medium', marginBottom: 10 },
   emptyCard: { borderRadius: 16, borderWidth: 1, padding: 18 },
@@ -253,10 +253,10 @@ const styles = StyleSheet.create({
     fontSize: 15,
     marginBottom: 10,
   },
-  errorText: { fontSize: 13, color: '#ef4444', fontFamily: 'HankenGrotesk_400Regular', marginBottom: 8 },
+  errorText: { fontSize: 13, color: Palette.error, fontFamily: 'HankenGrotesk_400Regular', marginBottom: 8 },
   modalActions: { flexDirection: 'row', justifyContent: 'flex-end', gap: 12, marginTop: 6 },
   modalCancel: { paddingVertical: 12, paddingHorizontal: 14 },
   modalCancelText: { fontSize: 14, fontFamily: 'HankenGrotesk_600SemiBold' },
   modalSave: { borderRadius: 12, paddingVertical: 12, paddingHorizontal: 20 },
-  modalSaveText: { color: '#fff', fontSize: 14, fontFamily: 'HankenGrotesk_600SemiBold' },
+  modalSaveText: { color: Palette.onBrand, fontSize: 14, fontFamily: 'HankenGrotesk_600SemiBold' },
 });

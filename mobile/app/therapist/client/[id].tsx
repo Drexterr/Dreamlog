@@ -13,6 +13,7 @@ import { api } from '../../../src/api/client';
 import { useTheme } from '../../../src/context/ThemeContext';
 import { T } from '../../../src/testIDs';
 import type { ExternalClient, ClientSession } from '../../../src/types';
+import { Palette } from '../../../src/theme';
 
 const STATUS_LABEL: Record<string, string> = {
   pending: 'Extracting…',
@@ -92,8 +93,7 @@ export default function ClientDetailScreen() {
         <TouchableOpacity
           testID={T.therapistPortal.clientDetailAddSession}
           style={[styles.primaryBtn, { backgroundColor: colors.purple600, shadowColor: colors.purple500 }]}
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          onPress={() => router.push({ pathname: '/therapist/add-session', params: { clientId: client.id } } as any)}
+          onPress={() => router.push({ pathname: '/therapist/add-session', params: { clientId: client.id } })}
           activeOpacity={0.85}
         >
           <Text style={styles.primaryBtnText}>＋ Add session notes</Text>
@@ -109,15 +109,14 @@ export default function ClientDetailScreen() {
             <TouchableOpacity
               key={s.id}
               style={[styles.sessionCard, { backgroundColor: colors.card, borderColor: colors.border }]}
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              onPress={() => router.push(`/therapist/session/${s.id}` as any)}
+              onPress={() => router.push({ pathname: '/therapist/session/[id]', params: { id: s.id } })}
             >
               <View style={styles.sessionHeader}>
                 <Text style={[styles.sessionDate, { color: colors.textPrimary }]}>{s.session_date}</Text>
                 <Text
                   style={[
                     styles.sessionStatus,
-                    { color: s.status === 'completed' ? '#34d399' : s.status === 'failed' ? '#ef4444' : colors.textMuted },
+                    { color: s.status === 'completed' ? Palette.success : s.status === 'failed' ? Palette.error : colors.textMuted },
                   ]}
                 >
                   {STATUS_LABEL[s.status]}
@@ -161,7 +160,7 @@ const styles = StyleSheet.create({
     shadowRadius: 12,
     elevation: 6,
   },
-  primaryBtnText: { color: '#fff', fontSize: 15, fontFamily: 'HankenGrotesk_600SemiBold' },
+  primaryBtnText: { color: Palette.onBrand, fontSize: 15, fontFamily: 'HankenGrotesk_600SemiBold' },
   sectionTitle: { fontSize: 20, fontFamily: 'Erode_500Medium', marginBottom: 12 },
   emptyCard: { borderRadius: 16, borderWidth: 1, padding: 18 },
   emptyText: { fontSize: 13, fontFamily: 'HankenGrotesk_400Regular' },
@@ -172,5 +171,5 @@ const styles = StyleSheet.create({
   sessionPreview: { fontSize: 13, fontFamily: 'HankenGrotesk_400Regular', lineHeight: 19 },
   summaryBadge: { fontSize: 11.5, fontFamily: 'HankenGrotesk_600SemiBold', marginTop: 8 },
   deleteBtn: { alignItems: 'center', paddingVertical: 22 },
-  deleteBtnText: { color: '#ef4444', fontSize: 13, fontFamily: 'HankenGrotesk_600SemiBold' },
+  deleteBtnText: { color: Palette.error, fontSize: 13, fontFamily: 'HankenGrotesk_600SemiBold' },
 });

@@ -30,11 +30,11 @@ export async function setupQuickActions(): Promise<void> {
     ]);
 
     const handle = (action?: { params?: Record<string, unknown> | null }) => {
-      const href = action?.params?.href;
-      if (typeof href !== 'string') return;
+      // Only routes registered above are honoured - a shortcut payload is
+      // never pushed as an arbitrary, unchecked route.
+      if (action?.params?.href !== '/record') return;
       try {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        router.push(href as any);
+        router.push('/record');
       } catch {
         // Router not mounted yet - losing the shortcut hop is acceptable.
       }

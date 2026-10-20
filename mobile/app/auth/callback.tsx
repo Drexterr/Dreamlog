@@ -3,6 +3,7 @@ import { View, ActivityIndicator, Text, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
 import { supabase } from '../../src/lib/supabase';
 import { api, storeToken } from '../../src/api/client';
+import { Palette } from '../../src/theme';
 
 // Landing screen for Supabase email confirmation deep links.
 // URL format: ode://auth/callback#access_token=...  (implicit flow)
@@ -20,7 +21,7 @@ export default function AuthCallback() {
           try {
             await storeToken(session.access_token);
             const user = await api.me();
-            router.replace(user.goal ? '/(tabs)' : '/onboarding' as any);
+            router.replace(user.goal ? '/(tabs)' : '/onboarding');
           } catch {
             router.replace('/auth');
           }
@@ -32,7 +33,7 @@ export default function AuthCallback() {
 
   return (
     <View style={styles.container}>
-      <ActivityIndicator color="#7C3AED" size="large" />
+      <ActivityIndicator color={Palette.spinnerBrand} size="large" />
       <Text style={styles.text}>Verifying your account…</Text>
     </View>
   );
@@ -41,13 +42,13 @@ export default function AuthCallback() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#18150f',
+    backgroundColor: Palette.bootBg,
     alignItems: 'center',
     justifyContent: 'center',
     gap: 16,
   },
   text: {
-    color: '#a78bfa',
+    color: Palette.accentLilac,
     fontFamily: 'HankenGrotesk_400Regular',
     fontSize: 15,
   },

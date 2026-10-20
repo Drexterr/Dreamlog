@@ -26,6 +26,7 @@ import {
 import type { RegionCurrency } from '../src/services/region';
 import type { Plan, BillingPeriod, BillingPlanResponse } from '../src/types';
 import { T, upgradePeriodID, upgradeCtaID } from '../src/testIDs';
+import { Palette } from '../src/theme';
 
 type Currency = RegionCurrency;
 
@@ -237,12 +238,12 @@ export default function UpgradeScreen() {
                   onPress={() => setPeriod(p)}
                   activeOpacity={0.8}
                 >
-                  <Text style={[styles.periodSegmentText, { color: selected ? '#fff' : colors.textMuted }]}>
+                  <Text style={[styles.periodSegmentText, { color: selected ? Palette.onBrand : colors.textMuted }]}>
                     {p === 'monthly' ? 'Monthly' : 'Annual'}
                   </Text>
                   {p === 'annual' && (
                     <View style={[styles.saveChip, { backgroundColor: selected ? 'rgba(255,255,255,0.22)' : colors.brandGlow }]}>
-                      <Text style={[styles.saveChipText, { color: selected ? '#fff' : colors.brand }]}>
+                      <Text style={[styles.saveChipText, { color: selected ? Palette.onBrand : colors.brand }]}>
                         {MAX_ANNUAL_SAVINGS[activeCurrency]}
                       </Text>
                     </View>
@@ -323,9 +324,9 @@ export default function UpgradeScreen() {
                     activeOpacity={0.8}
                   >
                     {isPurchasing ? (
-                      <ActivityIndicator color={card.highlight ? '#fff' : colors.brand} size="small" />
+                      <ActivityIndicator color={card.highlight ? Palette.onBrand : colors.brand} size="small" />
                     ) : (
-                      <Text style={[styles.ctaText, { color: card.highlight ? '#fff' : colors.brand }]}>
+                      <Text style={[styles.ctaText, { color: card.highlight ? Palette.onBrand : colors.brand }]}>
                         Get {card.title} →
                       </Text>
                     )}
@@ -464,7 +465,7 @@ const styles = StyleSheet.create({
   badgeText: {
     fontSize: 10,
     fontFamily: 'HankenGrotesk_600SemiBold',
-    color: '#fff',
+    color: Palette.onBrand,
     letterSpacing: 0.5,
   },
 

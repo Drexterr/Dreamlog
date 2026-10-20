@@ -15,6 +15,7 @@ import { useTheme } from '../src/context/ThemeContext';
 import { useAuth } from '../src/context/AuthContext';
 import type { JourneySession, JourneyTemplate } from '../src/types';
 import { T, journeyStartID } from '../src/testIDs';
+import { Palette } from '../src/theme';
 
 // ── Tag pill ──────────────────────────────────────────────────────────────────
 function TagPill({ tag }: { tag: string }) {
@@ -62,7 +63,7 @@ function TemplateCard({
           activeOpacity={0.8}
         >
           {isStarting ? (
-            <ActivityIndicator size="small" color="#fff" />
+            <ActivityIndicator size="small" color={Palette.onBrand} />
           ) : (
             <Text style={styles.startBtnText}>Begin</Text>
           )}
@@ -308,7 +309,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   startBtnText: {
-    color: '#fff',
+    color: Palette.onBrand,
     fontSize: 13,
     fontFamily: 'HankenGrotesk_600SemiBold',
   },

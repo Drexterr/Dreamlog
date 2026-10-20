@@ -60,6 +60,7 @@ import AuthSheet from '../src/components/AuthSheet';
 import BrandSplash from '../src/components/BrandSplash';
 import { E2E, E2E_TOKEN } from '../src/config/e2e';
 import type { VersionInfo } from '../src/types';
+import { Palette } from '../src/theme';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -192,8 +193,7 @@ function RootLayout() {
       if (!hasToken) {
         // Guest user path
         if (!onboardingDone) {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          router.replace('/onboarding' as any);
+          router.replace('/onboarding');
         } else {
           if (inAuth || inOnboarding || atRootIndex) {
             // Returning guest lands on tabs
@@ -213,8 +213,7 @@ function RootLayout() {
         // Only route to onboarding if the user hasn't locally completed it yet.
         // If onboardingDone=true but backend has no goal, the startup sync above will
         // fix it asynchronously — don't loop them back through onboarding.
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        router.replace('/onboarding' as any);
+        router.replace('/onboarding');
       } else if (!needsOnboarding && (inAuth || inOnboarding || atRootIndex)) {
         // Also redirect from root index — covers blank screen on second restart
         router.replace('/(tabs)');
@@ -315,8 +314,7 @@ function RootLayout() {
           } else {
             // Deep link / normal sign-in: terms gate → therapist routing → onboarding/tabs
             const dest = await resolvePostAuthRoute();
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            router.replace(dest as any);
+            router.replace(dest);
           }
         } catch {
           // ignore
@@ -331,7 +329,7 @@ function RootLayout() {
   }, [ready]);
 
   if (!ready || (!fontsLoaded && !fontError)) {
-    return <View style={{ flex: 1, backgroundColor: '#18150f' }} />;
+    return <View style={{ flex: 1, backgroundColor: Palette.bootBg }} />;
   }
 
   return (

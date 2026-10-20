@@ -282,3 +282,42 @@ export const Fonts = {
   mono:   undefined as string | undefined, // falls back to system mono
 } as const;
 
+
+// ── Fixed tokens (do not vary with the goal theme) ──────────────────────────
+
+export const Palette = {
+  onBrand: '#FFFFFF',          // text / spinners on brand-filled buttons and bubbles
+  error: '#ef4444',            // validation + destructive actions
+  errorBorder: '#ef444455',
+  success: '#34d399',          // completed states
+  successSoft: '#34d39933',
+  shadow: '#000000',
+  bootBg: '#18150F',           // espresso boot / splash background (matches the native splash)
+  accentLilac: '#a78bfa',      // fallback accent when a theme lacks purple500
+  spinnerBrand: '#7C3AED',
+} as const;
+
+// Plan badges in Settings.
+export const PlanColors = {
+  free: '#6b7280',
+  plus: '#a78bfa',
+  pro: '#c084fc',
+  b2b: '#34d399',
+} as const;
+
+// Therapy persona accents (therapy hub + persona picker).
+export const PersonaAccents = {
+  comforting: '#C4A06A',
+  rational: '#6A9EC4',
+  cbt: '#7AAA88',
+  mindful: '#9A8AC0',
+} as const;
+
+// Official Google "G" logo colours - brand guidelines require these exact
+// values, so they are never themed.
+export const GoogleBrandColors = {
+  red: '#EA4335',
+  blue: '#4285F4',
+  yellow: '#FBBC05',
+  green: '#34A853',
+} as const;

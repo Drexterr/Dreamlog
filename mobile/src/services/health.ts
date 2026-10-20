@@ -10,6 +10,7 @@
  */
 
 import { Platform } from 'react-native';
+import type { HealthKitPermissions, HealthPermission } from 'react-native-health';
 
 // ── iOS / HealthKit ──────────────────────────────────────────────────────────
 
@@ -31,14 +32,17 @@ async function initHealthKit(): Promise<boolean> {
   if (hkInitialized) return true;
 
   return new Promise((resolve) => {
-    const permissions = {
+    // 'MindfulSession' is the HealthPermission.MindfulSession value; the enum
+    // is referenced as a type only so this file never requires the native
+    // module at import time on Android.
+    const permissions: HealthKitPermissions = {
       permissions: {
         read: [],
-        write: ['MindfulSession'],
+        write: ['MindfulSession' as HealthPermission],
       },
     };
 
-    AppleHealthKit!.initHealthKit(permissions as any, (err: string) => {
+    AppleHealthKit!.initHealthKit(permissions, (err: string) => {
       if (err) {
         resolve(false);
         return;

@@ -28,6 +28,7 @@ import { api } from '../src/api/client';
 import { useTheme } from '../src/context/ThemeContext';
 import type { Person, PersonDetail, PersonMention, PersonRole, PersonSentiment } from '../src/types';
 import { T } from '../src/testIDs';
+import type { ThemeColors } from '../src/theme';
 
 // The avatar shows the person's initial (identifies the person); the role is
 // carried by the text chip beside the name.
@@ -75,7 +76,7 @@ function computeTrend(mentions: PersonMention[]): Trend {
 
 function trendMeta(
   trend: Trend,
-  colors: any,
+  colors: ThemeColors,
 ): { arrow: string; label: string; color: string } | null {
   switch (trend) {
     case 'warming': return { arrow: '↗', label: 'Warming over time', color: colors.moodGreen };
@@ -489,7 +490,7 @@ export default function RelationshipsScreen() {
   );
 }
 
-const getStyles = (colors: any) =>
+const getStyles = (colors: ThemeColors) =>
   StyleSheet.create({
     container: { flex: 1 },
     scroll: { padding: 20, paddingBottom: 60 },

@@ -18,6 +18,8 @@ import {
 } from '../../src/services/region';
 import type { RegionCurrency } from '../../src/services/region';
 import { T, therapyPricingCtaID } from '../../src/testIDs';
+import { Palette } from '../../src/theme';
+import type { ThemeColors } from '../../src/theme';
 
 // ── Pricing data ──────────────────────────────────────────────────────────────
 
@@ -83,7 +85,7 @@ function OptionCard({
   onPress,
 }: {
   option: SessionOption;
-  colors: any;
+  colors: ThemeColors;
   onPress: () => void;
 }) {
   const { price, perSession } = option;
@@ -154,7 +156,7 @@ function OptionCard({
         onPress={onPress}
         activeOpacity={0.85}
       >
-        <Text style={[cardStyles.ctaText, { color: option.highlight ? '#fff' : colors.brand }]}>
+        <Text style={[cardStyles.ctaText, { color: option.highlight ? Palette.onBrand : colors.brand }]}>
           {option.cta}
         </Text>
       </TouchableOpacity>
@@ -180,7 +182,7 @@ const cardStyles = StyleSheet.create({
   badgeText: {
     fontSize: 10,
     fontFamily: 'HankenGrotesk_700Bold',
-    color: '#fff',
+    color: Palette.onBrand,
     letterSpacing: 1,
   },
   title: {
@@ -253,10 +255,10 @@ export default function TherapyPricingScreen() {
 
   const handleOptionPress = (option: SessionOption) => {
     if (option.isPlan) {
-      router.push('/upgrade' as any);
+      router.push('/upgrade');
     } else {
       // Pay-per-use sessions (hidden in v1) start via the persona picker.
-      router.push('/therapy/persona-picker' as any);
+      router.push('/therapy/persona-picker');
     }
   };
 

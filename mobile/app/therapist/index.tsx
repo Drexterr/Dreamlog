@@ -13,6 +13,7 @@ import { api } from '../../src/api/client';
 import { useTheme } from '../../src/context/ThemeContext';
 import { T } from '../../src/testIDs';
 import type { TherapistOverview, ClientSession, ExternalClient, TherapistMeResponse } from '../../src/types';
+import { Palette } from '../../src/theme';
 
 const STATUS_LABEL: Record<string, string> = {
   pending: 'Extracting…',
@@ -45,8 +46,7 @@ export default function TherapistDashboard() {
       setClients(clientList.clients);
     } catch {
       // therapistMe 404 → not a therapist; send to registration
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      router.replace('/therapist/register' as any);
+      router.replace('/therapist/register');
     }
   }, [router]);
 
@@ -115,8 +115,7 @@ export default function TherapistDashboard() {
         <TouchableOpacity
           testID={T.therapistPortal.dashboardNewSession}
           style={[styles.primaryBtn, { backgroundColor: colors.purple600, shadowColor: colors.purple500 }]}
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          onPress={() => router.push('/therapist/add-session' as any)}
+          onPress={() => router.push('/therapist/add-session')}
           activeOpacity={0.85}
         >
           <Text style={styles.primaryBtnText}>＋ New session notes</Text>
@@ -126,8 +125,7 @@ export default function TherapistDashboard() {
           <TouchableOpacity
             testID={T.therapistPortal.dashboardMyClients}
             style={[styles.actionCard, { backgroundColor: colors.card, borderColor: colors.border }]}
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            onPress={() => router.push('/therapist/clients' as any)}
+            onPress={() => router.push('/therapist/clients')}
           >
             <Text style={styles.actionEmoji}>👥</Text>
             <Text style={[styles.actionLabel, { color: colors.textPrimary }]}>My clients</Text>
@@ -151,15 +149,14 @@ export default function TherapistDashboard() {
             <TouchableOpacity
               key={s.id}
               style={[styles.sessionCard, { backgroundColor: colors.card, borderColor: colors.border }]}
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              onPress={() => router.push(`/therapist/session/${s.id}` as any)}
+              onPress={() => router.push({ pathname: '/therapist/session/[id]', params: { id: s.id } })}
             >
               <View style={styles.sessionHeader}>
                 <Text style={[styles.sessionClient, { color: colors.textPrimary }]}>{clientName(s)}</Text>
                 <Text
                   style={[
                     styles.sessionStatus,
-                    { color: s.status === 'completed' ? '#34d399' : s.status === 'failed' ? '#ef4444' : colors.textMuted },
+                    { color: s.status === 'completed' ? Palette.success : s.status === 'failed' ? Palette.error : colors.textMuted },
                   ]}
                 >
                   {STATUS_LABEL[s.status]}
@@ -209,7 +206,7 @@ const styles = StyleSheet.create({
     shadowRadius: 12,
     elevation: 6,
   },
-  primaryBtnText: { color: '#fff', fontSize: 16, fontFamily: 'HankenGrotesk_600SemiBold', letterSpacing: 0.3 },
+  primaryBtnText: { color: Palette.onBrand, fontSize: 16, fontFamily: 'HankenGrotesk_600SemiBold', letterSpacing: 0.3 },
 
   actionRow: { flexDirection: 'row', gap: 10, marginBottom: 28 },
   actionCard: {

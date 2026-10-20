@@ -16,6 +16,7 @@ import { useAuth } from '../../src/context/AuthContext';
 import { useGuidedTour } from '../../src/context/GuidedTourContext';
 import { T } from '../../src/testIDs';
 import type { DailyMood, Flashback, StreakInfo, TimelineEntry } from '../../src/types';
+import type { ThemeColors } from '../../src/theme';
 
 // ── Starter prompt ────────────────────────────────────────────────────────────
 // A personalized "place to start" derived from the latest completed analysis.
@@ -63,7 +64,7 @@ function deriveStarter(item: TimelineEntry | undefined): Starter {
 }
 
 // ── Record button ─────────────────────────────────────────────────────────────
-function RecordButton({ onPress, colors }: { onPress: () => void; colors: any }) {
+function RecordButton({ onPress, colors }: { onPress: () => void; colors: ThemeColors }) {
   const scaleAnim = useRef(new Animated.Value(0.84)).current;
 
   useEffect(() => {
@@ -107,7 +108,7 @@ function RecordButton({ onPress, colors }: { onPress: () => void; colors: any })
 }
 
 // ── Weekly mood strip ─────────────────────────────────────────────────────────
-function WeekStrip({ days, colors, moodToColor }: { days: DailyMood[]; colors: any; moodToColor: (n: number) => string }) {
+function WeekStrip({ days, colors, moodToColor }: { days: DailyMood[]; colors: ThemeColors; moodToColor: (n: number) => string }) {
   const dayLabels = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
   const today = new Date();
   const todayDow = today.getDay();
@@ -273,7 +274,7 @@ export default function HomeScreen() {
             <TouchableOpacity
               testID={T.flashback.card}
               accessibilityLabel="Open flashback entry"
-              onPress={() => router.push(`/reflection/${flashback.entry_id}` as any)}
+              onPress={() => router.push({ pathname: '/reflection/[id]', params: { id: flashback.entry_id } })}
               activeOpacity={0.75}
               style={[styles.starterCard, { backgroundColor: colors.card, borderColor: colors.border }]}
             >

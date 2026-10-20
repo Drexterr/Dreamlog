@@ -18,10 +18,11 @@ import { api } from '../../src/api/client';
 import { useTheme } from '../../src/context/ThemeContext';
 import type { Conversation, ConversationMessage } from '../../src/types';
 import { T } from '../../src/testIDs';
+import type { ThemeColors } from '../../src/theme';
 
 const MAX_TURNS = 3;
 
-function MessageBubble({ message, colors }: { message: ConversationMessage; colors: any }) {
+function MessageBubble({ message, colors }: { message: ConversationMessage; colors: ThemeColors }) {
   const isUser = message.role === 'user';
   return (
     <View style={[
@@ -41,7 +42,7 @@ function MessageBubble({ message, colors }: { message: ConversationMessage; colo
   );
 }
 
-function TypingBubble({ colors }: { colors: any }) {
+function TypingBubble({ colors }: { colors: ThemeColors }) {
   return (
     <View style={[styles.assistantBubble, { backgroundColor: colors.cardSolid, borderColor: colors.borderFaint }]}>
       <Text style={[styles.assistantText, { color: colors.textPrimary, letterSpacing: 4, fontSize: 18 }]}>···</Text>

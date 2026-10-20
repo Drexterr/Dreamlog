@@ -15,16 +15,13 @@ import { useTheme } from '../../src/context/ThemeContext';
 import { type TherapyPersona, PERSONA_META } from '../../src/types';
 import { T, personaCardID } from '../../src/testIDs';
 import { getCachedRegion, THERAPY_SESSION_PRICE } from '../../src/services/region';
+import { Palette, PersonaAccents } from '../../src/theme';
+import { httpStatus } from '../../src/utils/errors';
 
 const PERSONAS: TherapyPersona[] = ['comforting', 'rational', 'cbt', 'mindful'];
 
 // Per-persona accent colors — each companion has its own visual identity
-const PERSONA_ACCENT: Record<TherapyPersona, string> = {
-  comforting: '#C4A06A',
-  rational:   '#6A9EC4',
-  cbt:        '#7AAA88',
-  mindful:    '#9A8AC0',
-};
+const PERSONA_ACCENT: Record<TherapyPersona, string> = PersonaAccents;
 
 // Short descriptive lines that feel more human than a feature spec
 const PERSONA_DESC: Record<TherapyPersona, string> = {
@@ -49,11 +46,11 @@ export default function PersonaPickerScreen() {
     setStarting(true);
     try {
       const session = await api.startTherapySession(selected);
-      router.replace({ pathname: '/therapy/session', params: { id: session.id } } as any);
-    } catch (err: any) {
-      const status = err?.response?.status;
+      router.replace({ pathname: '/therapy/session', params: { id: session.id } });
+    } catch (err: unknown) {
+      const status = httpStatus(err);
       if (status === 402) {
-        router.push('/therapy/pricing' as any);
+        router.push('/therapy/pricing');
       } else {
         Alert.alert('Could not start session', 'Please try again in a moment.');
       }
@@ -133,7 +130,7 @@ export default function PersonaPickerScreen() {
           activeOpacity={0.8}
         >
           {starting ? (
-            <ActivityIndicator color="#fff" />
+            <ActivityIndicator color={Palette.onBrand} />
           ) : (
             <Text style={styles.startBtnText}>
               Begin with {PERSONA_META[selected].label}
@@ -210,6 +207,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 12,
   },
-  startBtnText: { color: '#fff', fontSize: 16, fontFamily: 'HankenGrotesk_700Bold' },
+  startBtnText: { color: Palette.onBrand, fontSize: 16, fontFamily: 'HankenGrotesk_700Bold' },
   note: { fontSize: 12, fontFamily: 'HankenGrotesk_400Regular', textAlign: 'center' },
 });

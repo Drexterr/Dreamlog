@@ -27,6 +27,7 @@ import { api } from '../../src/api/client';
 import { useTheme } from '../../src/context/ThemeContext';
 import type { CreateShareLinkResult, ShareLink } from '../../src/types';
 import { T } from '../../src/testIDs';
+import { Palette } from '../../src/theme';
 
 export default function ShareTherapistScreen() {
   const router = useRouter();
@@ -344,7 +345,7 @@ const styles = StyleSheet.create({
   divider: { height: 1, marginLeft: 14 },
   linkToken: { fontFamily: 'HankenGrotesk_400Regular', fontSize: 13, marginBottom: 2 },
   linkExpiry: { fontFamily: 'HankenGrotesk_400Regular', fontSize: 11 },
-  revokeText: { color: '#ef4444', fontFamily: 'HankenGrotesk_600SemiBold', fontSize: 13 },
+  revokeText: { color: Palette.error, fontFamily: 'HankenGrotesk_600SemiBold', fontSize: 13 },
 
   footer: {
     fontFamily: 'HankenGrotesk_400Regular',

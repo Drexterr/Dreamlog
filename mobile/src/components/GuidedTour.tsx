@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { useTheme } from '../context/ThemeContext';
 import { useGuidedTour, TOUR_STEPS } from '../context/GuidedTourContext';
+import { Palette } from '../theme';
 
 const { width: SW, height: SH } = Dimensions.get('window');
 const OVERLAY = 'rgba(10, 7, 24, 0.82)';
@@ -184,7 +185,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     padding: 20,
     gap: 10,
-    shadowColor: '#000',
+    shadowColor: Palette.shadow,
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.4,
     shadowRadius: 20,

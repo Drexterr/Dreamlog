@@ -97,7 +97,7 @@ export default function ExploreScreen() {
   }, [router]);
 
   const handleDream = useCallback(() => {
-    const go = () => router.push({ pathname: '/record', params: { mode: 'dream' } } as any);
+    const go = () => router.push({ pathname: '/record', params: { mode: 'dream' } });
     if (isAuthenticated) go();
     else requestAuth(go);
   }, [isAuthenticated, requestAuth, router]);
@@ -107,11 +107,11 @@ export default function ExploreScreen() {
   }, [router]);
 
   const handleEntries = useCallback(() => {
-    router.push('/entries' as any);
+    router.push('/entries');
   }, [router]);
 
   const handleRelationships = useCallback(() => {
-    router.push('/relationships' as any);
+    router.push('/relationships');
   }, [router]);
 
   return (

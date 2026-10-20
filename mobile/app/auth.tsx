@@ -24,6 +24,8 @@ import { useTheme } from '../src/context/ThemeContext';
 import type { ThemeColors } from '../src/theme';
 import { setAppRole, resolvePostAuthRoute, type AppRole } from '../src/services/postAuthRoute';
 import { T } from '../src/testIDs';
+import { GoogleBrandColors, Palette } from '../src/theme';
+import { errorCode, errorMessage } from '../src/utils/errors';
 
 type Mode = 'login' | 'register';
 
@@ -37,19 +39,19 @@ function GoogleLogo() {
   return (
     <Svg width={18} height={18} viewBox="0 0 48 48">
       <Path
-        fill="#EA4335"
+        fill={GoogleBrandColors.red}
         d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"
       />
       <Path
-        fill="#4285F4"
+        fill={GoogleBrandColors.blue}
         d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"
       />
       <Path
-        fill="#FBBC05"
+        fill={GoogleBrandColors.yellow}
         d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"
       />
       <Path
-        fill="#34A853"
+        fill={GoogleBrandColors.green}
         d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"
       />
     </Svg>
@@ -109,8 +111,7 @@ export default function AuthScreen() {
   // terms gate → therapist dashboard/registration → onboarding/tabs.
   const routeAfterAuth = async () => {
     const dest = await resolvePostAuthRoute();
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    router.replace(dest as any);
+    router.replace(dest);
   };
 
   const handleGoogleSignIn = async () => {
@@ -136,8 +137,8 @@ export default function AuthScreen() {
 
       await handleDeepLink(result.url);
       await routeAfterAuth();
-    } catch (err: any) {
-      setError(err?.message ?? 'Google sign-in failed. Please try again.');
+    } catch (err: unknown) {
+      setError(errorMessage(err, 'Google sign-in failed. Please try again.'));
     } finally {
       authInFlight.current = false;
       setLoading(false);
@@ -166,9 +167,9 @@ export default function AuthScreen() {
       if (signInError) throw signInError;
 
       await routeAfterAuth();
-    } catch (err: any) {
-      if (err?.code === 'ERR_REQUEST_CANCELED') return;
-      setError(err?.message ?? 'Apple sign-in failed. Please try again.');
+    } catch (err: unknown) {
+      if (errorCode(err) === 'ERR_REQUEST_CANCELED') return;
+      setError(errorMessage(err, 'Apple sign-in failed. Please try again.'));
     } finally {
       authInFlight.current = false;
       setLoading(false);
@@ -233,8 +234,8 @@ export default function AuthScreen() {
 
         await routeAfterAuth();
       }
-    } catch (err: any) {
-      setError(err?.message ?? (mode === 'login' ? 'Invalid email or password.' : 'Registration failed.'));
+    } catch (err: unknown) {
+      setError(errorMessage(err, mode === 'login' ? 'Invalid email or password.' : 'Registration failed.'));
     } finally {
       authInFlight.current = false;
       setLoading(false);
@@ -341,7 +342,7 @@ export default function AuthScreen() {
           <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
             {mode === 'register' && (
               <TextInput
-                style={[styles.input, { backgroundColor: colors.cardSolid, borderColor: error ? '#ef4444' : colors.borderFaint, color: colors.textPrimary }]}
+                style={[styles.input, { backgroundColor: colors.cardSolid, borderColor: error ? Palette.error : colors.borderFaint, color: colors.textPrimary }]}
                 value={name}
                 onChangeText={v => { setName(v); setError(''); }}
                 placeholder="Your name"
@@ -354,7 +355,7 @@ export default function AuthScreen() {
 
             <TextInput
               testID={T.auth.emailInput}
-              style={[styles.input, { backgroundColor: colors.cardSolid, borderColor: error ? '#ef4444' : colors.borderFaint, color: colors.textPrimary }]}
+              style={[styles.input, { backgroundColor: colors.cardSolid, borderColor: error ? Palette.error : colors.borderFaint, color: colors.textPrimary }]}
               value={email}
               onChangeText={v => { setEmail(v); setError(''); }}
               placeholder="Email"
@@ -367,7 +368,7 @@ export default function AuthScreen() {
 
             <TextInput
               testID={T.auth.passwordInput}
-              style={[styles.input, { backgroundColor: colors.cardSolid, borderColor: error ? '#ef4444' : colors.borderFaint, color: colors.textPrimary }]}
+              style={[styles.input, { backgroundColor: colors.cardSolid, borderColor: error ? Palette.error : colors.borderFaint, color: colors.textPrimary }]}
               value={password}
               onChangeText={v => { setPassword(v); setError(''); }}
               placeholder={mode === 'register' ? 'Password (min 6 characters)' : 'Password'}
@@ -396,11 +397,11 @@ export default function AuthScreen() {
                 </View>
                 <Text style={[styles.consentText, { color: colors.textSecondary }]}>
                   I have read and agree to the{' '}
-                  <Text style={[styles.consentLink, { color: colors.purple500 ?? '#a78bfa' }]} onPress={() => Linking.openURL(TERMS_URL)}>
+                  <Text style={[styles.consentLink, { color: colors.purple500 ?? Palette.accentLilac }]} onPress={() => Linking.openURL(TERMS_URL)}>
                     Terms of Service
                   </Text>{' '}
                   and{' '}
-                  <Text style={[styles.consentLink, { color: colors.purple500 ?? '#a78bfa' }]} onPress={() => Linking.openURL(PRIVACY_URL)}>
+                  <Text style={[styles.consentLink, { color: colors.purple500 ?? Palette.accentLilac }]} onPress={() => Linking.openURL(PRIVACY_URL)}>
                     Privacy Policy
                   </Text>
                 </Text>
@@ -423,7 +424,7 @@ export default function AuthScreen() {
               activeOpacity={0.8}
             >
               {loading ? (
-                <ActivityIndicator color="#fff" size="small" />
+                <ActivityIndicator color={Palette.onBrand} size="small" />
               ) : (
                 <Text style={styles.buttonText}>
                   {mode === 'login' ? 'Sign in' : 'Create account'}
@@ -451,7 +452,7 @@ export default function AuthScreen() {
             <Text style={[styles.modalBody, { color: colors.textSecondary }]}>
               We sent a verification link to
             </Text>
-            <Text style={[styles.modalEmail, { color: colors.purple500 ?? '#a78bfa' }]} numberOfLines={1}>
+            <Text style={[styles.modalEmail, { color: colors.purple500 ?? Palette.accentLilac }]} numberOfLines={1}>
               {emailModal}
             </Text>
             <Text style={[styles.modalBody, { color: colors.textSecondary }]}>
@@ -550,7 +551,7 @@ const styles = StyleSheet.create({
     marginTop: 1,
   },
   checkboxTick: {
-    color: '#fff',
+    color: Palette.onBrand,
     fontSize: 13,
     fontWeight: '700',
     lineHeight: 16,
@@ -585,7 +586,7 @@ const styles = StyleSheet.create({
     fontFamily: 'HankenGrotesk_600SemiBold',
   },
   tabTextActive: {
-    color: '#fff',
+    color: Palette.onBrand,
   },
 
   card: {
@@ -704,7 +705,7 @@ const styles = StyleSheet.create({
     elevation: 6,
   },
   modalBtnText: {
-    color: '#fff',
+    color: Palette.onBrand,
     fontSize: 16,
     fontFamily: 'HankenGrotesk_600SemiBold',
     letterSpacing: 0.5,
@@ -712,11 +713,11 @@ const styles = StyleSheet.create({
   errorText: {
     fontSize: 13,
     fontFamily: 'HankenGrotesk_400Regular',
-    color: '#ef4444',
+    color: Palette.error,
     lineHeight: 18,
   },
   buttonText: {
-    color: '#fff',
+    color: Palette.onBrand,
     fontSize: 16,
     fontFamily: 'HankenGrotesk_600SemiBold',
     letterSpacing: 0.5,

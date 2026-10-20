@@ -20,9 +20,10 @@ import { useAuth } from '../src/context/AuthContext';
 import { T, recordModeID } from '../src/testIDs';
 import type { EntryMode } from '../src/types';
 import BrandOrbGlyph from '../src/components/BrandOrbGlyph';
+import type { ThemeColors } from '../src/theme';
 
 // ── Ripple rings ──────────────────────────────────────────────────────────────
-function RippleRings({ colors }: { colors: any }) {
+function RippleRings({ colors }: { colors: ThemeColors }) {
   const ring1 = useRef(new Animated.Value(0)).current;
   const ring2 = useRef(new Animated.Value(0)).current;
 
@@ -73,7 +74,7 @@ function RecordingOrb({
   recording: boolean;
   modeSelected: boolean;
   onPress: () => void;
-  colors: any;
+  colors: ThemeColors;
 }) {
   const scaleAnim = useRef(new Animated.Value(1)).current;
 
@@ -118,7 +119,7 @@ function RecordingOrb({
 }
 
 // ── Timer ─────────────────────────────────────────────────────────────────────
-function Timer({ ms, colors }: { ms: number; colors: any }) {
+function Timer({ ms, colors }: { ms: number; colors: ThemeColors }) {
   const totalSec = Math.floor(ms / 1000);
   const m = String(Math.floor(totalSec / 60)).padStart(2, '0');
   const s = String(totalSec % 60).padStart(2, '0');
@@ -145,7 +146,7 @@ function ModeGrid({
   selected: EntryMode | null;
   onSelect: (m: EntryMode) => void;
   disabled: boolean;
-  colors: any;
+  colors: ThemeColors;
 }) {
   const anims = useRef(MODES.map(() => new Animated.Value(0))).current;
 

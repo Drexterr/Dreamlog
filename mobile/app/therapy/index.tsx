@@ -18,14 +18,11 @@ import type { TherapySessionSummary, TherapyPersona } from '../../src/types';
 import { PERSONA_META } from '../../src/types';
 import { getCachedRegion, THERAPY_SESSION_PRICE } from '../../src/services/region';
 import { T } from '../../src/testIDs';
+import { Palette, PersonaAccents } from '../../src/theme';
+import type { ThemeColors } from '../../src/theme';
 
 // Per-persona accent colors — intentional identity, not themed
-const PERSONA_ACCENT: Record<TherapyPersona, string> = {
-  comforting: '#C4A06A',
-  rational:   '#6A9EC4',
-  cbt:        '#7AAA88',
-  mindful:    '#9A8AC0',
-};
+const PERSONA_ACCENT: Record<TherapyPersona, string> = PersonaAccents;
 
 function formatDuration(sec?: number): string {
   if (!sec) return '-';
@@ -52,7 +49,7 @@ function formatDate(iso: string): string {
 
 // ── Ambient background glow ───────────────────────────────────────────────────
 
-function AmbientGlow({ colors }: { colors: any }) {
+function AmbientGlow({ colors }: { colors: ThemeColors }) {
   const pulse = useRef(new Animated.Value(0.18)).current;
 
   useEffect(() => {
@@ -94,7 +91,7 @@ function SessionCard({
 }: {
   session: TherapySessionSummary;
   onPress: () => void;
-  colors: any;
+  colors: ThemeColors;
 }) {
   const personaKey = (session.persona ?? 'comforting') as TherapyPersona;
   const persona = PERSONA_META[personaKey];
@@ -183,17 +180,17 @@ export default function TherapyIndexScreen() {
 
   const handleStart = () => {
     if (isAuthenticated) {
-      router.push('/therapy/persona-picker' as any);
+      router.push('/therapy/persona-picker');
     } else {
-      requestAuth(() => router.push('/therapy/persona-picker' as any));
+      requestAuth(() => router.push('/therapy/persona-picker'));
     }
   };
 
   const handleResume = (s: TherapySessionSummary) => {
     if (s.status === 'active') {
-      router.push({ pathname: '/therapy/session', params: { id: s.id } } as any);
+      router.push({ pathname: '/therapy/session', params: { id: s.id } });
     } else {
-      router.push({ pathname: '/therapy/summary/[id]', params: { id: s.id } } as any);
+      router.push({ pathname: '/therapy/summary/[id]', params: { id: s.id } });
     }
   };
 
@@ -300,7 +297,7 @@ export default function TherapyIndexScreen() {
             <Text style={[styles.pricingNote, { color: colors.textMuted }]}>
               First session free  ·  {priceDisplay}/session
             </Text>
-            <TouchableOpacity testID={T.therapyIndex.plansLink} onPress={() => router.push('/therapy/pricing' as any)} activeOpacity={0.7}>
+            <TouchableOpacity testID={T.therapyIndex.plansLink} onPress={() => router.push('/therapy/pricing')} activeOpacity={0.7}>
               <Text style={[styles.pricingLink, { color: colors.brand }]}>Plans</Text>
             </TouchableOpacity>
           </View>
@@ -395,7 +392,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 12,
   },
-  startBtnText: { color: '#fff', fontSize: 16, fontFamily: 'HankenGrotesk_700Bold' },
+  startBtnText: { color: Palette.onBrand, fontSize: 16, fontFamily: 'HankenGrotesk_700Bold' },
 
   pricingRow: {
     flexDirection: 'row',

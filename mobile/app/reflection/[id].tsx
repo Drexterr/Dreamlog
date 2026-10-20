@@ -20,6 +20,7 @@ import { T } from '../../src/testIDs';
 import type { Entry, EntryAnalysis } from '../../src/types';
 import { detectUserCountry } from '../../src/services/region';
 import { helplinesForCountry, helplineHref, type CountryHelplines } from '../../src/services/helplines';
+import type { ThemeColors } from '../../src/theme';
 
 // ── Crisis Care Card ──────────────────────────────────────────────────────────
 function CrisisCareView({
@@ -31,7 +32,7 @@ function CrisisCareView({
 }: {
   fadeAnim: Animated.Value;
   slideAnim: Animated.Value;
-  colors: any;
+  colors: ThemeColors;
   onDone: () => void;
   resource: CountryHelplines;
 }) {
@@ -139,7 +140,7 @@ function CrisisCareView({
 }
 
 // ── Main Screen ───────────────────────────────────────────────────────────────
-function MoodDot({ score, size = 10, colors }: { score: number; size?: number; colors: any }) {
+function MoodDot({ score, size = 10, colors }: { score: number; size?: number; colors: ThemeColors }) {
   const { moodToColor } = useTheme();
   return (
     <View style={{ width: size, height: size, borderRadius: size / 2, backgroundColor: moodToColor(score) }} />
@@ -271,11 +272,11 @@ export default function ReflectionScreen() {
     router.push({
       pathname: '/followup/[id]',
       params: { id, seedMessage: parts.join('\n\n') },
-    } as any);
+    });
   };
 
   const handleShareTherapist = () => {
-    if (id) router.push(`/share/${id}` as any);
+    if (id) router.push({ pathname: '/share/[id]', params: { id: id } });
   };
 
   if (loading) {

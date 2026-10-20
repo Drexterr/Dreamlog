@@ -17,6 +17,7 @@ import { api } from '../../../src/api/client';
 import { useTheme } from '../../../src/context/ThemeContext';
 import { T } from '../../../src/testIDs';
 import type { ClientSession } from '../../../src/types';
+import { Palette } from '../../../src/theme';
 
 const POLL_INTERVAL_MS = 3000;
 const MAX_POLLS = 60; // give OCR up to ~3 minutes before surfacing a hint
@@ -174,8 +175,8 @@ export default function SessionDetailScreen() {
           )}
 
           {session.status === 'failed' && (
-            <View style={[styles.failedCard, { borderColor: '#ef444455' }]}>
-              <Text style={[styles.failedTitle, { color: '#ef4444' }]}>Extraction failed</Text>
+            <View style={[styles.failedCard, { borderColor: Palette.errorBorder }]}>
+              <Text style={[styles.failedTitle, { color: Palette.error }]}>Extraction failed</Text>
               <Text style={[styles.failedText, { color: colors.textSecondary }]}>
                 {session.error_msg || 'The photo could not be read.'} You can delete this session and
                 retake the photo, or type the notes instead.
@@ -252,7 +253,7 @@ export default function SessionDetailScreen() {
                   onPress={handleSave}
                   disabled={saving}
                 >
-                  {saving ? <ActivityIndicator color="#fff" size="small" /> : <Text style={styles.saveBtnText}>Save changes</Text>}
+                  {saving ? <ActivityIndicator color={Palette.onBrand} size="small" /> : <Text style={styles.saveBtnText}>Save changes</Text>}
                 </TouchableOpacity>
               )}
             </>
@@ -270,7 +271,7 @@ const styles = StyleSheet.create({
   headerRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 18 },
   title: { fontSize: 26, fontFamily: 'Erode_500Medium' },
   meta: { fontSize: 12.5, fontFamily: 'HankenGrotesk_400Regular', marginTop: 2 },
-  deleteText: { color: '#ef4444', fontSize: 13, fontFamily: 'HankenGrotesk_600SemiBold' },
+  deleteText: { color: Palette.error, fontSize: 13, fontFamily: 'HankenGrotesk_600SemiBold' },
 
   extractingCard: {
     flexDirection: 'row',
@@ -320,7 +321,7 @@ const styles = StyleSheet.create({
   rawCard: { borderRadius: 12, borderWidth: 1, padding: 14 },
   rawText: { fontSize: 12.5, fontFamily: 'HankenGrotesk_400Regular', lineHeight: 19 },
 
-  errorText: { fontSize: 13, color: '#ef4444', fontFamily: 'HankenGrotesk_400Regular', marginTop: 12 },
+  errorText: { fontSize: 13, color: Palette.error, fontFamily: 'HankenGrotesk_400Regular', marginTop: 12 },
   saveBtn: {
     borderRadius: 14,
     paddingVertical: 15,
@@ -331,5 +332,5 @@ const styles = StyleSheet.create({
     shadowRadius: 12,
     elevation: 6,
   },
-  saveBtnText: { color: '#fff', fontSize: 15, fontFamily: 'HankenGrotesk_600SemiBold' },
+  saveBtnText: { color: Palette.onBrand, fontSize: 15, fontFamily: 'HankenGrotesk_600SemiBold' },
 });

@@ -24,7 +24,11 @@ export const getAppRole = async (): Promise<AppRole> =>
  *    therapist registration.
  * 3. Normal user — onboarding if no goal set, tabs otherwise.
  */
-export async function resolvePostAuthRoute(opts?: { skipTermsGate?: boolean }): Promise<string> {
+// Every route this can return - a typed-route union, so callers pass it to
+// router.replace without a cast.
+export type PostAuthRoute = '/accept-terms' | '/therapist' | '/therapist/register' | '/onboarding' | '/(tabs)';
+
+export async function resolvePostAuthRoute(opts?: { skipTermsGate?: boolean }): Promise<PostAuthRoute> {
   if (!opts?.skipTermsGate) {
     try {
       const terms = await api.getTerms();

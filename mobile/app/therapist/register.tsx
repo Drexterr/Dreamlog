@@ -15,6 +15,7 @@ import { useRouter } from 'expo-router';
 import { api } from '../../src/api/client';
 import { useTheme } from '../../src/context/ThemeContext';
 import { T } from '../../src/testIDs';
+import { Palette } from '../../src/theme';
 
 // Therapist registration: creates the therapist profile and records the
 // client-data responsibility consent (required before any client can be added).
@@ -54,8 +55,7 @@ export default function TherapistRegisterScreen() {
     try {
       await api.registerTherapist(nameTrimmed, emailTrimmed, credentials.trim());
       await api.acceptTherapistConsent();
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      router.replace('/therapist' as any);
+      router.replace('/therapist');
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Registration failed. Please try again.';
       setError(msg);
@@ -142,7 +142,7 @@ export default function TherapistRegisterScreen() {
             disabled={loading}
             activeOpacity={0.8}
           >
-            {loading ? <ActivityIndicator color="#fff" size="small" /> : <Text style={styles.buttonText}>Create workspace</Text>}
+            {loading ? <ActivityIndicator color={Palette.onBrand} size="small" /> : <Text style={styles.buttonText}>Create workspace</Text>}
           </TouchableOpacity>
 
           <TouchableOpacity testID={T.therapistPortal.registerGoToJournal} onPress={() => router.replace('/(tabs)')} style={styles.skipBtn}>
@@ -208,12 +208,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  checkboxTick: { color: '#fff', fontSize: 13, fontWeight: '700', lineHeight: 16 },
+  checkboxTick: { color: Palette.onBrand, fontSize: 13, fontWeight: '700', lineHeight: 16 },
   consentText: { flex: 1, fontSize: 13.5, fontFamily: 'HankenGrotesk_600SemiBold' },
   errorText: {
     fontSize: 13,
     fontFamily: 'HankenGrotesk_400Regular',
-    color: '#ef4444',
+    color: Palette.error,
     marginBottom: 12,
   },
   button: {
@@ -226,7 +226,7 @@ const styles = StyleSheet.create({
     elevation: 6,
   },
   buttonDisabled: { opacity: 0.5 },
-  buttonText: { color: '#fff', fontSize: 16, fontFamily: 'HankenGrotesk_600SemiBold', letterSpacing: 0.5 },
+  buttonText: { color: Palette.onBrand, fontSize: 16, fontFamily: 'HankenGrotesk_600SemiBold', letterSpacing: 0.5 },
   skipBtn: { alignItems: 'center', paddingVertical: 18 },
   skipText: { fontSize: 13, fontFamily: 'HankenGrotesk_400Regular', textDecorationLine: 'underline' },
 });
