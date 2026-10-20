@@ -18,6 +18,7 @@ import * as FileSystem from 'expo-file-system/legacy';
 import { Audio } from 'expo-av';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { api } from '../../src/api/client';
+import { uuid } from '../../src/utils/uuid';
 import { useTheme } from '../../src/context/ThemeContext';
 import { useRecorder } from '../../src/hooks/useRecorder';
 import { T } from '../../src/testIDs';
@@ -254,6 +255,7 @@ export default function TherapySessionScreen() {
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const sendingText = useRef(false);
+  const pendingText = useRef<{ content: string; id: string } | null>(null);
   const [uploadingVoice, setUploadingVoice] = useState(false);
   const [draft, setDraft] = useState('');
   const [inputMode, setInputMode] = useState<'voice' | 'text'>('voice');
@@ -326,8 +328,13 @@ export default function TherapySessionScreen() {
     sendingText.current = true;
     setDraft('');
     setSending(true);
+    // Resending the same text after a failure reuses its request id, so a turn
+    // the server already finished is returned instead of run again (N4).
+    if (pendingText.current?.content !== content) pendingText.current = { content, id: uuid() };
+    const requestId = pendingText.current.id;
     try {
-      const resp = await api.sendTherapyMessage(id, { content, input_mode: 'text' });
+      const resp = await api.sendTherapyMessage(id, { content, input_mode: 'text', request_id: requestId });
+      pendingText.current = null;
       setMessages((prev) => [...prev, resp.user_message, resp.assistant_message]);
       setStatus(resp.session_state.status);
       setTimeRemaining(resp.session_state.time_remaining_sec);
@@ -336,6 +343,18 @@ export default function TherapySessionScreen() {
     } catch (err: unknown) {
       setDraft(content);
       const s = httpStatus(err);
+      if (s === undefined) {
+        // Timed out or offline: the server may still have stored the turn.
+        // Re-fetch before offering a resend.
+        api.getTherapySession(id).then((fresh) => {
+          setMessages(fresh.messages ?? []);
+          setStatus(fresh.status);
+          if (fresh.messages?.some((m) => m.role === 'user' && m.content === content)) {
+            setDraft('');
+            pendingText.current = null;
+          }
+        }).catch(() => undefined);
+      }
       if (s === 410) setStatus('expired');
       else if (s === 409) Alert.alert('Session ended', 'This session is no longer active.');
       else Alert.alert('Error', 'Could not send message. Please try again.');

@@ -158,9 +158,18 @@ func (h *TherapyHandler) SendMessage(c *gin.Context) {
 		return
 	}
 
+	if req.RequestID != "" {
+		if _, err := uuid.Parse(req.RequestID); err != nil {
+			c.Error(apierr.BadRequest("request_id must be a UUID"))
+			return
+		}
+	}
+
 	resp, err := h.svc.SendMessage(c.Request.Context(), sessionID, userID, req)
 	if err != nil {
 		switch {
+		case errors.Is(err, services.ErrTherapyTurnInProgress):
+			c.JSON(http.StatusConflict, gin.H{"error": "this message is still being processed", "code": "TURN_IN_PROGRESS"})
 		case errors.Is(err, services.ErrTherapyNotFound):
 			c.Error(apierr.NotFound("session not found"))
 		case errors.Is(err, services.ErrTherapyNotActive):

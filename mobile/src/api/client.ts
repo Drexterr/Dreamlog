@@ -319,10 +319,12 @@ export const api = {
 
   sendTherapyMessage: (
     id: string,
-    payload: { content?: string; audio_key?: string; input_mode: 'voice' | 'text' },
+    payload: { content?: string; audio_key?: string; input_mode: 'voice' | 'text'; request_id?: string },
   ): Promise<import('../types').SendTherapyMessageResponse> =>
     http
-      .post<import('../types').SendTherapyMessageResponse>(`/therapy/sessions/${id}/messages`, payload)
+      // Whisper + Claude + TTS can take well over the global 30 s timeout; a
+      // retry reuses request_id so the server never runs a turn twice (N4).
+      .post<import('../types').SendTherapyMessageResponse>(`/therapy/sessions/${id}/messages`, payload, { timeout: 120_000 })
       .then((r) => r.data),
 
   endTherapySession: (id: string): Promise<import('../types').EndSessionResponse> =>

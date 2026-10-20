@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"math"
@@ -19,15 +20,18 @@ type therapyRepo interface {
 	Create(ctx context.Context, userID uuid.UUID, persona models.TherapyPersona, snapshot models.TherapyContextSnapshot, billingPaise int) (*models.TherapySession, error)
 	GetByID(ctx context.Context, id, userID uuid.UUID) (*models.TherapySession, error)
 	ListByUser(ctx context.Context, userID uuid.UUID) ([]*models.TherapySession, error)
-	UpdateStatus(ctx context.Context, id uuid.UUID, status models.TherapySessionStatus, endedAt *time.Time, durationSec *int) error
-	IncrementTurn(ctx context.Context, id uuid.UUID) (int, error)
+	EndActive(ctx context.Context, id uuid.UUID, status models.TherapySessionStatus, endedAt *time.Time, durationSec *int) (bool, error)
+	MarkCrisis(ctx context.Context, id uuid.UUID, endedAt time.Time, durationSec int) error
 	IncrementCrisisWarning(ctx context.Context, id uuid.UUID) (int, error)
 	SetSessionAnalysis(ctx context.Context, id uuid.UUID, a *models.TherapySessionAnalysis) error
 	SetPostSessionSummary(ctx context.Context, id uuid.UUID, summary string) error
 	CountAll(ctx context.Context, userID uuid.UUID) (int, error)
 	CountThisMonth(ctx context.Context, userID uuid.UUID) (int, error)
 	PastCompletedSummaries(ctx context.Context, userID uuid.UUID, limit int) ([]string, error)
-	AddMessage(ctx context.Context, sessionID uuid.UUID, role, content, inputMode string) (*models.TherapySessionMessage, error)
+	FindTurn(ctx context.Context, sessionID, requestID uuid.UUID) (user, reply *models.TherapySessionMessage, err error)
+	ClaimTurn(ctx context.Context, sessionID, requestID uuid.UUID, content, inputMode string, allowEnded bool) (*models.TherapySessionMessage, bool, error)
+	ReleaseTurn(ctx context.Context, userMessageID uuid.UUID) error
+	AddReply(ctx context.Context, sessionID, replyTo uuid.UUID, content, inputMode string, requireActive, countTurn bool) (*models.TherapySessionMessage, int, error)
 	ListMessages(ctx context.Context, sessionID uuid.UUID) ([]models.TherapySessionMessage, error)
 }
 
@@ -123,6 +127,13 @@ func (s *TherapyService) StartSession(ctx context.Context, userID uuid.UUID, use
 
 // SendMessage processes one user turn: crisis check → optional Whisper → Claude → store.
 // Audio is deleted from storage immediately after transcription (ADR-005).
+//
+// Turns are idempotent on req.RequestID (N4): a retry of a turn that already
+// finished returns the stored pair without transcribing, screening, calling
+// Claude or counting a turn again, so a timed-out client resend can never
+// become a second crisis detection (ADR-014). Every write re-checks the
+// session status under a row lock (N3), so a reply generated while a
+// concurrent request hard-stopped or ended the session is discarded.
 func (s *TherapyService) SendMessage(ctx context.Context, sessionID, userID uuid.UUID, req models.SendTherapyMessageRequest) (*models.SendTherapyMessageResponse, error) {
 	session, err := s.repo.GetByID(ctx, sessionID, userID)
 	if err != nil {
@@ -131,11 +142,41 @@ func (s *TherapyService) SendMessage(ctx context.Context, sessionID, userID uuid
 	if session == nil {
 		return nil, ErrTherapyNotFound
 	}
+
+	requestID := uuid.New()
+	if req.RequestID != "" {
+		requestID, err = uuid.Parse(req.RequestID)
+		if err != nil {
+			return nil, errTherapyInvalidRequestID
+		}
+		// A retry of a turn already stored is answered from the database,
+		// whatever state the session has moved to since.
+		userMsg, reply, err := s.repo.FindTurn(ctx, session.ID, requestID)
+		if err != nil {
+			return nil, fmt.Errorf("therapySvc.SendMessage find turn: %w", err)
+		}
+		if userMsg != nil {
+			if reply == nil {
+				if session.Status != models.TherapyStatusActive {
+					return nil, ErrTherapyNotActive
+				}
+				return nil, ErrTherapyTurnInProgress
+			}
+			return &models.SendTherapyMessageResponse{
+				UserMessage:      *userMsg,
+				AssistantMessage: *reply,
+				SessionState:     sessionState(session),
+			}, nil
+		}
+	}
+
 	if session.Status != models.TherapyStatusActive {
 		return nil, ErrTherapyNotActive
 	}
 	if time.Now().After(session.ExpiresAt) {
-		_ = s.repo.UpdateStatus(ctx, session.ID, models.TherapyStatusExpired, nil, nil)
+		if _, err := s.repo.EndActive(ctx, session.ID, models.TherapyStatusExpired, nil, nil); err != nil {
+			s.log.Warn("therapy: expire session failed", zap.Error(err), zap.String("session_id", session.ID.String()))
+		}
 		return nil, ErrTherapyExpired
 	}
 
@@ -184,13 +225,31 @@ func (s *TherapyService) SendMessage(ctx context.Context, sessionID, userID uuid
 		// Screen absorbs errors internally and fails safe; this path is never reached.
 		return nil, fmt.Errorf("therapySvc.SendMessage crisis: %w", err)
 	}
-	if crisisResult.Detected {
-		return s.handleCrisis(ctx, session, userContent, req.InputMode, crisisResult.Response)
+
+	// Claim the turn: stores the user message under the session lock. A
+	// crisis turn is recorded even if the session ended a moment ago, so the
+	// hard stop below always lands (crisis wins over a concurrent End).
+	userMsg, created, err := s.repo.ClaimTurn(ctx, session.ID, requestID, userContent, req.InputMode, crisisResult.Detected)
+	if errors.Is(err, models.ErrTherapySessionNotActive) {
+		return nil, ErrTherapyNotActive
+	}
+	if err != nil {
+		return nil, fmt.Errorf("therapySvc.SendMessage claim turn: %w", err)
+	}
+	if !created {
+		// A concurrent request with the same id got here first.
+		return nil, ErrTherapyTurnInProgress
 	}
 
-	// Fetch message history for Claude context.
+	if crisisResult.Detected {
+		return s.handleCrisis(ctx, session, userMsg, crisisResult.Response)
+	}
+
+	// Fetch message history for Claude context (the claimed message is sent
+	// separately as the current turn).
 	history, err := s.repo.ListMessages(ctx, session.ID)
 	if err != nil {
+		s.releaseTurn(ctx, userMsg)
 		return nil, fmt.Errorf("therapySvc.SendMessage history: %w", err)
 	}
 
@@ -206,6 +265,9 @@ func (s *TherapyService) SendMessage(ctx context.Context, sessionID, userID uuid
 	// Build Claude message history.
 	claudeHistory := make([]chatMessage, 0, len(history))
 	for _, m := range history {
+		if m.ID == userMsg.ID {
+			continue
+		}
 		claudeHistory = append(claudeHistory, chatMessage{Role: m.Role, Content: m.Content})
 	}
 
@@ -215,16 +277,18 @@ func (s *TherapyService) SendMessage(ctx context.Context, sessionID, userID uuid
 		UserMessage:  userContent,
 	})
 	if err != nil {
+		s.releaseTurn(ctx, userMsg)
 		return nil, fmt.Errorf("therapySvc.SendMessage claude: %w", err)
 	}
 
-	// Persist both messages.
-	userMsg, err := s.repo.AddMessage(ctx, session.ID, "user", userContent, req.InputMode)
-	if err != nil {
-		return nil, fmt.Errorf("therapySvc.SendMessage store user msg: %w", err)
+	// Store the reply only if the session is still active, counting the turn
+	// in the same transaction.
+	assistantMsg, newTurnCount, err := s.repo.AddReply(ctx, session.ID, userMsg.ID, aiReply, "text", true, true)
+	if errors.Is(err, models.ErrTherapySessionNotActive) {
+		return nil, ErrTherapyNotActive
 	}
-	assistantMsg, err := s.repo.AddMessage(ctx, session.ID, "assistant", aiReply, "text")
 	if err != nil {
+		s.releaseTurn(ctx, userMsg)
 		return nil, fmt.Errorf("therapySvc.SendMessage store assistant msg: %w", err)
 	}
 
@@ -253,13 +317,6 @@ func (s *TherapyService) SendMessage(ctx context.Context, sessionID, userID uuid
 		}
 	}
 
-	// Increment turn counter.
-	newTurnCount, err := s.repo.IncrementTurn(ctx, session.ID)
-	if err != nil {
-		s.log.Warn("therapy: increment turn failed", zap.Error(err), zap.String("session_id", session.ID.String()))
-		newTurnCount = session.TurnCount + 1
-	}
-
 	return &models.SendTherapyMessageResponse{
 		UserMessage:      *userMsg,
 		AssistantMessage: *assistantMsg,
@@ -273,11 +330,32 @@ func (s *TherapyService) SendMessage(ctx context.Context, sessionID, userID uuid
 	}, nil
 }
 
+// releaseTurn drops a claimed user message whose turn failed before a reply
+// was stored, so the client's retry with the same request id runs the turn
+// again. It runs even if the request context was cancelled.
+func (s *TherapyService) releaseTurn(ctx context.Context, userMsg *models.TherapySessionMessage) {
+	if err := s.repo.ReleaseTurn(context.WithoutCancel(ctx), userMsg.ID); err != nil {
+		s.log.Warn("therapy: release failed turn", zap.Error(err), zap.String("message_id", userMsg.ID.String()))
+	}
+}
+
+// sessionState describes a session as last read, for replayed turns.
+func sessionState(session *models.TherapySession) models.TherapySessionState {
+	return models.TherapySessionState{
+		Status:           session.Status,
+		TurnCount:        session.TurnCount,
+		TimeRemainingSec: session.TimeRemainingSec,
+		IsCrisis:         session.Status == models.TherapyStatusCrisisDetected,
+		CrisisWarnings:   session.CrisisWarnings,
+	}
+}
+
 // handleCrisis implements the two-stage crisis response (ADR-014).
 // First detection: de-escalate, keep session open, increment crisis_warnings.
 // Second detection (or fail-safe path): hard stop with crisis resources.
-func (s *TherapyService) handleCrisis(ctx context.Context, session *models.TherapySession, userContent, inputMode, crisisResponse string) (*models.SendTherapyMessageResponse, error) {
-	if session.CrisisWarnings == 0 {
+// userMsg is the already-claimed user message for this turn.
+func (s *TherapyService) handleCrisis(ctx context.Context, session *models.TherapySession, userMsg *models.TherapySessionMessage, crisisResponse string) (*models.SendTherapyMessageResponse, error) {
+	if session.CrisisWarnings == 0 && session.Status == models.TherapyStatusActive {
 		// Claim the single de-escalation slot atomically BEFORE responding. The
 		// value read at request start is stale under concurrency; the counter
 		// returned by the increment is not, so two in-flight crisis messages
@@ -288,34 +366,28 @@ func (s *TherapyService) handleCrisis(ctx context.Context, session *models.Thera
 			if err != nil {
 				s.log.Warn("therapy: crisis warning increment failed, hard-stopping (fail-safe)", zap.Error(err))
 			}
-			return s.hardStopCrisis(ctx, session, userContent, inputMode, crisisResponse)
+			return s.hardStopCrisis(ctx, session, userMsg, crisisResponse)
 		}
 
 		// Stage 1: de-escalate. Build a grounding response instead of the crisis resource dump.
 		deEscalationReply, err := s.claude.TherapyTurn(ctx, TherapyTurnInput{
 			SystemPrompt: buildDeEscalationPrompt(),
 			History:      nil,
-			UserMessage:  userContent,
+			UserMessage:  userMsg.Content,
 		})
 		if err != nil {
 			// If Claude is unreachable on de-escalation → fail safe to hard stop (ADR-014).
-			return s.hardStopCrisis(ctx, session, userContent, inputMode, crisisResponse)
+			return s.hardStopCrisis(ctx, session, userMsg, crisisResponse)
 		}
 
-		userMsg, err := s.repo.AddMessage(ctx, session.ID, "user", userContent, inputMode)
+		// The session may have been ended or hard-stopped meanwhile: a
+		// de-escalation reply is then never stored, and the crisis stop wins.
+		assistantMsg, turnCount, err := s.repo.AddReply(ctx, session.ID, userMsg.ID, deEscalationReply, "text", true, true)
 		if err != nil {
-			s.log.Error("therapy: failed to persist crisis user message", zap.Error(err), zap.String("session_id", session.ID.String()))
-		}
-		assistantMsg, err := s.repo.AddMessage(ctx, session.ID, "assistant", deEscalationReply, "text")
-		if err != nil {
-			s.log.Error("therapy: failed to persist de-escalation reply", zap.Error(err), zap.String("session_id", session.ID.String()))
-		}
-
-		if userMsg == nil {
-			userMsg = &models.TherapySessionMessage{Role: "user", Content: userContent, InputMode: inputMode}
-		}
-		if assistantMsg == nil {
-			assistantMsg = &models.TherapySessionMessage{Role: "assistant", Content: deEscalationReply, InputMode: "text"}
+			if !errors.Is(err, models.ErrTherapySessionNotActive) {
+				s.log.Error("therapy: failed to persist de-escalation reply, hard-stopping (fail-safe)", zap.Error(err), zap.String("session_id", session.ID.String()))
+			}
+			return s.hardStopCrisis(ctx, session, userMsg, crisisResponse)
 		}
 
 		timeRem := int(math.Max(0, time.Until(session.ExpiresAt).Seconds()))
@@ -324,7 +396,7 @@ func (s *TherapyService) handleCrisis(ctx context.Context, session *models.Thera
 			AssistantMessage: *assistantMsg,
 			SessionState: models.TherapySessionState{
 				Status:           models.TherapyStatusActive,
-				TurnCount:        session.TurnCount + 1,
+				TurnCount:        turnCount,
 				TimeRemainingSec: timeRem,
 				IsCrisis:         true,
 				CrisisWarnings:   newWarnings,
@@ -333,30 +405,22 @@ func (s *TherapyService) handleCrisis(ctx context.Context, session *models.Thera
 	}
 
 	// Stage 2: hard stop.
-	return s.hardStopCrisis(ctx, session, userContent, inputMode, crisisResponse)
+	return s.hardStopCrisis(ctx, session, userMsg, crisisResponse)
 }
 
-func (s *TherapyService) hardStopCrisis(ctx context.Context, session *models.TherapySession, userContent, inputMode, crisisResponse string) (*models.SendTherapyMessageResponse, error) {
-	userMsg, err := s.repo.AddMessage(ctx, session.ID, "user", userContent, inputMode)
-	if err != nil {
-		s.log.Error("therapy: failed to persist crisis user message", zap.Error(err), zap.String("session_id", session.ID.String()))
-	}
-	assistantMsg, err := s.repo.AddMessage(ctx, session.ID, "assistant", crisisResponse, "system")
-	if err != nil {
-		s.log.Error("therapy: failed to persist crisis resources reply", zap.Error(err), zap.String("session_id", session.ID.String()))
-	}
-
+func (s *TherapyService) hardStopCrisis(ctx context.Context, session *models.TherapySession, userMsg *models.TherapySessionMessage, crisisResponse string) (*models.SendTherapyMessageResponse, error) {
+	// Mark the session first so no concurrent reply can be stored after the
+	// crisis resources (AddReply re-checks status under the same lock).
 	now := time.Now()
 	elapsed := int(now.Sub(session.StartedAt).Seconds())
-	if err := s.repo.UpdateStatus(ctx, session.ID, models.TherapyStatusCrisisDetected, &now, &elapsed); err != nil {
+	if err := s.repo.MarkCrisis(ctx, session.ID, now, elapsed); err != nil {
 		s.log.Error("therapy: failed to mark session crisis_detected", zap.Error(err), zap.String("session_id", session.ID.String()))
 		monitoring.CaptureErr(err, map[string]string{"component": "therapy_crisis_hard_stop", "session_id": session.ID.String()})
 	}
 
-	if userMsg == nil {
-		userMsg = &models.TherapySessionMessage{Role: "user", Content: userContent, InputMode: inputMode}
-	}
-	if assistantMsg == nil {
+	assistantMsg, _, err := s.repo.AddReply(ctx, session.ID, userMsg.ID, crisisResponse, "system", false, false)
+	if err != nil {
+		s.log.Error("therapy: failed to persist crisis resources reply", zap.Error(err), zap.String("session_id", session.ID.String()))
 		assistantMsg = &models.TherapySessionMessage{Role: "assistant", Content: crisisResponse, InputMode: "system"}
 	}
 
@@ -402,8 +466,15 @@ func (s *TherapyService) EndSession(ctx context.Context, sessionID, userID uuid.
 
 	analysis, analysisErr := s.claude.TherapySummary(ctx, TherapySummaryInput{Messages: summaryLines})
 
-	if err := s.repo.UpdateStatus(ctx, session.ID, models.TherapyStatusCompleted, &now, &elapsed); err != nil {
+	// The summary call takes seconds; a crisis hard stop (or another End) may
+	// have landed meanwhile. Only an still-active session is completed, and
+	// otherwise the summary is discarded (N3).
+	ended, err := s.repo.EndActive(ctx, session.ID, models.TherapyStatusCompleted, &now, &elapsed)
+	if err != nil {
 		return nil, fmt.Errorf("therapySvc.EndSession update status: %w", err)
+	}
+	if !ended {
+		return nil, ErrTherapyAlreadyEnded
 	}
 
 	narrative := ""
@@ -431,11 +502,22 @@ func (s *TherapyService) GetSession(ctx context.Context, sessionID, userID uuid.
 		return nil, ErrTherapyNotFound
 	}
 
-	// Auto-expire if active and past expiry.
+	// Auto-expire if active and past expiry - never over a status another
+	// request already set.
 	if session.Status == models.TherapyStatusActive && time.Now().After(session.ExpiresAt) {
-		_ = s.repo.UpdateStatus(ctx, session.ID, models.TherapyStatusExpired, nil, nil)
-		session.Status = models.TherapyStatusExpired
-		session.TimeRemainingSec = 0
+		expired, err := s.repo.EndActive(ctx, session.ID, models.TherapyStatusExpired, nil, nil)
+		if err != nil {
+			return nil, fmt.Errorf("therapySvc.GetSession expire: %w", err)
+		}
+		if expired {
+			session.Status = models.TherapyStatusExpired
+			session.TimeRemainingSec = 0
+		} else if session, err = s.repo.GetByID(ctx, sessionID, userID); err != nil || session == nil {
+			if err == nil {
+				err = ErrTherapyNotFound
+			}
+			return nil, err
+		}
 	}
 
 	messages, err := s.repo.ListMessages(ctx, session.ID)
@@ -586,6 +668,8 @@ var (
 	ErrTherapyNotActive      = fmt.Errorf("therapy session is not active")
 	ErrTherapyExpired        = fmt.Errorf("therapy session has expired")
 	ErrTherapyAlreadyEnded   = fmt.Errorf("therapy session already ended")
+	ErrTherapyTurnInProgress = fmt.Errorf("this message is still being processed")
+	errTherapyInvalidRequestID = fmt.Errorf("request_id must be a UUID")
 	errTherapyMissingAudio   = fmt.Errorf("audio_key is required for voice input")
 	errTherapyInvalidAudioKey = fmt.Errorf("audio_key is not a valid therapy upload key")
 	errTherapyEmptyContent   = fmt.Errorf("message content is empty")

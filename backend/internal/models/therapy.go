@@ -1,6 +1,7 @@
 package models
 
 import (
+	"errors"
 	"time"
 
 	"github.com/google/uuid"
@@ -95,6 +96,10 @@ type TherapySession struct {
 	Messages         []TherapySessionMessage `json:"messages,omitempty"`
 }
 
+// ErrTherapySessionNotActive is returned by the therapy repository when a turn
+// write is refused because the session is no longer active.
+var ErrTherapySessionNotActive = errors.New("therapy session is not active")
+
 type TherapySessionMessage struct {
 	ID        uuid.UUID `json:"id"`
 	SessionID uuid.UUID `json:"session_id"`
@@ -143,6 +148,10 @@ type SendTherapyMessageRequest struct {
 	AudioKey  string `json:"audio_key"`
 	Content   string `json:"content"`
 	InputMode string `json:"input_mode" binding:"required,oneof=voice text"`
+	// RequestID is a client-generated UUID that makes the turn idempotent: a
+	// retry with the same id returns the stored pair instead of running the
+	// turn again (N4). Optional; the server generates one when omitted.
+	RequestID string `json:"request_id"`
 }
 
 type SendTherapyMessageResponse struct {

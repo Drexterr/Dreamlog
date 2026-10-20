@@ -193,6 +193,8 @@ func (r *TherapyRepository) IncrementTurn(ctx context.Context, id uuid.UUID) (in
 
 // SetSessionAnalysis stores the full structured post-session analysis from Claude.
 // This replaces SetPostSessionSummary - both the prose narrative and structured fields are stored atomically.
+// Only a COMPLETED session takes an analysis: if a crisis hard stop landed while
+// the summary was generated, the write is a no-op (N3, ADR-016).
 func (r *TherapyRepository) SetSessionAnalysis(ctx context.Context, id uuid.UUID, a *models.TherapySessionAnalysis) error {
 	toneJSON, err := json.Marshal(a.EmotionalTone)
 	if err != nil {
@@ -205,7 +207,7 @@ func (r *TherapyRepository) SetSessionAnalysis(ctx context.Context, id uuid.UUID
 		    session_emotional_tone  = $4,
 		    session_topics          = $5,
 		    session_key_insights    = $6
-		WHERE id = $1`
+		WHERE id = $1 AND status = 'completed'`
 	_, err = r.db.Exec(ctx, q, id, a.SessionNarrative, a.MoodScore, string(toneJSON), a.Topics, a.KeyInsights)
 	if err != nil {
 		return fmt.Errorf("therapy.SetSessionAnalysis: %w", err)
@@ -289,4 +291,172 @@ func (r *TherapyRepository) ListMessages(ctx context.Context, sessionID uuid.UUI
 		msgs = append(msgs, m)
 	}
 	return msgs, rows.Err()
+}
+
+// ── Turn idempotency + conditional status transitions (N3/N4) ────────────────
+
+const therapyMessageColumns = `id, session_id, role, content, input_mode, created_at`
+
+func scanTherapyMessage(row pgx.Row) (*models.TherapySessionMessage, error) {
+	m := &models.TherapySessionMessage{}
+	if err := row.Scan(&m.ID, &m.SessionID, &m.Role, &m.Content, &m.InputMode, &m.CreatedAt); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
+// FindTurn returns the user message stored for requestID and its reply, if
+// any. user is nil when no request with that id was ever claimed.
+func (r *TherapyRepository) FindTurn(ctx context.Context, sessionID, requestID uuid.UUID) (user, reply *models.TherapySessionMessage, err error) {
+	user, err = scanTherapyMessage(r.db.QueryRow(ctx,
+		`SELECT `+therapyMessageColumns+` FROM therapy_session_messages WHERE session_id = $1 AND request_id = $2`,
+		sessionID, requestID))
+	if errors.Is(err, pgx.ErrNoRows) {
+		return nil, nil, nil
+	}
+	if err != nil {
+		return nil, nil, fmt.Errorf("therapy.FindTurn: %w", err)
+	}
+	reply, err = scanTherapyMessage(r.db.QueryRow(ctx,
+		`SELECT `+therapyMessageColumns+` FROM therapy_session_messages WHERE reply_to = $1`, user.ID))
+	if errors.Is(err, pgx.ErrNoRows) {
+		return user, nil, nil
+	}
+	if err != nil {
+		return nil, nil, fmt.Errorf("therapy.FindTurn reply: %w", err)
+	}
+	return user, reply, nil
+}
+
+// ClaimTurn stores the user's message for requestID under the session row
+// lock. Unless allowEnded is set (crisis turns, which must always be recorded)
+// it only does so while the session is active, otherwise returning
+// models.ErrTherapySessionNotActive. created=false means another request
+// already claimed this request id; the stored message is returned.
+func (r *TherapyRepository) ClaimTurn(ctx context.Context, sessionID, requestID uuid.UUID, content, inputMode string, allowEnded bool) (msg *models.TherapySessionMessage, created bool, err error) {
+	tx, err := r.db.Begin(ctx)
+	if err != nil {
+		return nil, false, fmt.Errorf("therapy.ClaimTurn begin: %w", err)
+	}
+	defer tx.Rollback(ctx) //nolint:errcheck
+
+	var status models.TherapySessionStatus
+	if err := tx.QueryRow(ctx, `SELECT status FROM therapy_sessions WHERE id = $1 FOR UPDATE`, sessionID).Scan(&status); err != nil {
+		return nil, false, fmt.Errorf("therapy.ClaimTurn lock: %w", err)
+	}
+	existing, err := scanTherapyMessage(tx.QueryRow(ctx,
+		`SELECT `+therapyMessageColumns+` FROM therapy_session_messages WHERE session_id = $1 AND request_id = $2`,
+		sessionID, requestID))
+	if err == nil {
+		return existing, false, tx.Commit(ctx)
+	}
+	if !errors.Is(err, pgx.ErrNoRows) {
+		return nil, false, fmt.Errorf("therapy.ClaimTurn lookup: %w", err)
+	}
+	if !allowEnded && status != models.TherapyStatusActive {
+		return nil, false, models.ErrTherapySessionNotActive
+	}
+	msg, err = scanTherapyMessage(tx.QueryRow(ctx, `
+		INSERT INTO therapy_session_messages (session_id, role, content, input_mode, request_id)
+		VALUES ($1, 'user', $2, $3, $4)
+		RETURNING `+therapyMessageColumns,
+		sessionID, content, inputMode, requestID))
+	if err != nil {
+		return nil, false, fmt.Errorf("therapy.ClaimTurn insert: %w", err)
+	}
+	if err := tx.Commit(ctx); err != nil {
+		return nil, false, fmt.Errorf("therapy.ClaimTurn commit: %w", err)
+	}
+	return msg, true, nil
+}
+
+// ReleaseTurn removes a claimed user message that never got a reply (the turn
+// failed before replying), so a retry with the same request id runs again.
+func (r *TherapyRepository) ReleaseTurn(ctx context.Context, userMessageID uuid.UUID) error {
+	if _, err := r.db.Exec(ctx, `
+		DELETE FROM therapy_session_messages m
+		WHERE m.id = $1
+		  AND NOT EXISTS (SELECT 1 FROM therapy_session_messages r WHERE r.reply_to = m.id)`,
+		userMessageID); err != nil {
+		return fmt.Errorf("therapy.ReleaseTurn: %w", err)
+	}
+	return nil
+}
+
+// AddReply stores the assistant reply to a claimed user message. With
+// requireActive it re-checks, under the session row lock, that the session is
+// still active: a reply generated while a concurrent request hard-stopped or
+// ended the session is discarded (models.ErrTherapySessionNotActive).
+// countTurn increments turn_count in the same transaction. A turn is answered
+// at most once - a second reply returns the first.
+func (r *TherapyRepository) AddReply(ctx context.Context, sessionID, replyTo uuid.UUID, content, inputMode string, requireActive, countTurn bool) (msg *models.TherapySessionMessage, turnCount int, err error) {
+	tx, err := r.db.Begin(ctx)
+	if err != nil {
+		return nil, 0, fmt.Errorf("therapy.AddReply begin: %w", err)
+	}
+	defer tx.Rollback(ctx) //nolint:errcheck
+
+	var status models.TherapySessionStatus
+	if err := tx.QueryRow(ctx, `SELECT status, turn_count FROM therapy_sessions WHERE id = $1 FOR UPDATE`, sessionID).Scan(&status, &turnCount); err != nil {
+		return nil, 0, fmt.Errorf("therapy.AddReply lock: %w", err)
+	}
+	existing, err := scanTherapyMessage(tx.QueryRow(ctx,
+		`SELECT `+therapyMessageColumns+` FROM therapy_session_messages WHERE reply_to = $1`, replyTo))
+	if err == nil {
+		return existing, turnCount, tx.Commit(ctx)
+	}
+	if !errors.Is(err, pgx.ErrNoRows) {
+		return nil, 0, fmt.Errorf("therapy.AddReply lookup: %w", err)
+	}
+	if requireActive && status != models.TherapyStatusActive {
+		return nil, 0, models.ErrTherapySessionNotActive
+	}
+	msg, err = scanTherapyMessage(tx.QueryRow(ctx, `
+		INSERT INTO therapy_session_messages (session_id, role, content, input_mode, reply_to)
+		VALUES ($1, 'assistant', $2, $3, $4)
+		RETURNING `+therapyMessageColumns,
+		sessionID, content, inputMode, replyTo))
+	if err != nil {
+		return nil, 0, fmt.Errorf("therapy.AddReply insert: %w", err)
+	}
+	if countTurn {
+		if err := tx.QueryRow(ctx,
+			`UPDATE therapy_sessions SET turn_count = turn_count + 1 WHERE id = $1 RETURNING turn_count`,
+			sessionID).Scan(&turnCount); err != nil {
+			return nil, 0, fmt.Errorf("therapy.AddReply turn: %w", err)
+		}
+	}
+	if err := tx.Commit(ctx); err != nil {
+		return nil, 0, fmt.Errorf("therapy.AddReply commit: %w", err)
+	}
+	return msg, turnCount, nil
+}
+
+// EndActive moves an ACTIVE session to status (completed / expired). It
+// returns false when the session was no longer active - e.g. a concurrent
+// crisis hard stop already ended it - so a stale caller never overwrites it.
+func (r *TherapyRepository) EndActive(ctx context.Context, id uuid.UUID, status models.TherapySessionStatus, endedAt *time.Time, durationSec *int) (bool, error) {
+	tag, err := r.db.Exec(ctx, `
+		UPDATE therapy_sessions SET status = $2, ended_at = $3, duration_sec = $4
+		WHERE id = $1 AND status = 'active'`,
+		id, status, endedAt, durationSec)
+	if err != nil {
+		return false, fmt.Errorf("therapy.EndActive: %w", err)
+	}
+	return tag.RowsAffected() == 1, nil
+}
+
+// MarkCrisis hard-stops a session (ADR-014). Crisis always wins: it applies
+// even when a concurrent End or expiry got there first, and clears any
+// post-session summary so a crisis transcript never enters session memory
+// (ADR-016).
+func (r *TherapyRepository) MarkCrisis(ctx context.Context, id uuid.UUID, endedAt time.Time, durationSec int) error {
+	if _, err := r.db.Exec(ctx, `
+		UPDATE therapy_sessions
+		SET status = 'crisis_detected', ended_at = $2, duration_sec = $3, post_session_summary = NULL
+		WHERE id = $1 AND status <> 'crisis_detected'`,
+		id, endedAt, durationSec); err != nil {
+		return fmt.Errorf("therapy.MarkCrisis: %w", err)
+	}
+	return nil
 }

@@ -517,13 +517,14 @@ func TestIntegration_TherapistDataTherapyPersistence(t *testing.T) {
 	_, err = r.AddMessage(ctx, uuid.New(), "user", "QA", "text")
 	therapistDataPG(t, err, "23503")
 	a := &models.TherapySessionAnalysis{MoodScore: 78, EmotionalTone: []models.EmotionalTone{{Emotion: "hope", Intensity: 0.8}}, Topics: []string{"work"}, KeyInsights: []string{"pause"}, SessionNarrative: "QA narrative"}
+	ended := s.StartedAt.Add(12 * time.Minute)
+	duration := 720
+	therapistDataOK(t, r.UpdateStatus(ctx, s.ID, models.TherapyStatusCompleted, &ended, &duration))
+	// The analysis only lands on a completed session (N3).
 	therapistDataOK(t, r.SetSessionAnalysis(ctx, s.ID, a))
 	bad := *a
 	bad.MoodScore = 101
 	therapistDataPG(t, r.SetSessionAnalysis(ctx, s.ID, &bad), "23514")
-	ended := s.StartedAt.Add(12 * time.Minute)
-	duration := 720
-	therapistDataOK(t, r.UpdateStatus(ctx, s.ID, models.TherapyStatusCompleted, &ended, &duration))
 	got, err := r.GetByID(ctx, s.ID, owner)
 	if err != nil || got.Status != models.TherapyStatusCompleted || got.TimeRemainingSec != 0 || got.EndedAt == nil || !got.EndedAt.Equal(ended) || got.DurationSec == nil || *got.DurationSec != duration || got.TurnCount != 2 || got.CrisisWarnings != 2 || got.SessionMoodScore == nil || *got.SessionMoodScore != 78 || got.PostSessionSummary == nil || *got.PostSessionSummary != a.SessionNarrative || !reflect.DeepEqual(got.SessionEmotionalTone, a.EmotionalTone) || !reflect.DeepEqual(got.SessionTopics, a.Topics) || !reflect.DeepEqual(got.SessionKeyInsights, a.KeyInsights) {
 		t.Fatalf("analysis/end persistence: %+v %v", got, err)

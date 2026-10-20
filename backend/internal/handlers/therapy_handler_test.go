@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 	"time"
 
@@ -363,5 +364,27 @@ func TestTherapyHandler_Presign_InactiveSession_Returns409(t *testing.T) {
 		map[string]string{"filename": "turn.aac", "content_type": "audio/aac"})
 	if w.Code != http.StatusConflict {
 		t.Fatalf("expected 409 for inactive session, got %d", w.Code)
+	}
+}
+
+// N4: a malformed request_id is rejected before the service runs.
+func TestTherapyHandler_SendMessage_InvalidRequestID_Returns400(t *testing.T) {
+	svc := &fakeTherapyServicer{}
+	r := newTherapyTestRouter(t, svc, &fakeTherapyPresigner{}, &fakeTherapyUserGetter{})
+	w := therapyDo(t, r, http.MethodPost, "/therapy/sessions/"+uuid.NewString()+"/messages",
+		map[string]string{"input_mode": "text", "content": "hello", "request_id": "nope"})
+	if w.Code != http.StatusBadRequest {
+		t.Fatalf("expected 400, got %d", w.Code)
+	}
+}
+
+// N4: a retry while the original turn is still running is a 409 the client can wait on.
+func TestTherapyHandler_SendMessage_TurnInProgress_Returns409(t *testing.T) {
+	svc := &fakeTherapyServicer{sendErr: services.ErrTherapyTurnInProgress}
+	r := newTherapyTestRouter(t, svc, &fakeTherapyPresigner{}, &fakeTherapyUserGetter{})
+	w := therapyDo(t, r, http.MethodPost, "/therapy/sessions/"+uuid.NewString()+"/messages",
+		map[string]string{"input_mode": "text", "content": "hello", "request_id": uuid.NewString()})
+	if w.Code != http.StatusConflict || !strings.Contains(w.Body.String(), "TURN_IN_PROGRESS") {
+		t.Fatalf("expected 409 TURN_IN_PROGRESS, got %d %s", w.Code, w.Body.String())
 	}
 }

@@ -23,6 +23,11 @@ type fakeTherapyRepo struct {
 	countAll        int
 	countMonth      int
 	pastSummaries   []string // injected per-test
+
+	turns       map[fakeTurnKey]uuid.UUID // (session, request_id) → user message
+	replies     map[uuid.UUID]uuid.UUID   // user message → assistant reply
+	released    int                       // ReleaseTurn calls that removed a turn
+	beforeReply func()                    // runs inside AddReply before the status re-check
 }
 
 func newFakeTherapyRepo() *fakeTherapyRepo {
@@ -106,6 +111,10 @@ func (r *fakeTherapyRepo) SetSessionAnalysis(_ context.Context, id uuid.UUID, a 
 	if !ok {
 		return errors.New("session not found")
 	}
+	if s.Status != models.TherapyStatusCompleted {
+		return nil // mirrors the repository: only a completed session takes an analysis
+	}
+	s.PostSessionSummary = &a.SessionNarrative
 	s.SessionMoodScore = &a.MoodScore
 	s.SessionEmotionalTone = a.EmotionalTone
 	s.SessionTopics = a.Topics
@@ -1067,5 +1076,341 @@ func TestTherapy_ForeignAudioKey_Rejected(t *testing.T) {
 	}
 	if len(storage.deleteCalledWith) != 0 {
 		t.Error("a foreign key must never be deleted")
+	}
+}
+
+// ── Turn idempotency / conditional transitions on the fake (N3/N4) ──────────
+
+type fakeTurnKey struct{ session, request uuid.UUID }
+
+func (r *fakeTherapyRepo) turnMaps() {
+	if r.turns == nil {
+		r.turns = make(map[fakeTurnKey]uuid.UUID)
+		r.replies = make(map[uuid.UUID]uuid.UUID)
+	}
+}
+
+func (r *fakeTherapyRepo) message(sessionID, id uuid.UUID) *models.TherapySessionMessage {
+	for i := range r.messages[sessionID] {
+		if r.messages[sessionID][i].ID == id {
+			m := r.messages[sessionID][i]
+			return &m
+		}
+	}
+	return nil
+}
+
+func (r *fakeTherapyRepo) FindTurn(_ context.Context, sessionID, requestID uuid.UUID) (*models.TherapySessionMessage, *models.TherapySessionMessage, error) {
+	r.turnMaps()
+	uid, ok := r.turns[fakeTurnKey{sessionID, requestID}]
+	if !ok {
+		return nil, nil, nil
+	}
+	user := r.message(sessionID, uid)
+	if rid, ok := r.replies[uid]; ok {
+		return user, r.message(sessionID, rid), nil
+	}
+	return user, nil, nil
+}
+
+func (r *fakeTherapyRepo) ClaimTurn(ctx context.Context, sessionID, requestID uuid.UUID, content, inputMode string, allowEnded bool) (*models.TherapySessionMessage, bool, error) {
+	r.turnMaps()
+	if uid, ok := r.turns[fakeTurnKey{sessionID, requestID}]; ok {
+		return r.message(sessionID, uid), false, nil
+	}
+	if s := r.sessions[sessionID]; !allowEnded && (s == nil || s.Status != models.TherapyStatusActive) {
+		return nil, false, models.ErrTherapySessionNotActive
+	}
+	m, _ := r.AddMessage(ctx, sessionID, "user", content, inputMode)
+	r.turns[fakeTurnKey{sessionID, requestID}] = m.ID
+	return m, true, nil
+}
+
+func (r *fakeTherapyRepo) ReleaseTurn(_ context.Context, userMessageID uuid.UUID) error {
+	r.turnMaps()
+	if _, answered := r.replies[userMessageID]; answered {
+		return nil
+	}
+	r.released++
+	for k, v := range r.turns {
+		if v == userMessageID {
+			delete(r.turns, k)
+		}
+	}
+	for sid, msgs := range r.messages {
+		for i, m := range msgs {
+			if m.ID == userMessageID {
+				r.messages[sid] = append(msgs[:i:i], msgs[i+1:]...)
+				return nil
+			}
+		}
+	}
+	return nil
+}
+
+func (r *fakeTherapyRepo) AddReply(ctx context.Context, sessionID, replyTo uuid.UUID, content, inputMode string, requireActive, countTurn bool) (*models.TherapySessionMessage, int, error) {
+	r.turnMaps()
+	s := r.sessions[sessionID]
+	if rid, ok := r.replies[replyTo]; ok {
+		return r.message(sessionID, rid), s.TurnCount, nil
+	}
+	if r.beforeReply != nil {
+		r.beforeReply()
+	}
+	if requireActive && s.Status != models.TherapyStatusActive {
+		return nil, 0, models.ErrTherapySessionNotActive
+	}
+	m, _ := r.AddMessage(ctx, sessionID, "assistant", content, inputMode)
+	r.replies[replyTo] = m.ID
+	if countTurn {
+		s.TurnCount++
+	}
+	return m, s.TurnCount, nil
+}
+
+func (r *fakeTherapyRepo) EndActive(_ context.Context, id uuid.UUID, status models.TherapySessionStatus, endedAt *time.Time, durationSec *int) (bool, error) {
+	s, ok := r.sessions[id]
+	if !ok {
+		return false, errors.New("session not found")
+	}
+	if s.Status != models.TherapyStatusActive {
+		return false, nil
+	}
+	s.Status, s.EndedAt, s.DurationSec = status, endedAt, durationSec
+	return true, nil
+}
+
+func (r *fakeTherapyRepo) MarkCrisis(_ context.Context, id uuid.UUID, endedAt time.Time, durationSec int) error {
+	s, ok := r.sessions[id]
+	if !ok {
+		return errors.New("session not found")
+	}
+	if s.Status != models.TherapyStatusCrisisDetected {
+		s.Status, s.EndedAt, s.DurationSec, s.PostSessionSummary = models.TherapyStatusCrisisDetected, &endedAt, &durationSec, nil
+	}
+	return nil
+}
+
+// ── N3 / N4 regressions ──────────────────────────────────────────────────────
+
+func countRole(msgs []models.TherapySessionMessage, role string) int {
+	n := 0
+	for _, m := range msgs {
+		if m.Role == role {
+			n++
+		}
+	}
+	return n
+}
+
+// N4: a retried turn with the same request_id returns the original pair and
+// stores / counts nothing new.
+func TestTherapy_SendMessage_SameRequestID_ReturnsOriginalPair(t *testing.T) {
+	repo := newFakeTherapyRepo()
+	svc := newStubTherapyService(repo, nil)
+	userID := uuid.New()
+	session := startSession(t, svc, userID)
+	req := models.SendTherapyMessageRequest{Content: "Work has been heavy.", InputMode: "text", RequestID: uuid.NewString()}
+
+	first, err := svc.SendMessage(context.Background(), session.ID, userID, req)
+	if err != nil {
+		t.Fatal(err)
+	}
+	second, err := svc.SendMessage(context.Background(), session.ID, userID, req)
+	if err != nil {
+		t.Fatalf("retry: %v", err)
+	}
+	if second.UserMessage.ID != first.UserMessage.ID || second.AssistantMessage.ID != first.AssistantMessage.ID {
+		t.Errorf("retry must return the original pair")
+	}
+	if n := len(repo.messages[session.ID]); n != 2 {
+		t.Errorf("retry must not store messages again: want 2, got %d", n)
+	}
+	if tc := repo.sessions[session.ID].TurnCount; tc != 1 {
+		t.Errorf("retry must not count a second turn: want 1, got %d", tc)
+	}
+}
+
+// N4: a retried crisis message is the SAME detection - it must not escalate a
+// de-escalated session to a hard stop (ADR-014).
+func TestTherapy_SendMessage_CrisisRetry_NotASecondDetection(t *testing.T) {
+	repo := newFakeTherapyRepo()
+	svc := newStubTherapyService(repo, NewCrisisDetector(nil, nil))
+	userID := uuid.New()
+	session := startSession(t, svc, userID)
+	req := models.SendTherapyMessageRequest{Content: "I want to kill myself", InputMode: "text", RequestID: uuid.NewString()}
+
+	first, err := svc.SendMessage(context.Background(), session.ID, userID, req)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if first.SessionState.Status != models.TherapyStatusActive || first.SessionState.CrisisWarnings != 1 {
+		t.Fatalf("first detection must de-escalate, got %+v", first.SessionState)
+	}
+	second, err := svc.SendMessage(context.Background(), session.ID, userID, req)
+	if err != nil {
+		t.Fatalf("retry: %v", err)
+	}
+	if second.AssistantMessage.ID != first.AssistantMessage.ID {
+		t.Error("retry must return the stored de-escalation reply")
+	}
+	s := repo.sessions[session.ID]
+	if s.Status != models.TherapyStatusActive || s.CrisisWarnings != 1 {
+		t.Errorf("retry must not count as a second detection: status=%s warnings=%d", s.Status, s.CrisisWarnings)
+	}
+}
+
+// N4: a retry while the original is still running is told so, not re-run.
+func TestTherapy_SendMessage_TurnInProgress(t *testing.T) {
+	repo := newFakeTherapyRepo()
+	svc := newStubTherapyService(repo, nil)
+	userID := uuid.New()
+	session := startSession(t, svc, userID)
+	reqID := uuid.New()
+	if _, _, err := repo.ClaimTurn(context.Background(), session.ID, reqID, "still thinking", "text", false); err != nil {
+		t.Fatal(err)
+	}
+
+	_, err := svc.SendMessage(context.Background(), session.ID, userID, models.SendTherapyMessageRequest{
+		Content: "still thinking", InputMode: "text", RequestID: reqID.String(),
+	})
+	if !errors.Is(err, ErrTherapyTurnInProgress) {
+		t.Errorf("want ErrTherapyTurnInProgress, got %v", err)
+	}
+}
+
+func TestTherapy_SendMessage_InvalidRequestID(t *testing.T) {
+	repo := newFakeTherapyRepo()
+	svc := newStubTherapyService(repo, nil)
+	userID := uuid.New()
+	session := startSession(t, svc, userID)
+
+	_, err := svc.SendMessage(context.Background(), session.ID, userID, models.SendTherapyMessageRequest{
+		Content: "hi", InputMode: "text", RequestID: "not-a-uuid",
+	})
+	if !errors.Is(err, errTherapyInvalidRequestID) {
+		t.Errorf("want errTherapyInvalidRequestID, got %v", err)
+	}
+}
+
+// N4: a turn that fails before replying is released, so the same request_id
+// can be retried and actually run.
+func TestTherapy_SendMessage_FailedTurnReleasedForRetry(t *testing.T) {
+	errSrv := claudeErrorServer(t)
+	defer errSrv.Close()
+	repo := newFakeTherapyRepo()
+	svc := NewTherapyService(repo, &fakeTherapyAnalysisRepo{}, nil, newClaudeWithServer(errSrv),
+		NewTranscriptionService(&appconfig.OpenAIConfig{BaseURL: "http://localhost:9999"}),
+		&fakeTherapyStorage{}, NewCrisisDetector(nil, nil), nil, true, nil)
+	userID := uuid.New()
+	session := startSession(t, svc, userID)
+	req := models.SendTherapyMessageRequest{Content: "Just a normal day.", InputMode: "text", RequestID: uuid.NewString()}
+
+	if _, err := svc.SendMessage(context.Background(), session.ID, userID, req); err == nil {
+		t.Fatal("Claude failure must surface as an error")
+	}
+	if repo.released != 1 || len(repo.messages[session.ID]) != 0 {
+		t.Fatalf("failed turn must be released: released=%d messages=%d", repo.released, len(repo.messages[session.ID]))
+	}
+
+	ok := newStubTherapyService(repo, nil)
+	if _, err := ok.SendMessage(context.Background(), session.ID, userID, req); err != nil {
+		t.Fatalf("retry after release must run the turn: %v", err)
+	}
+}
+
+// N3: a reply generated while a concurrent request hard-stopped the session
+// is discarded, never appended after the crisis resources.
+func TestTherapy_SendMessage_ReplyAfterConcurrentHardStop_NotStored(t *testing.T) {
+	repo := newFakeTherapyRepo()
+	svc := newStubTherapyService(repo, nil)
+	userID := uuid.New()
+	session := startSession(t, svc, userID)
+	repo.beforeReply = func() { repo.sessions[session.ID].Status = models.TherapyStatusCrisisDetected }
+
+	_, err := svc.SendMessage(context.Background(), session.ID, userID, models.SendTherapyMessageRequest{
+		Content: "Thinking about my week.", InputMode: "text",
+	})
+	if !errors.Is(err, ErrTherapyNotActive) {
+		t.Errorf("want ErrTherapyNotActive, got %v", err)
+	}
+	if n := countRole(repo.messages[session.ID], "assistant"); n != 0 {
+		t.Errorf("no assistant reply may be stored after a hard stop, got %d", n)
+	}
+	if repo.sessions[session.ID].TurnCount != 0 {
+		t.Error("a discarded reply must not count a turn")
+	}
+}
+
+// endRaceRepo lands a crisis hard stop while EndSession is generating the
+// summary (ListMessages runs right before the summary call).
+type endRaceRepo struct{ *fakeTherapyRepo }
+
+func (r *endRaceRepo) ListMessages(ctx context.Context, id uuid.UUID) ([]models.TherapySessionMessage, error) {
+	_ = r.fakeTherapyRepo.MarkCrisis(ctx, id, time.Now(), 60)
+	return r.fakeTherapyRepo.ListMessages(ctx, id)
+}
+
+// N3: EndSession racing a crisis hard stop must leave crisis_detected and
+// discard the summary (ADR-014 / ADR-016).
+func TestTherapy_EndSession_ConcurrentCrisis_KeepsCrisisDetected(t *testing.T) {
+	base := newFakeTherapyRepo()
+	userID := uuid.New()
+	session := startSession(t, newStubTherapyService(base, nil), userID)
+	svc := NewTherapyService(&endRaceRepo{base}, &fakeTherapyAnalysisRepo{}, nil,
+		NewClaudeService(&appconfig.AnthropicConfig{StubAnalysis: true, Model: "stub"}),
+		NewTranscriptionService(&appconfig.OpenAIConfig{BaseURL: "http://localhost:9999"}),
+		&fakeTherapyStorage{}, NewCrisisDetector(nil, nil), nil, true, nil)
+
+	if _, err := svc.EndSession(context.Background(), session.ID, userID); !errors.Is(err, ErrTherapyAlreadyEnded) {
+		t.Fatalf("want ErrTherapyAlreadyEnded, got %v", err)
+	}
+	s := base.sessions[session.ID]
+	if s.Status != models.TherapyStatusCrisisDetected {
+		t.Errorf("crisis status must survive a concurrent End, got %s", s.Status)
+	}
+	if s.PostSessionSummary != nil || s.SessionMoodScore != nil {
+		t.Error("a crisis session must never receive a post-session summary")
+	}
+}
+
+// staleActiveRepo returns the session as the request first read it: active.
+type staleActiveRepo struct{ *fakeTherapyRepo }
+
+func (r *staleActiveRepo) GetByID(ctx context.Context, id, userID uuid.UUID) (*models.TherapySession, error) {
+	s, err := r.fakeTherapyRepo.GetByID(ctx, id, userID)
+	if s == nil || err != nil {
+		return s, err
+	}
+	cp := *s
+	cp.Status = models.TherapyStatusActive
+	return &cp, nil
+}
+
+// N3: a crisis message whose session was ended a moment earlier still hard-stops it.
+func TestTherapy_SendMessage_CrisisAfterConcurrentEnd_HardStops(t *testing.T) {
+	base := newFakeTherapyRepo()
+	userID := uuid.New()
+	session := startSession(t, newStubTherapyService(base, nil), userID)
+	svc := NewTherapyService(&staleActiveRepo{base}, &fakeTherapyAnalysisRepo{}, nil,
+		NewClaudeService(&appconfig.AnthropicConfig{StubAnalysis: true, Model: "stub"}),
+		NewTranscriptionService(&appconfig.OpenAIConfig{BaseURL: "http://localhost:9999"}),
+		&fakeTherapyStorage{}, NewCrisisDetector(nil, nil), nil, true, nil)
+	base.sessions[session.ID].Status = models.TherapyStatusCompleted
+	summary := "should be cleared"
+	base.sessions[session.ID].PostSessionSummary = &summary
+
+	resp, err := svc.SendMessage(context.Background(), session.ID, userID, models.SendTherapyMessageRequest{
+		Content: "I want to kill myself", InputMode: "text",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if resp.SessionState.Status != models.TherapyStatusCrisisDetected {
+		t.Errorf("want crisis_detected response, got %s", resp.SessionState.Status)
+	}
+	s := base.sessions[session.ID]
+	if s.Status != models.TherapyStatusCrisisDetected || s.PostSessionSummary != nil {
+		t.Errorf("crisis must win over a concurrent End: status=%s summary=%v", s.Status, s.PostSessionSummary)
 	}
 }
