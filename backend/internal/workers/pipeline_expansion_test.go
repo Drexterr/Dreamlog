@@ -287,7 +287,7 @@ func TestExpansionOCROversizeAndRawFallback(t *testing.T) {
 					t.Fatal("oversize input did not fail permanently before OCR")
 				}
 			} else {
-				bullets, err := cipher.DecryptBullets(context.Background(), user, base.session.BulletsEnc)
+				bullets, err := cipher.DecryptBullets(context.Background(), user, services.BindSessionBullets(base.session.ID), base.session.BulletsEnc)
 				if err != nil || len(bullets) != 1 || bullets[0] != "readable notes" || base.session.Status != models.ClientSessionCompleted {
 					t.Fatalf("raw fallback not stored despite nonfatal delete failure: %v %v", bullets, err)
 				}

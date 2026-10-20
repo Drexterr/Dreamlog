@@ -177,7 +177,7 @@ func TestNoteOCR_HappyPath_EncryptsStoresAndDeletesImage(t *testing.T) {
 		t.Fatal("notes stored in plaintext")
 	}
 	// And decrypts back for the owning therapist.
-	bullets, err := cipher.DecryptBullets(context.Background(), therapistID, store.session.BulletsEnc)
+	bullets, err := cipher.DecryptBullets(context.Background(), therapistID, services.BindSessionBullets(store.session.ID), store.session.BulletsEnc)
 	if err != nil || len(bullets) != 2 {
 		t.Fatalf("decrypt failed: %v %v", err, bullets)
 	}

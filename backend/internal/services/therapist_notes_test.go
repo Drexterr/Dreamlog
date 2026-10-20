@@ -47,11 +47,11 @@ func (r *fakeNotesRepo) InsertWrappedDEK(_ context.Context, id uuid.UUID, wrappe
 	return wrapped, nil
 }
 
-func (r *fakeNotesRepo) CreateExternalClient(_ context.Context, therapistID uuid.UUID, nameEnc []byte, role string) (*models.ExternalClientRow, error) {
+func (r *fakeNotesRepo) CreateExternalClient(_ context.Context, id, therapistID uuid.UUID, nameEnc []byte, role string) (*models.ExternalClientRow, error) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	row := &models.ExternalClientRow{
-		ID: uuid.New(), TherapistID: therapistID, NameEnc: nameEnc, Role: role,
+		ID: id, TherapistID: therapistID, NameEnc: nameEnc, Role: role,
 		CreatedAt: time.Now(), UpdatedAt: time.Now(),
 	}
 	r.clients[row.ID] = row
@@ -113,7 +113,9 @@ func (r *fakeNotesRepo) DeleteExternalClient(_ context.Context, therapistID, cli
 func (r *fakeNotesRepo) CreateSession(_ context.Context, s *models.ClientSessionRow) (*models.ClientSessionRow, error) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
-	s.ID = uuid.New()
+	if s.ID == uuid.Nil {
+		s.ID = uuid.New()
+	}
 	s.CreatedAt = time.Now()
 	s.UpdatedAt = time.Now()
 	r.sessions[s.ID] = s
@@ -598,17 +600,17 @@ func TestNotesCipher_PerTherapistKeys(t *testing.T) {
 	cipher := NewNotesCipher(master, repo)
 
 	a, b := uuid.New(), uuid.New()
-	ctA, err := cipher.EncryptField(context.Background(), a, "secret note")
+	ctA, err := cipher.EncryptField(context.Background(), a, "b", "secret note")
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	// Therapist B's key cannot open A's ciphertext.
-	if _, err := cipher.DecryptField(context.Background(), b, ctA); err == nil {
+	if _, err := cipher.DecryptField(context.Background(), b, "b", ctA); err == nil {
 		t.Fatal("cross-therapist decryption succeeded")
 	}
 	// A's own round trip works.
-	got, err := cipher.DecryptField(context.Background(), a, ctA)
+	got, err := cipher.DecryptField(context.Background(), a, "b", ctA)
 	if err != nil || got != "secret note" {
 		t.Fatalf("round trip failed: %v %q", err, got)
 	}
@@ -621,14 +623,14 @@ func TestNotesCipher_BulletsRoundTrip(t *testing.T) {
 	id := uuid.New()
 
 	bullets := []string{"point one", "point two — हिंदी"}
-	enc, err := cipher.EncryptBullets(context.Background(), id, bullets)
+	enc, err := cipher.EncryptBullets(context.Background(), id, "b", bullets)
 	if err != nil {
 		t.Fatal(err)
 	}
 	if strings.Contains(string(enc), "point one") {
 		t.Fatal("bullets ciphertext contains plaintext")
 	}
-	got, err := cipher.DecryptBullets(context.Background(), id, enc)
+	got, err := cipher.DecryptBullets(context.Background(), id, "b", enc)
 	if err != nil {
 		t.Fatal(err)
 	}

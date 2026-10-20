@@ -150,6 +150,20 @@ func main() {
 	therapistNotesSvc := services.NewTherapistNotesService(
 		therapistNotesRepo, therapistRepo, notesQueue, storageSvc, claudeSvc, notesCipher,
 	)
+	// Re-seal therapist ciphertexts written before row/column binding (M10).
+	// Idempotent; runs in the background so startup isn't delayed.
+	go func() {
+		defer monitoring.RecoverRepanic()
+		n, err := therapistNotesSvc.UpgradeLegacyCiphertexts(context.Background())
+		if err != nil {
+			log.Error("notes: legacy ciphertext upgrade incomplete", zap.Int("upgraded", n), zap.Error(err))
+			monitoring.CaptureErr(err, map[string]string{"component": "notes_cipher_upgrade"})
+			return
+		}
+		if n > 0 {
+			log.Info("notes: re-sealed legacy ciphertexts with row binding", zap.Int("rows", n))
+		}
+	}()
 
 	therapySvc := services.NewTherapyService(
 		therapyRepo, analysisRepo, relationshipRepo, claudeSvc, transcriptionSvc, storageSvc,

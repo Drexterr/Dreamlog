@@ -174,11 +174,11 @@ func TestIntegration_TherapistDataNotesLifecycle(t *testing.T) {
 	}
 	_, err := r.InsertWrappedDEK(ctx, uuid.New(), []byte{1})
 	therapistDataPG(t, err, "23503")
-	client, err := r.CreateExternalClient(ctx, owner, []byte{0, 255, 42}, "client")
+	client, err := r.CreateExternalClient(ctx, uuid.New(), owner, []byte{0, 255, 42}, "client")
 	therapistDataOK(t, err)
-	quiet, err := r.CreateExternalClient(ctx, owner, []byte{3}, "minor")
+	quiet, err := r.CreateExternalClient(ctx, uuid.New(), owner, []byte{3}, "minor")
 	therapistDataOK(t, err)
-	_, err = r.CreateExternalClient(ctx, other, []byte{4}, "couple")
+	_, err = r.CreateExternalClient(ctx, uuid.New(), other, []byte{4}, "couple")
 	therapistDataOK(t, err)
 	if client.Archived || client.TherapistID != owner || !bytes.Equal(client.NameEnc, []byte{0, 255, 42}) {
 		t.Fatalf("client: %+v", client)
@@ -300,7 +300,7 @@ func TestIntegration_TherapistDataSessionListsConstraintsOverview(t *testing.T) 
 	_, other := therapistDataFixture(t, db)
 	linked := regressionUser(t, db)
 	r := NewTherapistNotesRepository(db)
-	client, err := r.CreateExternalClient(ctx, owner, []byte{1}, "client")
+	client, err := r.CreateExternalClient(ctx, uuid.New(), owner, []byte{1}, "client")
 	therapistDataOK(t, err)
 	if got, err := r.Overview(ctx, other); err != nil || got.TotalSessions != 0 || got.LastSessionAt != nil || got.ExternalClients != 0 {
 		t.Fatalf("empty overview: %+v %v", got, err)
@@ -641,7 +641,7 @@ func TestIntegration_TherapistDataCanceledOperations(t *testing.T) {
 	user, therapist := therapistDataFixture(t, db)
 	client := regressionUser(t, db)
 	tr, nr, ar := NewTherapistRepository(db), NewTherapistNotesRepository(db), NewTherapyRepository(db)
-	ec, err := nr.CreateExternalClient(background, therapist, []byte{1}, "client")
+	ec, err := nr.CreateExternalClient(background, uuid.New(), therapist, []byte{1}, "client")
 	therapistDataOK(t, err)
 	note, err := nr.CreateSession(background, &models.ClientSessionRow{TherapistID: therapist, ExternalClientID: &ec.ID, SessionDate: time.Now(), Status: models.ClientSessionPending})
 	therapistDataOK(t, err)
@@ -665,7 +665,7 @@ func TestIntegration_TherapistDataCanceledOperations(t *testing.T) {
 		"therapist.ClientRecentSummariesText": func() error { _, e := tr.ClientRecentSummariesText(ctx, client, time.Now()); return e },
 		"notes.GetWrappedDEK":                 func() error { _, e := nr.GetWrappedDEK(ctx, therapist); return e },
 		"notes.InsertWrappedDEK":              func() error { _, e := nr.InsertWrappedDEK(ctx, therapist, []byte{9}); return e },
-		"notes.CreateExternalClient":          func() error { _, e := nr.CreateExternalClient(ctx, therapist, []byte{9}, "minor"); return e },
+		"notes.CreateExternalClient":          func() error { _, e := nr.CreateExternalClient(ctx, uuid.New(), therapist, []byte{9}, "minor"); return e },
 		"notes.ListExternalClients":           func() error { _, e := nr.ListExternalClients(ctx, therapist, true); return e },
 		"notes.GetExternalClient":             func() error { _, e := nr.GetExternalClient(ctx, therapist, ec.ID); return e },
 		"notes.UpdateExternalClient":          func() error { _, e := nr.UpdateExternalClient(ctx, therapist, ec.ID, []byte{9}, nil, nil); return e },

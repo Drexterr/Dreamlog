@@ -139,3 +139,48 @@ func TestResolveMasterKey(t *testing.T) {
 		t.Fatal("invalid configured key accepted")
 	}
 }
+
+// M10: a sealed ciphertext only opens with the associated data it was bound to.
+func TestSealOpen_BindsAssociatedData(t *testing.T) {
+	key, _ := NewDEK()
+	ct, err := Seal(key, []byte("client notes"), "client_sessions|bullets_enc|row-1")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !IsSealed(ct) {
+		t.Fatal("Seal output must carry the v2 prefix")
+	}
+	pt, err := Open(key, ct, "client_sessions|bullets_enc|row-1")
+	if err != nil || string(pt) != "client notes" {
+		t.Fatalf("round trip: %q %v", pt, err)
+	}
+	for _, other := range []string{"client_sessions|bullets_enc|row-2", "client_sessions|summary_enc|row-1", ""} {
+		if _, err := Open(key, ct, other); err == nil {
+			t.Errorf("ciphertext moved to %q must not open", other)
+		}
+	}
+}
+
+func TestOpen_AcceptsLegacyCiphertext(t *testing.T) {
+	key, _ := NewDEK()
+	legacy, err := Encrypt(key, []byte("old row"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if IsSealed(legacy) && legacy[0] == 'O' {
+		t.Skip("random nonce collided with the magic prefix")
+	}
+	pt, err := Open(key, legacy, "external_clients|name_enc|any")
+	if err != nil || string(pt) != "old row" {
+		t.Fatalf("legacy ciphertext must stay readable: %q %v", pt, err)
+	}
+}
+
+func TestOpen_TamperedSealedCiphertextFails(t *testing.T) {
+	key, _ := NewDEK()
+	ct, _ := Seal(key, []byte("x"), "a")
+	ct[len(ct)-1] ^= 0xff
+	if _, err := Open(key, ct, "a"); err == nil {
+		t.Error("tampered ciphertext must not open")
+	}
+}

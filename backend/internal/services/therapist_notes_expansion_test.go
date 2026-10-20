@@ -35,11 +35,11 @@ func (r *notesExpansionRepo) InsertWrappedDEK(ctx context.Context, id uuid.UUID,
 	}
 	return r.fakeNotesRepo.InsertWrappedDEK(ctx, id, b)
 }
-func (r *notesExpansionRepo) CreateExternalClient(ctx context.Context, id uuid.UUID, b []byte, role string) (*models.ExternalClientRow, error) {
+func (r *notesExpansionRepo) CreateExternalClient(ctx context.Context, clientID, id uuid.UUID, b []byte, role string) (*models.ExternalClientRow, error) {
 	if r.fail == "create-client" {
 		return nil, notesExpansionFailure
 	}
-	return r.fakeNotesRepo.CreateExternalClient(ctx, id, b, role)
+	return r.fakeNotesRepo.CreateExternalClient(ctx, clientID, id, b, role)
 }
 func (r *notesExpansionRepo) GetExternalClient(ctx context.Context, id, client uuid.UUID) (*models.ExternalClientRow, error) {
 	if r.fail == "get-client" {
@@ -412,48 +412,48 @@ func TestNotesExpansionCipherFailuresAndEmptyValues(t *testing.T) {
 	}
 	c := NewNotesCipher(master, r)
 	r.fail = "key"
-	if got, err := c.EncryptField(ctx, id, ""); err != nil || got != nil {
+	if got, err := c.EncryptField(ctx, id, "b", ""); err != nil || got != nil {
 		t.Fatalf("empty field: %v %v", got, err)
 	}
-	if got, err := c.DecryptField(ctx, id, nil); err != nil || got != "" {
+	if got, err := c.DecryptField(ctx, id, "b", nil); err != nil || got != "" {
 		t.Fatalf("empty cipher: %q %v", got, err)
 	}
-	if got, err := c.EncryptBullets(ctx, id, nil); err != nil || got != nil {
+	if got, err := c.EncryptBullets(ctx, id, "b", nil); err != nil || got != nil {
 		t.Fatal(got, err)
 	}
-	if got, err := c.DecryptBullets(ctx, id, nil); err != nil || got == nil || len(got) != 0 {
+	if got, err := c.DecryptBullets(ctx, id, "b", nil); err != nil || got == nil || len(got) != 0 {
 		t.Fatal(got, err)
 	}
 	for _, op := range []string{"key", "insert-key"} {
 		r.fail = op
-		if _, err := c.EncryptField(ctx, id, "secret"); !errors.Is(err, notesExpansionFailure) {
+		if _, err := c.EncryptField(ctx, id, "b", "secret"); !errors.Is(err, notesExpansionFailure) {
 			t.Fatal(err)
 		}
-		if _, err := c.EncryptBullets(ctx, id, []string{"secret"}); !errors.Is(err, notesExpansionFailure) {
+		if _, err := c.EncryptBullets(ctx, id, "b", []string{"secret"}); !errors.Is(err, notesExpansionFailure) {
 			t.Fatal(err)
 		}
-		if _, err := c.DecryptField(ctx, id, []byte("broken")); !errors.Is(err, notesExpansionFailure) {
+		if _, err := c.DecryptField(ctx, id, "b", []byte("broken")); !errors.Is(err, notesExpansionFailure) {
 			t.Fatal(err)
 		}
 	}
 	r.fail = ""
-	if _, err := NewNotesCipher([]byte("invalid"), r).EncryptField(ctx, uuid.New(), "secret"); err == nil {
+	if _, err := NewNotesCipher([]byte("invalid"), r).EncryptField(ctx, uuid.New(), "b", "secret"); err == nil {
 		t.Fatal("invalid master key accepted")
 	}
 	r.keys[id] = []byte("bad wrapped key")
-	if _, err := c.EncryptField(ctx, id, "secret"); err == nil {
+	if _, err := c.EncryptField(ctx, id, "b", "secret"); err == nil {
 		t.Fatal("invalid wrapped key accepted")
 	}
 	delete(r.keys, id)
-	ct, err := c.EncryptField(ctx, id, "not JSON")
+	ct, err := c.EncryptField(ctx, id, "b", "not JSON")
 	if err != nil {
 		t.Fatal(err)
 	}
-	if _, err := c.DecryptBullets(ctx, id, ct); err == nil || !strings.Contains(err.Error(), "unmarshal bullets") {
+	if _, err := c.DecryptBullets(ctx, id, "b", ct); err == nil || !strings.Contains(err.Error(), "unmarshal bullets") {
 		t.Fatal(err)
 	}
 	ct[len(ct)-1] ^= 1
-	if _, err := c.DecryptBullets(ctx, id, ct); err == nil {
+	if _, err := c.DecryptBullets(ctx, id, "b", ct); err == nil {
 		t.Fatal("tampered ciphertext accepted")
 	}
 }
@@ -515,8 +515,8 @@ func TestNotesExpansionEncryptionAndProjectionFailures(t *testing.T) {
 	s, r, _, _, id, _, session := newNotesExpansionService(t)
 	ctx := context.Background()
 	row := r.sessions[session]
-	row.RawTextEnc, _ = s.cipher.EncryptField(ctx, id, "raw clinical text")
-	row.SummaryEnc, _ = s.cipher.EncryptField(ctx, id, "clinical summary")
+	row.RawTextEnc, _ = s.cipher.EncryptField(ctx, id, BindSessionRawText(session), "raw clinical text")
+	row.SummaryEnc, _ = s.cipher.EncryptField(ctx, id, BindSessionSummary(session), "clinical summary")
 	msg := "OCR warning"
 	row.ErrorMsg = &msg
 	got, err := s.GetSession(ctx, id, session)

@@ -100,10 +100,10 @@ func (r *hNotesRepo) InsertWrappedDEK(_ context.Context, id uuid.UUID, wrapped [
 	return wrapped, nil
 }
 
-func (r *hNotesRepo) CreateExternalClient(_ context.Context, therapistID uuid.UUID, nameEnc []byte, role string) (*models.ExternalClientRow, error) {
+func (r *hNotesRepo) CreateExternalClient(_ context.Context, id, therapistID uuid.UUID, nameEnc []byte, role string) (*models.ExternalClientRow, error) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
-	row := &models.ExternalClientRow{ID: uuid.New(), TherapistID: therapistID, NameEnc: nameEnc, Role: role, CreatedAt: time.Now(), UpdatedAt: time.Now()}
+	row := &models.ExternalClientRow{ID: id, TherapistID: therapistID, NameEnc: nameEnc, Role: role, CreatedAt: time.Now(), UpdatedAt: time.Now()}
 	r.clients[row.ID] = row
 	return row, nil
 }
@@ -137,7 +137,9 @@ func (r *hNotesRepo) DeleteExternalClient(_ context.Context, _, _ uuid.UUID) (bo
 	return false, nil
 }
 func (r *hNotesRepo) CreateSession(_ context.Context, s *models.ClientSessionRow) (*models.ClientSessionRow, error) {
-	s.ID = uuid.New()
+	if s.ID == uuid.Nil {
+		s.ID = uuid.New()
+	}
 	return s, nil
 }
 func (r *hNotesRepo) GetSession(_ context.Context, _, _ uuid.UUID) (*models.ClientSessionRow, error) {

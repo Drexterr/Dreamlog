@@ -105,7 +105,9 @@ func (r *notesHandlerExpansionRepo) DeleteExternalClient(_ context.Context, id, 
 	return true, nil
 }
 func (r *notesHandlerExpansionRepo) CreateSession(_ context.Context, row *models.ClientSessionRow) (*models.ClientSessionRow, error) {
-	row.ID = uuid.New()
+	if row.ID == uuid.Nil {
+		row.ID = uuid.New()
+	}
 	r.sessions[row.ID] = row
 	return row, nil
 }

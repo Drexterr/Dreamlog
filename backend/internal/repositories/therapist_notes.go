@@ -59,13 +59,16 @@ func (r *TherapistNotesRepository) InsertWrappedDEK(ctx context.Context, therapi
 
 // ── External clients ─────────────────────────────────────────────────────────
 
-func (r *TherapistNotesRepository) CreateExternalClient(ctx context.Context, therapistID uuid.UUID, nameEnc []byte, role string) (*models.ExternalClientRow, error) {
+// CreateExternalClient inserts a client with a caller-generated id: the
+// encrypted name is bound to that id (associated data), so it must be known
+// before the row exists.
+func (r *TherapistNotesRepository) CreateExternalClient(ctx context.Context, id, therapistID uuid.UUID, nameEnc []byte, role string) (*models.ExternalClientRow, error) {
 	row := &models.ExternalClientRow{}
 	err := r.db.QueryRow(ctx, `
-		INSERT INTO external_clients (therapist_id, name_enc, role)
-		VALUES ($1, $2, $3)
+		INSERT INTO external_clients (id, therapist_id, name_enc, role)
+		VALUES ($1, $2, $3, $4)
 		RETURNING id, therapist_id, name_enc, role, archived, created_at, updated_at`,
-		therapistID, nameEnc, role,
+		id, therapistID, nameEnc, role,
 	).Scan(&row.ID, &row.TherapistID, &row.NameEnc, &row.Role, &row.Archived, &row.CreatedAt, &row.UpdatedAt)
 	if err != nil {
 		return nil, fmt.Errorf("notes.CreateExternalClient: %w", err)
@@ -159,10 +162,10 @@ func (r *TherapistNotesRepository) DeleteExternalClient(ctx context.Context, the
 func (r *TherapistNotesRepository) CreateSession(ctx context.Context, s *models.ClientSessionRow) (*models.ClientSessionRow, error) {
 	err := r.db.QueryRow(ctx, `
 		INSERT INTO client_sessions
-			(therapist_id, external_client_id, linked_user_id, session_date, status, image_key, raw_text_enc, bullets_enc)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+			(id, therapist_id, external_client_id, linked_user_id, session_date, status, image_key, raw_text_enc, bullets_enc)
+		VALUES (COALESCE($9, gen_random_uuid()), $1, $2, $3, $4, $5, $6, $7, $8)
 		RETURNING id, created_at, updated_at`,
-		s.TherapistID, s.ExternalClientID, s.LinkedUserID, s.SessionDate, s.Status, s.ImageKey, s.RawTextEnc, s.BulletsEnc,
+		s.TherapistID, s.ExternalClientID, s.LinkedUserID, s.SessionDate, s.Status, s.ImageKey, s.RawTextEnc, s.BulletsEnc, sessionIDOrNil(s.ID),
 	).Scan(&s.ID, &s.CreatedAt, &s.UpdatedAt)
 	if err != nil {
 		return nil, fmt.Errorf("notes.CreateSession: %w", err)
@@ -426,4 +429,75 @@ func (r *TherapistNotesRepository) TherapistClientConsentAccepted(ctx context.Co
 		return false, fmt.Errorf("notes.TherapistClientConsentAccepted: %w", err)
 	}
 	return acceptedAt != nil, nil
+}
+
+// sessionIDOrNil passes a caller-generated session id through, or NULL so the
+// database default generates one.
+func sessionIDOrNil(id uuid.UUID) *uuid.UUID {
+	if id == uuid.Nil {
+		return nil
+	}
+	return &id
+}
+
+// CipherRow is one stored ciphertext set, for re-sealing legacy data.
+type CipherRow struct {
+	ID          uuid.UUID
+	TherapistID uuid.UUID
+	Fields      [3][]byte // external_clients: [name_enc]; client_sessions: [raw_text_enc, bullets_enc, summary_enc]
+}
+
+// ListExternalClientCiphers returns every client's encrypted name.
+func (r *TherapistNotesRepository) ListExternalClientCiphers(ctx context.Context) ([]CipherRow, error) {
+	rows, err := r.db.Query(ctx, `SELECT id, therapist_id, name_enc FROM external_clients`)
+	if err != nil {
+		return nil, fmt.Errorf("notes.ListExternalClientCiphers: %w", err)
+	}
+	defer rows.Close()
+	var out []CipherRow
+	for rows.Next() {
+		var c CipherRow
+		if err := rows.Scan(&c.ID, &c.TherapistID, &c.Fields[0]); err != nil {
+			return nil, fmt.Errorf("notes.ListExternalClientCiphers scan: %w", err)
+		}
+		out = append(out, c)
+	}
+	return out, rows.Err()
+}
+
+// SetExternalClientNameEnc replaces a client's encrypted name.
+func (r *TherapistNotesRepository) SetExternalClientNameEnc(ctx context.Context, id uuid.UUID, nameEnc []byte) error {
+	if _, err := r.db.Exec(ctx, `UPDATE external_clients SET name_enc = $2 WHERE id = $1`, id, nameEnc); err != nil {
+		return fmt.Errorf("notes.SetExternalClientNameEnc: %w", err)
+	}
+	return nil
+}
+
+// ListSessionCiphers returns every session's encrypted fields.
+func (r *TherapistNotesRepository) ListSessionCiphers(ctx context.Context) ([]CipherRow, error) {
+	rows, err := r.db.Query(ctx, `SELECT id, therapist_id, raw_text_enc, bullets_enc, summary_enc FROM client_sessions`)
+	if err != nil {
+		return nil, fmt.Errorf("notes.ListSessionCiphers: %w", err)
+	}
+	defer rows.Close()
+	var out []CipherRow
+	for rows.Next() {
+		var c CipherRow
+		if err := rows.Scan(&c.ID, &c.TherapistID, &c.Fields[0], &c.Fields[1], &c.Fields[2]); err != nil {
+			return nil, fmt.Errorf("notes.ListSessionCiphers scan: %w", err)
+		}
+		out = append(out, c)
+	}
+	return out, rows.Err()
+}
+
+// SetSessionCiphers replaces a session's encrypted fields.
+func (r *TherapistNotesRepository) SetSessionCiphers(ctx context.Context, id uuid.UUID, raw, bullets, summary []byte) error {
+	if _, err := r.db.Exec(ctx,
+		`UPDATE client_sessions SET raw_text_enc = $2, bullets_enc = $3, summary_enc = $4 WHERE id = $1`,
+		id, raw, bullets, summary,
+	); err != nil {
+		return fmt.Errorf("notes.SetSessionCiphers: %w", err)
+	}
+	return nil
 }

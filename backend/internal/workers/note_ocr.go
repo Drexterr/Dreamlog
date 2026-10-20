@@ -195,11 +195,11 @@ func (w *NoteOCRWorker) handle(ctx context.Context, job *models.NoteOCRJob, log 
 	}
 
 	// ── 4. Encrypt + store ──────────────────────────────────────────────────
-	rawEnc, err := w.cipher.EncryptField(ctx, job.TherapistID, out.RawText)
+	rawEnc, err := w.cipher.EncryptField(ctx, job.TherapistID, services.BindSessionRawText(job.SessionID), out.RawText)
 	if err != nil {
 		return fmt.Errorf("encrypt raw text: %w", err)
 	}
-	bulletsEnc, err := w.cipher.EncryptBullets(ctx, job.TherapistID, out.Bullets)
+	bulletsEnc, err := w.cipher.EncryptBullets(ctx, job.TherapistID, services.BindSessionBullets(job.SessionID), out.Bullets)
 	if err != nil {
 		return fmt.Errorf("encrypt bullets: %w", err)
 	}

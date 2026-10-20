@@ -128,3 +128,55 @@ func newAEAD(key []byte) (cipher.AEAD, error) {
 	}
 	return aead, nil
 }
+
+// sealedMagic prefixes ciphertexts produced by Seal (format v2). Data without
+// it is the legacy v1 format from Encrypt (no associated data).
+const sealedMagic = "ODE\x02"
+
+// Seal encrypts plaintext under key with AES-256-GCM, authenticating aad
+// (associated data) alongside it. aad binds the ciphertext to where it is
+// stored - e.g. "client_sessions|bullets_enc|<row id>" - so a ciphertext
+// copied into another row or column fails to open, even under the same key.
+// Output layout: "ODE\x02" || nonce || ciphertext+tag.
+func Seal(key, plaintext []byte, aad string) ([]byte, error) {
+	aead, err := newAEAD(key)
+	if err != nil {
+		return nil, err
+	}
+	out := make([]byte, len(sealedMagic), len(sealedMagic)+aead.NonceSize()+len(plaintext)+aead.Overhead())
+	copy(out, sealedMagic)
+	nonce := make([]byte, aead.NonceSize())
+	if _, err := rand.Read(nonce); err != nil {
+		return nil, fmt.Errorf("crypto: nonce: %w", err)
+	}
+	out = append(out, nonce...)
+	return aead.Seal(out, nonce, plaintext, []byte(aad)), nil
+}
+
+// Open reverses Seal, requiring the same aad. Legacy (v1, unbound) data from
+// Encrypt is still accepted so existing rows and backups stay readable;
+// IsSealed tells callers which rows still need re-sealing.
+func Open(key, data []byte, aad string) ([]byte, error) {
+	if IsSealed(data) {
+		aead, err := newAEAD(key)
+		if err != nil {
+			return nil, err
+		}
+		body := data[len(sealedMagic):]
+		if len(body) >= aead.NonceSize() {
+			nonce, ciphertext := body[:aead.NonceSize()], body[aead.NonceSize():]
+			if plaintext, err := aead.Open(nil, nonce, ciphertext, []byte(aad)); err == nil {
+				return plaintext, nil
+			}
+		}
+		// A legacy ciphertext whose random nonce happens to start with the
+		// magic bytes (p = 2^-32) still opens below; a moved v2 ciphertext
+		// fails both ways.
+	}
+	return Decrypt(key, data)
+}
+
+// IsSealed reports whether data is in the v2 (associated-data bound) format.
+func IsSealed(data []byte) bool {
+	return len(data) >= len(sealedMagic) && string(data[:len(sealedMagic)]) == sealedMagic
+}

@@ -2,12 +2,14 @@ package services
 
 import (
 	"context"
+	"errors"
 	"encoding/json"
 	"fmt"
 	"strings"
 	"time"
 
 	"github.com/dreamlog/backend/internal/models"
+	"github.com/dreamlog/backend/internal/repositories"
 	"github.com/dreamlog/backend/pkg/apierr"
 	pkgcrypto "github.com/dreamlog/backend/pkg/crypto"
 	"github.com/google/uuid"
@@ -33,7 +35,7 @@ type notesKeyStore interface {
 
 type notesRepo interface {
 	notesKeyStore
-	CreateExternalClient(ctx context.Context, therapistID uuid.UUID, nameEnc []byte, role string) (*models.ExternalClientRow, error)
+	CreateExternalClient(ctx context.Context, id, therapistID uuid.UUID, nameEnc []byte, role string) (*models.ExternalClientRow, error)
 	ListExternalClients(ctx context.Context, therapistID uuid.UUID, includeArchived bool) ([]*models.ExternalClientRow, error)
 	GetExternalClient(ctx context.Context, therapistID, clientID uuid.UUID) (*models.ExternalClientRow, error)
 	UpdateExternalClient(ctx context.Context, therapistID, clientID uuid.UUID, nameEnc []byte, role *string, archived *bool) (bool, error)
@@ -79,6 +81,21 @@ func NewNotesCipher(masterKey []byte, keys notesKeyStore) *NotesCipher {
 	return &NotesCipher{masterKey: masterKey, keys: keys}
 }
 
+// Associated-data bindings (M10 / ADR-017): every ciphertext is sealed to the
+// table, column and row it lives in, so a ciphertext copied into another row
+// or column - even one of the same therapist, under the same key - fails to
+// decrypt instead of silently showing the wrong client's data.
+func BindClientName(clientID uuid.UUID) string { return "external_clients|name_enc|" + clientID.String() }
+func BindSessionRawText(sessionID uuid.UUID) string {
+	return "client_sessions|raw_text_enc|" + sessionID.String()
+}
+func BindSessionBullets(sessionID uuid.UUID) string {
+	return "client_sessions|bullets_enc|" + sessionID.String()
+}
+func BindSessionSummary(sessionID uuid.UUID) string {
+	return "client_sessions|summary_enc|" + sessionID.String()
+}
+
 // dek returns the therapist's data key, creating one on first use.
 func (c *NotesCipher) dek(ctx context.Context, therapistID uuid.UUID) ([]byte, error) {
 	wrapped, err := c.keys.GetWrappedDEK(ctx, therapistID)
@@ -104,7 +121,7 @@ func (c *NotesCipher) dek(ctx context.Context, therapistID uuid.UUID) ([]byte, e
 }
 
 // EncryptField seals a plaintext string for the therapist. Empty input → nil.
-func (c *NotesCipher) EncryptField(ctx context.Context, therapistID uuid.UUID, plaintext string) ([]byte, error) {
+func (c *NotesCipher) EncryptField(ctx context.Context, therapistID uuid.UUID, binding, plaintext string) ([]byte, error) {
 	if plaintext == "" {
 		return nil, nil
 	}
@@ -112,11 +129,11 @@ func (c *NotesCipher) EncryptField(ctx context.Context, therapistID uuid.UUID, p
 	if err != nil {
 		return nil, err
 	}
-	return pkgcrypto.Encrypt(dek, []byte(plaintext))
+	return pkgcrypto.Seal(dek, []byte(plaintext), binding)
 }
 
 // DecryptField opens ciphertext for the therapist. Nil input → "".
-func (c *NotesCipher) DecryptField(ctx context.Context, therapistID uuid.UUID, ciphertext []byte) (string, error) {
+func (c *NotesCipher) DecryptField(ctx context.Context, therapistID uuid.UUID, binding string, ciphertext []byte) (string, error) {
 	if len(ciphertext) == 0 {
 		return "", nil
 	}
@@ -124,7 +141,7 @@ func (c *NotesCipher) DecryptField(ctx context.Context, therapistID uuid.UUID, c
 	if err != nil {
 		return "", err
 	}
-	plaintext, err := pkgcrypto.Decrypt(dek, ciphertext)
+	plaintext, err := pkgcrypto.Open(dek, ciphertext, binding)
 	if err != nil {
 		return "", err
 	}
@@ -132,7 +149,7 @@ func (c *NotesCipher) DecryptField(ctx context.Context, therapistID uuid.UUID, c
 }
 
 // EncryptBullets seals a bullet list as encrypted JSON.
-func (c *NotesCipher) EncryptBullets(ctx context.Context, therapistID uuid.UUID, bullets []string) ([]byte, error) {
+func (c *NotesCipher) EncryptBullets(ctx context.Context, therapistID uuid.UUID, binding string, bullets []string) ([]byte, error) {
 	if len(bullets) == 0 {
 		return nil, nil
 	}
@@ -144,15 +161,15 @@ func (c *NotesCipher) EncryptBullets(ctx context.Context, therapistID uuid.UUID,
 	if err != nil {
 		return nil, err
 	}
-	return pkgcrypto.Encrypt(dek, b)
+	return pkgcrypto.Seal(dek, b, binding)
 }
 
 // DecryptBullets opens an encrypted bullet list. Nil input → empty slice.
-func (c *NotesCipher) DecryptBullets(ctx context.Context, therapistID uuid.UUID, ciphertext []byte) ([]string, error) {
+func (c *NotesCipher) DecryptBullets(ctx context.Context, therapistID uuid.UUID, binding string, ciphertext []byte) ([]string, error) {
 	if len(ciphertext) == 0 {
 		return []string{}, nil
 	}
-	raw, err := c.DecryptField(ctx, therapistID, ciphertext)
+	raw, err := c.DecryptField(ctx, therapistID, binding, ciphertext)
 	if err != nil {
 		return nil, err
 	}
@@ -196,11 +213,13 @@ func (s *TherapistNotesService) CreateExternalClient(ctx context.Context, therap
 	if role == "" {
 		role = "client"
 	}
-	nameEnc, err := s.cipher.EncryptField(ctx, therapistID, name)
+	// The row ID is generated here so the ciphertext can be bound to it.
+	clientID := uuid.New()
+	nameEnc, err := s.cipher.EncryptField(ctx, therapistID, BindClientName(clientID), name)
 	if err != nil {
 		return nil, fmt.Errorf("notes: encrypt name: %w", err)
 	}
-	row, err := s.repo.CreateExternalClient(ctx, therapistID, nameEnc, role)
+	row, err := s.repo.CreateExternalClient(ctx, clientID, therapistID, nameEnc, role)
 	if err != nil {
 		return nil, err
 	}
@@ -251,7 +270,7 @@ func (s *TherapistNotesService) UpdateExternalClient(ctx context.Context, therap
 			return nil, apierr.BadRequest("name cannot be empty")
 		}
 		var err error
-		nameEnc, err = s.cipher.EncryptField(ctx, therapistID, trimmed)
+		nameEnc, err = s.cipher.EncryptField(ctx, therapistID, BindClientName(clientID), trimmed)
 		if err != nil {
 			return nil, fmt.Errorf("notes: encrypt name: %w", err)
 		}
@@ -278,7 +297,7 @@ func (s *TherapistNotesService) DeleteExternalClient(ctx context.Context, therap
 }
 
 func (s *TherapistNotesService) toExternalClient(ctx context.Context, row *models.ExternalClientRow) (*models.ExternalClient, error) {
-	name, err := s.cipher.DecryptField(ctx, row.TherapistID, row.NameEnc)
+	name, err := s.cipher.DecryptField(ctx, row.TherapistID, BindClientName(row.ID), row.NameEnc)
 	if err != nil {
 		return nil, fmt.Errorf("notes: decrypt client name: %w", err)
 	}
@@ -367,6 +386,8 @@ func (s *TherapistNotesService) CreateSession(ctx context.Context, therapistID u
 	}
 
 	row := &models.ClientSessionRow{
+		// Generated here so typed bullets can be bound to the row they live in.
+		ID:               uuid.New(),
 		TherapistID:      therapistID,
 		ExternalClientID: input.ExternalClientID,
 		LinkedUserID:     input.LinkedClientID,
@@ -382,7 +403,7 @@ func (s *TherapistNotesService) CreateSession(ctx context.Context, therapistID u
 		if len(bullets) == 0 {
 			return nil, apierr.BadRequest("bullets cannot be empty")
 		}
-		bulletsEnc, err := s.cipher.EncryptBullets(ctx, therapistID, bullets)
+		bulletsEnc, err := s.cipher.EncryptBullets(ctx, therapistID, BindSessionBullets(row.ID), bullets)
 		if err != nil {
 			return nil, fmt.Errorf("notes: encrypt bullets: %w", err)
 		}
@@ -454,7 +475,7 @@ func (s *TherapistNotesService) UpdateBullets(ctx context.Context, therapistID, 
 	if len(bullets) == 0 {
 		return nil, apierr.BadRequest("bullets cannot be empty")
 	}
-	bulletsEnc, err := s.cipher.EncryptBullets(ctx, therapistID, bullets)
+	bulletsEnc, err := s.cipher.EncryptBullets(ctx, therapistID, BindSessionBullets(sessionID), bullets)
 	if err != nil {
 		return nil, fmt.Errorf("notes: encrypt bullets: %w", err)
 	}
@@ -480,7 +501,7 @@ func (s *TherapistNotesService) Summarize(ctx context.Context, therapistID, sess
 	if row.Status != models.ClientSessionCompleted {
 		return nil, apierr.Conflict("session notes are not ready yet")
 	}
-	bullets, err := s.cipher.DecryptBullets(ctx, therapistID, row.BulletsEnc)
+	bullets, err := s.cipher.DecryptBullets(ctx, therapistID, BindSessionBullets(row.ID), row.BulletsEnc)
 	if err != nil {
 		return nil, fmt.Errorf("notes: decrypt bullets: %w", err)
 	}
@@ -494,7 +515,7 @@ func (s *TherapistNotesService) Summarize(ctx context.Context, therapistID, sess
 	if err != nil {
 		return nil, fmt.Errorf("notes: summarize: %w", err)
 	}
-	summaryEnc, err := s.cipher.EncryptField(ctx, therapistID, summary)
+	summaryEnc, err := s.cipher.EncryptField(ctx, therapistID, BindSessionSummary(sessionID), summary)
 	if err != nil {
 		return nil, fmt.Errorf("notes: encrypt summary: %w", err)
 	}
@@ -525,15 +546,15 @@ func (s *TherapistNotesService) Overview(ctx context.Context, therapistID uuid.U
 }
 
 func (s *TherapistNotesService) toSession(ctx context.Context, row *models.ClientSessionRow) (*models.ClientSession, error) {
-	rawText, err := s.cipher.DecryptField(ctx, row.TherapistID, row.RawTextEnc)
+	rawText, err := s.cipher.DecryptField(ctx, row.TherapistID, BindSessionRawText(row.ID), row.RawTextEnc)
 	if err != nil {
 		return nil, fmt.Errorf("notes: decrypt raw text: %w", err)
 	}
-	bullets, err := s.cipher.DecryptBullets(ctx, row.TherapistID, row.BulletsEnc)
+	bullets, err := s.cipher.DecryptBullets(ctx, row.TherapistID, BindSessionBullets(row.ID), row.BulletsEnc)
 	if err != nil {
 		return nil, fmt.Errorf("notes: decrypt bullets: %w", err)
 	}
-	summary, err := s.cipher.DecryptField(ctx, row.TherapistID, row.SummaryEnc)
+	summary, err := s.cipher.DecryptField(ctx, row.TherapistID, BindSessionSummary(row.ID), row.SummaryEnc)
 	if err != nil {
 		return nil, fmt.Errorf("notes: decrypt summary: %w", err)
 	}
@@ -568,3 +589,98 @@ func cleanBullets(in []string) []string {
 	}
 	return out
 }
+
+// reseal upgrades one legacy (unbound) ciphertext to the bound v2 format.
+// Already-sealed or empty data is returned unchanged with changed=false.
+func (c *NotesCipher) reseal(ctx context.Context, therapistID uuid.UUID, binding string, data []byte) (out []byte, changed bool, err error) {
+	if len(data) == 0 || pkgcrypto.IsSealed(data) {
+		return data, false, nil
+	}
+	dek, err := c.dek(ctx, therapistID)
+	if err != nil {
+		return nil, false, err
+	}
+	plaintext, err := pkgcrypto.Decrypt(dek, data)
+	if err != nil {
+		return nil, false, err
+	}
+	sealed, err := pkgcrypto.Seal(dek, plaintext, binding)
+	if err != nil {
+		return nil, false, err
+	}
+	return sealed, true, nil
+}
+
+// legacyCipherStore is implemented by the production repository; it lets the
+// upgrader walk and rewrite every stored ciphertext.
+type legacyCipherStore interface {
+	ListExternalClientCiphers(ctx context.Context) ([]repositories.CipherRow, error)
+	SetExternalClientNameEnc(ctx context.Context, id uuid.UUID, nameEnc []byte) error
+	ListSessionCiphers(ctx context.Context) ([]repositories.CipherRow, error)
+	SetSessionCiphers(ctx context.Context, id uuid.UUID, raw, bullets, summary []byte) error
+}
+
+// UpgradeLegacyCiphertexts re-seals every therapist ciphertext written before
+// associated-data binding (M10) so it is bound to its table, column and row.
+// Idempotent and safe to run on every API start; returns how many rows were
+// rewritten. Rows that fail to decrypt are left as-is and counted in err.
+func (s *TherapistNotesService) UpgradeLegacyCiphertexts(ctx context.Context) (int, error) {
+	store, ok := s.repo.(legacyCipherStore)
+	if !ok {
+		return 0, nil
+	}
+	var upgraded int
+	var failures []error
+
+	clients, err := store.ListExternalClientCiphers(ctx)
+	if err != nil {
+		return 0, err
+	}
+	for _, row := range clients {
+		name, changed, err := s.cipher.reseal(ctx, row.TherapistID, BindClientName(row.ID), row.Fields[0])
+		if err != nil {
+			failures = append(failures, fmt.Errorf("client %s: %w", row.ID, err))
+			continue
+		}
+		if changed {
+			if err := store.SetExternalClientNameEnc(ctx, row.ID, name); err != nil {
+				failures = append(failures, err)
+				continue
+			}
+			upgraded++
+		}
+	}
+
+	sessions, err := store.ListSessionCiphers(ctx)
+	if err != nil {
+		return upgraded, err
+	}
+	for _, row := range sessions {
+		bindings := [3]string{BindSessionRawText(row.ID), BindSessionBullets(row.ID), BindSessionSummary(row.ID)}
+		var out [3][]byte
+		anyChanged, failed := false, false
+		for i := range out {
+			sealed, changed, err := s.cipher.reseal(ctx, row.TherapistID, bindings[i], row.Fields[i])
+			if err != nil {
+				failures = append(failures, fmt.Errorf("session %s field %d: %w", row.ID, i, err))
+				failed = true
+				break
+			}
+			out[i] = sealed
+			anyChanged = anyChanged || changed
+		}
+		if failed || !anyChanged {
+			continue
+		}
+		if err := store.SetSessionCiphers(ctx, row.ID, out[0], out[1], out[2]); err != nil {
+			failures = append(failures, err)
+			continue
+		}
+		upgraded++
+	}
+	return upgraded, errors.Join(failures...)
+}
+
+// The production repository must support the upgrader, or legacy rows would
+// silently stay unbound.
+var _ legacyCipherStore = (*repositories.TherapistNotesRepository)(nil)
