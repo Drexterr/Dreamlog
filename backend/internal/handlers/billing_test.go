@@ -449,6 +449,7 @@ func (f *fakePaymentRecorder) GrantPlan(_ context.Context, transactionID string,
 // fakeIAPVerifier stands in for IAPService: configured, and returns a fixed
 // transaction ID or error for any purchase token.
 type fakeIAPVerifier struct {
+	accountToken string
 	txID         string
 	sandbox      bool
 	allowSandbox bool
@@ -469,7 +470,7 @@ func (f *fakeIAPVerifier) VerifyPurchase(_ context.Context, platform, productID,
 	if tx == "" {
 		tx = "tx_" + purchaseToken
 	}
-	return &services.VerifiedPurchase{TransactionID: tx, Sandbox: f.sandbox}, nil
+	return &services.VerifiedPurchase{TransactionID: tx, Sandbox: f.sandbox, AccountToken: f.accountToken}, nil
 }
 
 func (f *fakeIAPVerifier) SandboxAllowed(string) bool { return f.allowSandbox }
@@ -867,4 +868,36 @@ func (s *stealingRecorder) Record(ctx context.Context, userID uuid.UUID, tx stri
 	res, err := s.fakePaymentRecorder.Record(ctx, userID, tx, p, store, product, sandbox)
 	s.seen[tx] = uuid.New()
 	return res, err
+}
+
+// N17: a purchase tagged for another account is refused; one tagged for the
+// caller (or untagged, from older clients) is granted.
+func TestBillingHandler_UpgradeVerified_PurchaseAccountBinding(t *testing.T) {
+	user := billingTestUser(models.PlanFree)
+	payments := &fakePaymentRecorder{}
+	r := newVerifiedBillingRouter(t, &fakePlanManager{}, payments, &fakeIAPVerifier{accountToken: services.PurchaseAccountToken(uuid.New())}, user)
+	if w := postUpgrade(t, r, iapBody(nil)); w.Code != http.StatusConflict {
+		t.Fatalf("another account's purchase: want 409, got %d: %s", w.Code, w.Body.String())
+	}
+	if payments.grantCalls != 0 {
+		t.Fatal("nothing may be granted")
+	}
+	own := newVerifiedBillingRouter(t, &fakePlanManager{}, &fakePaymentRecorder{}, &fakeIAPVerifier{accountToken: services.PurchaseAccountToken(user.ID)}, user)
+	if w := postUpgrade(t, own, iapBody(nil)); w.Code != http.StatusOK {
+		t.Fatalf("own purchase: want 200, got %d: %s", w.Code, w.Body.String())
+	}
+}
+
+func TestBillingHandler_GetPlan_ReturnsPurchaseAccountToken(t *testing.T) {
+	user := billingTestUser(models.PlanFree)
+	r := newBillingTestRouter(t, &fakePlanManager{}, user)
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest(http.MethodGet, "/billing/plan", nil)
+	req.Header.Set("Authorization", "Bearer "+billingTestJWT(t))
+	r.ServeHTTP(w, req)
+	var resp map[string]any
+	_ = json.Unmarshal(w.Body.Bytes(), &resp)
+	if resp["purchase_account_token"] != services.PurchaseAccountToken(user.ID) {
+		t.Fatalf("plan response must carry the purchase account token, got %v", resp["purchase_account_token"])
+	}
 }

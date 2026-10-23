@@ -81,3 +81,18 @@ describe('resumed uploads', () => {
     expect(register).toHaveBeenLastCalledWith(expect.objectContaining({ audio_key: 'owned/clip' }));
   });
 });
+
+// N17: note photos go through the same native binary PUT as recordings.
+describe('putFileToPresignedUrl', () => {
+  it('PUTs the file as binary with its content type', async () => {
+    const { putFileToPresignedUrl } = jest.requireActual('../upload') as typeof import('../upload');
+    put.mockResolvedValue({ status: 200 });
+    await putFileToPresignedUrl('https://fixture.invalid/put', 'file:///photo.jpg', 'image/jpeg');
+    expect(put).toHaveBeenCalledWith('https://fixture.invalid/put', 'file:///photo.jpg', expect.objectContaining({ httpMethod: 'PUT', uploadType: 0, headers: { 'Content-Type': 'image/jpeg' } }));
+  });
+  it('throws on a storage error', async () => {
+    const { putFileToPresignedUrl } = jest.requireActual('../upload') as typeof import('../upload');
+    put.mockResolvedValue({ status: 403 });
+    await expect(putFileToPresignedUrl('https://fixture.invalid/put', 'file:///photo.jpg', 'image/png')).rejects.toThrow('403');
+  });
+});

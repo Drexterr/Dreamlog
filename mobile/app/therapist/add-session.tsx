@@ -13,6 +13,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
 import { api } from '../../src/api/client';
+import { putFileToPresignedUrl } from '../../src/services/upload';
 import { useTheme } from '../../src/context/ThemeContext';
 import { T } from '../../src/testIDs';
 import type { ExternalClient } from '../../src/types';
@@ -86,13 +87,11 @@ export default function AddSessionScreen() {
           photo.fileName ?? 'notes.jpg',
           contentType,
         );
-        const blob = await (await fetch(photo.uri)).blob();
-        const putResp = await fetch(upload_url, {
-          method: 'PUT',
-          headers: { 'Content-Type': contentType },
-          body: blob,
-        });
-        if (!putResp.ok) throw new Error('Photo upload failed. Please try again.');
+        try {
+          await putFileToPresignedUrl(upload_url, photo.uri, contentType);
+        } catch {
+          throw new Error('Photo upload failed. Please try again.');
+        }
         const session = await api.createClientSession({
           external_client_id: selectedClient,
           image_key,

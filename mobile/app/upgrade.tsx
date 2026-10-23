@@ -163,7 +163,7 @@ export default function UpgradeScreen() {
       // dev stub then grants the plan without verification.
       let purchase;
       try {
-        purchase = await purchasePlanPass(targetPlan, period);
+        purchase = await purchasePlanPass(targetPlan, period, billing?.purchase_account_token);
       } catch (err) {
         if (!isUserCancelled(err)) {
           Alert.alert('Purchase failed', 'The store could not complete the purchase. You have not been charged.');

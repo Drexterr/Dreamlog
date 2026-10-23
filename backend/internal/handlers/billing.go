@@ -101,6 +101,9 @@ func (h *BillingHandler) GetPlan(c *gin.Context) {
 		"plan_expires_at": user.PlanExpiresAt,
 		"limits":          limits,
 		"all_plans":       allPlanDetails(),
+		// Attached by the app to every store purchase so it can only be
+		// redeemed by this account (N17).
+		"purchase_account_token": services.PurchaseAccountToken(user.ID),
 	})
 }
 
@@ -207,6 +210,13 @@ func (h *BillingHandler) Upgrade(c *gin.Context) {
 		// allowlisted accounts (App Review demo, internal testers) may use them,
 		// and only with a verified address - an unverified local signup could
 		// otherwise claim an allowlisted email (N6).
+		// A purchase tagged for another account (a shared device, an account
+		// switch) is never granted to the caller (N17).
+		if !verified.AccountMatches(userID) {
+			_ = c.Error(apierr.Conflict("this purchase belongs to another account"))
+			return
+		}
+
 		currentUser := middleware.UserFromCtx(c.Request.Context())
 		if verified.Sandbox && (currentUser == nil || !currentUser.EmailVerified || !h.iap.SandboxAllowed(currentUser.Email)) {
 			_ = c.Error(apierr.New(http.StatusPaymentRequired, "test purchases are not accepted for this account"))

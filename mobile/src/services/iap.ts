@@ -75,6 +75,7 @@ export function isUserCancelled(err: unknown): boolean {
 export async function purchasePlanPass(
   plan: 'plus' | 'pro',
   period: BillingPeriod,
+  accountToken?: string,
 ): Promise<StorePurchase | null> {
   const iap = loadIap();
   if (!iap) return null;
@@ -84,9 +85,12 @@ export async function purchasePlanPass(
 
   const result = await iap.requestPurchase({
     type: 'in-app',
+    // The account token binds the purchase to this account (Apple
+    // appAccountToken / Play obfuscatedAccountId): the backend refuses it for
+    // anyone else, and recovery leaves it for its owner after an account switch.
     request: {
-      apple: { sku },
-      google: { skus: [sku] },
+      apple: { sku, ...(accountToken ? { appAccountToken: accountToken } : {}) },
+      google: { skus: [sku], ...(accountToken ? { obfuscatedAccountId: accountToken } : {}) },
     },
   });
   const purchase = Array.isArray(result) ? result[0] : result;
@@ -136,6 +140,12 @@ export async function finishPurchase(purchase: StorePurchase): Promise<void> {
   }
 }
 
+// The account token the purchase was tagged with, if any.
+function purchaseAccountToken(purchase: Purchase): string | null {
+  const p = purchase as Purchase & { appAccountToken?: string | null; obfuscatedAccountIdAndroid?: string | null };
+  return p.appAccountToken ?? p.obfuscatedAccountIdAndroid ?? null;
+}
+
 // Maps a store SKU back to the plan pass it grants.
 export function planForSku(sku: string): { plan: 'plus' | 'pro'; period: BillingPeriod } | null {
   for (const plan of ['plus', 'pro'] as const) {
@@ -156,6 +166,7 @@ let recovering = false;
 // stays unfinished and is retried on the next launch.
 export async function recoverUnfinishedPurchases(
   redeem: (purchase: StorePurchase, plan: 'plus' | 'pro', period: BillingPeriod) => Promise<void>,
+  accountToken?: string,
 ): Promise<void> {
   const iap = loadIap();
   if (!iap || recovering) return;
@@ -166,6 +177,11 @@ export async function recoverUnfinishedPurchases(
     for (const purchase of pending ?? []) {
       const target = planForSku(purchase.productId);
       if (!target) continue;
+      // A purchase made by another account on this device (a sign-in switch)
+      // stays unfinished for its owner instead of being granted to whoever
+      // is signed in now (N17). Untagged purchases predate tagging.
+      const owner = purchaseAccountToken(purchase);
+      if (owner && accountToken && owner.toLowerCase() !== accountToken.toLowerCase()) continue;
       try {
         const storePurchase = await toStorePurchase(iap, purchase, purchase.productId);
         await redeem(storePurchase, target.plan, target.period);

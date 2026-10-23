@@ -353,7 +353,7 @@ export default function RelationshipsScreen() {
                                 key={m.id}
                                 style={styles.mentionRow}
                                 activeOpacity={0.7}
-                                onPress={() => router.push(`/reflection/${m.entry_id}` as never)}
+                                onPress={() => router.push({ pathname: '/reflection/[id]', params: { id: m.entry_id } })}
                               >
                                 <View style={[styles.mentionDot, { backgroundColor: sentimentColor(m.sentiment) }]} />
                                 <View style={{ flex: 1 }}>

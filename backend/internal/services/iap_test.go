@@ -6,9 +6,11 @@ import (
 	"errors"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	appconfig "github.com/dreamlog/backend/internal/config"
+	"github.com/google/uuid"
 )
 
 func newAppleTestService(t *testing.T, prodURL, sandboxURL string) *IAPService {
@@ -311,5 +313,67 @@ func TestIAP_SandboxAllowed(t *testing.T) {
 	}
 	if s.SandboxAllowed("someone@example.com") || s.SandboxAllowed("") {
 		t.Error("other or empty emails must not be allowed")
+	}
+}
+
+// ── N17: purchases are bound to the account that made them ───────────────────
+
+func TestPurchaseAccountToken_StableUUIDPerUser(t *testing.T) {
+	a, b := uuid.New(), uuid.New()
+	ta := PurchaseAccountToken(a)
+	if ta != PurchaseAccountToken(a) {
+		t.Fatal("token must be deterministic")
+	}
+	if ta == PurchaseAccountToken(b) {
+		t.Fatal("tokens must differ per user")
+	}
+	parsed, err := uuid.Parse(ta)
+	if err != nil || parsed.Version() != 5 || parsed.Variant() != uuid.RFC4122 {
+		t.Fatalf("token must be an RFC 4122 v5 UUID (Apple appAccountToken): %s %v", ta, err)
+	}
+	if ta == a.String() {
+		t.Fatal("token must not expose the user id")
+	}
+}
+
+func TestVerifiedPurchase_AccountMatches(t *testing.T) {
+	user, other := uuid.New(), uuid.New()
+	for _, tc := range []struct {
+		token string
+		want  bool
+	}{
+		{"", true}, // older clients set no token
+		{PurchaseAccountToken(user), true},
+		{strings.ToUpper(PurchaseAccountToken(user)), true},
+		{PurchaseAccountToken(other), false},
+		{"something-else", false},
+	} {
+		if got := (&VerifiedPurchase{AccountToken: tc.token}).AccountMatches(user); got != tc.want {
+			t.Errorf("token %q: AccountMatches=%v, want %v", tc.token, got, tc.want)
+		}
+	}
+}
+
+func TestIAP_VerifyGoogle_ReturnsObfuscatedAccountID(t *testing.T) {
+	google := googleStub(t, http.StatusOK, map[string]any{"purchaseState": 0, "orderId": "GPA.9", "obfuscatedExternalAccountId": "acct-token"})
+	defer google.Close()
+	vp, err := newGoogleTestService(t, google.URL).VerifyPurchase(context.Background(), "android", IAPProductPlusMonthly, "play-token", "")
+	if err != nil || vp.AccountToken != "acct-token" {
+		t.Fatalf("want account token from Play, got %+v %v", vp, err)
+	}
+}
+
+func TestIAP_VerifyApple_ReturnsAppAccountToken(t *testing.T) {
+	apple := appleStub(t, map[string]any{
+		"status":  0,
+		"receipt": map[string]any{"bundle_id": "com.talktoode.app"},
+		"latest_receipt_info": []map[string]any{
+			{"product_id": IAPProductPlusMonthly, "transaction_id": "2000001", "purchase_date_ms": "1700000000000", "app_account_token": "acct-token"},
+		},
+	})
+	defer apple.Close()
+	vp, err := newAppleTestService(t, apple.URL, apple.URL).VerifyPurchase(context.Background(), "ios", IAPProductPlusMonthly, "receipt", "")
+	if err != nil || vp.AccountToken != "acct-token" {
+		t.Fatalf("want app_account_token from the receipt, got %+v %v", vp, err)
 	}
 }

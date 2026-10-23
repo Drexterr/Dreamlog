@@ -103,7 +103,9 @@ Response `200`:
     "display_name": "Free",
     "price": "₹0 · $0"
   },
-  "all_plans": { /* same structure for free, plus, pro, b2b */ }
+  "all_plans": { /* same structure for free, plus, pro, b2b */ },
+  "purchase_account_token": "uuid"  // opaque per-account id; the app sets it as Apple
+                                    // appAccountToken / Play obfuscatedAccountId on purchases
 }
 ```
 
@@ -139,6 +141,7 @@ store-managed per product, so there is no amount check server-side.
 402 - sandbox / TestFlight / Play test purchase from an account not on IAP_SANDBOX_ALLOWED_EMAILS,
       or whose email is not verified
 409 - store transaction already used to grant a plan for ANOTHER user (replay protection)
+409 - the purchase is tagged with another account's purchase_account_token
 500 - store verification unavailable (retry later; the purchase is safe with the store)
 ```
 

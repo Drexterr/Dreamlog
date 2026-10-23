@@ -135,4 +135,20 @@ function isMissingAudio(err: unknown): boolean {
   return msg.includes('not found in storage');
 }
 
+/**
+ * PUTs a local file to a pre-signed storage URL with native binary upload (the
+ * same mechanism as recordings - whatwg-fetch mishandles binary bodies in
+ * React Native). Throws on a non-2xx response. Used for therapist note photos.
+ */
+export async function putFileToPresignedUrl(uploadUrl: string, localUri: string, contentType: string): Promise<void> {
+  const result = await FileSystem.uploadAsync(uploadUrl, localUri, {
+    httpMethod: 'PUT',
+    uploadType: FileSystem.FileSystemUploadType.BINARY_CONTENT,
+    headers: { 'Content-Type': contentType },
+  });
+  if (result.status < 200 || result.status >= 300) {
+    throw new Error(`Storage upload failed with status ${result.status}`);
+  }
+}
+
 const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));

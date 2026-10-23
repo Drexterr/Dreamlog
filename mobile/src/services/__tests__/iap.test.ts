@@ -74,3 +74,34 @@ describe('recoverUnfinishedPurchases', () => {
     expect(redeem).not.toHaveBeenCalled();
   });
 });
+
+// N17: purchases carry the buyer's account token, and recovery never grants
+// another account's unfinished purchase to whoever is signed in now.
+describe('purchase account binding', () => {
+  it('tags a new purchase with the account token on both stores', async () => {
+    const { purchasePlanPass, IAP_PRODUCT_IDS } = loadIap();
+    mockIap.requestPurchase.mockResolvedValue(purchase(IAP_PRODUCT_IDS.plus.monthly));
+    await purchasePlanPass('plus', 'monthly', 'acct-1');
+    expect(mockIap.requestPurchase).toHaveBeenCalledWith(expect.objectContaining({
+      request: {
+        apple: { sku: IAP_PRODUCT_IDS.plus.monthly, appAccountToken: 'acct-1' },
+        google: { skus: [IAP_PRODUCT_IDS.plus.monthly], obfuscatedAccountId: 'acct-1' },
+      },
+    }));
+  });
+
+  it('leaves another account\'s purchase unfinished and redeems own and untagged ones', async () => {
+    const { recoverUnfinishedPurchases, IAP_PRODUCT_IDS } = loadIap();
+    const sku = IAP_PRODUCT_IDS.plus.monthly;
+    mockIap.getAvailablePurchases.mockResolvedValue([
+      { ...purchase(sku, 'tx-other'), appAccountToken: 'acct-OTHER' },
+      { ...purchase(sku, 'tx-mine'), appAccountToken: 'ACCT-ME' },
+      { ...purchase(sku, 'tx-android-mine'), obfuscatedAccountIdAndroid: 'acct-me' },
+      purchase(sku, 'tx-untagged'),
+    ]);
+    const redeemed: string[] = [];
+    await recoverUnfinishedPurchases(async (p) => { redeemed.push(p.raw.id); }, 'acct-me');
+    expect(redeemed).toEqual(['tx-mine', 'tx-android-mine', 'tx-untagged']);
+    expect(mockIap.finishTransaction).toHaveBeenCalledTimes(3);
+  });
+});

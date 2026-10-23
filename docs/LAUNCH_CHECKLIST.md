@@ -192,9 +192,10 @@ Backend on Railway (`https://dreamlog-production-f9e2.up.railway.app`):
       source branch to `production` (service → Settings → Source). Alternatively keep `main`
       and enable "Wait for CI" on both services. Until one of these is done, a commit that
       fails tests still ships.
-      GitHub refuses to let the default Actions token push a commit that changes
-      `.github/workflows/`, so such commits are not promoted. Add a repository secret
-      `PROMOTE_TOKEN` (fine-grained PAT on this repo: Contents + Workflows read/write).
+      If a promotion ever fails with "refusing to allow a GitHub App to create or update
+      workflow" (GitHub refused the very first push that created the branch), add a
+      repository secret `PROMOTE_TOKEN` (fine-grained PAT on this repo: Contents +
+      Workflows read/write); the job uses it when present.
 
 - [ ] **`APP_ENV=production` on the API and worker.** Since 2026-10-23 (N8) production
       checks are fail-closed: any APP_ENV other than development/dev/local/test - including

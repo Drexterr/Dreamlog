@@ -483,6 +483,9 @@ export interface BillingPlanResponse {
   plan_expires_at: string | null;
   limits: PlanLimits;
   all_plans: Record<Plan, PlanLimits>;
+  // Opaque per-account id attached to every store purchase, so a purchase can
+  // only be redeemed by the account that made it.
+  purchase_account_token?: string;
 }
 
 // Server-side IAP verification payload sent with POST /billing/upgrade.

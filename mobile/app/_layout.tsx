@@ -236,14 +236,19 @@ function RootLayout() {
   // the store charging and the backend granting the plan (fail-silent).
   useEffect(() => {
     if (!ready || !hasToken || E2E) return;
-    recoverUnfinishedPurchases(async (p, plan, period) => {
-      await api.upgradePlan(plan, period, {
-        platform: p.platform,
-        product_id: p.productId,
-        purchase_token: p.purchaseToken,
-        transaction_id: p.transactionId,
-      });
-    });
+    // The account token keeps another account's unfinished purchase for its
+    // owner after a sign-in switch. Without it (offline) nothing is redeemed:
+    // the purchases stay unfinished and are retried next launch.
+    api.getBillingPlan()
+      .then(({ purchase_account_token }) => recoverUnfinishedPurchases(async (p, plan, period) => {
+        await api.upgradePlan(plan, period, {
+          platform: p.platform,
+          product_id: p.productId,
+          purchase_token: p.purchaseToken,
+          transaction_id: p.transactionId,
+        });
+      }, purchase_account_token))
+      .catch(() => {});
   }, [ready, hasToken]);
 
   // Home-screen quick action ("Record a moment") - registered for everyone,

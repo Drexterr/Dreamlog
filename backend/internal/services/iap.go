@@ -3,6 +3,7 @@ package services
 import (
 	"bytes"
 	"context"
+	"crypto/sha256"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -15,6 +16,7 @@ import (
 
 	appconfig "github.com/dreamlog/backend/internal/config"
 	"github.com/dreamlog/backend/internal/models"
+	"github.com/google/uuid"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
 )
@@ -112,6 +114,30 @@ type VerifiedPurchase struct {
 	// license-tester purchases - no money changed hands. The handler only
 	// honours these for allowlisted accounts (SandboxAllowed).
 	Sandbox bool
+	// AccountToken is the account the purchase was tagged with at purchase
+	// time (Play obfuscatedExternalAccountId / Apple app_account_token), or ""
+	// when the purchase carries none (older app versions).
+	AccountToken string
+}
+
+// PurchaseAccountToken is the opaque per-user id the app attaches to every
+// store purchase (Play obfuscatedAccountId, Apple appAccountToken). It is
+// UUID-shaped because Apple requires a UUID, carries no PII, and lets the
+// backend refuse a purchase redeemed by a different account (N17).
+func PurchaseAccountToken(userID uuid.UUID) string {
+	sum := sha256.Sum256([]byte("ode-purchase-account:" + userID.String()))
+	var id uuid.UUID
+	copy(id[:], sum[:16])
+	id[6] = (id[6] & 0x0f) | 0x50 // version 5 (name-based, SHA)
+	id[8] = (id[8] & 0x3f) | 0x80 // RFC 4122 variant
+	return id.String()
+}
+
+// AccountMatches reports whether a verified purchase may be redeemed by the
+// user: untagged purchases (older clients) are accepted; tagged ones only by
+// the account they were made for.
+func (v *VerifiedPurchase) AccountMatches(userID uuid.UUID) bool {
+	return v.AccountToken == "" || strings.EqualFold(v.AccountToken, PurchaseAccountToken(userID))
 }
 
 // VerifyPurchase validates a store purchase.
@@ -160,9 +186,10 @@ type appleVerifyResponse struct {
 }
 
 type appleInAppItem struct {
-	ProductID     string `json:"product_id"`
-	TransactionID string `json:"transaction_id"`
-	PurchaseDate  string `json:"purchase_date_ms"`
+	ProductID       string `json:"product_id"`
+	TransactionID   string `json:"transaction_id"`
+	PurchaseDate    string `json:"purchase_date_ms"`
+	AppAccountToken string `json:"app_account_token"`
 }
 
 // verifyApple validates the receipt with Apple's verifyReceipt endpoint and
@@ -237,7 +264,7 @@ func (s *IAPService) verifyApple(ctx context.Context, productID, receipt, transa
 	if best == nil || best.TransactionID == "" {
 		return nil, fmt.Errorf("%w: receipt contains no matching purchase of %s", ErrPurchaseInvalid, productID)
 	}
-	return &VerifiedPurchase{TransactionID: best.TransactionID, Sandbox: sandbox}, nil
+	return &VerifiedPurchase{TransactionID: best.TransactionID, Sandbox: sandbox, AccountToken: best.AppAccountToken}, nil
 }
 
 func (s *IAPService) appleVerifyCall(ctx context.Context, baseURL, receipt string) (*appleVerifyResponse, error) {
@@ -281,6 +308,8 @@ type googleProductPurchase struct {
 	// PurchaseType is only present for non-real purchases: 0 = test
 	// (license tester), 1 = promo, 2 = rewarded.
 	PurchaseType *int `json:"purchaseType"`
+	// ObfuscatedExternalAccountId is the account id the app set on the purchase.
+	ObfuscatedExternalAccountID string `json:"obfuscatedExternalAccountId"`
 }
 
 // verifyGoogle validates a Play Billing purchase token via the Android
@@ -343,10 +372,11 @@ func (s *IAPService) verifyGoogle(ctx context.Context, productID, purchaseToken 
 	// orderId is unique per purchase; fall back to the token for test/promo
 	// purchases, which can lack one.
 	testPurchase := purchase.PurchaseType != nil && *purchase.PurchaseType == 0
-	if purchase.OrderID != "" {
-		return &VerifiedPurchase{TransactionID: purchase.OrderID, Sandbox: testPurchase}, nil
+	txID := purchase.OrderID
+	if txID == "" {
+		txID = purchaseToken
 	}
-	return &VerifiedPurchase{TransactionID: purchaseToken, Sandbox: testPurchase}, nil
+	return &VerifiedPurchase{TransactionID: txID, Sandbox: testPurchase, AccountToken: purchase.ObfuscatedExternalAccountID}, nil
 }
 
 // googleAccessToken exchanges the service account for a short-lived OAuth2
