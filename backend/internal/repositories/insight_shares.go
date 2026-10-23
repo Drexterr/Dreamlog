@@ -56,7 +56,7 @@ func (r *InsightShareRepository) GetCardData(ctx context.Context, userID uuid.UU
 		JOIN entry_analysis ea ON ea.entry_id = e.id
 		WHERE e.user_id = $1
 		  AND e.status = 'completed'
-		  AND ea.is_crisis = FALSE
+		  AND NOT (ea.is_crisis OR ea.followup_crisis)
 		  AND DATE(e.created_at AT TIME ZONE 'UTC') >= $2::DATE
 		  AND DATE(e.created_at AT TIME ZONE 'UTC') < ($2::DATE + INTERVAL '7 days')
 		GROUP BY day
@@ -89,7 +89,7 @@ func (r *InsightShareRepository) GetCardData(ctx context.Context, userID uuid.UU
 		     LATERAL (SELECT et->>'emotion' AS emotion_text) AS em
 		WHERE e.user_id = $1
 		  AND e.status = 'completed'
-		  AND ea.is_crisis = FALSE
+		  AND NOT (ea.is_crisis OR ea.followup_crisis)
 		  AND DATE(e.created_at AT TIME ZONE 'UTC') >= $2::DATE
 		  AND DATE(e.created_at AT TIME ZONE 'UTC') < ($2::DATE + INTERVAL '7 days')
 		  AND (et->>'intensity')::float >= 0.3

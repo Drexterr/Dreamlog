@@ -164,7 +164,7 @@ func (r *TherapistRepository) ListClients(ctx context.Context, therapistID uuid.
 		LEFT JOIN entries e ON e.user_id = u.id
 		    AND e.status = 'completed'
 		    AND e.created_at >= NOW() - INTERVAL '30 days'
-		LEFT JOIN entry_analysis ea ON ea.entry_id = e.id AND ea.is_crisis = FALSE
+		LEFT JOIN entry_analysis ea ON ea.entry_id = e.id AND NOT (ea.is_crisis OR ea.followup_crisis)
 		WHERE ctl.therapist_id = $1 AND ctl.status = 'active'
 		GROUP BY u.id, u.preferred_name, u.name, ctl.linked_at
 		ORDER BY last_entry_at DESC NULLS LAST`
@@ -215,7 +215,7 @@ func (r *TherapistRepository) ClientRecentEntries(ctx context.Context, clientID 
 		SELECT e.created_at, ea.summary, ea.mood_score, ea.topics, ea.key_quotes
 		FROM entries e
 		JOIN entry_analysis ea ON ea.entry_id = e.id
-		WHERE e.user_id = $1 AND e.status = 'completed' AND ea.is_crisis = FALSE
+		WHERE e.user_id = $1 AND e.status = 'completed' AND NOT (ea.is_crisis OR ea.followup_crisis)
 		ORDER BY e.created_at DESC
 		LIMIT 5`
 
@@ -246,7 +246,7 @@ func (r *TherapistRepository) ClientMoodStats(ctx context.Context, clientID uuid
 		SELECT ROUND(AVG(ea.mood_score))::INT, COUNT(e.id)::INT
 		FROM entries e
 		JOIN entry_analysis ea ON ea.entry_id = e.id
-		WHERE e.user_id = $1 AND e.status = 'completed' AND ea.is_crisis = FALSE
+		WHERE e.user_id = $1 AND e.status = 'completed' AND NOT (ea.is_crisis OR ea.followup_crisis)
 		  AND e.created_at >= NOW() - INTERVAL '7 days'`
 
 	var avg7dRaw *int
@@ -263,7 +263,7 @@ func (r *TherapistRepository) ClientMoodStats(ctx context.Context, clientID uuid
 		SELECT ROUND(AVG(ea.mood_score))::INT, COUNT(e.id)::INT
 		FROM entries e
 		JOIN entry_analysis ea ON ea.entry_id = e.id
-		WHERE e.user_id = $1 AND e.status = 'completed' AND ea.is_crisis = FALSE
+		WHERE e.user_id = $1 AND e.status = 'completed' AND NOT (ea.is_crisis OR ea.followup_crisis)
 		  AND e.created_at >= NOW() - INTERVAL '14 days'
 		  AND e.created_at <  NOW() - INTERVAL '7 days'`
 
@@ -291,7 +291,7 @@ func (r *TherapistRepository) ClientMoodStats(ctx context.Context, clientID uuid
 		SELECT ea.emotional_tone
 		FROM entries e
 		JOIN entry_analysis ea ON ea.entry_id = e.id
-		WHERE e.user_id = $1 AND e.status = 'completed' AND ea.is_crisis = FALSE
+		WHERE e.user_id = $1 AND e.status = 'completed' AND NOT (ea.is_crisis OR ea.followup_crisis)
 		  AND e.created_at >= NOW() - INTERVAL '30 days'`
 
 	eRows, qErr := r.db.Query(ctx, emotionQ, clientID)
@@ -330,7 +330,7 @@ func (r *TherapistRepository) ClientEntryCount(ctx context.Context, clientID uui
 	err := r.db.QueryRow(ctx, `
 		SELECT COUNT(e.id) FROM entries e
 		JOIN entry_analysis ea ON ea.entry_id = e.id
-		WHERE e.user_id = $1 AND e.status = 'completed' AND ea.is_crisis = FALSE`,
+		WHERE e.user_id = $1 AND e.status = 'completed' AND NOT (ea.is_crisis OR ea.followup_crisis)`,
 		clientID,
 	).Scan(&n)
 	return n, err
@@ -354,7 +354,7 @@ func (r *TherapistRepository) ClientRecentSummariesText(ctx context.Context, cli
 		SELECT TO_CHAR(e.created_at, 'Mon DD'), ea.summary, ea.mood_score
 		FROM entries e
 		JOIN entry_analysis ea ON ea.entry_id = e.id
-		WHERE e.user_id = $1 AND e.status = 'completed' AND ea.is_crisis = FALSE
+		WHERE e.user_id = $1 AND e.status = 'completed' AND NOT (ea.is_crisis OR ea.followup_crisis)
 		  AND e.created_at >= $2
 		ORDER BY e.created_at DESC
 		LIMIT 7`

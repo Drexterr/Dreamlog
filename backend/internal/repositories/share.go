@@ -177,7 +177,7 @@ func (r *ShareRepository) ShareView(ctx context.Context, userID uuid.UUID) (*mod
 		JOIN entry_analysis ea ON ea.entry_id = e.id
 		WHERE e.user_id = $1
 		  AND e.status = 'completed'
-		  AND ea.is_crisis = FALSE
+		  AND NOT (ea.is_crisis OR ea.followup_crisis)
 		  AND e.created_at >= NOW() - INTERVAL '30 days'
 		GROUP BY day
 		ORDER BY day ASC`
@@ -218,7 +218,7 @@ func (r *ShareRepository) ShareView(ctx context.Context, userID uuid.UUID) (*mod
 		     LATERAL (SELECT et->>'emotion' AS emotion_text) AS em
 		WHERE e.user_id = $1
 		  AND e.status = 'completed'
-		  AND ea.is_crisis = FALSE
+		  AND NOT (ea.is_crisis OR ea.followup_crisis)
 		  AND e.created_at >= NOW() - INTERVAL '30 days'
 		  AND (et->>'intensity')::float >= 0.4
 		GROUP BY emotion_text
@@ -251,7 +251,7 @@ func (r *ShareRepository) ShareView(ctx context.Context, userID uuid.UUID) (*mod
 		JOIN entry_analysis ea ON ea.entry_id = e.id
 		WHERE e.user_id = $1
 		  AND e.status = 'completed'
-		  AND ea.is_crisis = FALSE
+		  AND NOT (ea.is_crisis OR ea.followup_crisis)
 		  AND e.created_at >= NOW() - INTERVAL '30 days'
 		ORDER BY e.created_at DESC
 		LIMIT 30`

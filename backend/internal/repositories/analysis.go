@@ -121,7 +121,7 @@ func (r *AnalysisRepository) MoodLast7Days(ctx context.Context, userID uuid.UUID
 		    WHERE e.user_id = $1
 		      AND e.created_at >= NOW() - INTERVAL '7 days'
 		      AND ea.mood_score IS NOT NULL
-		      AND ea.is_crisis = FALSE
+		      AND NOT (ea.is_crisis OR ea.followup_crisis)
 		    UNION ALL
 		    SELECT DATE(ts.ended_at AT TIME ZONE 'UTC') AS day, ts.session_mood_score::float AS mood
 		    FROM therapy_sessions ts
@@ -256,7 +256,7 @@ func (r *AnalysisRepository) MoodHistory(ctx context.Context, userID uuid.UUID, 
 		    WHERE e.user_id = $1
 		      AND e.created_at >= $2
 		      AND ea.mood_score IS NOT NULL
-		      AND ea.is_crisis = FALSE
+		      AND NOT (ea.is_crisis OR ea.followup_crisis)
 		    UNION ALL
 		    SELECT DATE(ts.ended_at AT TIME ZONE 'UTC') AS day, ts.session_mood_score::float AS mood
 		    FROM therapy_sessions ts
@@ -304,7 +304,7 @@ func (r *AnalysisRepository) MoodHistory(ctx context.Context, userID uuid.UUID, 
 		    JOIN entry_analysis ea ON ea.entry_id = e.id
 		    WHERE e.user_id = $1
 		      AND e.created_at >= $2 AND e.created_at < $3
-		      AND ea.is_crisis = FALSE
+		      AND NOT (ea.is_crisis OR ea.followup_crisis)
 		    UNION ALL
 		    SELECT session_mood_score::float AS mood
 		    FROM therapy_sessions
@@ -336,7 +336,7 @@ func (r *AnalysisRepository) MoodHistory(ctx context.Context, userID uuid.UUID, 
 		    JOIN entry_analysis ea ON ea.entry_id = e.id
 		    WHERE e.user_id = $1
 		      AND e.created_at >= $2
-		      AND ea.is_crisis = FALSE
+		      AND NOT (ea.is_crisis OR ea.followup_crisis)
 		    UNION ALL
 		    SELECT session_emotional_tone AS tone
 		    FROM therapy_sessions
@@ -406,7 +406,7 @@ func (r *AnalysisRepository) EmotionPatterns(ctx context.Context, userID uuid.UU
 		    LATERAL jsonb_array_elements(ea.emotional_tone::jsonb) et
 		    WHERE e.user_id = $1
 		      AND e.status = 'completed'
-		      AND ea.is_crisis = FALSE
+		      AND NOT (ea.is_crisis OR ea.followup_crisis)
 		      AND e.created_at >= $2
 		      AND (et->>'intensity')::float >= 0.3
 		    UNION ALL
@@ -480,7 +480,7 @@ func (r *AnalysisRepository) EmotionPatterns(ctx context.Context, userID uuid.UU
 		    JOIN entry_analysis ea ON ea.entry_id = e.id
 		    WHERE e.user_id = $1
 		      AND e.status = 'completed'
-		      AND ea.is_crisis = FALSE
+		      AND NOT (ea.is_crisis OR ea.followup_crisis)
 		      AND e.created_at >= $2
 		    UNION ALL
 		    SELECT session_mood_score AS mood
@@ -542,7 +542,7 @@ func (r *AnalysisRepository) GetWeekSummaries(ctx context.Context, userID uuid.U
 		JOIN entry_analysis ea ON ea.entry_id = e.id
 		WHERE e.user_id = $1
 		  AND e.status = 'completed'
-		  AND ea.is_crisis = FALSE
+		  AND NOT (ea.is_crisis OR ea.followup_crisis)
 		  AND e.created_at >= $2
 		  AND e.created_at < $3
 		  AND ea.summary IS NOT NULL AND ea.summary != ''
@@ -591,7 +591,7 @@ func (r *AnalysisRepository) GetYearSummaries(ctx context.Context, userID uuid.U
 		JOIN entry_analysis ea ON ea.entry_id = e.id
 		WHERE e.user_id = $1
 		  AND e.status = 'completed'
-		  AND ea.is_crisis = FALSE
+		  AND NOT (ea.is_crisis OR ea.followup_crisis)
 		  AND e.created_at >= $2
 		  AND e.created_at < $3
 		  AND ea.summary IS NOT NULL AND ea.summary != ''
@@ -636,7 +636,7 @@ func (r *AnalysisRepository) ExportData(ctx context.Context, userID uuid.UUID, s
 		JOIN entry_analysis ea ON ea.entry_id = e.id
 		WHERE e.user_id = $1
 		  AND e.created_at >= $2 AND e.created_at < $3
-		  AND ea.is_crisis = FALSE
+		  AND NOT (ea.is_crisis OR ea.followup_crisis)
 		GROUP BY DATE(e.created_at AT TIME ZONE 'UTC')
 		ORDER BY day ASC`
 
@@ -675,7 +675,7 @@ func (r *AnalysisRepository) ExportData(ctx context.Context, userID uuid.UUID, s
 		JOIN entry_analysis ea ON ea.entry_id = e.id
 		WHERE e.user_id = $1
 		  AND e.created_at >= $2 AND e.created_at < $3
-		  AND ea.is_crisis = FALSE`
+		  AND NOT (ea.is_crisis OR ea.followup_crisis)`
 
 	var prevRaw, prevCnt int
 	if err := r.db.QueryRow(ctx, prevQ, userID, prevSince, since).Scan(&prevRaw, &prevCnt); err != nil {
@@ -697,7 +697,7 @@ func (r *AnalysisRepository) ExportData(ctx context.Context, userID uuid.UUID, s
 		JOIN entry_analysis ea ON ea.entry_id = e.id
 		WHERE e.user_id = $1
 		  AND e.created_at >= $2 AND e.created_at < $3
-		  AND ea.is_crisis = FALSE`
+		  AND NOT (ea.is_crisis OR ea.followup_crisis)`
 
 	eRows, err := r.db.Query(ctx, emotionQ, userID, since, until)
 	if err != nil {
@@ -722,7 +722,9 @@ func (r *AnalysisRepository) ExportData(ctx context.Context, userID uuid.UUID, s
 		}
 	}
 
-	// Entry summaries (oldest first, no crisis).
+	// Entry summaries (oldest first, no crisis). An entry whose follow-up
+	// ended in crisis stays listed - its own text was screened safe - and only
+	// leaves the mood stats above.
 	const entryQ = `
 		SELECT
 		    e.created_at,
@@ -785,7 +787,7 @@ func (r *AnalysisRepository) MoodAvg30Days(ctx context.Context, userID uuid.UUID
 		    JOIN entry_analysis ea ON ea.entry_id = e.id
 		    WHERE e.user_id = $1
 		      AND e.status = 'completed'
-		      AND ea.is_crisis = FALSE
+		      AND NOT (ea.is_crisis OR ea.followup_crisis)
 		      AND e.created_at >= NOW() - INTERVAL '30 days'
 		    UNION ALL
 		    SELECT session_mood_score::float AS mood
@@ -810,7 +812,7 @@ func (r *AnalysisRepository) RecentSummaries(ctx context.Context, userID uuid.UU
 		JOIN entry_analysis ea ON ea.entry_id = e.id
 		WHERE e.user_id = $1
 		  AND e.status = 'completed'
-		  AND ea.is_crisis = FALSE
+		  AND NOT (ea.is_crisis OR ea.followup_crisis)
 		  AND ea.summary IS NOT NULL AND ea.summary != ''
 		ORDER BY e.created_at DESC
 		LIMIT $2`
@@ -847,7 +849,7 @@ func (r *AnalysisRepository) TopEmotions(ctx context.Context, userID uuid.UUID, 
 		    JOIN entry_analysis ea ON ea.entry_id = e.id
 		    WHERE e.user_id = $1
 		      AND e.status = 'completed'
-		      AND ea.is_crisis = FALSE
+		      AND NOT (ea.is_crisis OR ea.followup_crisis)
 		      AND e.created_at >= $2
 		    UNION ALL
 		    SELECT session_emotional_tone AS tone
@@ -897,7 +899,7 @@ func (r *AnalysisRepository) TopTopics(ctx context.Context, userID uuid.UUID, li
 		    JOIN entry_analysis ea ON ea.entry_id = e.id
 		    WHERE e.user_id = $1
 		      AND e.status = 'completed'
-		      AND ea.is_crisis = FALSE
+		      AND NOT (ea.is_crisis OR ea.followup_crisis)
 		      AND e.created_at >= $2
 		      AND ea.topics IS NOT NULL
 		    UNION ALL
@@ -978,7 +980,7 @@ func (r *AnalysisRepository) CountTopicOccurrences(ctx context.Context, userID, 
 		  AND ea.entry_id <> $2
 		  AND e.status = 'completed'
 		  AND e.created_at >= $3
-		  AND ea.is_crisis = false
+		  AND NOT (ea.is_crisis OR ea.followup_crisis)
 		  AND LOWER(t.topic) = ANY($4)
 		GROUP BY LOWER(t.topic)`
 
@@ -1021,7 +1023,7 @@ func (r *AnalysisRepository) Flashback(ctx context.Context, userID uuid.UUID) (*
 		JOIN entry_analysis ea ON ea.entry_id = e.id
 		WHERE e.user_id = $1
 		  AND e.status = 'completed'
-		  AND ea.is_crisis = false
+		  AND NOT (ea.is_crisis OR ea.followup_crisis)
 		  AND e.created_at BETWEEN $2 AND $3
 		ORDER BY ABS(EXTRACT(EPOCH FROM (e.created_at - $4::timestamptz)))
 		LIMIT 1`

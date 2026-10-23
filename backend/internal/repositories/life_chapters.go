@@ -177,7 +177,7 @@ func (r *LifeChapterRepository) GetDetail(ctx context.Context, id, userID uuid.U
 		JOIN entry_analysis ea ON ea.entry_id = e.id
 		WHERE e.user_id = $1
 		  AND e.status = 'completed'
-		  AND ea.is_crisis = FALSE
+		  AND NOT (ea.is_crisis OR ea.followup_crisis)
 		  AND DATE(e.created_at AT TIME ZONE 'UTC') >= $2::DATE
 		  AND e.created_at <= %s`, endFilter)
 
@@ -197,7 +197,7 @@ func (r *LifeChapterRepository) GetDetail(ctx context.Context, id, userID uuid.U
 		JOIN entry_analysis ea ON ea.entry_id = e.id
 		WHERE e.user_id = $1
 		  AND e.status = 'completed'
-		  AND ea.is_crisis = FALSE
+		  AND NOT (ea.is_crisis OR ea.followup_crisis)
 		  AND DATE(e.created_at AT TIME ZONE 'UTC') >= $2::DATE
 		  AND e.created_at <= %s
 		GROUP BY day
@@ -225,7 +225,7 @@ func (r *LifeChapterRepository) GetDetail(ctx context.Context, id, userID uuid.U
 		     LATERAL (SELECT et->>'emotion' AS emotion, (et->>'intensity')::float AS intensity) AS em
 		WHERE e.user_id = $1
 		  AND e.status = 'completed'
-		  AND ea.is_crisis = FALSE
+		  AND NOT (ea.is_crisis OR ea.followup_crisis)
 		  AND DATE(e.created_at AT TIME ZONE 'UTC') >= $2::DATE
 		  AND e.created_at <= %s
 		  AND em.intensity >= 0.4
@@ -272,7 +272,7 @@ func (r *LifeChapterRepository) GetEntriesInRange(ctx context.Context, userID uu
 		JOIN entry_analysis ea ON ea.entry_id = e.id
 		WHERE e.user_id = $1
 		  AND e.status = 'completed'
-		  AND ea.is_crisis = FALSE
+		  AND NOT (ea.is_crisis OR ea.followup_crisis)
 		  AND DATE(e.created_at AT TIME ZONE 'UTC') >= $2::DATE
 		  AND e.created_at <= %s
 		  AND ea.summary IS NOT NULL AND ea.summary != ''

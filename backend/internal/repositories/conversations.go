@@ -150,12 +150,21 @@ func (r *ConversationRepository) AddMessage(ctx context.Context, convID uuid.UUI
 
 // Close marks a conversation closed after a crisis reply and records that it
 // ended in crisis, so reopening it shows the crisis resources again (N12).
+// In the same statement it flags the parent entry's analysis followup_crisis:
+// the entry keeps its reflection but leaves mood stats, reviews, flashbacks
+// and future context.
 func (r *ConversationRepository) Close(ctx context.Context, convID uuid.UUID) (*models.Conversation, error) {
 	conv := &models.Conversation{}
 	err := r.db.QueryRow(ctx, `
-		UPDATE conversations SET is_closed = true, is_crisis = true, updated_at = NOW()
-		WHERE id = $1
-		RETURNING id, entry_id, user_id, turn_count, is_closed, is_crisis, created_at, updated_at`,
+		WITH closed AS (
+			UPDATE conversations SET is_closed = true, is_crisis = true, updated_at = NOW()
+			WHERE id = $1
+			RETURNING id, entry_id, user_id, turn_count, is_closed, is_crisis, created_at, updated_at
+		), flagged AS (
+			UPDATE entry_analysis SET followup_crisis = true
+			WHERE entry_id = (SELECT entry_id FROM closed)
+		)
+		SELECT id, entry_id, user_id, turn_count, is_closed, is_crisis, created_at, updated_at FROM closed`,
 		convID,
 	).Scan(&conv.ID, &conv.EntryID, &conv.UserID, &conv.TurnCount, &conv.IsClosed, &conv.IsCrisis, &conv.CreatedAt, &conv.UpdatedAt)
 	if err != nil {

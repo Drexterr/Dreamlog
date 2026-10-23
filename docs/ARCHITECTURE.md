@@ -167,6 +167,9 @@ entry_analysis                  -- 1:1 with entries
   reflection TEXT               -- warm 3-5 sentences + one open question
   morning_nudge TEXT            -- 1 sentence, specific to this entry
   is_crisis BOOLEAN DEFAULT false
+  followup_crisis BOOLEAN DEFAULT false -- the entry's follow-up conversation was closed by crisis
+                                -- screening (migration 000048). Reflection stays visible, but the
+                                -- entry leaves every aggregate exactly like is_crisis does
   connection_insight TEXT       -- occasional cross-entry pattern ("3rd time X came up this month");
                                 -- computed deterministically in the worker, NULL when no pattern (migration 000033)
   dream_symbols TEXT[]          -- NULL for non-dream entries; 3-6 symbols extracted from the dream (migration 000016)
@@ -424,6 +427,13 @@ Both paths produce the same JWT format - middleware doesn't know which path mint
 
 Crisis entries:
 - Get `is_crisis=true` in `entry_analysis`
+- A follow-up conversation closed by crisis screening sets `followup_crisis=true` on its parent
+  entry (same statement that closes it). The entry text was screened safe, so its reflection
+  stays visible; everything that excludes crisis entries below excludes it too, except the
+  user's own PDF export entry list
+- Excluded from mood stats, weekly/annual reviews, insight cards, life-chapter stats, share
+  links, therapist briefs, team mood, flashbacks, connection insights, therapy context and
+  the context for future reflections (ADR-009)
 - Are excluded from `v_daily_mood` view (don't skew mood stats)
 - Skip regular reflection generation entirely
 - Trigger crisis resource message instead of reflection

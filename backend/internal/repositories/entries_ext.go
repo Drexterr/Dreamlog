@@ -12,7 +12,9 @@ import (
 )
 
 // ListCompletedBefore returns up to limit completed entries created before the given time,
-// newest first. Used by context builder to get historical summaries.
+// newest first. Used by context builder to get historical summaries. Crisis
+// entries and entries whose follow-up ended in crisis are left out (ADR-009):
+// outlier states must not shape the next reflection.
 func (r *EntryRepository) ListCompletedBefore(ctx context.Context, userID uuid.UUID, before time.Time, limit int) ([]*models.Entry, error) {
 	const q = `
 		SELECT id, user_id, audio_key, audio_size_bytes, duration_sec,
@@ -21,6 +23,9 @@ func (r *EntryRepository) ListCompletedBefore(ctx context.Context, userID uuid.U
 		WHERE user_id = $1
 		  AND status = 'completed'
 		  AND created_at < $2
+		  AND NOT EXISTS (
+		      SELECT 1 FROM entry_analysis ea
+		      WHERE ea.entry_id = entries.id AND (ea.is_crisis OR ea.followup_crisis))
 		ORDER BY created_at DESC
 		LIMIT $3`
 
