@@ -30,7 +30,7 @@ func TestIntegration_JourneyPersistenceAndRollback(t *testing.T) {
 		t.Fatalf("foreign: %+v %v", got, err)
 	}
 	entry := uuid.New()
-	if _, err := db.Exec(ctx, `INSERT INTO entries(id,user_id,audio_key,status) VALUES($1,$2,'fixture/journey','completed')`, entry, owner); err != nil {
+	if _, err := db.Exec(ctx, `INSERT INTO entries(id,user_id,audio_key,status) VALUES($1,$2,'fixture/journey/' || gen_random_uuid()::text,'completed')`, entry, owner); err != nil {
 		t.Fatal(err)
 	}
 	if err := r.AdvanceStep(ctx, s.ID, 0, entry, 1, false); err != nil {
@@ -85,7 +85,7 @@ func TestIntegration_ConversationPersistenceAndTurnClosure(t *testing.T) {
 	ctx := context.Background()
 	owner, other := regressionUser(t, db), regressionUser(t, db)
 	entry := uuid.New()
-	if _, err := db.Exec(ctx, `INSERT INTO entries(id,user_id,audio_key,status) VALUES($1,$2,'fixture/conversation','completed')`, entry, owner); err != nil {
+	if _, err := db.Exec(ctx, `INSERT INTO entries(id,user_id,audio_key,status) VALUES($1,$2,'fixture/conversation/' || gen_random_uuid()::text,'completed')`, entry, owner); err != nil {
 		t.Fatal(err)
 	}
 	r := NewConversationRepository(db)

@@ -21,7 +21,7 @@ func TestIntegration_RelationshipConcurrentRetries(t *testing.T) {
 	defer cancel()
 	owner := regressionUser(t, db)
 	entry := uuid.New()
-	if _, err := db.Exec(ctx, `INSERT INTO entries(id,user_id,audio_key,status) VALUES($1,$2,'fixture/concurrent-retry','completed')`, entry, owner); err != nil {
+	if _, err := db.Exec(ctx, `INSERT INTO entries(id,user_id,audio_key,status) VALUES($1,$2,'fixture/concurrent-retry/' || gen_random_uuid()::text,'completed')`, entry, owner); err != nil {
 		t.Fatal(err)
 	}
 	r := NewRelationshipRepository(db)
@@ -56,7 +56,7 @@ func TestIntegration_RelationshipRetryAndManagement(t *testing.T) {
 	ctx := context.Background()
 	owner, other := regressionUser(t, db), regressionUser(t, db)
 	entry := uuid.New()
-	if _, err := db.Exec(ctx, `INSERT INTO entries(id,user_id,audio_key,status) VALUES($1,$2,'fixture/relationship','completed')`, entry, owner); err != nil {
+	if _, err := db.Exec(ctx, `INSERT INTO entries(id,user_id,audio_key,status) VALUES($1,$2,'fixture/relationship/' || gen_random_uuid()::text,'completed')`, entry, owner); err != nil {
 		t.Fatal(err)
 	}
 	r := NewRelationshipRepository(db)
@@ -108,7 +108,7 @@ func TestIntegration_RelationshipMergeAndRollback(t *testing.T) {
 	r := NewRelationshipRepository(db)
 	entries := []uuid.UUID{uuid.New(), uuid.New(), uuid.New()}
 	for _, id := range entries {
-		if _, err := db.Exec(ctx, `INSERT INTO entries(id,user_id,audio_key,status) VALUES($1,$2,'fixture/merge','completed')`, id, owner); err != nil {
+		if _, err := db.Exec(ctx, `INSERT INTO entries(id,user_id,audio_key,status) VALUES($1,$2,'fixture/merge/' || gen_random_uuid()::text,'completed')`, id, owner); err != nil {
 			t.Fatal(err)
 		}
 	}

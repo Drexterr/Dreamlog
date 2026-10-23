@@ -143,7 +143,7 @@ func TestIntegration_ShareViewFiltersPrivateAndIneligibleRecords(t *testing.T) {
 		{"pending-summary", owner, 0, false, false},
 	}
 	for _, fixture := range fixtures {
-		e, err := entries.Create(ctx, fixture.user, "private-audio-fixture", 100, 3, models.EntryModeProcessing)
+		e, err := entries.Create(ctx, fixture.user, "private-audio-fixture/"+fixture.name, 100, 3, models.EntryModeProcessing)
 		if err != nil {
 			t.Fatal(err)
 		}

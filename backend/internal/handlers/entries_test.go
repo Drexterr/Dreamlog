@@ -8,11 +8,14 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 	"time"
 
 	"github.com/dreamlog/backend/internal/middleware"
 	"github.com/dreamlog/backend/internal/models"
+	"github.com/dreamlog/backend/internal/services"
+	"github.com/dreamlog/backend/pkg/apierr"
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
@@ -22,6 +25,9 @@ import (
 // ── fake entryServicer ────────────────────────────────────────────────────────
 
 type fakeEntryServicer struct {
+	existing    *models.Entry // FindByAudioKey result
+	findErr     error
+	createCalls int
 	textCalls   int
 	presignCalls int
 	presignResp *models.PresignResponse
@@ -40,7 +46,12 @@ func (f *fakeEntryServicer) PresignUpload(_ context.Context, _ uuid.UUID) (*mode
 }
 
 func (f *fakeEntryServicer) Create(_ context.Context, _ uuid.UUID, _ *models.CreateEntryInput, _ string) (*models.Entry, error) {
+	f.createCalls++
 	return f.createResp, f.createErr
+}
+
+func (f *fakeEntryServicer) FindByAudioKey(_ context.Context, _ uuid.UUID, _ string) (*models.Entry, error) {
+	return f.existing, f.findErr
 }
 
 func (f *fakeEntryServicer) CreateText(_ context.Context, _ uuid.UUID, _ *models.CreateTextEntryInput, _ string) (*models.Entry, error) {
@@ -366,7 +377,7 @@ func TestEntryHandler_List_MissingAuth_Returns401(t *testing.T) {
 // orphaned in storage when registration would fail.
 func TestEntryHandler_Presign_QuotaExceeded_Returns409WithoutPresigning(t *testing.T) {
 	svc := &fakeEntryServicer{presignResp: &models.PresignResponse{UploadURL: "u", AudioKey: "k"}}
-	quota := &fakeEntryQuota{err: errors.New("monthly entry limit reached")}
+	quota := &fakeEntryQuota{err: services.ErrEntryQuotaExceeded}
 	r := newEntryTestRouter(t, svc, &fakeStorageUploader{}, entryTestUser(), quota)
 	w := httptest.NewRecorder()
 	req, _ := http.NewRequest(http.MethodPost, "/entries/presign", nil)
@@ -378,5 +389,77 @@ func TestEntryHandler_Presign_QuotaExceeded_Returns409WithoutPresigning(t *testi
 	}
 	if quota.calls != 1 || svc.presignCalls != 0 {
 		t.Errorf("quota must be checked and no upload URL issued: quota=%d presign=%d", quota.calls, svc.presignCalls)
+	}
+}
+
+// ── N10: POST /entries error mapping and retry order ─────────────────────────
+
+func postEntry(t *testing.T, r http.Handler) *httptest.ResponseRecorder {
+	t.Helper()
+	body, _ := json.Marshal(models.CreateEntryInput{AudioKey: "audio/user/entry.aac", AudioSizeBytes: 1, DurationSec: 1})
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest(http.MethodPost, "/entries", bytes.NewReader(body))
+	req.Header.Set("Authorization", "Bearer "+entryTestJWT(t))
+	req.Header.Set("Content-Type", "application/json")
+	r.ServeHTTP(w, req)
+	return w
+}
+
+// A lost response for the 10th entry: the retry gets the entry back even
+// though the user is now at the monthly limit.
+func TestEntryHandler_Create_RetryAtQuotaReturnsExistingEntry(t *testing.T) {
+	existing := &models.Entry{ID: uuid.New(), Status: models.EntryStatusPending}
+	svc := &fakeEntryServicer{existing: existing}
+	quota := &fakeEntryQuota{err: services.ErrEntryQuotaExceeded}
+	w := postEntry(t, newEntryTestRouter(t, svc, &fakeStorageUploader{}, entryTestUser(), quota))
+	if w.Code != http.StatusCreated || !strings.Contains(w.Body.String(), existing.ID.String()) {
+		t.Fatalf("retry must return the existing entry: %d %s", w.Code, w.Body.String())
+	}
+	if quota.calls != 0 || svc.createCalls != 0 {
+		t.Errorf("a retry must not check quota or create: quota=%d create=%d", quota.calls, svc.createCalls)
+	}
+}
+
+func TestEntryHandler_Create_QuotaReached_Returns409(t *testing.T) {
+	quota := &fakeEntryQuota{err: services.ErrEntryQuotaExceeded}
+	w := postEntry(t, newEntryTestRouter(t, &fakeEntryServicer{}, &fakeStorageUploader{}, entryTestUser(), quota))
+	if w.Code != http.StatusConflict {
+		t.Fatalf("want 409, got %d", w.Code)
+	}
+}
+
+// A failure to count entries is an outage (500), not a quota verdict.
+func TestEntryHandler_Create_QuotaCheckError_Returns500(t *testing.T) {
+	quota := &fakeEntryQuota{err: errors.New("db: connection refused")}
+	w := postEntry(t, newEntryTestRouter(t, &fakeEntryServicer{}, &fakeStorageUploader{}, entryTestUser(), quota))
+	if w.Code != http.StatusInternalServerError || strings.Contains(w.Body.String(), "connection refused") {
+		t.Fatalf("want 500 without internal text, got %d %s", w.Code, w.Body.String())
+	}
+}
+
+// Storage / DB failures are retryable 500s without internal detail, while
+// typed validation errors keep their status.
+func TestEntryHandler_Create_ServiceErrors(t *testing.T) {
+	cases := []struct {
+		name string
+		err  error
+		want int
+	}{
+		{"outage", errors.New("storage: head object: dial tcp: timeout"), http.StatusInternalServerError},
+		{"validation", apierr.BadRequest("audio_key does not belong to user"), http.StatusBadRequest},
+		{"lookup outage", nil, http.StatusInternalServerError},
+	}
+	for _, tc := range cases {
+		svc := &fakeEntryServicer{createErr: tc.err}
+		if tc.err == nil {
+			svc.findErr = errors.New("db down")
+		}
+		w := postEntry(t, newEntryTestRouter(t, svc, &fakeStorageUploader{}, entryTestUser()))
+		if w.Code != tc.want {
+			t.Errorf("%s: want %d, got %d %s", tc.name, tc.want, w.Code, w.Body.String())
+		}
+		if tc.want == http.StatusInternalServerError && (strings.Contains(w.Body.String(), "dial tcp") || strings.Contains(w.Body.String(), "db down")) {
+			t.Errorf("%s: internal detail leaked: %s", tc.name, w.Body.String())
+		}
 	}
 }

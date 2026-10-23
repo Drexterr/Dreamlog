@@ -22,12 +22,22 @@ func NewEntryRepository(db *pgxpool.Pool) *EntryRepository {
 
 // Create inserts a new entry with status=pending.
 func (r *EntryRepository) Create(ctx context.Context, userID uuid.UUID, audioKey string, sizeBytes int64, durationSec float64, mode models.EntryMode) (*models.Entry, error) {
+	e, _, err := r.CreateOnce(ctx, userID, audioKey, sizeBytes, durationSec, mode)
+	return e, err
+}
+
+// CreateOnce inserts the entry for (user, audio_key) unless one exists, in
+// which case it returns that entry with created=false (N10). The unique index
+// makes concurrent registrations of one upload converge on a single row, so
+// only one transcription job is ever queued for it.
+func (r *EntryRepository) CreateOnce(ctx context.Context, userID uuid.UUID, audioKey string, sizeBytes int64, durationSec float64, mode models.EntryMode) (*models.Entry, bool, error) {
 	if !mode.Valid() {
 		mode = models.EntryModeProcessing
 	}
 	const q = `
 		INSERT INTO entries (user_id, audio_key, audio_size_bytes, duration_sec, status, mode)
 		VALUES ($1, $2, $3, $4, 'pending', $5)
+		ON CONFLICT (user_id, audio_key) DO NOTHING
 		RETURNING id, user_id, audio_key, audio_size_bytes, duration_sec,
 		          status, mode, transcript, language, error_msg, retry_count, created_at, updated_at`
 
@@ -37,10 +47,20 @@ func (r *EntryRepository) Create(ctx context.Context, userID uuid.UUID, audioKey
 		&e.Status, &e.Mode, &e.Transcript, &e.Language, &e.ErrorMsg, &e.RetryCount,
 		&e.CreatedAt, &e.UpdatedAt,
 	)
-	if err != nil {
-		return nil, fmt.Errorf("entries.Create: %w", err)
+	if errors.Is(err, pgx.ErrNoRows) {
+		existing, err := r.GetByAudioKey(ctx, userID, audioKey)
+		if err != nil {
+			return nil, false, fmt.Errorf("entries.CreateOnce existing: %w", err)
+		}
+		if existing == nil {
+			return nil, false, fmt.Errorf("entries.CreateOnce: conflicting entry vanished")
+		}
+		return existing, false, nil
 	}
-	return e, nil
+	if err != nil {
+		return nil, false, fmt.Errorf("entries.Create: %w", err)
+	}
+	return e, true, nil
 }
 
 // CreateText atomically inserts a transcript without creating an audio object.

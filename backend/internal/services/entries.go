@@ -14,7 +14,7 @@ import (
 )
 
 type entryRepository interface {
-	Create(context.Context, uuid.UUID, string, int64, float64, models.EntryMode) (*models.Entry, error)
+	CreateOnce(context.Context, uuid.UUID, string, int64, float64, models.EntryMode) (*models.Entry, bool, error)
 	CreateText(context.Context, uuid.UUID, *models.CreateTextEntryInput) (*models.Entry, bool, error)
 	GetByID(context.Context, uuid.UUID, uuid.UUID) (*models.Entry, error)
 	GetByAudioKey(context.Context, uuid.UUID, string) (*models.Entry, error)
@@ -70,7 +70,7 @@ func (s *EntryService) Create(ctx context.Context, userID uuid.UUID, input *mode
 	// Idempotent per audio_key: a client retrying registration after a
 	// timeout gets the entry it already created, never a duplicate.
 	if existing, err := s.repo.GetByAudioKey(ctx, userID, input.AudioKey); err != nil {
-		return nil, fmt.Errorf("entryService.Create: lookup: %w", err)
+		return nil, apierr.InternalErr("could not register the recording", fmt.Errorf("entryService.Create: lookup: %w", err))
 	} else if existing != nil {
 		return existing, nil
 	}
@@ -78,16 +78,21 @@ func (s *EntryService) Create(ctx context.Context, userID uuid.UUID, input *mode
 	// Verify the client actually uploaded before we create a DB row.
 	exists, err := s.storage.Exists(ctx, input.AudioKey)
 	if err != nil {
-		return nil, fmt.Errorf("entryService.Create: storage check: %w", err)
+		return nil, apierr.InternalErr("could not register the recording", fmt.Errorf("entryService.Create: storage check: %w", err))
 	}
 	if !exists {
 		return nil, apierr.BadRequest("audio file not found in storage - upload it before creating the entry")
 	}
 
 	// Persist the entry.
-	entry, err := s.repo.Create(ctx, userID, input.AudioKey, input.AudioSizeBytes, input.DurationSec, input.Mode)
+	// A concurrent registration of the same upload may have won the insert:
+	// return its entry and leave the job it queued as the only one (N10).
+	entry, created, err := s.repo.CreateOnce(ctx, userID, input.AudioKey, input.AudioSizeBytes, input.DurationSec, input.Mode)
 	if err != nil {
-		return nil, fmt.Errorf("entryService.Create: repo: %w", err)
+		return nil, apierr.InternalErr("could not register the recording", fmt.Errorf("entryService.Create: repo: %w", err))
+	}
+	if !created {
+		return entry, nil
 	}
 
 	// Enqueue transcription job.
@@ -111,6 +116,16 @@ func (s *EntryService) Create(ctx context.Context, userID uuid.UUID, input *mode
 }
 
 // CreateText uses the existing safe analysis pipeline without Whisper or storage.
+// FindByAudioKey returns the user's entry already registered for an upload,
+// or nil. POST /entries resolves retries with it before checking the quota.
+func (s *EntryService) FindByAudioKey(ctx context.Context, userID uuid.UUID, audioKey string) (*models.Entry, error) {
+	e, err := s.repo.GetByAudioKey(ctx, userID, audioKey)
+	if err != nil {
+		return nil, apierr.InternalErr("could not register the recording", fmt.Errorf("entryService.FindByAudioKey: %w", err))
+	}
+	return e, nil
+}
+
 func (s *EntryService) CreateText(ctx context.Context, userID uuid.UUID, input *models.CreateTextEntryInput, country string) (*models.Entry, error) {
 	if err := input.Validate(); err != nil {
 		return nil, err

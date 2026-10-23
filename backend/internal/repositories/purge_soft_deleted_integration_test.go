@@ -27,8 +27,8 @@ func TestIntegration_Migration042_PurgesLegacySoftDeletedUsers(t *testing.T) {
 		exec(`INSERT INTO users(id,supabase_id,email,name) VALUES($1,$2,$3,'QA')`, u, u.String(), u.String()+"@example.test")
 	}
 	exec(`UPDATE users SET is_deleted = true, deleted_at = NOW() WHERE id = $1`, deleted)
-	exec(`INSERT INTO entries(user_id,audio_key,status,transcript) VALUES($1,'audio/x','completed','private')`, deleted)
-	exec(`INSERT INTO entries(user_id,audio_key,status,transcript) VALUES($1,'audio/y','completed','kept')`, active)
+	exec(`INSERT INTO entries(user_id,audio_key,status,transcript) VALUES($1,'audio/x/' || gen_random_uuid()::text,'completed','private')`, deleted)
+	exec(`INSERT INTO entries(user_id,audio_key,status,transcript) VALUES($1,'audio/y/' || gen_random_uuid()::text,'completed','kept')`, active)
 	exec(`INSERT INTO therapists(id,user_id,name,email) VALUES($1,$2,'T','t@example.test')`, therapist, therapistUser)
 	exec(`INSERT INTO client_therapist_links(therapist_id,client_id,status) VALUES($1,$2,'active'),($1,$3,'active')`, therapist, deleted, active)
 

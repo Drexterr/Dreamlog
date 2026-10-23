@@ -55,7 +55,7 @@ func (s *SubscriptionService) CheckEntryQuota(ctx context.Context, userID uuid.U
 		return fmt.Errorf("subscriptionService.CheckEntryQuota: %w", err)
 	}
 	if count >= models.FreeMonthlyEntries {
-		return errEntryQuotaExceeded
+		return ErrEntryQuotaExceeded
 	}
 	return nil
 }
@@ -82,13 +82,13 @@ func (s *SubscriptionService) CheckShareQuota(ctx context.Context, userID uuid.U
 
 // sentinel errors - checked by handlers via errors.Is.
 var (
-	errEntryQuotaExceeded = fmt.Errorf("monthly entry limit reached; upgrade to Ode+ for unlimited entries")
+	ErrEntryQuotaExceeded = fmt.Errorf("monthly entry limit reached; upgrade to Ode+ for unlimited entries")
 	errShareNotAllowed    = fmt.Errorf("therapist share links require Ode+ or higher")
 	errShareQuotaExceeded = fmt.Errorf("monthly share link limit reached; upgrade to Ode Pro for unlimited shares")
 )
 
 // IsEntryQuotaExceeded returns true for the free-plan entry limit error.
-func IsEntryQuotaExceeded(err error) bool { return err == errEntryQuotaExceeded }
+func IsEntryQuotaExceeded(err error) bool { return err == ErrEntryQuotaExceeded }
 
 // IsShareError returns true for any share quota / plan error.
 func IsShareError(err error) bool {

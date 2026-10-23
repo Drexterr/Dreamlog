@@ -7,6 +7,7 @@ import (
 
 	"github.com/dreamlog/backend/internal/middleware"
 	"github.com/dreamlog/backend/internal/models"
+	"github.com/dreamlog/backend/internal/services"
 	"github.com/dreamlog/backend/pkg/apierr"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -31,7 +32,7 @@ func (h *EntryHandler) Presign(c *gin.Context) {
 	// only at registration lets the audio upload and then orphans it (N7).
 	if user := middleware.UserFromCtx(c.Request.Context()); user != nil {
 		if err := h.subscription.CheckEntryQuota(c.Request.Context(), user.ID, user.EffectivePlan()); err != nil {
-			c.Error(apierr.Conflict(err.Error()))
+			c.Error(quotaError(err))
 			return
 		}
 	}
@@ -60,9 +61,21 @@ func (h *EntryHandler) Create(c *gin.Context) {
 		return
 	}
 
+	// Resolve retries before the quota check (N10): a free user's 10th
+	// registration whose response was lost must get its entry back, not 409.
+	existing, err := h.svc.FindByAudioKey(c.Request.Context(), user.ID, input.AudioKey)
+	if err != nil {
+		c.Error(serviceError(err))
+		return
+	}
+	if existing != nil {
+		c.JSON(http.StatusCreated, existing)
+		return
+	}
+
 	// Check monthly entry quota (free plan: 10/month).
 	if err := h.subscription.CheckEntryQuota(c.Request.Context(), user.ID, user.EffectivePlan()); err != nil {
-		c.Error(apierr.Conflict(err.Error()))
+		c.Error(quotaError(err))
 		return
 	}
 
@@ -72,10 +85,29 @@ func (h *EntryHandler) Create(c *gin.Context) {
 	}
 	entry, err := h.svc.Create(c.Request.Context(), user.ID, &input, userCountry)
 	if err != nil {
-		c.Error(apierr.BadRequest(err.Error()))
+		c.Error(serviceError(err))
 		return
 	}
 	c.JSON(http.StatusCreated, entry)
+}
+
+// serviceError passes typed API errors (validation 400s, conflicts) through
+// unchanged and turns anything else - a DB or storage outage - into a 500,
+// which clients retry, instead of a permanent-looking 400 carrying internal
+// text (N10).
+func serviceError(err error) error {
+	if _, ok := apierr.As(err); ok {
+		return err
+	}
+	return apierr.InternalErr("could not register the recording", err)
+}
+
+// quotaError maps the monthly-limit error to 409; a failure to count is a 500.
+func quotaError(err error) error {
+	if services.IsEntryQuotaExceeded(err) {
+		return apierr.Conflict(err.Error())
+	}
+	return apierr.InternalErr("could not check the monthly entry limit", err)
 }
 
 // POST /entries/text
@@ -111,7 +143,7 @@ func (h *EntryHandler) CreateText(c *gin.Context) {
 		return
 	}
 	if err := h.subscription.CheckEntryQuota(c.Request.Context(), user.ID, user.EffectivePlan()); err != nil {
-		c.Error(apierr.Conflict(err.Error()))
+		c.Error(quotaError(err))
 		return
 	}
 	country := ""

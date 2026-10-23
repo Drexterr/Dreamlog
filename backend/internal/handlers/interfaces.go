@@ -15,6 +15,7 @@ import (
 type entryServicer interface {
 	PresignUpload(ctx context.Context, userID uuid.UUID) (*models.PresignResponse, error)
 	Create(ctx context.Context, userID uuid.UUID, input *models.CreateEntryInput, userCountry string) (*models.Entry, error)
+	FindByAudioKey(ctx context.Context, userID uuid.UUID, audioKey string) (*models.Entry, error)
 	CreateText(ctx context.Context, userID uuid.UUID, input *models.CreateTextEntryInput, userCountry string) (*models.Entry, error)
 	Get(ctx context.Context, id, userID uuid.UUID) (*models.Entry, error)
 	List(ctx context.Context, userID uuid.UUID, page, pageSize int) (*models.ListEntriesResponse, error)

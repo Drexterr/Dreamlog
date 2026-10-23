@@ -17,7 +17,7 @@ func TestIntegration_NudgeDeliveryDevicesAndCheckin(t *testing.T) {
 	owner, other := regressionUser(t, db), regressionUser(t, db)
 	r := NewNudgeRepository(db)
 	entry := uuid.New()
-	if _, err := db.Exec(ctx, `INSERT INTO entries(id,user_id,audio_key,status) VALUES($1,$2,'fixture/nudge','completed')`, entry, owner); err != nil {
+	if _, err := db.Exec(ctx, `INSERT INTO entries(id,user_id,audio_key,status) VALUES($1,$2,'fixture/nudge/' || gen_random_uuid()::text,'completed')`, entry, owner); err != nil {
 		t.Fatal(err)
 	}
 	due := time.Now().Add(-time.Hour)
@@ -131,7 +131,7 @@ func TestIntegration_NudgeCandidateFiltersAndTypicalHour(t *testing.T) {
 	if err := r.UpsertDevice(ctx, owner, "qa-candidate", "android"); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := db.Exec(ctx, `INSERT INTO entries(user_id,audio_key,status,created_at) SELECT $1,'fixture/old','completed', DATE_TRUNC('day',NOW() AT TIME ZONE 'UTC') AT TIME ZONE 'UTC' - INTERVAL '1 day' + INTERVAL '8 hours' FROM generate_series(1,3)`, owner); err != nil {
+	if _, err := db.Exec(ctx, `INSERT INTO entries(user_id,audio_key,status,created_at) SELECT $1,'fixture/old/' || gen_random_uuid()::text,'completed', DATE_TRUNC('day',NOW() AT TIME ZONE 'UTC') AT TIME ZONE 'UTC' - INTERVAL '1 day' + INTERVAL '8 hours' FROM generate_series(1,3)`, owner); err != nil {
 		t.Fatal(err)
 	}
 	typical, ok, err := r.TypicalEntryHour(ctx, owner, "UTC")

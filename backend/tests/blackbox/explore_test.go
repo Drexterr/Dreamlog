@@ -63,7 +63,7 @@ func exploreID(t *testing.T, got map[string]any) string {
 func exploreEntry(t *testing.T, h *apiHarness, user uuid.UUID, at time.Time, mood int, crisis bool) uuid.UUID {
 	t.Helper()
 	id := uuid.New()
-	exploreSeed(t, h, `INSERT INTO entries(id,user_id,audio_key,status,created_at) VALUES($1,$2,'explore-local','completed',$3)`, id, user, at)
+	exploreSeed(t, h, `INSERT INTO entries(id,user_id,audio_key,status,created_at) VALUES($1,$2,'explore-local/' || gen_random_uuid()::text,'completed',$3)`, id, user, at)
 	exploreSeed(t, h, `INSERT INTO entry_analysis(entry_id,summary,mood_score,is_crisis,emotional_tone) VALUES($1,'Explore synthetic summary',$2,$3,'[{"emotion":"joy","intensity":0.8},{"emotion":"noise","intensity":0.1}]')`, id, mood, crisis)
 	return id
 }

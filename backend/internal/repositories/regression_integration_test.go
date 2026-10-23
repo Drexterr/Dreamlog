@@ -252,7 +252,7 @@ func exportRegressionEntry(t *testing.T, db *pgxpool.Pool, user uuid.UUID, at ti
 	t.Helper()
 	id := uuid.New()
 	ctx := context.Background()
-	if _, err := db.Exec(ctx, `INSERT INTO entries(id,user_id,audio_key,status,created_at) VALUES($1,$2,'fixture/not-uploaded','completed',$3)`, id, user, at); err != nil {
+	if _, err := db.Exec(ctx, `INSERT INTO entries(id,user_id,audio_key,status,created_at) VALUES($1,$2,'fixture/not-uploaded/' || gen_random_uuid()::text,'completed',$3)`, id, user, at); err != nil {
 		t.Fatal(err)
 	}
 	if _, err := db.Exec(ctx, `INSERT INTO entry_analysis(entry_id,mood_score,is_crisis,summary,emotional_tone,topics,key_quotes) VALUES($1,$2,$3,$4,$5::jsonb,ARRAY['fixture-topic'],$6)`, id, mood, crisis, summary, tones, quotes); err != nil {
@@ -285,7 +285,7 @@ func TestIntegration_ExportWindowOwnershipAndAggregates(t *testing.T) {
 	seed(owner, prevSince.Add(time.Hour), 100, true, "prior crisis", `[]`, emptyQuotes)
 	seed(other, since.Add(time.Hour), 100, false, "foreign current", `[{"emotion":"excluded","intensity":1}]`, emptyQuotes)
 	seed(other, prevSince.Add(time.Hour), 100, false, "foreign prior", `[]`, emptyQuotes)
-	if _, err := db.Exec(ctx, `INSERT INTO entries(user_id,audio_key,status,created_at) VALUES($1,'fixture/no-analysis','pending',$2)`, owner, since.Add(3*time.Hour)); err != nil {
+	if _, err := db.Exec(ctx, `INSERT INTO entries(user_id,audio_key,status,created_at) VALUES($1,'fixture/no-analysis/' || gen_random_uuid()::text,'pending',$2)`, owner, since.Add(3*time.Hour)); err != nil {
 		t.Fatal(err)
 	}
 

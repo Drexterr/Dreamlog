@@ -3,8 +3,8 @@ package handlers
 import (
 	"bytes"
 	"encoding/json"
-	"errors"
 	"github.com/dreamlog/backend/internal/models"
+	"github.com/dreamlog/backend/internal/services"
 	"github.com/google/uuid"
 	"net/http"
 	"net/http/httptest"
@@ -69,7 +69,7 @@ func TestTextEntryQuotaBlocksNewEntryButNotRetrievalOfSavedRetry(t *testing.T) {
 	content := "complete journal"
 	user, token := entryTestUser(), uuid.NewString()
 	for _, replay := range []bool{false, true} {
-		quota := &fakeEntryQuota{err: errors.New("entry quota reached")}
+		quota := &fakeEntryQuota{err: services.ErrEntryQuotaExceeded}
 		svc := &fakeEntryServicer{}
 		if replay {
 			svc.getResp = &models.Entry{ID: models.TextEntryID(user.ID, token), UserID: user.ID, Transcript: &content, Mode: models.EntryModeProcessing}

@@ -14,7 +14,7 @@ func TestIntegration_RecentUsersSchedulerSelection(t *testing.T) {
 	ctx := context.Background()
 	eligible, ineligible := regressionUser(t, db), regressionUser(t, db)
 	since := time.Date(2026, 4, 10, 0, 0, 0, 0, time.UTC)
-	if _, err := db.Exec(ctx, `INSERT INTO entries(user_id,audio_key,status,created_at) VALUES($1,'fixture/recent','completed',$3),($1,'fixture/retry','completed',$3),($2,'fixture/old','completed',$3-INTERVAL '1 day'),($2,'fixture/pending','pending',$3)`, eligible, ineligible, since); err != nil {
+	if _, err := db.Exec(ctx, `INSERT INTO entries(user_id,audio_key,status,created_at) VALUES($1,'fixture/recent/' || gen_random_uuid()::text,'completed',$3),($1,'fixture/retry/' || gen_random_uuid()::text,'completed',$3),($2,'fixture/old/' || gen_random_uuid()::text,'completed',$3-INTERVAL '1 day'),($2,'fixture/pending/' || gen_random_uuid()::text,'pending',$3)`, eligible, ineligible, since); err != nil {
 		t.Fatal(err)
 	}
 	r := NewUserRepository(db)

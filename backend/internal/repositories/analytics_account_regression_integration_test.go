@@ -26,7 +26,7 @@ func analyticsAccountExec(t *testing.T, db *pgxpool.Pool, sql string, args ...an
 func analyticsAccountEntry(t *testing.T, db *pgxpool.Pool, user uuid.UUID, at time.Time, status string, mood any, crisis bool, summary, tone string) uuid.UUID {
 	t.Helper()
 	id := uuid.New()
-	analyticsAccountExec(t, db, `INSERT INTO entries(id,user_id,audio_key,status,created_at) VALUES($1,$2,'fixture/analytics-account',$3,$4)`, id, user, status, at)
+	analyticsAccountExec(t, db, `INSERT INTO entries(id,user_id,audio_key,status,created_at) VALUES($1,$2,'fixture/analytics-account/' || gen_random_uuid()::text,$3,$4)`, id, user, status, at)
 	analyticsAccountExec(t, db, `INSERT INTO entry_analysis(entry_id,mood_score,is_crisis,summary,emotional_tone,topics) VALUES($1,$2,$3,$4,$5::jsonb,ARRAY['work','sleep'])`, id, mood, crisis, summary, tone)
 	return id
 }

@@ -267,6 +267,11 @@ learned timing until the user re-enables auto.
 }
 ```
 
+Idempotent per `audio_key`: a retry (or a concurrent duplicate) of a registered upload
+returns the existing entry with `201`, before the quota is checked, and never queues a
+second job. Errors: `400` validation (bad key, missing upload, over 30 min) · `409` monthly
+quota reached · `500` storage or database unavailable (safe to retry).
+
 ### POST /entries/text
 
 Creates one complete typed journal, using the same authentication, monthly entry
