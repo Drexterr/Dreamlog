@@ -275,9 +275,12 @@ can't capture on-device crashes and would duplicate weeks of what these tools gi
 - [ ] **Uptime monitoring**: UptimeRobot (free) pinging `GET /health` every 5 min, alert on downtime.
 - [ ] **Store dashboards**: check Android Vitals (Play Console) and Xcode Organizer crashes
       weekly after launch — these feed store ranking.
-- [ ] 🟢 **DLQ admin endpoint** (fast follow): list + re-enqueue rows from the existing
-      `dead_letter_jobs` table (failed transcription/analysis jobs). Auth-gated, admin-only.
-      Optionally a small admin page in the therapist portal later.
+- [x] 🟢 **DLQ admin endpoints** ✅ 2026-10-23: `/admin/dlq/{entries,notes}` list, requeue and
+      discard dead letters. Failed jobs actually live on the Redis DLQ lists
+      (`WORKER_DLQ_KEY`, `WORKER_NOTES_DLQ_KEY`), not the unused `dead_letter_jobs` table.
+- [ ] **Set `ADMIN_EMAILS`** on the Railway API service (comma-separated operator emails).
+      Only accounts signed in through Supabase with a *verified* email qualify; while unset,
+      the admin endpoints 404 for everyone. Optionally a small admin page in the portal later.
 
 ## 5. CI & repo hygiene 🟡
 

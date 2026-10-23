@@ -1576,6 +1576,69 @@ List the authenticated user's therapy sessions, newest first (max 20).
 
 ---
 
+## Admin (operator tools)
+
+Every `/admin` route requires a valid JWT **and** an account whose email is on
+`ADMIN_EMAILS` (comma-separated, case-insensitive) **and** verified by the identity
+provider (`users.email_verified` - local `/auth/register` accounts never are). Anyone
+else - and everyone while `ADMIN_EMAILS` is empty - gets `404`, so the routes'
+existence is not revealed. Missing/invalid JWT is still `401`.
+
+### Dead-letter queues
+
+Jobs that exhaust `WORKER_MAX_RETRIES` land on Redis DLQ lists: `entries` (journal
+pipeline, `WORKER_DLQ_KEY`) and `notes` (therapist note OCR, `WORKER_NOTES_DLQ_KEY`).
+`:queue` is `entries` or `notes` (anything else `400`).
+
+#### GET /admin/dlq/:queue?page=1&page_size=20
+Newest first. `page_size` 1-100 (default 20). Privacy-safe: ids, worker error and
+timing only - never transcripts, note text, user ids or storage keys.
+
+```json
+// Response 200
+{
+  "queue": "entries",
+  "items": [
+    {
+      "id": "uuid",                 // address for requeue/discard: the entry (or session) id,
+                                    // or "raw-<hash>" for an unparseable payload
+      "queue": "entries",
+      "entry_id": "uuid",           // entries queue
+      "session_id": "uuid",         // notes queue
+      "error": "max retries exceeded: ...", // truncated to 300 characters
+      "attempt": 2,
+      "failed_at": "RFC3339",
+      "unparseable": true           // present only when the payload could not be decoded
+    }
+  ],
+  "total": 41, "page": 1, "page_size": 20, "has_more": true
+}
+```
+
+#### POST /admin/dlq/:queue/:id/requeue
+Resets the entry (or note session) to `pending` with `retry_count = 0` and
+`error_msg` cleared, enqueues a fresh attempt-0 job and removes the dead letter. The
+item is claimed with an atomic Redis `LREM` first, so concurrent requeues (a double
+click) enqueue exactly one job.
+
+```json
+// Response 200
+{ "queue": "entries", "id": "uuid", "status": "requeued" }
+```
+
+Errors: `404` no such dead letter · `409` the entry/session no longer exists, already
+completed, is not `failed`, the item was already claimed, the payload is unparseable, or
+the source is gone (entry without a transcript whose audio was deleted - ADR-005; note
+session whose photo was deleted - ADR-019) - the message says to discard it instead ·
+`500` Redis/DB failure (a claimed item is put back unless the row was already reset; a
+reset entry left `pending` is picked up by the reconciler).
+
+#### DELETE /admin/dlq/:queue/:id
+Discards the newest dead letter with that id without retrying anything. Response `204`.
+Errors: `404` not found · `409` claimed concurrently.
+
+---
+
 ## Error Response Format
 
 All errors use this shape:

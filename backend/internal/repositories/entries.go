@@ -354,3 +354,18 @@ func (r *EntryRepository) ReclaimStuck(ctx context.Context, pendingAge, processi
 	}
 	return out, rows.Err()
 }
+
+// ResetForRequeue moves a FAILED entry back to pending with a fresh retry
+// budget (retry_count 0, error cleared) for an operator requeue from the
+// DLQ. Conditional on status = 'failed', so it reports false for an entry
+// that completed, is being processed, or no longer exists.
+func (r *EntryRepository) ResetForRequeue(ctx context.Context, id uuid.UUID) (bool, error) {
+	tag, err := r.db.Exec(ctx, `
+		UPDATE entries
+		SET status = 'pending', retry_count = 0, error_msg = NULL, updated_at = NOW()
+		WHERE id = $1 AND status = 'failed'`, id)
+	if err != nil {
+		return false, fmt.Errorf("entries.ResetForRequeue: %w", err)
+	}
+	return tag.RowsAffected() > 0, nil
+}

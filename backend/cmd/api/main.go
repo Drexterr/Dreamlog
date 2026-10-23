@@ -175,6 +175,12 @@ func main() {
 		}
 	}()
 
+	// Operator DLQ tools (/admin/dlq, gated by ADMIN_EMAILS).
+	dlqAdminSvc := services.NewDLQAdminService(jobQueue, notesQueue, entryRepo, therapistNotesRepo, storageSvc, log)
+	if len(cfg.AdminEmails) == 0 {
+		log.Info("ADMIN_EMAILS not set - admin endpoints are disabled")
+	}
+
 	therapySvc := services.NewTherapyService(
 		therapyRepo, analysisRepo, relationshipRepo, claudeSvc, transcriptionSvc, storageSvc,
 		crisisDetector, ttsSvc, cfg.Anthropic.StubAnalysis, log,
@@ -209,6 +215,8 @@ func main() {
 		AnalyticsSvc:         analyticsSvc,
 		ClaudeSvc:            claudeSvc,
 		IAPSvc:               iapSvc,
+		DLQAdminSvc:          dlqAdminSvc,
+		AdminEmails:          cfg.AdminEmails,
 		JWTSecret:            cfg.Supabase.JWTSecret,
 		SupabaseJWKSURL:      supabaseJWKSURL(cfg.Supabase.URL),
 		TrustedProxies:       cfg.TrustedProxies,

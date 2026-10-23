@@ -98,6 +98,7 @@ internal/handlers/journey.go        # /journeys templates + sessions
 internal/handlers/life_chapters.go  # /chapters CRUD + summarize
 internal/handlers/relationships.go  # /relationships map
 internal/handlers/therapy.go        # /therapy/sessions (Phase 6)
+internal/handlers/admin.go          # /admin/dlq operator tools (ADMIN_EMAILS + verified email)
 internal/services/*.go              # all business logic lives here
 internal/repositories/*.go          # all DB queries (pgx/v5), no logic
 internal/workers/transcription.go   # full pipeline orchestration (calls services)
@@ -480,6 +481,10 @@ Key properties:
 - Redis queue is the coordination point - atomic BRPOP ensures no double-processing
 - Failed jobs: after `WORKER_MAX_RETRIES` attempts the entry is marked `failed` and the job
   payload is pushed to the Redis DLQ list (`WORKER_DLQ_KEY`) - not the `dead_letter_jobs` table.
+  Operators inspect, requeue (entry reset to pending with a fresh retry budget, new attempt-0
+  job; refused when the audio is gone and there is no transcript - ADR-005) or discard dead
+  letters through `/admin/dlq/{entries,notes}` (`services/dlq_admin.go`). The requeue claims
+  the item with an atomic LREM first, so a double click enqueues once.
 - Lost jobs (crash / deploy mid-job, lost enqueue): `workers.EntryReconciler` requeues entries
   stuck in `pending` > 15 min or `processing` > 30 min every 5 minutes; a worker drops duplicate
   jobs for entries another worker holds.

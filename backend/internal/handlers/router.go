@@ -42,6 +42,8 @@ type Deps struct {
 	AnalyticsSvc         *services.AnalyticsService
 	ClaudeSvc            *services.ClaudeService
 	IAPSvc               *services.IAPService
+	DLQAdminSvc          *services.DLQAdminService // nil = no /admin routes
+	AdminEmails          []string                  // ADMIN_EMAILS (verified emails only)
 	JWTSecret            string
 	SupabaseJWKSURL      string
 	AppBaseURL           string
@@ -118,6 +120,16 @@ func NewRouter(deps Deps) http.Handler {
 	auth.GET("/billing/plan", billingHandler.GetPlan)
 	auth.POST("/billing/upgrade", billingHandler.Upgrade)
 	auth.POST("/billing/therapy-credits", billingHandler.BuyTherapyCredits)
+
+	// Operator tools (dead-letter queues). RequireAdmin: ADMIN_EMAILS + a
+	// verified email; everyone else - everyone, when the list is empty - 404s.
+	if deps.DLQAdminSvc != nil {
+		adminHandler := NewAdminHandler(deps.DLQAdminSvc)
+		admin := auth.Group("/admin", middleware.RequireAdmin(deps.AdminEmails))
+		admin.GET("/dlq/:queue", adminHandler.ListDLQ)
+		admin.POST("/dlq/:queue/:id/requeue", adminHandler.RequeueDLQ)
+		admin.DELETE("/dlq/:queue/:id", adminHandler.DiscardDLQ)
+	}
 
 	entryHandler := NewEntryHandler(deps.EntrySvc, deps.StorageSvc, deps.SubscriptionSvc)
 	// Upload proxy: only registered when STORAGE_PROXY_BASE_URL is set (local MinIO dev only)

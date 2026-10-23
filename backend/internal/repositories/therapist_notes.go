@@ -501,3 +501,17 @@ func (r *TherapistNotesRepository) SetSessionCiphers(ctx context.Context, id uui
 	}
 	return nil
 }
+
+// ResetSessionForRequeue moves a FAILED note session back to pending with a
+// fresh retry budget for an operator requeue from the notes DLQ. Conditional
+// on status = 'failed'.
+func (r *TherapistNotesRepository) ResetSessionForRequeue(ctx context.Context, sessionID uuid.UUID) (bool, error) {
+	tag, err := r.db.Exec(ctx, `
+		UPDATE client_sessions
+		SET status = 'pending', retry_count = 0, error_msg = NULL, updated_at = NOW()
+		WHERE id = $1 AND status = 'failed'`, sessionID)
+	if err != nil {
+		return false, fmt.Errorf("notes.ResetSessionForRequeue: %w", err)
+	}
+	return tag.RowsAffected() > 0, nil
+}

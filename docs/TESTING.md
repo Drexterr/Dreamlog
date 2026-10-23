@@ -1,5 +1,17 @@
 # DreamLog Testing Strategy
 
+## DLQ admin endpoints (23 October 2026)
+
+- `services/dlq_admin_test.go`: newest-first paging, no transcript/key/user id in
+  listings, unparseable items, requeue resets + fresh attempt-0 job, refusals (entry gone,
+  completed, not failed, audio deleted without transcript, note photo gone), double click
+  and lost-claim races, item restored when the reset fails, discard.
+- `middleware/admin_test.go` (verified email on ADMIN_EMAILS only; empty list = 404) and
+  `handlers/admin_test.go` (access matrix, paging validation, error mapping, routes).
+- Integration: `pkg/queue` DLQ ops incl. concurrent LREM claims;
+  `repositories/dlq_requeue_integration_test.go` (conditional, single-winner resets);
+  blackbox `TestBlackboxAdminDLQ` (concurrent requeues over HTTP enqueue one job).
+
 ## Therapy pay-per-use credits (23 October 2026)
 
 - `services/therapy_credits_test.go`: paid sessions spend exactly one credit at the

@@ -37,6 +37,12 @@ type apiHarness struct {
 	owner, other     string
 	ownerID, otherID uuid.UUID
 	routes           gin.RoutesInfo
+	// DLQ admin fixtures: the owner is the (verified) admin.
+	rdb        *redis.Client
+	jobs       *queue.Queue
+	jobsKey    string
+	notesJobs  *queue.Queue
+	ownerEmail string
 }
 
 func newAPI(t *testing.T) *apiHarness {
@@ -146,11 +152,18 @@ func newAPI(t *testing.T) *apiHarness {
 		AnalyticsRepo: repositories.NewAnalyticsRepository(db), ClaudeSvc: claude, IAPSvc: services.NewIAPService(&config.IAPConfig{}), JWTSecret: "qa-blackbox-local-only", AppBaseURL: "https://qa.invalid", Log: zap.NewNop(), MinimumAppVersion: "1.0.0",
 	}
 	deps.AnalyticsSvc = services.NewAnalyticsService(deps.AnalyticsRepo)
+	ownerEmail := uuid.NewString() + "@example.test"
+	deps.DLQAdminSvc = services.NewDLQAdminService(jobs, notesJobs, entries, notes, storage, zap.NewNop())
+	deps.AdminEmails = []string{ownerEmail}
 	router := handlers.NewRouter(deps).(*gin.Engine)
-	h := &apiHarness{db: db, server: httptest.NewServer(router), routes: router.Routes()}
+	h := &apiHarness{db: db, server: httptest.NewServer(router), routes: router.Routes(),
+		rdb: rdb, jobs: jobs, jobsKey: key, notesJobs: notesJobs, ownerEmail: ownerEmail}
 	t.Cleanup(h.server.Close)
 	for i := 0; i < 2; i++ {
 		email := uuid.NewString() + "@example.test"
+		if i == 0 {
+			email = ownerEmail
+		}
 		body := fmt.Sprintf(`{"email":%q,"name":"QA synthetic","password":"QA-local-12345"}`, email)
 		got := h.raw(t, "POST", "/auth/register", body, "", 201)
 		token := got["token"].(string)

@@ -88,3 +88,42 @@ func (q *Queue) Len(ctx context.Context) (int64, error) {
 	}
 	return n, nil
 }
+
+// DLQRange returns raw dead-letter elements, newest first (LPUSH order), for
+// the inclusive index range [start, stop]; stop = -1 means to the end.
+func (q *Queue) DLQRange(ctx context.Context, start, stop int64) ([]string, error) {
+	items, err := q.rdb.LRange(ctx, q.dlqKey, start, stop).Result()
+	if err != nil {
+		return nil, fmt.Errorf("queue: dlq lrange %q: %w", q.dlqKey, err)
+	}
+	return items, nil
+}
+
+// DLQLen returns the number of dead-lettered jobs.
+func (q *Queue) DLQLen(ctx context.Context) (int64, error) {
+	n, err := q.rdb.LLen(ctx, q.dlqKey).Result()
+	if err != nil {
+		return 0, fmt.Errorf("queue: dlq llen %q: %w", q.dlqKey, err)
+	}
+	return n, nil
+}
+
+// DLQRemove removes one occurrence of the exact raw element. It reports
+// whether this call removed it: LREM is atomic, so of two concurrent callers
+// only one gets true - the claim that stops a double requeue.
+func (q *Queue) DLQRemove(ctx context.Context, raw string) (bool, error) {
+	n, err := q.rdb.LRem(ctx, q.dlqKey, 1, raw).Result()
+	if err != nil {
+		return false, fmt.Errorf("queue: dlq lrem %q: %w", q.dlqKey, err)
+	}
+	return n > 0, nil
+}
+
+// DLQRestore puts a raw element back on the dead-letter list (after a claimed
+// requeue could not be completed).
+func (q *Queue) DLQRestore(ctx context.Context, raw string) error {
+	if err := q.rdb.LPush(ctx, q.dlqKey, raw).Err(); err != nil {
+		return fmt.Errorf("queue: dlq restore %q: %w", q.dlqKey, err)
+	}
+	return nil
+}
