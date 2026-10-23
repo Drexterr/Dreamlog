@@ -21,7 +21,13 @@ const (
 )
 
 type stuckEntryStore interface {
-	ReclaimStuck(ctx context.Context, pendingAge, processingAge time.Duration, maxRetries, limit int) ([]repositories.StuckEntry, error)
+	ReclaimStuck(ctx context.Context, pendingAge, processingAge time.Duration, maxRetries, limit int, includePending bool) ([]repositories.StuckEntry, error)
+}
+
+// reconcileQueue is the job queue plus its depth.
+type reconcileQueue interface {
+	Enqueue(ctx context.Context, v any) error
+	Len(ctx context.Context) (int64, error)
 }
 
 // EntryReconciler requeues entries whose job was lost, so no entry spins in
@@ -30,12 +36,12 @@ type stuckEntryStore interface {
 // this concurrently never requeue the same entry twice per cycle.
 type EntryReconciler struct {
 	store      stuckEntryStore
-	queue      jobQueue
+	queue      reconcileQueue
 	maxRetries int
 	log        *zap.Logger
 }
 
-func NewEntryReconciler(store stuckEntryStore, queue jobQueue, maxRetries int, log *zap.Logger) *EntryReconciler {
+func NewEntryReconciler(store stuckEntryStore, queue reconcileQueue, maxRetries int, log *zap.Logger) *EntryReconciler {
 	if log == nil {
 		log = zap.NewNop()
 	}
@@ -56,7 +62,19 @@ func (r *EntryReconciler) Run(ctx context.Context) {
 }
 
 func (r *EntryReconciler) reconcileOnce(ctx context.Context) {
-	stuck, err := r.store.ReclaimStuck(ctx, stalePendingAge, staleProcessingAge, r.maxRetries, reconcileBatch)
+	// A stale 'pending' row is most likely still waiting in a backlogged
+	// queue: requeueing it would add a duplicate job. Only while the queue is
+	// empty can a pending row's job really be lost (N9). An unknown depth
+	// leaves pending rows for the next cycle.
+	depth, depthErr := r.queue.Len(ctx)
+	if depthErr != nil {
+		r.log.Warn("reconciler: queue depth unavailable", zap.Error(depthErr))
+	} else {
+		r.log.Info("reconciler: cycle", zap.Int64("queue_depth", depth))
+	}
+	includePending := depthErr == nil && depth == 0
+
+	stuck, err := r.store.ReclaimStuck(ctx, stalePendingAge, staleProcessingAge, r.maxRetries, reconcileBatch, includePending)
 	if err != nil {
 		r.log.Error("reconciler: reclaim stuck entries failed", zap.Error(err))
 		return

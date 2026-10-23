@@ -239,7 +239,7 @@ func TestIntegration_Review_ReclaimStuckEntries(t *testing.T) {
 	exec(`UPDATE entries SET status='processing', updated_at=NOW()-INTERVAL '40 minutes', retry_count=3 WHERE id=$1`, exhausted)
 	exec(`ALTER TABLE entries ENABLE TRIGGER trg_entries_updated_at`)
 
-	stuck, err := r.ReclaimStuck(ctx, 15*time.Minute, 30*time.Minute, 3, 100)
+	stuck, err := r.ReclaimStuck(ctx, 15*time.Minute, 30*time.Minute, 3, 100, true)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -260,7 +260,7 @@ func TestIntegration_Review_ReclaimStuckEntries(t *testing.T) {
 	if status(exhausted) != "failed" || status(liveProcessing) != "processing" || status(freshPending) != "pending" || status(staleProcessing) != "pending" {
 		t.Fatal("reclaim touched the wrong rows")
 	}
-	if again, err := r.ReclaimStuck(ctx, 15*time.Minute, 30*time.Minute, 3, 100); err != nil || len(again) != 0 {
+	if again, err := r.ReclaimStuck(ctx, 15*time.Minute, 30*time.Minute, 3, 100, true); err != nil || len(again) != 0 {
 		t.Fatalf("second pass must not reclaim the same rows: %+v %v", again, err)
 	}
 }

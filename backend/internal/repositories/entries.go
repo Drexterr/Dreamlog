@@ -277,22 +277,28 @@ type StuckEntry struct {
 	Country    string
 }
 
-// ReclaimStuck finds entries whose job was lost (still 'pending' after
-// pendingAge, or 'processing' after processingAge), marks the ones out of
-// retries as failed, and atomically flips the rest back to 'pending' with a
-// fresh updated_at, returning them for requeueing. The UPDATE … RETURNING is
-// the claim: concurrent reconcilers never return the same row in one cycle.
-func (r *EntryRepository) ReclaimStuck(ctx context.Context, pendingAge, processingAge time.Duration, maxRetries, limit int) ([]StuckEntry, error) {
-	const staleCond = `
-		((e.status = 'pending'    AND e.updated_at < NOW() - make_interval(secs => $1))
-		 OR (e.status = 'processing' AND e.updated_at < NOW() - make_interval(secs => $2)))`
+// ReclaimStuck finds entries whose job was lost and atomically flips them
+// back to 'pending' with a fresh updated_at, returning them for requeueing.
+// The UPDATE … RETURNING is the claim: concurrent reconcilers never return
+// the same row in one cycle.
+//
+// Only a 'processing' row older than processingAge counts as an attempt: a
+// worker took it and was lost. It gets retry_count+1, and is failed once out
+// of retries. A row still 'pending' was never attempted - under a backlog it
+// is simply waiting its turn - so it never counts against retries and is
+// never failed (N9); it is requeued only when includePending is set, which
+// the reconciler does only while the queue is empty.
+func (r *EntryRepository) ReclaimStuck(ctx context.Context, pendingAge, processingAge time.Duration, maxRetries, limit int, includePending bool) ([]StuckEntry, error) {
+	const staleProcessing = `(e.status = 'processing' AND e.updated_at < NOW() - make_interval(secs => $2))`
 
 	if _, err := r.db.Exec(ctx, `
 		UPDATE entries e
 		SET status = 'failed',
 		    error_msg = 'processing was interrupted too many times'
-		WHERE `+staleCond+` AND e.retry_count >= $3`,
-		pendingAge.Seconds(), processingAge.Seconds(), maxRetries,
+		WHERE e.status = 'processing'
+		  AND e.updated_at < NOW() - make_interval(secs => $1)
+		  AND e.retry_count >= $2`,
+		processingAge.Seconds(), maxRetries,
 	); err != nil {
 		return nil, fmt.Errorf("entries.ReclaimStuck fail exhausted: %w", err)
 	}
@@ -300,17 +306,18 @@ func (r *EntryRepository) ReclaimStuck(ctx context.Context, pendingAge, processi
 	rows, err := r.db.Query(ctx, `
 		UPDATE entries e
 		SET status = 'pending',
-		    retry_count = e.retry_count + 1
+		    retry_count = e.retry_count + CASE WHEN e.status = 'processing' THEN 1 ELSE 0 END
 		FROM users u
 		WHERE e.id IN (
 			SELECT e.id FROM entries e
-			WHERE `+staleCond+` AND e.retry_count < $3
+			WHERE (`+staleProcessing+` AND e.retry_count < $3)
+			   OR ($5 AND e.status = 'pending' AND e.updated_at < NOW() - make_interval(secs => $1))
 			ORDER BY e.updated_at
 			LIMIT $4
 			FOR UPDATE SKIP LOCKED
 		) AND u.id = e.user_id
 		RETURNING e.id, e.user_id, e.audio_key, e.retry_count, COALESCE(u.country, '')`,
-		pendingAge.Seconds(), processingAge.Seconds(), maxRetries, limit,
+		pendingAge.Seconds(), processingAge.Seconds(), maxRetries, limit, includePending,
 	)
 	if err != nil {
 		return nil, fmt.Errorf("entries.ReclaimStuck: %w", err)

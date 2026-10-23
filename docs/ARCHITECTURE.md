@@ -470,6 +470,9 @@ Key properties:
 - Lost jobs (crash / deploy mid-job, lost enqueue): `workers.EntryReconciler` requeues entries
   stuck in `pending` > 15 min or `processing` > 30 min every 5 minutes; a worker drops duplicate
   jobs for entries another worker holds.
+  Only a lost `processing` row counts as an attempt (and can be failed); a `pending` row was
+  never attempted, so it is never failed and is requeued only while the queue is empty - under
+  a backlog it is still waiting its turn. Each cycle logs the queue depth.
 
 ---
 
