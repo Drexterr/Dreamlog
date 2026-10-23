@@ -12,8 +12,11 @@ import (
 // Config holds all runtime configuration loaded from environment variables.
 // No global state: pass *Config through dependency injection.
 type Config struct {
-	// AppEnv is "production" in prod. Production refuses to start with dev
-	// stubs or missing safety-critical secrets (see ProductionProblems).
+	// AppEnv names the deployment. Anything other than an explicit
+	// development/test value - including unset - is production, which refuses
+	// to start with dev stubs or missing safety-critical secrets (see
+	// ProductionProblems). Fail closed: forgetting APP_ENV must not quietly
+	// grant paid plans for free (N8).
 	AppEnv string
 	// TrustedProxies are the CIDRs whose X-Forwarded-For hops are trusted when
 	// resolving the client IP (rate limits, security logs). Defaults to private
@@ -156,7 +159,7 @@ type WorkerConfig struct {
 
 func Load() (*Config, error) {
 	cfg := &Config{
-		AppEnv:                getEnv("APP_ENV", "development"),
+		AppEnv:                getEnv("APP_ENV", ""),
 		TrustedProxies:        splitCommaList(getEnv("TRUSTED_PROXIES", "10.0.0.0/8,172.16.0.0/12,192.168.0.0/16,100.64.0.0/10,127.0.0.0/8,fc00::/7,::1/128")),
 		TrustedPlatformHeader: getEnv("TRUSTED_PLATFORM_HEADER", ""),
 		CORSAllowedOrigins:    splitCommaList(getEnv("CORS_ALLOWED_ORIGINS", "http://localhost:5173,http://localhost:3000")),
@@ -319,8 +322,14 @@ func splitCommaList(v string) []string {
 	return out
 }
 
-// IsProduction reports whether APP_ENV=production.
-func (c *Config) IsProduction() bool { return c.AppEnv == "production" }
+// nonProductionEnvs are the only APP_ENV values that relax production checks.
+var nonProductionEnvs = map[string]bool{"development": true, "dev": true, "local": true, "test": true}
+
+// IsProduction reports whether production checks apply: every APP_ENV except
+// an explicit development/test value, including an unset one (N8).
+func (c *Config) IsProduction() bool {
+	return !nonProductionEnvs[strings.ToLower(strings.TrimSpace(c.AppEnv))]
+}
 
 // ProductionProblems lists configuration that is unsafe in production: dev
 // stubs that grant paid plans or fake AI output, and missing secrets that

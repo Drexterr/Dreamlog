@@ -41,7 +41,7 @@ func main() {
 		log.Fatal("config load failed", zap.Error(err))
 	}
 	if problems := cfg.ProductionProblems(true); len(problems) > 0 {
-		log.Fatal("unsafe production configuration (APP_ENV=production)", zap.Strings("problems", problems))
+		log.Fatal("unsafe production configuration (APP_ENV is unset or not development/test, so production checks apply; set APP_ENV=development for local dev)", zap.Strings("problems", problems))
 	}
 
 	// ── Sentry (no-op when SENTRY_DSN unset) ──────────────────────────────────

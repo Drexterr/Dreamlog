@@ -196,8 +196,11 @@ Backend on Railway (`https://dreamlog-production-f9e2.up.railway.app`):
       `.github/workflows/`, so such commits are not promoted. Add a repository secret
       `PROMOTE_TOKEN` (fine-grained PAT on this repo: Contents + Workflows read/write).
 
-- [ ] **`APP_ENV=production` on the API and worker.** With it set, both refuse to start if a
-      dev stub is on or a safety-critical secret is missing (see `Config.ProductionProblems`):
+- [ ] **`APP_ENV=production` on the API and worker.** Since 2026-10-23 (N8) production
+      checks are fail-closed: any APP_ENV other than development/dev/local/test - including
+      unset - is production, so both services refuse to start if a dev stub is on or a
+      safety-critical secret is missing (see `Config.ProductionProblems`). Set it explicitly
+      anyway, and confirm both services start after this deploys:
       STUB_AI_ANALYSIS, unset ANTHROPIC_API_KEY / MASTER_ENCRYPTION_KEY / SUPABASE_URL,
       STORAGE_PROXY_BASE_URL, and (API only) missing IAP verification credentials.
 - [ ] Verify client IPs resolve correctly behind Railway (rate limits key on them): check the

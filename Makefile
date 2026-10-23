@@ -237,11 +237,13 @@ minio-console:
 	@echo "  password: minioadmin_secret"
 
 # ── Backend - local Go (no Docker) ───────────────────────────────────────────
+# Local runs are development unless APP_ENV says otherwise: an unset APP_ENV
+# is production (fail closed) and would refuse to start with dev settings.
 api:
-	cd backend && go run ./cmd/api
+	cd backend && APP_ENV=${APP_ENV:-development} go run ./cmd/api
 
 worker:
-	cd backend && go run ./cmd/worker
+	cd backend && APP_ENV=${APP_ENV:-development} go run ./cmd/worker
 
 tidy:
 	cd backend && go mod tidy

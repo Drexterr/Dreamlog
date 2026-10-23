@@ -52,3 +52,49 @@ func TestLoad_CORSDefaultsToLocalhostDevOrigins(t *testing.T) {
 		t.Errorf("localhost dev origin must be allowed by default, got %v", cfg.CORSAllowedOrigins)
 	}
 }
+
+// N8: production checks fail closed - only an explicit development/test
+// environment relaxes them; unset or unknown values are production.
+func TestIsProduction_FailsClosed(t *testing.T) {
+	for env, want := range map[string]bool{
+		"":            true,
+		"production":  true,
+		"prod":        true,
+		"staging":     true,
+		"Production ": true,
+		"development": false,
+		"dev":         false,
+		"local":       false,
+		"test":        false,
+		" Test ":      false,
+	} {
+		if got := (&Config{AppEnv: env}).IsProduction(); got != want {
+			t.Errorf("APP_ENV=%q: IsProduction=%v, want %v", env, got, want)
+		}
+	}
+}
+
+// N8: forgetting APP_ENV on a service with dev stubs must refuse to start.
+func TestProductionProblems_UnsetAppEnvIsChecked(t *testing.T) {
+	cfg := &Config{AppEnv: "", Anthropic: AnthropicConfig{StubAnalysis: true}}
+	if len(cfg.ProductionProblems(true)) == 0 {
+		t.Fatal("an unset APP_ENV must get production checks")
+	}
+}
+
+func TestLoad_AppEnvHasNoDevDefault(t *testing.T) {
+	for k, v := range map[string]string{
+		"DATABASE_URL": "postgres://x", "STORAGE_ENDPOINT": "http://localhost:9000",
+		"STORAGE_ACCESS_KEY_ID": "a", "STORAGE_SECRET_ACCESS_KEY": "b", "STORAGE_BUCKET": "c",
+		"SUPABASE_JWT_SECRET": "s", "APP_ENV": "",
+	} {
+		t.Setenv(k, v)
+	}
+	cfg, err := Load()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !cfg.IsProduction() {
+		t.Errorf("Load without APP_ENV must be treated as production, got AppEnv=%q", cfg.AppEnv)
+	}
+}
