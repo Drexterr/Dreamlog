@@ -284,19 +284,19 @@ func TestIntegration_AnalyticsAccountIdentityAndLifecycle(t *testing.T) {
 			}
 		})
 	}
-	social, err := r.Upsert(ctx, "fixture-social", "social@example.test", "Social")
+	social, err := r.Upsert(ctx, "fixture-social", "social@example.test", "Social", true)
 	if err != nil {
 		t.Fatal(err)
 	}
-	updated, err := r.Upsert(ctx, social.SupabaseID, "social-new@example.test", "Do not replace name")
+	updated, err := r.Upsert(ctx, social.SupabaseID, "social-new@example.test", "Do not replace name", true)
 	if err != nil || updated.ID != social.ID || updated.Email != "social-new@example.test" || updated.Name != "Social" {
 		t.Fatalf("upsert identity/name: %+v %v", updated, err)
 	}
 	if hash, err := r.GetPasswordHash(ctx, updated.Email); err != nil || hash != "" {
 		t.Fatalf("null hash: %q %v", hash, err)
 	}
-	if _, err := r.Upsert(ctx, "another-social", user.Email, "Collision"); err == nil {
-		t.Fatal("conflicting email accepted")
+	if _, err := r.Upsert(ctx, "another-social", user.Email, "Collision", false); err == nil {
+		t.Fatal("an unverified sign-in must not take an existing email")
 	}
 	renamed, err := r.UpdateName(ctx, user.ID, "Renamed")
 	if err != nil || renamed.Name != "Renamed" || renamed.Email != user.Email {
@@ -316,7 +316,7 @@ func TestIntegration_AnalyticsAccountIdentityAndLifecycle(t *testing.T) {
 		t.Fatal("duplicate deletion succeeded")
 	}
 	// Signing back in with the same identity yields a fresh, empty account.
-	fresh, err := r.Upsert(ctx, user.SupabaseID, user.Email, "Fresh")
+	fresh, err := r.Upsert(ctx, user.SupabaseID, user.Email, "Fresh", true)
 	if err != nil || fresh.ID == user.ID {
 		t.Fatalf("fresh account after deletion: %+v %v", fresh, err)
 	}
@@ -549,7 +549,7 @@ func TestIntegration_AnalyticsAccountCancellation(t *testing.T) {
 		"id":            func() error { _, err := r.GetByID(ctx, user); return err },
 		"supabase":      func() error { _, err := r.GetBySupabaseID(ctx, user.String()); return err },
 		"email":         func() error { _, err := r.GetByEmail(ctx, "x"); return err },
-		"upsert":        func() error { _, err := r.Upsert(ctx, "x", "x@example.test", "X"); return err },
+		"upsert":        func() error { _, err := r.Upsert(ctx, "x", "x@example.test", "X", true); return err },
 		"create":        func() error { _, err := r.CreateLocal(ctx, "x@example.test", "X", "hash"); return err },
 		"rename":        func() error { _, err := r.UpdateName(ctx, user, "X"); return err },
 		"profile": func() error {

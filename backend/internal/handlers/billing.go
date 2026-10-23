@@ -204,9 +204,11 @@ func (h *BillingHandler) Upgrade(c *gin.Context) {
 		}
 
 		// Sandbox / TestFlight / Play-tester purchases cost nothing; only
-		// allowlisted accounts (App Review demo, internal testers) may use them.
+		// allowlisted accounts (App Review demo, internal testers) may use them,
+		// and only with a verified address - an unverified local signup could
+		// otherwise claim an allowlisted email (N6).
 		currentUser := middleware.UserFromCtx(c.Request.Context())
-		if verified.Sandbox && (currentUser == nil || !h.iap.SandboxAllowed(currentUser.Email)) {
+		if verified.Sandbox && (currentUser == nil || !currentUser.EmailVerified || !h.iap.SandboxAllowed(currentUser.Email)) {
 			_ = c.Error(apierr.New(http.StatusPaymentRequired, "test purchases are not accepted for this account"))
 			return
 		}

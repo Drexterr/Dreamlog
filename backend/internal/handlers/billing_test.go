@@ -81,7 +81,22 @@ func billingTestJWT(t *testing.T) string {
 }
 
 func billingTestUser(plan models.Plan) *models.User {
-	return &models.User{ID: uuid.New(), Email: "billing@test.com", Name: "Billing User", Plan: plan}
+	return &models.User{ID: uuid.New(), Email: "billing@test.com", Name: "Billing User", Plan: plan, EmailVerified: true}
+}
+
+// N6: an allowlisted address registered locally (unverified) cannot redeem a
+// free sandbox purchase.
+func TestBillingHandler_UpgradeVerified_SandboxUnverifiedEmail_Returns402(t *testing.T) {
+	user := billingTestUser(models.PlanFree)
+	user.EmailVerified = false
+	payments := &fakePaymentRecorder{}
+	r := newVerifiedBillingRouter(t, &fakePlanManager{}, payments, &fakeIAPVerifier{sandbox: true, allowSandbox: true}, user)
+	if w := postUpgrade(t, r, iapBody(nil)); w.Code != http.StatusPaymentRequired {
+		t.Fatalf("unverified allowlisted email must be 402, got %d", w.Code)
+	}
+	if payments.grantCalls != 0 {
+		t.Error("nothing may be granted")
+	}
 }
 
 // ── GET /billing/plan ─────────────────────────────────────────────────────────

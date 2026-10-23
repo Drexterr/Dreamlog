@@ -110,7 +110,7 @@ func (r *hFakeAnalysisReader) GetByEntryID(_ context.Context, _ uuid.UUID) (*mod
 // fakeProvisioner satisfies middleware.userProvisioner (unexported interface, structural match).
 type fakeProvisioner struct{ user *models.User }
 
-func (p *fakeProvisioner) GetOrCreate(_ context.Context, _, _, _ string) (*models.User, error) {
+func (p *fakeProvisioner) GetOrCreate(_ context.Context, _, _, _ string, _ bool) (*models.User, error) {
 	return p.user, nil
 }
 

@@ -136,7 +136,8 @@ store-managed per product, so there is no amount check server-side.
       not match the requested plan or billing period; b2b requested (b2b is
       provisioned by sales, not self-serve)
 402 - the store rejected the purchase (not purchased, pending, refunded, or forged)
-402 - sandbox / TestFlight / Play test purchase from an account not on IAP_SANDBOX_ALLOWED_EMAILS
+402 - sandbox / TestFlight / Play test purchase from an account not on IAP_SANDBOX_ALLOWED_EMAILS,
+      or whose email is not verified
 409 - store transaction already used to grant a plan for ANOTHER user (replay protection)
 500 - store verification unavailable (retry later; the purchase is safe with the store)
 ```
@@ -919,7 +920,7 @@ Response `200`:
 { "company_id": "uuid", "company_name": "string", "role": "member" }
 ```
 
-Errors: `403` email domain does not match the company · `404` company not found · `409` seat limit reached.
+Errors: `403` email domain does not match the company, or the email is not verified (local `/auth/register` accounts never are) · `404` company not found · `409` seat limit reached.
 
 ### GET /b2b/companies/:slug/mood?range=30d|90d
 Anonymised team mood summary. Requires the requesting user to be a company **admin**.

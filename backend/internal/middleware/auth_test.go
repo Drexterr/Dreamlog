@@ -35,11 +35,13 @@ func mintTestJWT(t *testing.T, secret, sub, email string, expiry time.Duration) 
 
 // fakeUserProvisioner satisfies the userProvisioner interface without a DB.
 type fakeUserProvisioner struct {
-	user *models.User
-	err  error
+	user         *models.User
+	err          error
+	lastVerified *bool // email_verified passed on the last call
 }
 
-func (f *fakeUserProvisioner) GetOrCreate(_ context.Context, supabaseID, email, name string) (*models.User, error) {
+func (f *fakeUserProvisioner) GetOrCreate(_ context.Context, supabaseID, email, name string, emailVerified bool) (*models.User, error) {
+	f.lastVerified = &emailVerified
 	if f.err != nil {
 		return nil, f.err
 	}
@@ -260,5 +262,41 @@ func TestUserIDFromCtx_ReturnsZeroWhenAbsent(t *testing.T) {
 	id := UserIDFromCtx(ctx)
 	if id != (uuid.UUID{}) {
 		t.Errorf("want zero UUID, got %v", id)
+	}
+}
+
+// ── N6: email_verified ───────────────────────────────────────────────────────
+
+func TestEmailVerifiedClaim(t *testing.T) {
+	cases := []struct {
+		name string
+		sub  string
+		meta map[string]interface{}
+		want bool
+	}{
+		{"local signup is never verified", "local-" + uuid.NewString(), map[string]interface{}{"email_verified": true}, false},
+		{"supabase without metadata", "supabase-user", nil, true},
+		{"supabase confirmed", "supabase-user", map[string]interface{}{"email_verified": true}, true},
+		{"supabase explicitly unverified", "supabase-user", map[string]interface{}{"email_verified": false}, false},
+	}
+	for _, tc := range cases {
+		if got := emailVerifiedClaim(tc.sub, tc.meta); got != tc.want {
+			t.Errorf("%s: want %v, got %v", tc.name, tc.want, got)
+		}
+	}
+}
+
+func TestAuthMiddleware_PassesEmailVerifiedToProvisioner(t *testing.T) {
+	const secret = "test-secret-32-bytes-minimum!!!!"
+	for sub, want := range map[string]bool{"supabase-user": true, "local-" + uuid.NewString(): false} {
+		prov := &fakeUserProvisioner{}
+		r := newTestRouter(secret, prov)
+		w := httptest.NewRecorder()
+		req, _ := http.NewRequest(http.MethodGet, "/ping", nil)
+		req.Header.Set("Authorization", "Bearer "+mintTestJWT(t, secret, sub, "a@test.com", time.Hour))
+		r.ServeHTTP(w, req)
+		if w.Code != http.StatusOK || prov.lastVerified == nil || *prov.lastVerified != want {
+			t.Errorf("sub %s: code=%d verified=%v, want %v", sub, w.Code, prov.lastVerified, want)
+		}
 	}
 }

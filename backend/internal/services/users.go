@@ -20,8 +20,8 @@ func NewUserService(repo *repositories.UserRepository) *UserService {
 
 // GetOrCreate fetches the user by supabase_id, creating them if they don't exist.
 // This is called on every authenticated request via middleware.
-func (s *UserService) GetOrCreate(ctx context.Context, supabaseID, email, name string) (*models.User, error) {
-	user, err := s.repo.Upsert(ctx, supabaseID, email, name)
+func (s *UserService) GetOrCreate(ctx context.Context, supabaseID, email, name string, emailVerified bool) (*models.User, error) {
+	user, err := s.repo.Upsert(ctx, supabaseID, email, name, emailVerified)
 	if err != nil {
 		return nil, fmt.Errorf("userService.GetOrCreate: %w", err)
 	}

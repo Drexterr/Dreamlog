@@ -47,7 +47,12 @@ func (h *B2BHandler) Join(c *gin.Context) {
 
 	// Knowing a slug is not enough to enrol: only employees whose email is on
 	// the company's domain may self-join (stops seat burning and mood injection).
+	// The address must be verified: anyone can register any email locally (N6).
 	user := middleware.UserFromCtx(c.Request.Context())
+	if user != nil && !user.EmailVerified {
+		_ = c.Error(apierr.Forbidden("verify your email address before joining a company"))
+		return
+	}
 	if user == nil || !sameEmailDomain(user.Email, company.AdminEmail) {
 		_ = c.Error(apierr.Forbidden("your email address is not on this company's domain"))
 		return

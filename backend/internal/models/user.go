@@ -105,6 +105,10 @@ type User struct {
 	Plan              Plan       `json:"plan"`
 	PlanExpiresAt     *time.Time `json:"plan_expires_at,omitempty"`
 	FirstJoinedAt     *time.Time `json:"first_joined_at,omitempty"`
+	// EmailVerified is true only when a trusted provider (Supabase) verified the
+	// address. Local /auth/register accounts are unverified, so Email must not be
+	// used for authorization unless this is set (N6).
+	EmailVerified bool `json:"-"`
 	CreatedAt         time.Time  `json:"created_at"`
 	UpdatedAt         time.Time  `json:"updated_at"`
 }

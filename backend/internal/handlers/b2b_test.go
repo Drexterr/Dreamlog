@@ -6,6 +6,7 @@ import (
 	"errors"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 	"time"
 
@@ -90,7 +91,24 @@ func b2bTestJWT(t *testing.T) string {
 }
 
 func b2bTestUser() *models.User {
-	return &models.User{ID: uuid.New(), Email: "b2b@test.com", Name: "B2B User"}
+	return &models.User{ID: uuid.New(), Email: "b2b@test.com", Name: "B2B User", EmailVerified: true}
+}
+
+// N6: an unverified (local-signup) address is not proof of being an employee,
+// even when its domain matches.
+func TestB2BHandler_Join_UnverifiedEmail_Returns403(t *testing.T) {
+	repo := &fakeCompanyRepo{getBySlugResp: defaultCompany(), totalMembersResp: 5}
+	user := b2bTestUser()
+	user.EmailVerified = false
+	r := newB2BTestRouter(t, repo, user)
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest(http.MethodPost, "/b2b/companies/acme/join", nil)
+	req.Header.Set("Authorization", "Bearer "+b2bTestJWT(t))
+	r.ServeHTTP(w, req)
+
+	if w.Code != http.StatusForbidden || !strings.Contains(w.Body.String(), "verify your email") {
+		t.Errorf("unverified join: want 403 verify-email, got %d %s", w.Code, w.Body.String())
+	}
 }
 
 func defaultCompany() *models.Company {

@@ -131,6 +131,10 @@ users
   plan TEXT DEFAULT 'free'      -- free | plus | pro | b2b (migration 000011)
   plan_expires_at TIMESTAMPTZ   -- NULL = no expiry
   password_hash TEXT            -- only set for local-auth users
+  email_verified BOOLEAN DEFAULT false -- true only for Supabase-verified sign-ins; required wherever
+                                -- email is used for authorization (B2B join, sandbox allowlist).
+                                -- A verified sign-in takes its email over from an unverified
+                                -- local row (migration 000044)
   streak_freeze_count INT DEFAULT 0
   streak_freeze_granted_week DATE
   created_at, updated_at TIMESTAMPTZ

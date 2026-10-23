@@ -21,7 +21,7 @@ func NewUserRepository(db *pgxpool.Pool) *UserRepository {
 	return &UserRepository{db: db}
 }
 
-const userColumns = `id, supabase_id, email, name, timezone, fcm_nudge_hour, nudge_enabled, nudge_auto_time, goal, preferred_name, streak_freeze_count, plan, plan_expires_at, age_range, country, voice_language, first_joined_at, created_at, updated_at`
+const userColumns = `id, supabase_id, email, name, timezone, fcm_nudge_hour, nudge_enabled, nudge_auto_time, goal, preferred_name, streak_freeze_count, plan, plan_expires_at, age_range, country, voice_language, first_joined_at, email_verified, created_at, updated_at`
 
 // rowScanner is satisfied by both pgx.Row and pgx.Rows - avoids a direct pgx type in the signature.
 type rowScanner interface {
@@ -37,7 +37,7 @@ func scanUser(row rowScanner) (*models.User, error) {
 		&u.StreakFreezeCount,
 		&u.Plan, &u.PlanExpiresAt,
 		&u.AgeRange, &u.Country, &u.VoiceLanguage,
-		&u.FirstJoinedAt,
+		&u.FirstJoinedAt, &u.EmailVerified,
 		&u.CreatedAt, &u.UpdatedAt,
 	)
 	if err != nil {
@@ -167,29 +167,57 @@ func (r *UserRepository) GetByID(ctx context.Context, id uuid.UUID) (*models.Use
 // Upsert creates or updates a user record (idempotent on supabase_id).
 //
 // Called on every authenticated request, so the common path is a single read:
-// it only writes when the user is new or their email changed.
-func (r *UserRepository) Upsert(ctx context.Context, supabaseID, email, name string) (*models.User, error) {
+// it only writes when the user is new, their email changed, or it just became
+// verified. emailVerified says whether the identity provider verified email.
+//
+// A verified sign-in takes its email over from an UNVERIFIED account holding
+// it (N6): anyone can register any address locally, so such a row must not
+// block - or squat - the real owner. The squatting row keeps its data but
+// loses the address and its password, so it can no longer sign in.
+func (r *UserRepository) Upsert(ctx context.Context, supabaseID, email, name string, emailVerified bool) (*models.User, error) {
 	existing, err := scanUser(r.db.QueryRow(ctx, `SELECT `+userColumns+` FROM users WHERE supabase_id = $1`, supabaseID))
 	switch {
 	case errors.Is(err, pgx.ErrNoRows):
 		// New user - fall through to the insert.
 	case err != nil:
 		return nil, fmt.Errorf("users.Upsert lookup: %w", err)
-	case email == "" || existing.Email == email:
+	case email == "":
+		return existing, nil
+	case existing.Email == email && existing.EmailVerified == emailVerified:
 		return existing, nil
 	}
 
+	tx, err := r.db.Begin(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("users.Upsert begin: %w", err)
+	}
+	defer tx.Rollback(ctx) //nolint:errcheck
+
+	if emailVerified && email != "" {
+		if _, err := tx.Exec(ctx, `
+			UPDATE users
+			SET email = 'released+' || id::text || '@invalid.ode', password_hash = NULL, updated_at = NOW()
+			WHERE email = $1 AND supabase_id <> $2 AND email_verified = false`,
+			email, supabaseID); err != nil {
+			return nil, fmt.Errorf("users.Upsert release unverified email: %w", err)
+		}
+	}
+
 	q := `
-		INSERT INTO users (supabase_id, email, name)
-		VALUES ($1, $2, $3)
+		INSERT INTO users (supabase_id, email, name, email_verified)
+		VALUES ($1, $2, $3, $4)
 		ON CONFLICT (supabase_id) DO UPDATE
 			SET email = EXCLUDED.email,
+			    email_verified = EXCLUDED.email_verified,
 			    updated_at = NOW()
 		RETURNING ` + userColumns
 
-	u, err := scanUser(r.db.QueryRow(ctx, q, supabaseID, email, name))
+	u, err := scanUser(tx.QueryRow(ctx, q, supabaseID, email, name, emailVerified))
 	if err != nil {
 		return nil, fmt.Errorf("users.Upsert: %w", err)
+	}
+	if err := tx.Commit(ctx); err != nil {
+		return nil, fmt.Errorf("users.Upsert commit: %w", err)
 	}
 	return u, nil
 }

@@ -24,7 +24,7 @@ import (
 // userProvisioner is satisfied by *services.UserService. Defined here so
 // AuthMiddleware can be unit-tested without a real database.
 type userProvisioner interface {
-	GetOrCreate(ctx context.Context, supabaseID, email, name string) (*models.User, error)
+	GetOrCreate(ctx context.Context, supabaseID, email, name string, emailVerified bool) (*models.User, error)
 }
 
 type contextKey string
@@ -242,7 +242,7 @@ func AuthMiddleware(jwtSecret, jwksURL string, userSvc userProvisioner, log *zap
 		email := claims.Email
 		name := extractName(claims.UserMetadata)
 
-		user, err := userSvc.GetOrCreate(c.Request.Context(), supabaseID, email, name)
+		user, err := userSvc.GetOrCreate(c.Request.Context(), supabaseID, email, name, emailVerifiedClaim(supabaseID, claims.UserMetadata))
 		if err != nil {
 			log.Error("auth: upsert user failed", zap.Error(err))
 			c.AbortWithStatusJSON(http.StatusInternalServerError, apierr.Internal("authentication error"))
@@ -258,6 +258,21 @@ func AuthMiddleware(jwtSecret, jwksURL string, userSvc userProvisioner, log *zap
 
 		c.Next()
 	}
+}
+
+// emailVerifiedClaim reports whether the token's email was verified (N6).
+// Tokens minted by the local /auth/login path (sub "local-...") never are:
+// /auth/register accepts any address. Supabase only issues sessions for
+// confirmed emails or OAuth identities, so its tokens are verified unless
+// user_metadata explicitly says email_verified=false.
+func emailVerifiedClaim(supabaseID string, meta map[string]interface{}) bool {
+	if strings.HasPrefix(supabaseID, "local-") {
+		return false
+	}
+	if v, ok := meta["email_verified"].(bool); ok {
+		return v
+	}
+	return true
 }
 
 // UserFromCtx retrieves the authenticated User from a request context.
