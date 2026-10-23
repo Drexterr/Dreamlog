@@ -11,7 +11,6 @@ import (
 	"github.com/dreamlog/backend/internal/repositories"
 	"github.com/dreamlog/backend/internal/services"
 	"github.com/dreamlog/backend/pkg/apierr"
-	"github.com/dreamlog/backend/pkg/monitoring"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 )
@@ -25,7 +24,7 @@ type planManager interface {
 // paymentRecorder is what BillingHandler needs from PaymentRepository.
 type paymentRecorder interface {
 	Record(ctx context.Context, userID uuid.UUID, transactionID string, plan models.Plan, store, productID string, sandbox bool) (repositories.RecordResult, error)
-	MarkGranted(ctx context.Context, transactionID string) error
+	GrantPlan(ctx context.Context, transactionID string, userID uuid.UUID, plan models.Plan, duration time.Duration) (*models.User, bool, error)
 }
 
 // purchaseVerifier is what BillingHandler needs from IAPService: server-side
@@ -243,15 +242,26 @@ func (h *BillingHandler) Upgrade(c *gin.Context) {
 			// Recorded but the grant never committed: fall through and grant.
 		}
 
-		// A pass for the plan you already hold extends it from the current
-		// expiry, so no paid days are lost. Switching plans starts the new
-		// pass now (the mobile upgrade screen warns before a switch).
-		base := time.Now()
-		if currentUser != nil && currentUser.Plan == req.Plan && currentUser.PlanExpiresAt != nil && currentUser.PlanExpiresAt.After(base) {
-			base = *currentUser.PlanExpiresAt
+		// The grant is the claim (N5): one transaction checks the payment
+		// was not granted yet, sets the plan and marks it granted, so
+		// concurrent replays of one purchase grant it once. A pass for the
+		// plan you already hold extends from the current expiry, so no paid
+		// days are lost; switching plans starts the new pass now (the mobile
+		// upgrade screen warns before a switch).
+		user, _, err := h.payments.GrantPlan(c.Request.Context(), transactionID, userID, req.Plan, planDuration(period))
+		if errors.Is(err, repositories.ErrPaymentNotOwned) {
+			_ = c.Error(apierr.Conflict("this purchase has already been used"))
+			return
 		}
-		t := base.Add(planDuration(period))
-		expiresAt = &t
+		if err != nil {
+			// The payment is verified and recorded - a failure here means a
+			// charged user whose plan didn't change. Must not be untraceable;
+			// the store re-delivers the unfinished transaction for a retry.
+			_ = c.Error(apierr.InternalErr("failed to update plan", err))
+			return
+		}
+		h.respondPlanChanged(c, userID, req.Plan, user)
+		return
 	}
 
 	user, err := h.svc.UpgradePlan(c.Request.Context(), userID, req.Plan, expiresAt)
@@ -262,21 +272,18 @@ func (h *BillingHandler) Upgrade(c *gin.Context) {
 		_ = c.Error(apierr.InternalErr("failed to update plan", err))
 		return
 	}
+	h.respondPlanChanged(c, userID, req.Plan, user)
+}
+
+// respondPlanChanged tracks the plan change and returns the user's new plan.
+func (h *BillingHandler) respondPlanChanged(c *gin.Context, userID uuid.UUID, plan models.Plan, user *models.User) {
 	if user == nil {
 		_ = c.Error(apierr.NotFound("user"))
 		return
 	}
-	if transactionID != "" {
-		if err := h.payments.MarkGranted(c.Request.Context(), transactionID); err != nil {
-			// The plan is granted; a missing marker only means a replay of
-			// this transaction would extend once more. Log, don't fail.
-			monitoring.CaptureErr(err, map[string]string{"component": "billing_mark_granted"})
-		}
-	}
-
 	if h.analytics != nil {
 		h.analytics.TrackUser(c.Request.Context(), userID, "plan_changed", map[string]any{
-			"plan": string(req.Plan),
+			"plan": string(plan),
 		})
 	}
 

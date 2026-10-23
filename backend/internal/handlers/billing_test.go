@@ -383,6 +383,13 @@ type fakePaymentRecorder struct {
 	lastStore   string
 	lastProduct string
 	lastSandbox bool
+
+	// GrantPlan state: current is the user's plan before the grant (nil =
+	// free); grantedPlan/grantedExpiry record what was granted.
+	current       *models.User
+	grantCalls    int
+	grantedPlan   models.Plan
+	grantedExpiry *time.Time
 }
 
 func (f *fakePaymentRecorder) Record(_ context.Context, userID uuid.UUID, transactionID string, _ models.Plan, store, productID string, sandbox bool) (repositories.RecordResult, error) {
@@ -397,12 +404,31 @@ func (f *fakePaymentRecorder) Record(_ context.Context, userID uuid.UUID, transa
 	return repositories.RecordResult{Inserted: true}, nil
 }
 
-func (f *fakePaymentRecorder) MarkGranted(_ context.Context, transactionID string) error {
+// GrantPlan mirrors PaymentRepository.GrantPlan: grants once per transaction,
+// extending from the current expiry for the same plan.
+func (f *fakePaymentRecorder) GrantPlan(_ context.Context, transactionID string, userID uuid.UUID, plan models.Plan, duration time.Duration) (*models.User, bool, error) {
 	if f.granted == nil {
 		f.granted = map[string]bool{}
 	}
+	if owner, ok := f.seen[transactionID]; !ok || owner != userID {
+		return nil, false, repositories.ErrPaymentNotOwned
+	}
+	if f.current == nil {
+		f.current = &models.User{ID: userID, Plan: models.PlanFree}
+	}
+	if f.granted[transactionID] {
+		return f.current, false, nil
+	}
+	f.grantCalls++
+	base := time.Now()
+	if f.current.Plan == plan && f.current.PlanExpiresAt != nil && f.current.PlanExpiresAt.After(base) {
+		base = *f.current.PlanExpiresAt
+	}
+	exp := base.Add(duration)
+	f.current.Plan, f.current.PlanExpiresAt = plan, &exp
+	f.grantedPlan, f.grantedExpiry = plan, &exp
 	f.granted[transactionID] = true
-	return nil
+	return f.current, true, nil
 }
 
 // fakeIAPVerifier stands in for IAPService: configured, and returns a fixed
@@ -544,11 +570,14 @@ func TestBillingHandler_UpgradeVerified_Success_GrantsServerExpiry(t *testing.T)
 	if w.Code != http.StatusOK {
 		t.Fatalf("expected 200, got %d: %s", w.Code, w.Body.String())
 	}
-	if svc.upgradedPlan != models.PlanPro {
-		t.Fatalf("expected pro granted, got %s", svc.upgradedPlan)
+	if payments.grantedPlan != models.PlanPro {
+		t.Fatalf("expected pro granted, got %s", payments.grantedPlan)
 	}
-	if svc.upgradedExpiry == nil {
+	if payments.grantedExpiry == nil {
 		t.Fatal("expected server-set expiry on verified upgrade")
+	}
+	if svc.upgradedPlan != "" {
+		t.Error("a verified purchase must be granted by the atomic payment grant, not a separate plan update")
 	}
 	if payments.lastStore != "apple" {
 		t.Errorf("ios purchase must be recorded with store=apple, got %q", payments.lastStore)
@@ -570,19 +599,19 @@ func TestBillingHandler_UpgradeVerified_Android_RecordsGoogleStore(t *testing.T)
 }
 
 func TestBillingHandler_UpgradeVerified_Annual_GrantsYearExpiry(t *testing.T) {
-	svc := &fakePlanManager{}
-	r := newVerifiedBillingRouter(t, svc, &fakePaymentRecorder{}, &fakeIAPVerifier{}, billingTestUser(models.PlanFree))
+	payments := &fakePaymentRecorder{}
+	r := newVerifiedBillingRouter(t, &fakePlanManager{}, payments, &fakeIAPVerifier{}, billingTestUser(models.PlanFree))
 	w := postUpgrade(t, r, iapBody(map[string]string{
 		"plan": "pro", "period": "annual", "product_id": services.IAPProductProAnnual,
 	}))
 	if w.Code != http.StatusOK {
 		t.Fatalf("expected 200, got %d: %s", w.Code, w.Body.String())
 	}
-	if svc.upgradedExpiry == nil {
+	if payments.grantedExpiry == nil {
 		t.Fatal("expected server-set expiry on verified annual upgrade")
 	}
 	// Expiry must be ~365 days out, not the 30-day monthly pass.
-	if got := time.Until(*svc.upgradedExpiry); got < 360*24*time.Hour || got > 366*24*time.Hour {
+	if got := time.Until(*payments.grantedExpiry); got < 360*24*time.Hour || got > 366*24*time.Hour {
 		t.Fatalf("annual expiry must be ~365 days out, got %v", got)
 	}
 }
@@ -613,13 +642,12 @@ func TestBillingHandler_UpgradeVerified_SameUserReplay_IsIdempotent(t *testing.T
 	if w := postUpgrade(t, r, iapBody(nil)); w.Code != http.StatusOK {
 		t.Fatalf("first use must succeed, got %d", w.Code)
 	}
-	firstExpiry := svc.upgradedExpiry
-	svc.upgradedExpiry = nil
+	firstExpiry := *payments.grantedExpiry
 	if w := postUpgrade(t, r, iapBody(nil)); w.Code != http.StatusOK {
 		t.Fatalf("same-user replay must be idempotent 200, got %d: %s", w.Code, w.Body.String())
 	}
-	if svc.upgradedExpiry != nil || firstExpiry == nil {
-		t.Error("a granted replay must not grant (extend) again")
+	if payments.grantCalls != 1 || !payments.grantedExpiry.Equal(firstExpiry) {
+		t.Errorf("a granted replay must not grant (extend) again: grants=%d", payments.grantCalls)
 	}
 }
 
@@ -629,8 +657,8 @@ func TestBillingHandler_UpgradeVerified_RecordedButNotGranted_RetryGrants(t *tes
 	payments := &fakePaymentRecorder{seen: map[string]uuid.UUID{"GPA.1": user.ID}}
 	svc := &fakePlanManager{}
 	r := newVerifiedBillingRouter(t, svc, payments, &fakeIAPVerifier{txID: "GPA.1"}, user)
-	if w := postUpgrade(t, r, iapBody(nil)); w.Code != http.StatusOK || svc.upgradedPlan != models.PlanPlus {
-		t.Fatalf("ungranted purchase must be granted on retry: %d plan=%s", w.Code, svc.upgradedPlan)
+	if w := postUpgrade(t, r, iapBody(nil)); w.Code != http.StatusOK || payments.grantedPlan != models.PlanPlus {
+		t.Fatalf("ungranted purchase must be granted on retry: %d plan=%s", w.Code, payments.grantedPlan)
 	}
 	if !payments.granted["GPA.1"] {
 		t.Error("grant must be marked after success")
@@ -658,14 +686,14 @@ func TestBillingHandler_UpgradeVerified_SamePlanExtendsFromExpiry(t *testing.T) 
 	user := billingTestUser(models.PlanPlus)
 	current := time.Now().Add(20 * 24 * time.Hour)
 	user.PlanExpiresAt = &current
-	svc := &fakePlanManager{}
-	r := newVerifiedBillingRouter(t, svc, &fakePaymentRecorder{}, &fakeIAPVerifier{}, user)
+	payments := &fakePaymentRecorder{current: user}
+	r := newVerifiedBillingRouter(t, &fakePlanManager{}, payments, &fakeIAPVerifier{}, user)
 	if w := postUpgrade(t, r, iapBody(nil)); w.Code != http.StatusOK {
 		t.Fatalf("want 200, got %d", w.Code)
 	}
 	want := current.Add(monthlyPlanDuration)
-	if svc.upgradedExpiry == nil || svc.upgradedExpiry.Sub(want).Abs() > time.Minute {
-		t.Errorf("expiry must extend from the current expiry: want ~%v, got %v", want, svc.upgradedExpiry)
+	if payments.grantedExpiry == nil || payments.grantedExpiry.Sub(want).Abs() > time.Minute {
+		t.Errorf("expiry must extend from the current expiry: want ~%v, got %v", want, payments.grantedExpiry)
 	}
 }
 
@@ -801,4 +829,27 @@ func TestBillingHandler_GetPlan_AllPlansPresent(t *testing.T) {
 			t.Errorf("all_plans must contain %q plan", p)
 		}
 	}
+}
+
+// N5: if the grant finds the transaction was recorded for someone else (a
+// race the earlier Record lookup could not see), the caller gets 409.
+func TestBillingHandler_UpgradeVerified_GrantOwnedByOther_Returns409(t *testing.T) {
+	payments := &fakePaymentRecorder{seen: map[string]uuid.UUID{}}
+	r := newVerifiedBillingRouter(t, &fakePlanManager{}, &stealingRecorder{payments}, &fakeIAPVerifier{txID: "GPA.steal"}, billingTestUser(models.PlanFree))
+	if w := postUpgrade(t, r, iapBody(nil)); w.Code != http.StatusConflict {
+		t.Fatalf("want 409, got %d: %s", w.Code, w.Body.String())
+	}
+	if payments.grantCalls != 0 {
+		t.Error("nothing may be granted")
+	}
+}
+
+// stealingRecorder reports the purchase as new, but by grant time another
+// user owns it.
+type stealingRecorder struct{ *fakePaymentRecorder }
+
+func (s *stealingRecorder) Record(ctx context.Context, userID uuid.UUID, tx string, p models.Plan, store, product string, sandbox bool) (repositories.RecordResult, error) {
+	res, err := s.fakePaymentRecorder.Record(ctx, userID, tx, p, store, product, sandbox)
+	s.seen[tx] = uuid.New()
+	return res, err
 }

@@ -2,6 +2,7 @@ package repositories
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
@@ -63,12 +64,67 @@ func (r *PaymentRepository) Record(ctx context.Context, userID uuid.UUID, transa
 	return res, nil
 }
 
-// MarkGranted records that the plan grant for a transaction committed.
-func (r *PaymentRepository) MarkGranted(ctx context.Context, transactionID string) error {
-	if _, err := r.db.Exec(ctx,
-		`UPDATE payments SET granted_at = NOW() WHERE transaction_id = $1 AND granted_at IS NULL`, transactionID,
-	); err != nil {
-		return fmt.Errorf("paymentRepo.MarkGranted: %w", err)
+// GrantPlan grants the plan bought by a recorded store transaction exactly
+// once (N5). In one transaction it locks the payment row, returns the user
+// unchanged (granted=false) if the grant already committed, and otherwise
+// sets the plan and marks the payment granted. Concurrent requests for the
+// same transaction serialize on the payment row, so one purchase can never
+// extend a pass twice. The new expiry is computed under the user row lock: a
+// pass for the plan the user already holds extends from the current expiry,
+// any other plan starts now.
+func (r *PaymentRepository) GrantPlan(ctx context.Context, transactionID string, userID uuid.UUID, plan models.Plan, duration time.Duration) (user *models.User, granted bool, err error) {
+	tx, err := r.db.Begin(ctx)
+	if err != nil {
+		return nil, false, fmt.Errorf("paymentRepo.GrantPlan begin: %w", err)
 	}
-	return nil
+	defer tx.Rollback(ctx) //nolint:errcheck
+
+	var owner *uuid.UUID
+	var grantedAt *time.Time
+	if err := tx.QueryRow(ctx,
+		`SELECT user_id, granted_at FROM payments WHERE transaction_id = $1 FOR UPDATE`, transactionID,
+	).Scan(&owner, &grantedAt); err != nil {
+		return nil, false, fmt.Errorf("paymentRepo.GrantPlan lock payment: %w", err)
+	}
+	if owner == nil || *owner != userID {
+		return nil, false, ErrPaymentNotOwned
+	}
+
+	var currentPlan models.Plan
+	var currentExpiry *time.Time
+	if err := tx.QueryRow(ctx,
+		`SELECT plan, plan_expires_at FROM users WHERE id = $1 FOR UPDATE`, userID,
+	).Scan(&currentPlan, &currentExpiry); err != nil {
+		return nil, false, fmt.Errorf("paymentRepo.GrantPlan lock user: %w", err)
+	}
+
+	if grantedAt == nil {
+		now := time.Now()
+		base := now
+		if currentPlan == plan && currentExpiry != nil && currentExpiry.After(now) {
+			base = *currentExpiry
+		}
+		if _, err := tx.Exec(ctx,
+			`UPDATE users SET plan = $2, plan_expires_at = $3, updated_at = NOW() WHERE id = $1`,
+			userID, string(plan), base.Add(duration)); err != nil {
+			return nil, false, fmt.Errorf("paymentRepo.GrantPlan update plan: %w", err)
+		}
+		if _, err := tx.Exec(ctx,
+			`UPDATE payments SET granted_at = NOW() WHERE transaction_id = $1`, transactionID); err != nil {
+			return nil, false, fmt.Errorf("paymentRepo.GrantPlan mark granted: %w", err)
+		}
+		granted = true
+	}
+
+	user, err = scanUser(tx.QueryRow(ctx, `SELECT `+userColumns+` FROM users WHERE id = $1`, userID))
+	if err != nil {
+		return nil, false, fmt.Errorf("paymentRepo.GrantPlan read user: %w", err)
+	}
+	if err := tx.Commit(ctx); err != nil {
+		return nil, false, fmt.Errorf("paymentRepo.GrantPlan commit: %w", err)
+	}
+	return user, granted, nil
 }
+
+// ErrPaymentNotOwned means a transaction is recorded for a different user.
+var ErrPaymentNotOwned = errors.New("payment belongs to another user")

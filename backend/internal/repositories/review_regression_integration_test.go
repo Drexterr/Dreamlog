@@ -122,8 +122,8 @@ func TestIntegration_Review_PaymentReplayUnderConcurrency(t *testing.T) {
 		t.Fatalf("transaction recorded %d times, want 1", inserted)
 	}
 
-	if err := r.MarkGranted(ctx, "GPA.race"); err != nil {
-		t.Fatal(err)
+	if _, granted, err := r.GrantPlan(ctx, "GPA.race", user, models.PlanPlus, 30*24*time.Hour); err != nil || !granted {
+		t.Fatalf("first grant: granted=%v %v", granted, err)
 	}
 	if res, err := r.Record(ctx, user, "GPA.race", models.PlanPlus, "google", "x", false); err != nil || res.Inserted || !res.Granted {
 		t.Fatalf("granted replay: %+v %v", res, err)
