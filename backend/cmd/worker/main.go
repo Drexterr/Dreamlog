@@ -138,7 +138,7 @@ func main() {
 		Repo:       therapistNotesRepo,
 		Storage:    storageClient,
 		OCR:        claudeSvc,
-		Cipher:     services.NewNotesCipher(masterKey, therapistNotesRepo),
+		Cipher:     services.NewNotesCipher(masterKey, therapistNotesRepo).RejectLegacy(cfg.Security.RejectLegacyCiphertext),
 		Log:        log,
 		MaxRetries: cfg.Worker.MaxRetries,
 	})

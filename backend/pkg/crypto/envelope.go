@@ -153,27 +153,51 @@ func Seal(key, plaintext []byte, aad string) ([]byte, error) {
 	return aead.Seal(out, nonce, plaintext, []byte(aad)), nil
 }
 
+// ErrLegacyCiphertext is returned by OpenSealed for data that is not in the
+// row-bound v2 format.
+var ErrLegacyCiphertext = errors.New("crypto: legacy (unbound) ciphertext rejected")
+
 // Open reverses Seal, requiring the same aad. Legacy (v1, unbound) data from
 // Encrypt is still accepted so existing rows and backups stay readable;
-// IsSealed tells callers which rows still need re-sealing.
+// IsSealed tells callers which rows still need re-sealing. Once every row is
+// re-sealed, use OpenSealed so a v1 ciphertext can't be swapped between rows (N15).
 func Open(key, data []byte, aad string) ([]byte, error) {
 	if IsSealed(data) {
-		aead, err := newAEAD(key)
-		if err != nil {
-			return nil, err
-		}
-		body := data[len(sealedMagic):]
-		if len(body) >= aead.NonceSize() {
-			nonce, ciphertext := body[:aead.NonceSize()], body[aead.NonceSize():]
-			if plaintext, err := aead.Open(nil, nonce, ciphertext, []byte(aad)); err == nil {
-				return plaintext, nil
-			}
+		if plaintext, err := openSealed(key, data, aad); err == nil {
+			return plaintext, nil
 		}
 		// A legacy ciphertext whose random nonce happens to start with the
 		// magic bytes (p = 2^-32) still opens below; a moved v2 ciphertext
 		// fails both ways.
 	}
 	return Decrypt(key, data)
+}
+
+// OpenSealed opens only v2 (associated-data bound) ciphertexts. Legacy v1
+// data is refused with ErrLegacyCiphertext: unbound, it could have been moved
+// in from another row or column (the swap attack v2 binding closes).
+func OpenSealed(key, data []byte, aad string) ([]byte, error) {
+	if !IsSealed(data) {
+		return nil, ErrLegacyCiphertext
+	}
+	return openSealed(key, data, aad)
+}
+
+func openSealed(key, data []byte, aad string) ([]byte, error) {
+	aead, err := newAEAD(key)
+	if err != nil {
+		return nil, err
+	}
+	body := data[len(sealedMagic):]
+	if len(body) < aead.NonceSize() {
+		return nil, errors.New("crypto: sealed ciphertext too short")
+	}
+	nonce, ciphertext := body[:aead.NonceSize()], body[aead.NonceSize():]
+	plaintext, err := aead.Open(nil, nonce, ciphertext, []byte(aad))
+	if err != nil {
+		return nil, fmt.Errorf("crypto: open sealed: %w", err)
+	}
+	return plaintext, nil
 }
 
 // IsSealed reports whether data is in the v2 (associated-data bound) format.

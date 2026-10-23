@@ -153,7 +153,7 @@ func main() {
 	}
 	therapistNotesRepo := repositories.NewTherapistNotesRepository(db)
 	notesQueue := queue.New(rdb, cfg.Worker.NotesQueueKey, cfg.Worker.NotesDLQKey, cfg.Worker.PollTimeout)
-	notesCipher := services.NewNotesCipher(masterKey, therapistNotesRepo)
+	notesCipher := services.NewNotesCipher(masterKey, therapistNotesRepo).RejectLegacy(cfg.Security.RejectLegacyCiphertext)
 	therapistNotesSvc := services.NewTherapistNotesService(
 		therapistNotesRepo, therapistRepo, notesQueue, storageSvc, claudeSvc, notesCipher,
 	)
@@ -169,6 +169,9 @@ func main() {
 		}
 		if n > 0 {
 			log.Info("notes: re-sealed legacy ciphertexts with row binding", zap.Int("rows", n))
+		}
+		if !cfg.Security.RejectLegacyCiphertext {
+			log.Info("notes: no legacy ciphertexts remain - set REJECT_LEGACY_CIPHERTEXT=true on the API and worker")
 		}
 	}()
 

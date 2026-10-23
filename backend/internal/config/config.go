@@ -58,6 +58,10 @@ type SecurityConfig struct {
 	// works with no extra setup - set it explicitly in production so key
 	// rotation is decoupled from the JWT secret.
 	MasterEncryptionKey string
+	// RejectLegacyCiphertext refuses legacy (v1, unbound) therapist-note
+	// ciphertexts on read (N15). Enable once the startup re-seal reports no
+	// legacy rows remain.
+	RejectLegacyCiphertext bool
 }
 
 type ServerConfig struct {
@@ -240,7 +244,8 @@ func Load() (*Config, error) {
 			PollTimeout:   parseDuration("WORKER_POLL_TIMEOUT", 5*time.Second),
 		},
 		Security: SecurityConfig{
-			MasterEncryptionKey: getEnv("MASTER_ENCRYPTION_KEY", ""),
+			MasterEncryptionKey:    getEnv("MASTER_ENCRYPTION_KEY", ""),
+			RejectLegacyCiphertext: parseBool("REJECT_LEGACY_CIPHERTEXT", false),
 		},
 		Sentry: SentryConfig{
 			DSN: getEnv("SENTRY_DSN", ""),

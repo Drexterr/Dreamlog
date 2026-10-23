@@ -73,12 +73,23 @@ type sessionSummarizer interface {
 // NotesCipher performs per-therapist envelope encryption. Shared between the
 // API service and the OCR worker.
 type NotesCipher struct {
-	masterKey []byte
-	keys      notesKeyStore
+	masterKey    []byte
+	keys         notesKeyStore
+	rejectLegacy bool // only open row-bound v2 ciphertexts (N15)
 }
 
 func NewNotesCipher(masterKey []byte, keys notesKeyStore) *NotesCipher {
 	return &NotesCipher{masterKey: masterKey, keys: keys}
+}
+
+// RejectLegacy makes reads refuse legacy v1 (unbound) ciphertexts (N15). Turn
+// it on (REJECT_LEGACY_CIPHERTEXT=true) once UpgradeLegacyCiphertexts has
+// re-sealed every row: a v1 ciphertext restored from a backup or written
+// directly into the DB could otherwise still be moved between rows and open.
+// The upgrader itself still reads v1, so enabling this early is safe.
+func (c *NotesCipher) RejectLegacy(on bool) *NotesCipher {
+	c.rejectLegacy = on
+	return c
 }
 
 // Associated-data bindings (M10 / ADR-017): every ciphertext is sealed to the
@@ -141,7 +152,11 @@ func (c *NotesCipher) DecryptField(ctx context.Context, therapistID uuid.UUID, b
 	if err != nil {
 		return "", err
 	}
-	plaintext, err := pkgcrypto.Open(dek, ciphertext, binding)
+	open := pkgcrypto.Open
+	if c.rejectLegacy {
+		open = pkgcrypto.OpenSealed
+	}
+	plaintext, err := open(dek, ciphertext, binding)
 	if err != nil {
 		return "", err
 	}

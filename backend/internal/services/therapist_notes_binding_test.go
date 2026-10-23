@@ -109,3 +109,36 @@ func TestNotes_UpgradeLegacyCiphertexts(t *testing.T) {
 		t.Fatalf("second run must be a no-op: n=%d err=%v", n, err)
 	}
 }
+
+// N15: with RejectLegacy on, an unbound (v1) ciphertext - e.g. restored from a
+// backup or copied in from another row - is refused instead of decrypted,
+// while the startup upgrader can still re-seal it.
+func TestNotes_RejectLegacyCiphertext(t *testing.T) {
+	base := newFakeNotesRepo()
+	repo := &upgradeRepo{base}
+	master, _ := pkgcrypto.NewDEK()
+	cipher := NewNotesCipher(master, repo).RejectLegacy(true)
+	svc := NewTherapistNotesService(repo, &fakeLinkChecker{activeLinks: map[uuid.UUID]bool{}}, &fakeNotesQueue{}, &fakeNotesStorage{}, &fakeSummarizer{}, cipher)
+	ctx := context.Background()
+	therapist := uuid.New()
+	dek, err := cipher.dek(ctx, therapist)
+	if err != nil {
+		t.Fatal(err)
+	}
+	legacy, _ := pkgcrypto.Encrypt(dek, []byte("Legacy Name"))
+	clientID := uuid.New()
+	if _, err := base.CreateExternalClient(ctx, clientID, therapist, legacy, "client"); err != nil {
+		t.Fatal(err)
+	}
+
+	if _, err := svc.GetExternalClient(ctx, therapist, clientID); err == nil {
+		t.Fatal("a legacy ciphertext must not be readable once legacy is rejected")
+	}
+	if n, err := svc.UpgradeLegacyCiphertexts(ctx); err != nil || n != 1 {
+		t.Fatalf("the upgrader must still re-seal legacy rows: n=%d err=%v", n, err)
+	}
+	got, err := svc.GetExternalClient(ctx, therapist, clientID)
+	if err != nil || got.Name != "Legacy Name" {
+		t.Fatalf("re-sealed row must decrypt: %+v %v", got, err)
+	}
+}

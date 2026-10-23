@@ -184,3 +184,28 @@ func TestOpen_TamperedSealedCiphertextFails(t *testing.T) {
 		t.Error("tampered ciphertext must not open")
 	}
 }
+
+// N15: OpenSealed accepts only row-bound v2 ciphertexts.
+func TestOpenSealed_RejectsLegacyAcceptsBound(t *testing.T) {
+	key := testKey(t)
+	legacy, err := Encrypt(key, []byte("old"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := OpenSealed(key, legacy, "t|c|1"); err != ErrLegacyCiphertext {
+		t.Fatalf("legacy ciphertext must be refused, got %v", err)
+	}
+	if got, err := Open(key, legacy, "t|c|1"); err != nil || string(got) != "old" {
+		t.Fatalf("lenient Open must still read legacy data: %q %v", got, err)
+	}
+	sealed, err := Seal(key, []byte("new"), "t|c|1")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got, err := OpenSealed(key, sealed, "t|c|1"); err != nil || string(got) != "new" {
+		t.Fatalf("bound ciphertext: %q %v", got, err)
+	}
+	if _, err := OpenSealed(key, sealed, "t|c|2"); err == nil {
+		t.Fatal("a ciphertext moved to another row must not open")
+	}
+}

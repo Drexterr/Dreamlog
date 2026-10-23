@@ -203,6 +203,9 @@ Backend on Railway (`https://dreamlog-production-f9e2.up.railway.app`):
       anyway, and confirm both services start after this deploys:
       STUB_AI_ANALYSIS, unset ANTHROPIC_API_KEY / MASTER_ENCRYPTION_KEY / SUPABASE_URL,
       STORAGE_PROXY_BASE_URL, and (API only) missing IAP verification credentials.
+- [ ] **`REJECT_LEGACY_CIPHERTEXT=true` on the API and worker (N15)** once the API log says
+      "no legacy ciphertexts remain" after a deploy - therapist notes then only open in the
+      row-bound v2 format.
 - [ ] Verify client IPs resolve correctly behind Railway (rate limits key on them): check the
       `ip` field in security logs. Adjust `TRUSTED_PROXIES` / `TRUSTED_PLATFORM_HEADER` if needed.
 
