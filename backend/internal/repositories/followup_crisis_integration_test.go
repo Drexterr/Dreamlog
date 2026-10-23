@@ -160,8 +160,15 @@ func TestIntegration_FollowupCrisis_ExcludedFromInsightsReflectionKept(t *testin
 
 	card, err := NewInsightShareRepository(db).GetCardData(ctx, user, startOfWeekUTC(at))
 	therapistDataOK(t, err)
-	if card.EntryCount != 1 {
-		t.Errorf("insight card entry count: %d", card.EntryCount)
+	// entry_count is journaling activity (like the streak) and counts every
+	// completed entry, crisis ones included; the mood arc is the statistic.
+	if card.EntryCount != 2 {
+		t.Errorf("insight card activity count: %d", card.EntryCount)
+	}
+	for _, d := range card.MoodArc {
+		if d.AvgMood != 80 {
+			t.Errorf("insight card mood arc must only average the safe entry: %+v", card.MoodArc)
+		}
 	}
 	noFlagged("insight card emotions", card.TopEmotions)
 
