@@ -192,6 +192,9 @@ Backend on Railway (`https://dreamlog-production-f9e2.up.railway.app`):
       source branch to `production` (service → Settings → Source). Alternatively keep `main`
       and enable "Wait for CI" on both services. Until one of these is done, a commit that
       fails tests still ships.
+      GitHub refuses to let the default Actions token push a commit that changes
+      `.github/workflows/`, so such commits are not promoted. Add a repository secret
+      `PROMOTE_TOKEN` (fine-grained PAT on this repo: Contents + Workflows read/write).
 
 - [ ] **`APP_ENV=production` on the API and worker.** With it set, both refuse to start if a
       dev stub is on or a safety-critical secret is missing (see `Config.ProductionProblems`):

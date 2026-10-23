@@ -46,6 +46,10 @@ jobs:
         with:
           ref: ${{ github.event.workflow_run.head_sha }}
           fetch-depth: 0
+          # GITHUB_TOKEN may not push a commit that changes .github/workflows.
+          # A fine-grained PAT (contents + workflows: write) in PROMOTE_TOKEN
+          # lets those commits reach production too.
+          token: ${{ secrets.PROMOTE_TOKEN || github.token }}
       - name: Fast-forward production to the tested commit
         env:
           TESTED_SHA: ${{ github.event.workflow_run.head_sha }}
