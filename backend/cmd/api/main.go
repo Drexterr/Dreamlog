@@ -100,6 +100,13 @@ func main() {
 	if err != nil {
 		log.Fatal("storage init", zap.Error(err))
 	}
+	// Expire orphaned uploads (N7). Fail-soft: a bucket that refuses lifecycle
+	// configuration must not keep the API down; deletion paths still run.
+	lcCtx, lcCancel := context.WithTimeout(context.Background(), 10*time.Second)
+	if err := storageClient.EnsureLifecycle(lcCtx, pkgstorage.OrphanLifecycleRules); err != nil {
+		log.Warn("storage: lifecycle rules not applied - orphaned uploads will not expire", zap.Error(err))
+	}
+	lcCancel()
 
 	// ── Repositories ──────────────────────────────────────────────────────────
 	userRepo := repositories.NewUserRepository(db)
@@ -123,7 +130,7 @@ func main() {
 	// ── Services ──────────────────────────────────────────────────────────────
 	jobQueue := queue.New(rdb, cfg.Worker.QueueKey, cfg.Worker.DLQKey, cfg.Worker.PollTimeout)
 	storageSvc := services.NewStorageService(storageClient, &cfg.Storage)
-	userSvc := services.NewUserService(userRepo)
+	userSvc := services.NewUserService(userRepo, storageClient, log)
 	authSvc := services.NewAuthService(userRepo, cfg.Supabase.JWTSecret, log)
 	entrySvc := services.NewEntryService(entryRepo, storageSvc, jobQueue)
 	claudeSvc := services.NewClaudeService(&cfg.Anthropic)

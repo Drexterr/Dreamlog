@@ -24,7 +24,7 @@ describe('offline recordings', () => {
   });
   it('uploads the original mode and removes successful items', async () => {
     await enqueue(item()); await flush();
-    expect(upload).toHaveBeenCalledWith('a.m4a', 3, undefined, 'dream');
+    expect(upload).toHaveBeenCalledWith('a.m4a', 3, undefined, 'dream', expect.objectContaining({ uploadedKey: undefined }));
     expect(await getQueue()).toEqual([]);
   });
   it('does not upload an empty queue', async () => {
@@ -98,5 +98,27 @@ describe('offline recordings', () => {
     upload.mockResolvedValue({ entry: { id: 'entry' } });
     await retryItem('a'); await discardItem('b'); await flush();
     expect(await getQueue()).toEqual([]);
+  });
+});
+
+// N7: audio uploaded by a failed flush is registered by the next flush with
+// the same key - never uploaded (and orphaned) twice.
+describe('uploaded key persistence', () => {
+  it('stores the uploaded key when registration fails and reuses it next flush', async () => {
+    await enqueue(item());
+    upload.mockImplementationOnce(async (_u: string, _d: number, _p: unknown, _m: string, resume: { onUploaded: (k: string) => void }) => {
+      resume.onUploaded('audio/u/clip.aac');
+      throw new Error('register timeout');
+    });
+    await flush();
+    expect((await getQueue())[0].uploadedKey).toBe('audio/u/clip.aac');
+    await flush();
+    expect(upload).toHaveBeenLastCalledWith('a.m4a', 3, undefined, 'dream', expect.objectContaining({ uploadedKey: 'audio/u/clip.aac' }));
+    expect(await getQueue()).toEqual([]);
+  });
+  it('keeps no key when the upload itself failed', async () => {
+    await enqueue(item()); upload.mockRejectedValueOnce(new Error('offline'));
+    await flush();
+    expect((await getQueue())[0].uploadedKey).toBeUndefined();
   });
 });

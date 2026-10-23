@@ -20,6 +20,17 @@ export interface UploadResult {
   entry: Entry;
 }
 
+/** Lets a retried upload continue from an earlier attempt (offline queue). */
+export interface UploadResume {
+  /** Key of audio an earlier attempt already uploaded. */
+  uploadedKey?: string;
+  /** Called once the audio is in storage, so the caller can persist the key. */
+  onUploaded?: (key: string) => void;
+}
+
+/** Thrown upload error; uploadedKey is set when the audio did reach storage. */
+export type UploadError = Error & { uploadedKey?: string };
+
 export interface UploadProgress {
   phase: 'presigning' | 'uploading' | 'registering' | 'done';
   uploadedBytes?: number;
@@ -31,6 +42,7 @@ export async function uploadRecording(
   durationSec: number,
   onProgress?: (p: UploadProgress) => void,
   mode: EntryMode = 'processing',
+  resume?: UploadResume,
 ): Promise<UploadResult> {
   const file = new File(localUri);
   if (!file.exists) {
@@ -43,7 +55,10 @@ export async function uploadRecording(
   // that failed, with the SAME key: re-presigning would orphan the first object
   // (never deleted - ADR-005) and could create a duplicate entry. The backend
   // treats POST /entries as idempotent per audio_key.
-  let uploadedKey: string | null = null;
+  let uploadedKey: string | null = resume?.uploadedKey ?? null;
+  // A resumed key may have expired from storage (orphan lifecycle rules) -
+  // then upload once more instead of failing for good.
+  let resumedKey = uploadedKey !== null;
 
   for (let attempt = 0; attempt < MAX_UPLOAD_ATTEMPTS; attempt++) {
     if (attempt > 0) {
@@ -73,6 +88,7 @@ export async function uploadRecording(
 
         onProgress?.({ phase: 'uploading', uploadedBytes: sizeBytes, totalBytes: sizeBytes });
         uploadedKey = audio_key;
+        resume?.onUploaded?.(audio_key);
       }
 
       // Step 3: Notify backend - creates DB row + queues transcription job.
@@ -89,14 +105,34 @@ export async function uploadRecording(
     } catch (err) {
       lastError = err instanceof Error ? err : new Error(String(err));
 
+      if (resumedKey && isMissingAudio(err)) {
+        resumedKey = false;
+        uploadedKey = null;
+        continue;
+      }
+
       // Do not retry on known non-recoverable errors (e.g., 4xx from backend).
       if (isApiError(err) && err.response && err.response.status < 500) {
-        throw lastError;
+        throw withUploadedKey(lastError, uploadedKey);
       }
     }
   }
 
-  throw lastError ?? new Error('Upload failed after max retries');
+  throw withUploadedKey(lastError ?? new Error('Upload failed after max retries'), uploadedKey);
+}
+
+function withUploadedKey(err: Error, key: string | null): UploadError {
+  if (key) (err as UploadError).uploadedKey = key;
+  return err;
+}
+
+// POST /entries reports 400 "audio file not found in storage" when the
+// object behind a resumed key is gone.
+function isMissingAudio(err: unknown): boolean {
+  if (!isApiError(err) || err.response?.status !== 400) return false;
+  const data = err.response.data as { message?: unknown; error?: unknown } | undefined;
+  const msg = String(data?.message ?? data?.error ?? '');
+  return msg.includes('not found in storage');
 }
 
 const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));

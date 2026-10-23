@@ -136,8 +136,12 @@ export async function flush(
     const uploaded: OfflineQueueItem[] = [];
 
     for (const item of pending) {
+      let uploadedKey = item.uploadedKey;
       try {
-        await uploadRecording(item.localUri, item.durationSec, undefined, item.mode ?? 'processing');
+        await uploadRecording(item.localUri, item.durationSec, undefined, item.mode ?? 'processing', {
+          uploadedKey,
+          onUploaded: (key) => { uploadedKey = key; },
+        });
         uploaded.push(item);
         onItemUploaded?.(item);
         // Remove from queue by NOT adding to remaining[].
@@ -149,6 +153,9 @@ export async function flush(
           attempts,
           failed: isPermanentFailure(err) || attempts >= MAX_ITEM_ATTEMPTS,
           lastError: error.message,
+          // Keep the key of audio already in storage: the next flush registers
+          // it instead of uploading (and orphaning) another copy (N7).
+          uploadedKey,
         };
         onItemFailed?.(updated, error);
         remaining.push(updated);

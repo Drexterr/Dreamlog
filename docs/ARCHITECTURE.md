@@ -481,6 +481,9 @@ Audio lifecycle:
 3. Worker downloads audio from storage to process with Whisper
 4. Worker deletes audio from storage after successful transcription
 5. Audio key remains in `entries.audio_key` for audit but object no longer exists
+6. Orphans (uploads never registered, failed pipelines, TTS replies) expire via bucket
+   lifecycle rules set on API start; account deletion erases the user's `audio/{id}/`,
+   `therapy/{id}/`, `tts/{session}/` and `notes/{therapist}/` prefixes
 
 In dev: MinIO at `http://localhost:9001` (console), bucket `dreamlog-audio`
 In prod: Cloudflare R2, same S3-compatible API

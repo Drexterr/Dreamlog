@@ -218,6 +218,11 @@ Backend on Railway (`https://dreamlog-production-f9e2.up.railway.app`):
 - [ ] `CORS_ALLOWED_ORIGINS` includes the therapist-portal production origin (defaults to localhost otherwise).
 - [ ] `SUPABASE_URL` set so ES256 Supabase tokens validate via JWKS.
 - [ ] Storage env points at Cloudflare R2 (not MinIO), presign expiry sane.
+- [ ] **Bucket lifecycle rules (N7).** The API sets expiry rules on start
+      (`tts/` 1 day; `audio/`, `therapy/`, `notes/` 2 days) so orphaned uploads
+      don't stay in R2 forever. If the logs show "lifecycle rules not applied", the R2
+      token lacks bucket-admin rights: add the same four rules in the Cloudflare
+      dashboard (R2 → bucket → Settings → Object lifecycle rules).
 - [ ] `JWT_SECRET` / `SUPABASE_JWT_SECRET` confirmed strong + matching Supabase project.
 - [ ] Confirm DB migrations ran (18+ migrations, auto-run on API startup) and worker process is running alongside the API.
 

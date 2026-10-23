@@ -352,6 +352,10 @@ export interface OfflineQueueItem {
   // the user retries or discards it, never dropped silently.
   failed?: boolean;
   lastError?: string;
+  // Storage key of audio already uploaded by an earlier attempt. Retries
+  // register this key instead of uploading a second copy, which would be
+  // orphaned in storage (N7).
+  uploadedKey?: string;
 }
 
 // ── Phase 6 + 8: Therapy Mode ─────────────────────────────────────────────────

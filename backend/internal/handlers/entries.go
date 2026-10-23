@@ -27,6 +27,15 @@ func NewEntryHandler(svc entryServicer, storage storageUploader, subscription en
 func (h *EntryHandler) Presign(c *gin.Context) {
 	userID := middleware.UserIDFromCtx(c.Request.Context())
 
+	// Refuse the upload up front when the monthly quota is used up: checking
+	// only at registration lets the audio upload and then orphans it (N7).
+	if user := middleware.UserFromCtx(c.Request.Context()); user != nil {
+		if err := h.subscription.CheckEntryQuota(c.Request.Context(), user.ID, user.EffectivePlan()); err != nil {
+			c.Error(apierr.Conflict(err.Error()))
+			return
+		}
+	}
+
 	resp, err := h.svc.PresignUpload(c.Request.Context(), userID)
 	if err != nil {
 		c.Error(err)

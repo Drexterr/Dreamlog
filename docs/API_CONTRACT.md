@@ -242,6 +242,10 @@ learned timing until the user re-enables auto.
   "upload_url": "string",    // pre-signed PUT URL, expires in 15 min
   "audio_key": "string"      // object key to pass to POST /entries
 }
+
+// Errors
+409 - monthly entry quota reached (checked here too, so no audio is uploaded
+      that POST /entries would refuse)
 ```
 
 ### POST /entries

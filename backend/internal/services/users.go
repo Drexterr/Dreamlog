@@ -6,16 +6,28 @@ import (
 
 	"github.com/dreamlog/backend/internal/models"
 	"github.com/dreamlog/backend/internal/repositories"
+	"github.com/dreamlog/backend/pkg/monitoring"
 	"github.com/google/uuid"
+	"go.uber.org/zap"
 )
 
 
 type UserService struct {
-	repo *repositories.UserRepository
+	repo    *repositories.UserRepository
+	objects objectPrefixDeleter // optional; nil = storage is not cleaned on deletion
+	log     *zap.Logger
 }
 
-func NewUserService(repo *repositories.UserRepository) *UserService {
-	return &UserService{repo: repo}
+// objectPrefixDeleter erases every stored object under a key prefix.
+type objectPrefixDeleter interface {
+	DeletePrefix(ctx context.Context, prefix string) (int, error)
+}
+
+func NewUserService(repo *repositories.UserRepository, objects objectPrefixDeleter, log *zap.Logger) *UserService {
+	if log == nil {
+		log = zap.NewNop()
+	}
+	return &UserService{repo: repo, objects: objects, log: log}
 }
 
 // GetOrCreate fetches the user by supabase_id, creating them if they don't exist.
@@ -73,10 +85,42 @@ func (s *UserService) UpdateProfile(ctx context.Context, userID uuid.UUID, input
 	return user, nil
 }
 
-// Delete permanently removes the user and all their data.
+// Delete permanently removes the user and all their data, including the
+// objects they left in storage (N7).
 func (s *UserService) Delete(ctx context.Context, userID uuid.UUID) error {
-	if err := s.repo.Delete(ctx, userID); err != nil {
+	return deleteAccount(ctx, s.repo, s.objects, s.log, userID)
+}
+
+// accountStore is what account deletion needs from UserRepository.
+type accountStore interface {
+	StoragePrefixes(ctx context.Context, userID uuid.UUID) ([]string, error)
+	Delete(ctx context.Context, userID uuid.UUID) error
+}
+
+// deleteAccount deletes the user's rows first - the deletion the user asked
+// for must not wait on, or fail because of, object storage - then erases
+// their storage prefixes. A storage failure is logged and reported; the
+// bucket lifecycle rules remain the backstop for anything left behind.
+func deleteAccount(ctx context.Context, repo accountStore, objects objectPrefixDeleter, log *zap.Logger, userID uuid.UUID) error {
+	var prefixes []string
+	if objects != nil {
+		var err error
+		if prefixes, err = repo.StoragePrefixes(ctx, userID); err != nil {
+			return fmt.Errorf("userService.Delete prefixes: %w", err)
+		}
+	}
+	if err := repo.Delete(ctx, userID); err != nil {
 		return fmt.Errorf("userService.Delete: %w", err)
+	}
+	if log == nil {
+		log = zap.NewNop()
+	}
+	cleanup := context.WithoutCancel(ctx)
+	for _, p := range prefixes {
+		if _, err := objects.DeletePrefix(cleanup, p); err != nil {
+			log.Error("account deletion: storage cleanup failed", zap.String("prefix", p), zap.Error(err))
+			monitoring.CaptureErr(err, map[string]string{"component": "account_storage_cleanup"})
+		}
 	}
 	return nil
 }

@@ -23,6 +23,7 @@ import (
 
 type fakeEntryServicer struct {
 	textCalls   int
+	presignCalls int
 	presignResp *models.PresignResponse
 	presignErr  error
 	createResp  *models.Entry
@@ -34,6 +35,7 @@ type fakeEntryServicer struct {
 }
 
 func (f *fakeEntryServicer) PresignUpload(_ context.Context, _ uuid.UUID) (*models.PresignResponse, error) {
+	f.presignCalls++
 	return f.presignResp, f.presignErr
 }
 
@@ -357,5 +359,24 @@ func TestEntryHandler_List_MissingAuth_Returns401(t *testing.T) {
 
 	if w.Code != http.StatusUnauthorized {
 		t.Errorf("missing auth: want 401, got %d", w.Code)
+	}
+}
+
+// N7: a user at the monthly limit is refused before uploading, so no audio is
+// orphaned in storage when registration would fail.
+func TestEntryHandler_Presign_QuotaExceeded_Returns409WithoutPresigning(t *testing.T) {
+	svc := &fakeEntryServicer{presignResp: &models.PresignResponse{UploadURL: "u", AudioKey: "k"}}
+	quota := &fakeEntryQuota{err: errors.New("monthly entry limit reached")}
+	r := newEntryTestRouter(t, svc, &fakeStorageUploader{}, entryTestUser(), quota)
+	w := httptest.NewRecorder()
+	req, _ := http.NewRequest(http.MethodPost, "/entries/presign", nil)
+	req.Header.Set("Authorization", "Bearer "+entryTestJWT(t))
+	r.ServeHTTP(w, req)
+
+	if w.Code != http.StatusConflict {
+		t.Fatalf("presign at quota: want 409, got %d: %s", w.Code, w.Body.String())
+	}
+	if quota.calls != 1 || svc.presignCalls != 0 {
+		t.Errorf("quota must be checked and no upload URL issued: quota=%d presign=%d", quota.calls, svc.presignCalls)
 	}
 }

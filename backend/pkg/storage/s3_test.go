@@ -239,3 +239,81 @@ func TestStorageExpansionConfigFailure(t *testing.T) {
 		t.Fatalf("invalid SDK configuration = %v, %v", client, err)
 	}
 }
+
+// N7: DeletePrefix lists every page under the prefix and deletes each key.
+func TestStorageDeletePrefix_PaginatesAndDeletes(t *testing.T) {
+	var mu sync.Mutex
+	var deleted []string
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		mu.Lock()
+		defer mu.Unlock()
+		switch {
+		case r.Method == http.MethodGet && r.URL.Query().Get("list-type") == "2":
+			if r.URL.Query().Get("prefix") != "audio/u1/" {
+				t.Errorf("listed wrong prefix %q", r.URL.Query().Get("prefix"))
+			}
+			w.Header().Set("Content-Type", "application/xml")
+			if r.URL.Query().Get("continuation-token") == "" {
+				_, _ = io.WriteString(w, `<ListBucketResult><IsTruncated>true</IsTruncated><NextContinuationToken>p2</NextContinuationToken><Contents><Key>audio/u1/a.aac</Key></Contents><Contents><Key>audio/u1/b.aac</Key></Contents></ListBucketResult>`)
+				return
+			}
+			_, _ = io.WriteString(w, `<ListBucketResult><IsTruncated>false</IsTruncated><Contents><Key>audio/u1/c.aac</Key></Contents></ListBucketResult>`)
+		case r.Method == http.MethodDelete:
+			deleted = append(deleted, strings.TrimPrefix(r.URL.Path, "/test-bucket/"))
+			w.WriteHeader(http.StatusNoContent)
+		default:
+			t.Errorf("unexpected request %s %s", r.Method, r.URL)
+		}
+	}))
+	defer server.Close()
+	client, err := New(storageTestConfig(t, server.URL))
+	if err != nil {
+		t.Fatal(err)
+	}
+	n, err := client.DeletePrefix(context.Background(), "audio/u1/")
+	if err != nil || n != 3 {
+		t.Fatalf("DeletePrefix = %d, %v", n, err)
+	}
+	if strings.Join(deleted, ",") != "audio/u1/a.aac,audio/u1/b.aac,audio/u1/c.aac" {
+		t.Fatalf("deleted %v", deleted)
+	}
+}
+
+// A prefix without a trailing slash could match other users' keys
+// ("audio/u1" also matches "audio/u10/...") - refused.
+func TestStorageDeletePrefix_RefusesUnboundedPrefix(t *testing.T) {
+	client, err := New(storageTestConfig(t, "http://127.0.0.1:1"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, p := range []string{"", "audio/u1", "audio"} {
+		if _, err := client.DeletePrefix(context.Background(), p); err == nil {
+			t.Errorf("prefix %q must be refused", p)
+		}
+	}
+}
+
+// N7: the lifecycle request carries one expiry rule per orphan prefix.
+func TestStorageEnsureLifecycle_SendsRules(t *testing.T) {
+	var body string
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPut || !r.URL.Query().Has("lifecycle") {
+			t.Errorf("unexpected request %s %s", r.Method, r.URL)
+		}
+		b, _ := io.ReadAll(r.Body)
+		body = string(b)
+	}))
+	defer server.Close()
+	client, err := New(storageTestConfig(t, server.URL))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := client.EnsureLifecycle(context.Background(), OrphanLifecycleRules); err != nil {
+		t.Fatal(err)
+	}
+	for _, want := range []string{"<Prefix>tts/</Prefix>", "<Days>1</Days>", "<Prefix>audio/</Prefix>", "<Prefix>therapy/</Prefix>", "<Prefix>notes/</Prefix>", "<Days>2</Days>", "<Status>Enabled</Status>"} {
+		if !strings.Contains(body, want) {
+			t.Errorf("lifecycle body missing %s: %s", want, body)
+		}
+	}
+}

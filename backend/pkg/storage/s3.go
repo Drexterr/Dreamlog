@@ -5,12 +5,14 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/credentials"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
+	"github.com/aws/aws-sdk-go-v2/service/s3/types"
 	appconfig "github.com/dreamlog/backend/internal/config"
 )
 
@@ -159,4 +161,69 @@ func (c *Client) Exists(ctx context.Context, key string) (bool, error) {
 		return false, nil
 	}
 	return true, nil
+}
+
+// DeletePrefix deletes every object whose key starts with prefix and returns
+// how many were removed. Used to erase a user's uploads on account deletion.
+func (c *Client) DeletePrefix(ctx context.Context, prefix string) (int, error) {
+	if prefix == "" || !strings.HasSuffix(prefix, "/") {
+		return 0, fmt.Errorf("storage: refusing to delete prefix %q (must end in /)", prefix)
+	}
+	deleted := 0
+	pages := s3.NewListObjectsV2Paginator(c.s3, &s3.ListObjectsV2Input{
+		Bucket: aws.String(c.bucket),
+		Prefix: aws.String(prefix),
+	})
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+		if err != nil {
+			return deleted, fmt.Errorf("storage: list %q: %w", prefix, err)
+		}
+		for _, obj := range page.Contents {
+			if err := c.Delete(ctx, aws.ToString(obj.Key)); err != nil {
+				return deleted, err
+			}
+			deleted++
+		}
+	}
+	return deleted, nil
+}
+
+// LifecycleRule expires objects under Prefix after Days days.
+type LifecycleRule struct {
+	Prefix string
+	Days   int32
+}
+
+// EnsureLifecycle installs expiry rules on the bucket (N7). Live objects are
+// deleted by the app long before these fire; the rules only catch orphans
+// (uploads never registered, TTS replies, data of crashed pipelines). It
+// replaces the bucket's whole lifecycle configuration.
+func (c *Client) EnsureLifecycle(ctx context.Context, rules []LifecycleRule) error {
+	cfg := &types.BucketLifecycleConfiguration{}
+	for _, r := range rules {
+		cfg.Rules = append(cfg.Rules, types.LifecycleRule{
+			ID:         aws.String("ode-expire-" + strings.TrimSuffix(r.Prefix, "/")),
+			Status:     types.ExpirationStatusEnabled,
+			Filter:     &types.LifecycleRuleFilterMemberPrefix{Value: r.Prefix},
+			Expiration: &types.LifecycleExpiration{Days: aws.Int32(r.Days)},
+		})
+	}
+	if _, err := c.s3.PutBucketLifecycleConfiguration(ctx, &s3.PutBucketLifecycleConfigurationInput{
+		Bucket:                 aws.String(c.bucket),
+		LifecycleConfiguration: cfg,
+	}); err != nil {
+		return fmt.Errorf("storage: put lifecycle: %w", err)
+	}
+	return nil
+}
+
+// OrphanLifecycleRules expire objects the app failed to delete. Live objects
+// are removed within minutes (audio after transcription, note photos after
+// OCR), so these windows only ever catch orphans.
+var OrphanLifecycleRules = []LifecycleRule{
+	{Prefix: "tts/", Days: 1},     // therapy replies are played once, right away
+	{Prefix: "audio/", Days: 2},   // journal audio: uploads never registered, failed pipelines
+	{Prefix: "therapy/", Days: 2}, // therapy voice turns
+	{Prefix: "notes/", Days: 2},   // therapist note photos
 }

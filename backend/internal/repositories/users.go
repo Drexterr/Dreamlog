@@ -497,3 +497,27 @@ func (r *UserRepository) UpdatePreferences(ctx context.Context, id uuid.UUID, ti
 	}
 	return u, nil
 }
+
+// StoragePrefixes lists the object-storage key prefixes holding a user's
+// uploads and generated audio, so account deletion can erase them (N7):
+// journal audio, therapy voice turns, therapy TTS replies and, for
+// therapists, note photos. Call it before Delete - the rows it reads cascade.
+func (r *UserRepository) StoragePrefixes(ctx context.Context, userID uuid.UUID) ([]string, error) {
+	prefixes := []string{"audio/" + userID.String() + "/", "therapy/" + userID.String() + "/"}
+	rows, err := r.db.Query(ctx, `
+		SELECT 'tts/' || id::text || '/' FROM therapy_sessions WHERE user_id = $1
+		UNION ALL
+		SELECT 'notes/' || id::text || '/' FROM therapists WHERE user_id = $1`, userID)
+	if err != nil {
+		return nil, fmt.Errorf("users.StoragePrefixes: %w", err)
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var p string
+		if err := rows.Scan(&p); err != nil {
+			return nil, fmt.Errorf("users.StoragePrefixes scan: %w", err)
+		}
+		prefixes = append(prefixes, p)
+	}
+	return prefixes, rows.Err()
+}

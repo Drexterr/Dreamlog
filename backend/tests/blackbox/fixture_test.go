@@ -131,7 +131,7 @@ func newAPI(t *testing.T) *apiHarness {
 	relationships := repositories.NewRelationshipRepository(db)
 	therapyRepo := repositories.NewTherapyRepository(db)
 	claude := services.NewClaudeService(&config.AnthropicConfig{StubAnalysis: true})
-	userSvc := services.NewUserService(users)
+	userSvc := services.NewUserService(users, nil, nil)
 	deps := handlers.Deps{
 		UserSvc: userSvc, AuthSvc: services.NewAuthService(users, "qa-blackbox-local-only", zap.NewNop()),
 		EntrySvc: services.NewEntryService(entries, storage, jobs), StorageSvc: storage,
