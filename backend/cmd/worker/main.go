@@ -131,6 +131,10 @@ func main() {
 	if derivedKey {
 		log.Warn("MASTER_ENCRYPTION_KEY not set - deriving notes encryption key from JWT secret; set an explicit key in production")
 	}
+	previousKey, err := resolvePreviousMasterKey(cfg.Security.PreviousMasterEncryptionKey)
+	if err != nil {
+		log.Fatal("MASTER_ENCRYPTION_KEY_PREVIOUS invalid", zap.Error(err))
+	}
 	therapistNotesRepo := repositories.NewTherapistNotesRepository(db)
 	notesQueue := queue.New(rdb, cfg.Worker.NotesQueueKey, cfg.Worker.NotesDLQKey, cfg.Worker.PollTimeout)
 	noteOCRWorker := workers.NewNoteOCRWorker(workers.NoteOCRWorkerDeps{
@@ -138,7 +142,7 @@ func main() {
 		Repo:       therapistNotesRepo,
 		Storage:    storageClient,
 		OCR:        claudeSvc,
-		Cipher:     services.NewNotesCipher(masterKey, therapistNotesRepo).RejectLegacy(cfg.Security.RejectLegacyCiphertext),
+		Cipher:     services.NewNotesCipher(masterKey, therapistNotesRepo).WithPreviousKey(previousKey).RejectLegacy(cfg.Security.RejectLegacyCiphertext),
 		Log:        log,
 		MaxRetries: cfg.Worker.MaxRetries,
 	})
@@ -201,4 +205,12 @@ func main() {
 	log.Info("starting transcription worker")
 	worker.Run(ctx)
 	log.Info("worker exited")
+}
+
+// resolvePreviousMasterKey parses MASTER_ENCRYPTION_KEY_PREVIOUS (nil when unset).
+func resolvePreviousMasterKey(configured string) ([]byte, error) {
+	if configured == "" {
+		return nil, nil
+	}
+	return pkgcrypto.ParseMasterKey(configured)
 }

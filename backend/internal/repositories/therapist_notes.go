@@ -57,6 +57,44 @@ func (r *TherapistNotesRepository) InsertWrappedDEK(ctx context.Context, therapi
 	return stored, nil
 }
 
+// WrappedKeyRow is one stored wrapped data key.
+type WrappedKeyRow struct {
+	TherapistID uuid.UUID
+	Wrapped     []byte
+}
+
+// ListWrappedDEKs returns every therapist's wrapped data key (master-key
+// rotation walks them).
+func (r *TherapistNotesRepository) ListWrappedDEKs(ctx context.Context) ([]WrappedKeyRow, error) {
+	rows, err := r.db.Query(ctx, `SELECT therapist_id, wrapped_dek FROM therapist_keys`)
+	if err != nil {
+		return nil, fmt.Errorf("notes.ListWrappedDEKs: %w", err)
+	}
+	defer rows.Close()
+	var out []WrappedKeyRow
+	for rows.Next() {
+		var k WrappedKeyRow
+		if err := rows.Scan(&k.TherapistID, &k.Wrapped); err != nil {
+			return nil, fmt.Errorf("notes.ListWrappedDEKs scan: %w", err)
+		}
+		out = append(out, k)
+	}
+	return out, rows.Err()
+}
+
+// ReplaceWrappedDEK swaps a therapist's wrapped key for a re-wrapped one, only
+// if the stored value is still old (compare-and-swap): a concurrent re-wrap
+// by another instance wins and this call reports false.
+func (r *TherapistNotesRepository) ReplaceWrappedDEK(ctx context.Context, therapistID uuid.UUID, old, replacement []byte) (bool, error) {
+	tag, err := r.db.Exec(ctx,
+		`UPDATE therapist_keys SET wrapped_dek = $3 WHERE therapist_id = $1 AND wrapped_dek = $2`,
+		therapistID, old, replacement)
+	if err != nil {
+		return false, fmt.Errorf("notes.ReplaceWrappedDEK: %w", err)
+	}
+	return tag.RowsAffected() == 1, nil
+}
+
 // ── External clients ─────────────────────────────────────────────────────────
 
 // CreateExternalClient inserts a client with a caller-generated id: the

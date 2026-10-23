@@ -137,6 +137,9 @@ APPLE_SHARED_SECRET   App Store Connect shared secret for IAP receipt verificati
 GOOGLE_PLAY_CREDENTIALS_JSON  Service-account JSON with Play Console financial-data access for IAP verification (blank in dev = same stub)
 GOOGLE_PLAY_PACKAGE_NAME      Android application ID for Play IAP verification (default com.talktoode.app)
 MASTER_ENCRYPTION_KEY Envelope-encryption master key for therapist notes (32 bytes hex/base64; blank in dev = derived from JWT secret; set explicitly in prod; needed on API and worker)
+MASTER_ENCRYPTION_KEY_PREVIOUS  Old master key during a rotation (data keys under it are re-wrapped; remove afterwards - docs/SECRET_ROTATION.md)
+ALLOW_UNVERIFIED_IAP  Production-only stopgap: start without store credentials (purchases are then granted unverified; remove before store launch)
+WORKER_POLL_TIMEOUT   Queue blocking-pop timeout, default 30s (each timeout is a billed Redis request)
 ADMIN_EMAILS          Comma-separated operator emails for /admin/* (DLQ tools); a VERIFIED email is required; blank = admin routes 404
 SENTRY_DSN            Sentry error reporting (blank in dev = disabled entirely; set on API and worker - pipeline failures report from the worker with entry_id)
 ```

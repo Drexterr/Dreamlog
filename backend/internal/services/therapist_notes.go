@@ -1,6 +1,7 @@
 package services
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"encoding/json"
@@ -74,8 +75,95 @@ type sessionSummarizer interface {
 // API service and the OCR worker.
 type NotesCipher struct {
 	masterKey    []byte
+	previousKey  []byte // old master key during a rotation; data keys still wrapped by it are re-wrapped
 	keys         notesKeyStore
 	rejectLegacy bool // only open row-bound v2 ciphertexts (N15)
+}
+
+// keyRewrapStore is implemented by the production repository; it lets the
+// cipher find and replace data keys still wrapped under the previous master key.
+type keyRewrapStore interface {
+	ListWrappedDEKs(ctx context.Context) ([]repositories.WrappedKeyRow, error)
+	ReplaceWrappedDEK(ctx context.Context, therapistID uuid.UUID, old, replacement []byte) (bool, error)
+}
+
+var _ keyRewrapStore = (*repositories.TherapistNotesRepository)(nil)
+
+// WithPreviousKey enables master-key rotation. After MASTER_ENCRYPTION_KEY is
+// changed, set the OLD value as MASTER_ENCRYPTION_KEY_PREVIOUS: data keys that
+// the new key cannot open are opened with the old one and re-wrapped under the
+// new one (opportunistically on use, and for all therapists by RewrapMasterKey
+// at API start). Remove the previous key once RewrapMasterKey reports nothing
+// left to re-wrap. A nil or identical key disables the fallback.
+func (c *NotesCipher) WithPreviousKey(previous []byte) *NotesCipher {
+	if len(previous) == 0 || bytes.Equal(previous, c.masterKey) {
+		c.previousKey = nil
+		return c
+	}
+	c.previousKey = previous
+	return c
+}
+
+// unwrap opens a wrapped data key under the current master key, falling back
+// to the previous one. rewrapped is the replacement wrapper when the fallback
+// was needed (nil otherwise).
+func (c *NotesCipher) unwrap(wrapped []byte) (dek, rewrapped []byte, err error) {
+	dek, err = pkgcrypto.UnwrapDEK(c.masterKey, wrapped)
+	if err == nil {
+		return dek, nil, nil
+	}
+	if c.previousKey == nil {
+		return nil, nil, err
+	}
+	dek, prevErr := pkgcrypto.UnwrapDEK(c.previousKey, wrapped)
+	if prevErr != nil {
+		return nil, nil, err // neither key opens it: report the current-key error
+	}
+	rewrapped, err = pkgcrypto.WrapDEK(c.masterKey, dek)
+	if err != nil {
+		return nil, nil, err
+	}
+	return dek, rewrapped, nil
+}
+
+// RewrapMasterKey re-wraps every data key still wrapped under the previous
+// master key, so MASTER_ENCRYPTION_KEY_PREVIOUS can be removed. It returns how
+// many keys it re-wrapped. Keys neither master key can open are counted in the
+// returned error (they signal a wrong key and need attention). Idempotent and
+// safe across concurrent instances (compare-and-swap per key).
+func (c *NotesCipher) RewrapMasterKey(ctx context.Context) (int, error) {
+	if c.previousKey == nil {
+		return 0, nil
+	}
+	store, ok := c.keys.(keyRewrapStore)
+	if !ok {
+		return 0, nil
+	}
+	rows, err := store.ListWrappedDEKs(ctx)
+	if err != nil {
+		return 0, err
+	}
+	rewrapped := 0
+	var failures []error
+	for _, row := range rows {
+		_, replacement, err := c.unwrap(row.Wrapped)
+		if err != nil {
+			failures = append(failures, fmt.Errorf("therapist %s: data key opens under neither master key", row.TherapistID))
+			continue
+		}
+		if replacement == nil {
+			continue // already under the current key
+		}
+		swapped, err := store.ReplaceWrappedDEK(ctx, row.TherapistID, row.Wrapped, replacement)
+		if err != nil {
+			failures = append(failures, err)
+			continue
+		}
+		if swapped {
+			rewrapped++
+		}
+	}
+	return rewrapped, errors.Join(failures...)
 }
 
 func NewNotesCipher(masterKey []byte, keys notesKeyStore) *NotesCipher {
@@ -128,7 +216,18 @@ func (c *NotesCipher) dek(ctx context.Context, therapistID uuid.UUID) ([]byte, e
 			return nil, err
 		}
 	}
-	return pkgcrypto.UnwrapDEK(c.masterKey, wrapped)
+	dek, replacement, err := c.unwrap(wrapped)
+	if err != nil {
+		return nil, err
+	}
+	if replacement != nil {
+		// Opportunistic re-wrap during a rotation; losing the race or failing
+		// to store is harmless - RewrapMasterKey retries every API start.
+		if rk, ok := c.keys.(keyRewrapStore); ok {
+			_, _ = rk.ReplaceWrappedDEK(ctx, therapistID, wrapped, replacement)
+		}
+	}
+	return dek, nil
 }
 
 // EncryptField seals a plaintext string for the therapist. Empty input → nil.

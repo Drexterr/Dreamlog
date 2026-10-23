@@ -12,6 +12,7 @@ import (
 	"github.com/dreamlog/backend/internal/repositories"
 	"github.com/dreamlog/backend/internal/services"
 	"github.com/dreamlog/backend/pkg/monitoring"
+	"github.com/dreamlog/backend/pkg/queue"
 	"go.uber.org/zap"
 )
 
@@ -87,6 +88,9 @@ func (w *TranscriptionWorker) Run(ctx context.Context) {
 
 	sem := make(chan struct{}, w.concurrency)
 	var inflight sync.WaitGroup
+	// Back off after Redis errors instead of retrying every 2 s: on a metered
+	// Redis the retry storm itself exhausts the request quota.
+	backoff := queue.NewBackoff(2*time.Second, time.Minute)
 	for {
 		select {
 		case <-ctx.Done():
@@ -108,10 +112,14 @@ func (w *TranscriptionWorker) Run(ctx context.Context) {
 
 		payload, err := w.queue.Dequeue(ctx)
 		if err != nil {
-			w.log.Error("queue dequeue error", zap.Error(err))
-			time.Sleep(2 * time.Second)
+			delay := backoff.Next()
+			w.log.Error("queue dequeue error", zap.Error(err), zap.Duration("retry_in", delay))
+			if !queue.Sleep(ctx, delay) {
+				continue // cancelled: the loop head runs the shutdown path
+			}
 			continue
 		}
+		backoff.Reset()
 		if payload == nil {
 			continue
 		}

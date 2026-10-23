@@ -12,6 +12,7 @@ import (
 	"github.com/dreamlog/backend/internal/models"
 	"github.com/dreamlog/backend/internal/services"
 	"github.com/dreamlog/backend/pkg/monitoring"
+	"github.com/dreamlog/backend/pkg/queue"
 	"github.com/google/uuid"
 	"go.uber.org/zap"
 )
@@ -71,6 +72,7 @@ func NewNoteOCRWorker(deps NoteOCRWorkerDeps) *NoteOCRWorker {
 // sequentially - note OCR volume is far below entry volume.
 func (w *NoteOCRWorker) Run(ctx context.Context) {
 	w.log.Info("note OCR worker starting", zap.Int("max_retries", w.maxRetries))
+	backoff := queue.NewBackoff(2*time.Second, time.Minute)
 	for {
 		select {
 		case <-ctx.Done():
@@ -81,10 +83,12 @@ func (w *NoteOCRWorker) Run(ctx context.Context) {
 
 		payload, err := w.queue.Dequeue(ctx)
 		if err != nil {
-			w.log.Error("note queue dequeue error", zap.Error(err))
-			time.Sleep(2 * time.Second)
+			delay := backoff.Next()
+			w.log.Error("note queue dequeue error", zap.Error(err), zap.Duration("retry_in", delay))
+			queue.Sleep(ctx, delay)
 			continue
 		}
+		backoff.Reset()
 		if payload == nil {
 			continue
 		}

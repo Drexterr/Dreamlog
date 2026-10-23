@@ -211,6 +211,17 @@ Backend on Railway (`https://dreamlog-production-f9e2.up.railway.app`):
       anyway, and confirm both services start after this deploys:
       STUB_AI_ANALYSIS, unset ANTHROPIC_API_KEY / MASTER_ENCRYPTION_KEY / SUPABASE_URL,
       STORAGE_PROXY_BASE_URL, and (API only) missing IAP verification credentials.
+- [ ] **`ALLOW_UNVERIFIED_IAP=true` is a stopgap (2026-10-23).** With `APP_ENV=production`
+      the API refuses to start without `APPLE_SHARED_SECRET` and
+      `GOOGLE_PLAY_CREDENTIALS_JSON`. Until the apps are in the stores, setting
+      `ALLOW_UNVERIFIED_IAP=true` lets it start (with a warning in the log) while
+      plans and therapy credits are granted WITHOUT a verified purchase. Set the
+      store credentials and **remove the flag before launch**.
+- [ ] **Redis request quota (Upstash).** The worker's two queue polls used the
+      500,000-request free limit in a month. Defaults are now 30 s polls with backoff
+      after errors (~175k requests/month for both queues); if the quota is still tight,
+      move to a paid Upstash plan or Railway Redis. Watch the Upstash usage graph.
+- [ ] **Secret rotation after the Railway incident:** follow docs/SECRET_ROTATION.md.
 - [ ] **`REJECT_LEGACY_CIPHERTEXT=true` on the API and worker (N15)** once the API log says
       "no legacy ciphertexts remain" after a deploy - therapist notes then only open in the
       row-bound v2 format.

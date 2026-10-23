@@ -44,6 +44,10 @@ func main() {
 		log.Fatal("unsafe production configuration (APP_ENV is unset or not development/test, so production checks apply; set APP_ENV=development for local dev)", zap.Strings("problems", problems))
 	}
 
+	if w := cfg.UnverifiedIAPWarning(); w != "" {
+		log.Warn(w)
+	}
+
 	// ── Sentry (no-op when SENTRY_DSN unset) ──────────────────────────────────
 	defer monitoring.InitSentry(cfg.Sentry.DSN, "api", log)()
 
@@ -151,12 +155,30 @@ func main() {
 	if derivedKey {
 		log.Warn("MASTER_ENCRYPTION_KEY not set - deriving notes encryption key from JWT secret; set an explicit key in production")
 	}
+	previousKey, err := resolvePreviousMasterKey(cfg.Security.PreviousMasterEncryptionKey)
+	if err != nil {
+		log.Fatal("MASTER_ENCRYPTION_KEY_PREVIOUS invalid", zap.Error(err))
+	}
 	therapistNotesRepo := repositories.NewTherapistNotesRepository(db)
 	notesQueue := queue.New(rdb, cfg.Worker.NotesQueueKey, cfg.Worker.NotesDLQKey, cfg.Worker.PollTimeout)
-	notesCipher := services.NewNotesCipher(masterKey, therapistNotesRepo).RejectLegacy(cfg.Security.RejectLegacyCiphertext)
+	notesCipher := services.NewNotesCipher(masterKey, therapistNotesRepo).WithPreviousKey(previousKey).RejectLegacy(cfg.Security.RejectLegacyCiphertext)
 	therapistNotesSvc := services.NewTherapistNotesService(
 		therapistNotesRepo, therapistRepo, notesQueue, storageSvc, claudeSvc, notesCipher,
 	)
+	// Master-key rotation: re-wrap data keys still wrapped under the previous key.
+	if previousKey != nil {
+		go func() {
+			defer monitoring.RecoverRepanic()
+			n, err := notesCipher.RewrapMasterKey(context.Background())
+			if err != nil {
+				log.Error("notes: master key re-wrap incomplete", zap.Int("rewrapped", n), zap.Error(err))
+				monitoring.CaptureErr(err, map[string]string{"component": "notes_master_rewrap"})
+				return
+			}
+			log.Info("notes: master key re-wrap complete - remove MASTER_ENCRYPTION_KEY_PREVIOUS from the API and worker once both run this version", zap.Int("rewrapped", n))
+		}()
+	}
+
 	// Re-seal therapist ciphertexts written before row/column binding (M10).
 	// Idempotent; runs in the background so startup isn't delayed.
 	go func() {
@@ -267,4 +289,12 @@ func supabaseJWKSURL(supabaseURL string) string {
 		return ""
 	}
 	return strings.TrimRight(supabaseURL, "/") + "/auth/v1/.well-known/jwks.json"
+}
+
+// resolvePreviousMasterKey parses MASTER_ENCRYPTION_KEY_PREVIOUS (nil when unset).
+func resolvePreviousMasterKey(configured string) ([]byte, error) {
+	if configured == "" {
+		return nil, nil
+	}
+	return pkgcrypto.ParseMasterKey(configured)
 }

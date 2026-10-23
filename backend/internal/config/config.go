@@ -66,6 +66,11 @@ type SecurityConfig struct {
 	// ciphertexts on read (N15). Enable once the startup re-seal reports no
 	// legacy rows remain.
 	RejectLegacyCiphertext bool
+	// PreviousMasterEncryptionKey is the OLD master key during a rotation:
+	// data keys wrapped under it are re-wrapped under MasterEncryptionKey.
+	// Set it together with the new MASTER_ENCRYPTION_KEY, remove it once the
+	// API logs that no data keys remain to re-wrap.
+	PreviousMasterEncryptionKey string
 }
 
 type ServerConfig struct {
@@ -153,6 +158,13 @@ type IAPConfig struct {
 	// purchases (App Review demo account, internal testers). Everyone else
 	// needs a real store purchase.
 	SandboxAllowedEmails []string
+	// AllowUnverified acknowledges that store verification is not configured:
+	// in production the API then starts anyway and /billing/upgrade and
+	// /billing/therapy-credits GRANT PURCHASES WITHOUT PROOF. Only for the
+	// period before the apps are in the stores (nothing real can be bought
+	// yet); remove it once APPLE_SHARED_SECRET and GOOGLE_PLAY_CREDENTIALS_JSON
+	// are set. Never needed in development.
+	AllowUnverified bool
 }
 
 type WorkerConfig struct {
@@ -238,6 +250,7 @@ func Load() (*Config, error) {
 			GooglePlayPackageName:     getEnv("GOOGLE_PLAY_PACKAGE_NAME", "com.talktoode.app"),
 			AppleBundleID:             getEnv("APPLE_BUNDLE_ID", "com.talktoode.app"),
 			SandboxAllowedEmails:      splitCommaList(getEnv("IAP_SANDBOX_ALLOWED_EMAILS", "")),
+			AllowUnverified:           parseBool("ALLOW_UNVERIFIED_IAP", false),
 		},
 		Worker: WorkerConfig{
 			Concurrency:   parseInt("WORKER_CONCURRENCY", 4),
@@ -246,11 +259,12 @@ func Load() (*Config, error) {
 			DLQKey:        getEnv("WORKER_DLQ_KEY", "dreamlog:transcription:dlq"),
 			NotesQueueKey: getEnv("WORKER_NOTES_QUEUE_KEY", "dreamlog:notes:queue"),
 			NotesDLQKey:   getEnv("WORKER_NOTES_DLQ_KEY", "dreamlog:notes:dlq"),
-			PollTimeout:   parseDuration("WORKER_POLL_TIMEOUT", 5*time.Second),
+			PollTimeout:   parseDuration("WORKER_POLL_TIMEOUT", 30*time.Second),
 		},
 		Security: SecurityConfig{
 			MasterEncryptionKey:    getEnv("MASTER_ENCRYPTION_KEY", ""),
 			RejectLegacyCiphertext: parseBool("REJECT_LEGACY_CIPHERTEXT", false),
+			PreviousMasterEncryptionKey: getEnv("MASTER_ENCRYPTION_KEY_PREVIOUS", ""),
 		},
 		Sentry: SentryConfig{
 			DSN: getEnv("SENTRY_DSN", ""),
@@ -341,6 +355,16 @@ func (c *Config) IsProduction() bool {
 	return !nonProductionEnvs[strings.ToLower(strings.TrimSpace(c.AppEnv))]
 }
 
+// UnverifiedIAPWarning returns a startup warning when production runs with
+// ALLOW_UNVERIFIED_IAP and no store credentials - purchases are then granted
+// without proof - or "" when verification is configured or not applicable.
+func (c *Config) UnverifiedIAPWarning() string {
+	if c.IsProduction() && c.IAP.AllowUnverified && (c.IAP.AppleSharedSecret == "" || c.IAP.GooglePlayCredentialsJSON == "") {
+		return "ALLOW_UNVERIFIED_IAP is on and store credentials are missing: plans and therapy credits are granted WITHOUT a verified purchase. Set APPLE_SHARED_SECRET and GOOGLE_PLAY_CREDENTIALS_JSON and remove ALLOW_UNVERIFIED_IAP before the stores go live."
+	}
+	return ""
+}
+
 // ProductionProblems lists configuration that is unsafe in production: dev
 // stubs that grant paid plans or fake AI output, and missing secrets that
 // would silently weaken safety or encryption. Empty outside production.
@@ -365,8 +389,8 @@ func (c *Config) ProductionProblems(api bool) []string {
 	if c.Storage.ProxyBaseURL != "" {
 		p = append(p, "STORAGE_PROXY_BASE_URL must be unset (dev-only unauthenticated upload proxy)")
 	}
-	if api && (c.IAP.AppleSharedSecret == "" || c.IAP.GooglePlayCredentialsJSON == "") {
-		p = append(p, "APPLE_SHARED_SECRET and GOOGLE_PLAY_CREDENTIALS_JSON are required (otherwise /billing/upgrade grants plans without a purchase)")
+	if api && !c.IAP.AllowUnverified && (c.IAP.AppleSharedSecret == "" || c.IAP.GooglePlayCredentialsJSON == "") {
+		p = append(p, "APPLE_SHARED_SECRET and GOOGLE_PLAY_CREDENTIALS_JSON are required (otherwise /billing/upgrade grants plans without a purchase; set ALLOW_UNVERIFIED_IAP=true to start anyway until the stores are set up)")
 	}
 	return p
 }
