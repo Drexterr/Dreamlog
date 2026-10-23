@@ -171,3 +171,12 @@ date (in the client list), plus the Phase 5g mood stats for linked app clients.
 `therapists.plan` exists (`trial`) since Phase 5g. A natural gate: free ≤ 2 external
 clients, paid unlimited + AI summaries. Not enforced anywhere yet — product decision
 pending (see docs/PRICING.md when it lands).
+
+## Content-Security-Policy (N14)
+
+The portal CSP (`therapist-portal/firebase.json`) allows only the exact inline
+scripts of the static export: `npm run build` runs `next build` and then
+`scripts/csp-hashes.cjs`, which hashes every inline `<script>` in `out/` and
+writes them into `script-src` (no `'unsafe-inline'`). Always deploy from a fresh
+`npm run build` and commit the updated `firebase.json`; `npm run csp:check`
+fails if the committed hashes no longer match the export.

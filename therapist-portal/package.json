@@ -4,7 +4,8 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "next build && node scripts/csp-hashes.cjs",
+    "csp:check": "node scripts/csp-hashes.cjs --check",
     "start": "next start",
     "lint": "next lint"
   },
