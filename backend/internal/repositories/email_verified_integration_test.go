@@ -84,4 +84,12 @@ func TestIntegration_Upsert_VerifiedSignInTakesOverUnverifiedEmail(t *testing.T)
 	if err != nil || again.ID != local.ID || !again.EmailVerified {
 		t.Fatalf("verification must be recorded: %+v %v", again, err)
 	}
+	// A later token that doesn't assert verification never downgrades it.
+	if kept, err := r.Upsert(ctx, local.SupabaseID, local.Email, "Later", false); err != nil || !kept.EmailVerified {
+		t.Fatalf("verified address downgraded: %+v %v", kept, err)
+	}
+	// A changed address must be verified afresh.
+	if changed, err := r.Upsert(ctx, local.SupabaseID, "changed-"+email, "Later", false); err != nil || changed.EmailVerified {
+		t.Fatalf("a new address must not inherit verification: %+v %v", changed, err)
+	}
 }

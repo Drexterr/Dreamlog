@@ -183,7 +183,8 @@ func (r *UserRepository) Upsert(ctx context.Context, supabaseID, email, name str
 		return nil, fmt.Errorf("users.Upsert lookup: %w", err)
 	case email == "":
 		return existing, nil
-	case existing.Email == email && existing.EmailVerified == emailVerified:
+	case existing.Email == email && (existing.EmailVerified || !emailVerified):
+		// Unchanged - a verified address is never downgraded for the same email.
 		return existing, nil
 	}
 
@@ -208,7 +209,9 @@ func (r *UserRepository) Upsert(ctx context.Context, supabaseID, email, name str
 		VALUES ($1, $2, $3, $4)
 		ON CONFLICT (supabase_id) DO UPDATE
 			SET email = EXCLUDED.email,
-			    email_verified = EXCLUDED.email_verified,
+			    email_verified = CASE WHEN users.email = EXCLUDED.email
+			                          THEN users.email_verified OR EXCLUDED.email_verified
+			                          ELSE EXCLUDED.email_verified END,
 			    updated_at = NOW()
 		RETURNING ` + userColumns
 
