@@ -110,9 +110,14 @@ func NewRouter(deps Deps) http.Handler {
 
 	// Billing / subscription (purchases happen in the store SDKs on-device;
 	// the backend verifies receipts server-side before granting a plan)
-	billingHandler := NewBillingHandler(deps.SubscriptionSvc, deps.PaymentRepo, deps.AnalyticsSvc, deps.IAPSvc)
+	var therapyCredits therapyCreditStore // nil-safe: no typed-nil when PaymentRepo is unset
+	if deps.PaymentRepo != nil {
+		therapyCredits = deps.PaymentRepo
+	}
+	billingHandler := NewBillingHandler(deps.SubscriptionSvc, deps.PaymentRepo, deps.AnalyticsSvc, deps.IAPSvc, therapyCredits)
 	auth.GET("/billing/plan", billingHandler.GetPlan)
 	auth.POST("/billing/upgrade", billingHandler.Upgrade)
+	auth.POST("/billing/therapy-credits", billingHandler.BuyTherapyCredits)
 
 	entryHandler := NewEntryHandler(deps.EntrySvc, deps.StorageSvc, deps.SubscriptionSvc)
 	// Upload proxy: only registered when STORAGE_PROXY_BASE_URL is set (local MinIO dev only)

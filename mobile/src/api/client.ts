@@ -416,6 +416,14 @@ export const api = {
     http
       .post<BillingPlanResponse>('/billing/upgrade', { plan, period, ...purchase })
       .then((r) => r.data),
+
+  // Grants prepaid therapy session credits after the backend verifies the
+  // consumable In-App Purchase with the store. Idempotent per store
+  // transaction for the same user (credits_granted = 0 on a replay).
+  buyTherapyCredits: (purchase: import('../types').TherapyCreditPurchase): Promise<import('../types').TherapyCreditsResponse> =>
+    http
+      .post<import('../types').TherapyCreditsResponse>('/billing/therapy-credits', purchase)
+      .then((r) => r.data),
 };
 
 // ── Typed error helper ───────────────────────────────────────────────────────

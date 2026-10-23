@@ -1,5 +1,19 @@
 # DreamLog Testing Strategy
 
+## Therapy pay-per-use credits (23 October 2026)
+
+- `services/therapy_credits_test.go`: paid sessions spend exactly one credit at the
+  right price tier, free sessions (first ever, Pro allowance) never spend one, no
+  credit = 402 with no session, a failed insert keeps the credit, dev-stub fallback.
+- `handlers/billing_therapy_credits_test.go`: store verification, account binding,
+  sandbox allowlist, same-user idempotent replay, other-user 409, member-price SKU
+  Pro-only (also when the Pro pass expired), dev stub, `therapy_credits` on `/billing/plan`.
+- `repositories/therapy_credits_integration_test.go` (integration tag): concurrent
+  replays credit once, concurrent session starts never overspend, rollback keeps the
+  credit, wrong-kind payments refused, migration 000047 up/down/up.
+- Blackbox `TestBlackboxTherapyCredits`; mobile `TherapyPricing.test.tsx` and the
+  therapy-credit cases in `src/services/__tests__/iap.test.ts`.
+
 ## Website and therapist portal redesign (20 October 2026)
 
 See [WEBSITE_REDESIGN.md](WEBSITE_REDESIGN.md). Run the production export and

@@ -18,6 +18,9 @@ import (
 // therapyRepo is the minimal repository interface TherapyService needs.
 type therapyRepo interface {
 	Create(ctx context.Context, userID uuid.UUID, persona models.TherapyPersona, snapshot models.TherapyContextSnapshot, billingPaise int) (*models.TherapySession, error)
+	// CreateWithCredit atomically consumes one prepaid credit and creates the
+	// session; models.ErrNoTherapyCredits when the balance is 0.
+	CreateWithCredit(ctx context.Context, userID uuid.UUID, persona models.TherapyPersona, snapshot models.TherapyContextSnapshot, billingPaise int) (*models.TherapySession, error)
 	GetByID(ctx context.Context, id, userID uuid.UUID) (*models.TherapySession, error)
 	ListByUser(ctx context.Context, userID uuid.UUID) ([]*models.TherapySession, error)
 	EndActive(ctx context.Context, id uuid.UUID, status models.TherapySessionStatus, endedAt *time.Time, durationSec *int) (bool, error)
@@ -102,9 +105,13 @@ func NewTherapyService(
 // Billing logic:
 //   - First session ever → free (acquisition hook)
 //   - Pro plan → 1 session/month included (models constant; see docs/PRICING.md)
-//   - Otherwise → ₹499 (stub in dev: allow with billing_amount_paise set)
+//   - Otherwise → one prepaid session credit (bought as a consumable IAP via
+//     POST /billing/therapy-credits) is consumed atomically with the session
+//     insert; billing_amount_paise records the price tier (₹499 standalone,
+//     ₹299 Pro member). No credit → ErrTherapyPaymentRequired (402). In dev
+//     (stub billing) a credit is used when present, otherwise allowed anyway.
 func (s *TherapyService) StartSession(ctx context.Context, userID uuid.UUID, userPlan models.Plan, persona models.TherapyPersona, userCountry, userVoiceLanguage, userName string) (*models.TherapySession, error) {
-	billingPaise, err := s.computeBilling(ctx, userID, userPlan)
+	billingPaise, needsCredit, err := s.computeBilling(ctx, userID, userPlan)
 	if err != nil {
 		return nil, err
 	}
@@ -118,7 +125,19 @@ func (s *TherapyService) StartSession(ctx context.Context, userID uuid.UUID, use
 	snapshot.VoiceLanguage = userVoiceLanguage
 	snapshot.UserName = userName
 
-	session, err := s.repo.Create(ctx, userID, persona, snapshot, billingPaise)
+	var session *models.TherapySession
+	if needsCredit {
+		session, err = s.repo.CreateWithCredit(ctx, userID, persona, snapshot, billingPaise)
+		if errors.Is(err, models.ErrNoTherapyCredits) {
+			if !s.stubBilling {
+				return nil, ErrTherapyPaymentRequired
+			}
+			// Dev stub: no real payment exists, allow the session anyway.
+			session, err = s.repo.Create(ctx, userID, persona, snapshot, billingPaise)
+		}
+	} else {
+		session, err = s.repo.Create(ctx, userID, persona, snapshot, billingPaise)
+	}
 	if err != nil {
 		return nil, fmt.Errorf("therapySvc.StartSession: %w", err)
 	}
@@ -552,14 +571,17 @@ func (s *TherapyService) ListSessions(ctx context.Context, userID uuid.UUID) (*m
 
 // ── Internal helpers ─────────────────────────────────────────────────────────
 
-func (s *TherapyService) computeBilling(ctx context.Context, userID uuid.UUID, plan models.Plan) (int, error) {
+// computeBilling decides how a new session is paid for: the price tier in
+// paise, and whether it must be paid with a prepaid credit (needsCredit).
+// Free sessions (first ever, Pro allowance) need no credit.
+func (s *TherapyService) computeBilling(ctx context.Context, userID uuid.UUID, plan models.Plan) (paise int, needsCredit bool, err error) {
 	// First session ever is always free.
 	total, err := s.repo.CountAll(ctx, userID)
 	if err != nil {
-		return 0, fmt.Errorf("therapySvc.billing: %w", err)
+		return 0, false, fmt.Errorf("therapySvc.billing: %w", err)
 	}
 	if total == 0 {
-		return 0, nil
+		return 0, false, nil
 	}
 
 	// Pro plan includes TherapyProMonthlyAllowance sessions/month; beyond that,
@@ -568,10 +590,10 @@ func (s *TherapyService) computeBilling(ctx context.Context, userID uuid.UUID, p
 	if isPro {
 		monthCount, err := s.repo.CountThisMonth(ctx, userID)
 		if err != nil {
-			return 0, fmt.Errorf("therapySvc.billing: %w", err)
+			return 0, false, fmt.Errorf("therapySvc.billing: %w", err)
 		}
 		if monthCount < models.TherapyProMonthlyAllowance {
-			return 0, nil
+			return 0, false, nil
 		}
 	}
 
@@ -579,14 +601,8 @@ func (s *TherapyService) computeBilling(ctx context.Context, userID uuid.UUID, p
 	if isPro {
 		sessionPrice = models.TherapyMemberSessionPricePaise
 	}
-
-	// In dev stub mode: allow with billing amount set (no real payment).
-	if s.stubBilling {
-		return sessionPrice, nil
-	}
-
-	// In prod: real payment would be processed here. For now, return 402.
-	return 0, ErrTherapyPaymentRequired
+	// Paid with a prepaid credit, consumed atomically with the session insert.
+	return sessionPrice, true, nil
 }
 
 func (s *TherapyService) loadContextSnapshot(ctx context.Context, userID uuid.UUID) (models.TherapyContextSnapshot, bool, error) {

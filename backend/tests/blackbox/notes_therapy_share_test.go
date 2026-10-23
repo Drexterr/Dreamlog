@@ -85,3 +85,38 @@ func TestBlackboxSharingTherapy(t *testing.T) {
 	h.request(t, "therapy.end-session", "POST", "/therapy/sessions/"+id+"/end", `{}`, h.owner, 200)
 	h.request(t, "therapy.reject-turn-after-end", "POST", "/therapy/sessions/"+id+"/messages", `{"content":"QA extra turn","input_mode":"text"}`, h.owner, 409)
 }
+
+// Therapy pay-per-use: credits bought through POST /billing/therapy-credits
+// (dev stub - no store credentials) pay for sessions beyond the free first one.
+func TestBlackboxTherapyCredits(t *testing.T) {
+	h := newAPI(t)
+	credits := func(name string) float64 {
+		t.Helper()
+		plan := h.request(t, name, "GET", "/billing/plan", "", h.other, 200)
+		n, ok := plan["therapy_credits"].(float64)
+		if !ok {
+			t.Fatalf("therapy_credits missing: %v", plan)
+		}
+		return n
+	}
+	if credits("credits.initial-balance") != 0 {
+		t.Fatal("new accounts start without credits")
+	}
+	h.request(t, "credits.reject-unknown-product", "POST", "/billing/therapy-credits", `{"product_id":"com.example.other"}`, h.other, 400)
+	h.request(t, "credits.reject-plan-product", "POST", "/billing/therapy-credits", `{"product_id":"com.talktoode.app.plus.monthly"}`, h.other, 400)
+	h.request(t, "credits.member-price-pro-only", "POST", "/billing/therapy-credits", `{"product_id":"com.talktoode.app.therapy.member"}`, h.other, 403)
+	got := h.request(t, "credits.dev-grant", "POST", "/billing/therapy-credits", `{"product_id":"com.talktoode.app.therapy.single"}`, h.other, 200)
+	if got["therapy_credits"] != float64(1) || got["credits_granted"] != float64(1) {
+		t.Fatalf("grant: %v", got)
+	}
+	h.request(t, "credits.member-price-for-pro", "POST", "/billing/therapy-credits", `{"product_id":"com.talktoode.app.therapy.member"}`, h.owner, 200)
+
+	first := h.request(t, "credits.first-session-free", "POST", "/therapy/sessions", `{}`, h.other, 201)
+	if first["billing_amount_paise"] != float64(0) || credits("credits.free-session-keeps-credit") != 1 {
+		t.Fatalf("the free first session must not spend a credit: %v", first)
+	}
+	paid := h.request(t, "credits.paid-session-spends-credit", "POST", "/therapy/sessions", `{}`, h.other, 201)
+	if paid["billing_amount_paise"] != float64(49900) || credits("credits.balance-after-paid-session") != 0 {
+		t.Fatalf("paid session: %v", paid)
+	}
+}

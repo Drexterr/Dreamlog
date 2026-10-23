@@ -45,10 +45,17 @@ Left to do (needs your store accounts):
       internal-testing license testers): buy Plus monthly, verify `payments` row
       (store, product_id, transaction_id) and `plan_expires_at` ≈ +30 days; kill the
       app between purchase and grant and confirm the store re-delivers.
-- [ ] **Implement therapy pay-per-use billing server-side.** `TherapyService.computeBilling`
-      currently returns `402` in production with a "real payment would be processed here"
-      comment — non-Pro users can never buy a session. Wire a therapy-session consumable
-      SKU through the same IAP verification path.
+- [x] **Therapy pay-per-use billing.** ✅ Code done 2026-10-23: prepaid session credits
+      bought as consumable IAPs (`POST /billing/therapy-credits`, same store verification,
+      replay protection and account binding as plan passes; migration 000047), spent
+      atomically by `POST /therapy/sessions`; the mobile pricing screen sells them again.
+- [ ] **Create the 2 therapy-session products** in App Store Connect and the Play Console
+      as *consumable* products: `com.talktoode.app.therapy.single` (standalone, ₹499 /
+      $7.99 / €7.99) and `com.talktoode.app.therapy.member` (Pro member price, ₹299 /
+      $4.99 / €4.99). IDs must match `IAPTherapyCatalog` in `backend/internal/services/iap.go`
+      and `mobile/src/services/iap.ts`. Then rebuild (`eas build`) and sandbox-test: buy a
+      session, confirm a `payments` row with plan `therapy`, `users.therapy_credits` +1 and a
+      `therapy_credit_ledger` row; start a paid session and confirm the credit is spent.
 - [ ] Enroll in the App Store Small Business Program + Play 15% tier (docs/PRICING.md).
 
 ### Billing integrity & subscription compliance (found 2026-06-10 audit)

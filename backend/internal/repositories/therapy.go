@@ -81,6 +81,56 @@ func (r *TherapyRepository) Create(ctx context.Context, userID uuid.UUID, person
 	return s, nil
 }
 
+// CreateWithCredit starts a session paid with one prepaid therapy credit. The
+// credit is consumed, the session created and the ledger written in ONE
+// transaction: a failure anywhere rolls the credit back, and the conditional
+// decrement (row-locked, re-checked by concurrent callers) means concurrent
+// starts can never spend more credits than sessions they create. Returns
+// models.ErrNoTherapyCredits when the balance is 0.
+func (r *TherapyRepository) CreateWithCredit(ctx context.Context, userID uuid.UUID, persona models.TherapyPersona, snapshot models.TherapyContextSnapshot, billingPaise int) (*models.TherapySession, error) {
+	snapshotJSON, err := json.Marshal(snapshot)
+	if err != nil {
+		return nil, fmt.Errorf("therapy.CreateWithCredit: marshal snapshot: %w", err)
+	}
+
+	tx, err := r.db.Begin(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("therapy.CreateWithCredit begin: %w", err)
+	}
+	defer tx.Rollback(ctx) //nolint:errcheck
+
+	var remaining int
+	err = tx.QueryRow(ctx,
+		`UPDATE users SET therapy_credits = therapy_credits - 1, updated_at = NOW()
+		 WHERE id = $1 AND therapy_credits > 0
+		 RETURNING therapy_credits`, userID,
+	).Scan(&remaining)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return nil, models.ErrNoTherapyCredits
+	}
+	if err != nil {
+		return nil, fmt.Errorf("therapy.CreateWithCredit consume credit: %w", err)
+	}
+
+	const q = `
+		INSERT INTO therapy_sessions (user_id, persona, expires_at, context_snapshot, billing_amount_paise)
+		VALUES ($1, $2, NOW() + INTERVAL '1 hour', $3, $4)
+		RETURNING ` + therapySessionColumns
+	s, err := scanSession(tx.QueryRow(ctx, q, userID, persona, string(snapshotJSON), billingPaise))
+	if err != nil {
+		return nil, fmt.Errorf("therapy.CreateWithCredit create session: %w", err)
+	}
+	if _, err := tx.Exec(ctx,
+		`INSERT INTO therapy_credit_ledger (user_id, delta, reason, session_id) VALUES ($1, -1, 'session', $2)`,
+		userID, s.ID); err != nil {
+		return nil, fmt.Errorf("therapy.CreateWithCredit ledger: %w", err)
+	}
+	if err := tx.Commit(ctx); err != nil {
+		return nil, fmt.Errorf("therapy.CreateWithCredit commit: %w", err)
+	}
+	return s, nil
+}
+
 // GetByID returns a session, verifying user ownership. Returns nil if not found.
 func (r *TherapyRepository) GetByID(ctx context.Context, id, userID uuid.UUID) (*models.TherapySession, error) {
 	const q = `SELECT ` + therapySessionColumns + ` FROM therapy_sessions WHERE id = $1 AND user_id = $2`

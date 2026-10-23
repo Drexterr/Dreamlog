@@ -100,6 +100,15 @@ type TherapySession struct {
 // write is refused because the session is no longer active.
 var ErrTherapySessionNotActive = errors.New("therapy session is not active")
 
+// ErrNoTherapyCredits is returned by the therapy repository when a session
+// that must be paid with a credit is started by a user whose balance is 0.
+var ErrNoTherapyCredits = errors.New("no therapy session credits")
+
+// PaymentItemTherapyCredit is the payments.plan value recorded for therapy
+// session credit purchases. It is a payment kind, not a subscription plan:
+// never pass it to plan gating.
+const PaymentItemTherapyCredit Plan = "therapy"
+
 type TherapySessionMessage struct {
 	ID        uuid.UUID `json:"id"`
 	SessionID uuid.UUID `json:"session_id"`

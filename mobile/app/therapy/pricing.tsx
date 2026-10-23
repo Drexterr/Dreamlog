@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -7,12 +7,23 @@ import {
   StyleSheet,
   StatusBar,
   ActivityIndicator,
+  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useTheme } from '../../src/context/ThemeContext';
+import { api } from '../../src/api/client';
+import {
+  purchaseTherapyCredit,
+  finishPurchase,
+  isUserCancelled,
+  THERAPY_CREDIT_PRODUCT_IDS,
+} from '../../src/services/iap';
+import type { TherapyCreditKind } from '../../src/services/iap';
+import type { BillingPlanResponse } from '../../src/types';
 import {
   resetAndDetectRegion,
+  THERAPY_SESSION_PRICE,
   THERAPY_MEMBER_SESSION_PRICE,
   PLAN_PRICE_SHORT,
 } from '../../src/services/region';
@@ -35,17 +46,52 @@ type SessionOption = {
   cta: string;
   highlight: boolean;
   isPlan?: boolean;
+  // Set for a pay-per-use session: which consumable SKU it buys.
+  creditKind?: TherapyCreditKind;
 };
 
 // All prices render in the user's currency only (location asked at account
 // creation: India → INR, Europe → EUR, else USD). Canonical: docs/PRICING.md.
-// v1 launch: pay-per-use single sessions are hidden — the backend has no store
-// SKU for them yet (computeBilling returns 402 in prod). Sessions ship via the
-// free first session + Pro plan only. Re-add a 'single' option here once a
-// therapy-session consumable IAP is wired end-to-end.
-function buildSessionOptions(currency: RegionCurrency): SessionOption[] {
+// Pay-per-use sessions are single prepaid credits (no packs - see PRICING.md):
+// Pro members buy at the member price (its own SKU, redeemable only on Pro),
+// everyone else at the standalone price.
+function buildSessionOptions(currency: RegionCurrency, isPro: boolean): SessionOption[] {
   const memberPrice = THERAPY_MEMBER_SESSION_PRICE[currency];
+  const single: SessionOption = isPro
+    ? {
+        id: 'single',
+        badge: 'MEMBER PRICE',
+        title: 'Extra session',
+        subtitle: 'For when you want more than your included session',
+        price: memberPrice,
+        perSession: `Member price - ${THERAPY_SESSION_PRICE[currency]} without Pro`,
+        features: [
+          'One session, up to 60 minutes',
+          'Use it whenever you like - it does not expire',
+          'One-time purchase, no subscription',
+        ],
+        cta: `Buy a session · ${memberPrice}`,
+        highlight: false,
+        creditKind: 'member',
+      }
+    : {
+        id: 'single',
+        title: 'Single session',
+        subtitle: 'Pay once, talk when you are ready',
+        price: THERAPY_SESSION_PRICE[currency],
+        perSession: `Pro members pay ${memberPrice}`,
+        features: [
+          'One session, up to 60 minutes',
+          'Use it whenever you like - it does not expire',
+          'One-time purchase, no subscription',
+        ],
+        cta: `Buy a session · ${THERAPY_SESSION_PRICE[currency]}`,
+        highlight: false,
+        creditKind: 'single',
+      };
+  if (isPro) return [single];
   return [
+    single,
     {
       id: 'pro',
       badge: 'BEST VALUE',
@@ -83,16 +129,20 @@ function OptionCard({
   option,
   colors,
   onPress,
+  busy = false,
 }: {
   option: SessionOption;
   colors: ThemeColors;
   onPress: () => void;
+  busy?: boolean;
 }) {
   const { price, perSession } = option;
 
   return (
     <TouchableOpacity
       testID={therapyPricingCtaID(option.id)}
+      disabled={busy}
+      accessibilityState={{ busy, disabled: busy }}
       style={[
         cardStyles.card,
         {
@@ -154,11 +204,16 @@ function OptionCard({
           },
         ]}
         onPress={onPress}
+        disabled={busy}
         activeOpacity={0.85}
       >
-        <Text style={[cardStyles.ctaText, { color: option.highlight ? Palette.onBrand : colors.brand }]}>
-          {option.cta}
-        </Text>
+        {busy ? (
+          <ActivityIndicator color={option.highlight ? Palette.onBrand : colors.brand} />
+        ) : (
+          <Text style={[cardStyles.ctaText, { color: option.highlight ? Palette.onBrand : colors.brand }]}>
+            {option.cta}
+          </Text>
+        )}
       </TouchableOpacity>
     </TouchableOpacity>
   );
@@ -246,19 +301,75 @@ export default function TherapyPricingScreen() {
   const { colors } = useTheme();
   const router = useRouter();
   const [currency, setCurrency] = useState<RegionCurrency | null>(null);
+  const [billing, setBilling] = useState<BillingPlanResponse | null>(null);
+  const [credits, setCredits] = useState(0);
+  const [purchasing, setPurchasing] = useState(false);
 
   useEffect(() => {
     resetAndDetectRegion().then(setCurrency).catch(() => setCurrency('usd'));
   }, []);
 
+  // Plan (for the member price), prepaid balance and the purchase account
+  // token. Fail-soft: without it the standalone price is offered.
+  useEffect(() => {
+    let alive = true;
+    api.getBillingPlan()
+      .then((b) => {
+        if (!alive) return;
+        setBilling(b);
+        setCredits(b.therapy_credits ?? 0);
+      })
+      .catch(() => {});
+    return () => { alive = false; };
+  }, []);
+
   const activeCurrency: RegionCurrency = currency ?? 'usd';
+  const isPro = billing?.plan === 'pro' || billing?.plan === 'b2b';
+
+  const buySession = useCallback(async (kind: TherapyCreditKind) => {
+    if (purchasing) return;
+    setPurchasing(true);
+    try {
+      // Step 1: native store purchase sheet. null = IAP unavailable (Expo Go /
+      // dev) - the dev backend then grants without verification.
+      let purchase;
+      try {
+        purchase = await purchaseTherapyCredit(kind, billing?.purchase_account_token);
+      } catch (err) {
+        if (!isUserCancelled(err)) {
+          Alert.alert('Purchase failed', 'The store could not complete the purchase. You have not been charged.');
+        }
+        return;
+      }
+
+      // Step 2: the backend verifies the purchase and adds the credit.
+      const res = await api.buyTherapyCredits(
+        purchase
+          ? { platform: purchase.platform, product_id: purchase.productId, purchase_token: purchase.purchaseToken, transaction_id: purchase.transactionId }
+          : { product_id: THERAPY_CREDIT_PRODUCT_IDS[kind] },
+      );
+      setCredits(res.therapy_credits);
+
+      // Step 3: only now consume the store transaction. If the app dies
+      // before this, the store re-delivers it and launch recovery redeems it.
+      if (purchase) await finishPurchase(purchase);
+
+      router.push('/therapy/persona-picker');
+    } catch {
+      Alert.alert(
+        'Something went wrong',
+        'Your purchase could not be confirmed. If you were charged, reopen the app to retry - your purchase is saved with the store.',
+      );
+    } finally {
+      setPurchasing(false);
+    }
+  }, [billing, purchasing, router]);
 
   const handleOptionPress = (option: SessionOption) => {
     if (option.isPlan) {
       router.push('/upgrade');
-    } else {
-      // Pay-per-use sessions (hidden in v1) start via the persona picker.
-      router.push('/therapy/persona-picker');
+    } else if (option.creditKind) {
+      buySession(option.creditKind);
     }
   };
 
@@ -312,12 +423,33 @@ export default function TherapyPricingScreen() {
             </View>
           </ScrollView>
 
+          {/* Prepaid balance */}
+          {credits > 0 && (
+            <View
+              testID={T.therapyPricing.credits}
+              style={[styles.creditsBox, { backgroundColor: colors.card, borderColor: colors.brand }]}
+            >
+              <Text style={[styles.creditsText, { color: colors.textPrimary }]}>
+                {credits === 1 ? 'You have 1 prepaid session' : `You have ${credits} prepaid sessions`}
+              </Text>
+              <TouchableOpacity
+                testID={T.therapyPricing.useCredit}
+                onPress={() => router.push('/therapy/persona-picker')}
+                activeOpacity={0.85}
+                style={[styles.creditsCta, { backgroundColor: colors.brand }]}
+              >
+                <Text style={[styles.creditsCtaText, { color: Palette.onBrand }]}>Start a session</Text>
+              </TouchableOpacity>
+            </View>
+          )}
+
           {/* Options */}
-          {buildSessionOptions(activeCurrency).map((option) => (
+          {buildSessionOptions(activeCurrency, isPro).map((option) => (
             <OptionCard
               key={option.id}
               option={option}
               colors={colors}
+              busy={purchasing && option.creditKind !== undefined}
               onPress={() => handleOptionPress(option)}
             />
           ))}
@@ -394,6 +526,17 @@ const styles = StyleSheet.create({
     fontFamily: 'HankenGrotesk_700Bold',
     fontSize: 13,
   },
+
+  creditsBox: {
+    borderWidth: 1,
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 20,
+    gap: 12,
+  },
+  creditsText: { fontSize: 15, fontFamily: 'HankenGrotesk_700Bold' },
+  creditsCta: { borderRadius: 12, paddingVertical: 12, alignItems: 'center' },
+  creditsCtaText: { fontSize: 15, fontFamily: 'HankenGrotesk_700Bold' },
 
   sectionLabel: {
     fontSize: 10,

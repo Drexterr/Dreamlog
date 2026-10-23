@@ -24,7 +24,11 @@ type fakeTherapyRepo struct {
 	countMonth      int
 	pastSummaries   []string // injected per-test
 
-	turns       map[fakeTurnKey]uuid.UUID // (session, request_id) → user message
+	credits        int   // prepaid therapy credits (CreateWithCredit)
+	creditSessions int   // sessions created by consuming a credit
+	createErr      error // CreateWithCredit failure after the balance check
+
+	turns      map[fakeTurnKey]uuid.UUID // (session, request_id) → user message
 	replies     map[uuid.UUID]uuid.UUID   // user message → assistant reply
 	released    int                       // ReleaseTurn calls that removed a turn
 	beforeReply func()                    // runs inside AddReply before the status re-check
@@ -57,6 +61,20 @@ func (r *fakeTherapyRepo) Create(_ context.Context, userID uuid.UUID, persona mo
 	r.countAll++
 	r.countMonth++
 	return s, nil
+}
+
+// CreateWithCredit mirrors the repository: consumes one credit and creates
+// the session together, or refuses with ErrNoTherapyCredits.
+func (r *fakeTherapyRepo) CreateWithCredit(ctx context.Context, userID uuid.UUID, persona models.TherapyPersona, snapshot models.TherapyContextSnapshot, billingPaise int) (*models.TherapySession, error) {
+	if r.credits <= 0 {
+		return nil, models.ErrNoTherapyCredits
+	}
+	if r.createErr != nil {
+		return nil, r.createErr // the real repository rolls the credit back
+	}
+	r.credits--
+	r.creditSessions++
+	return r.Create(ctx, userID, persona, snapshot, billingPaise)
 }
 
 func (r *fakeTherapyRepo) GetByID(_ context.Context, id, userID uuid.UUID) (*models.TherapySession, error) {
@@ -558,8 +576,8 @@ func TestTherapy_PaymentRequired_NonStubbedMode(t *testing.T) {
 	svc := NewTherapyService(repo, &fakeTherapyAnalysisRepo{}, nil, claude, transcription, &fakeTherapyStorage{}, NewCrisisDetector(nil, nil), nil, false, nil)
 
 	_, err := svc.StartSession(context.Background(), uuid.New(), models.PlanFree, models.PersonaComforting, "", "auto", "")
-	if err == nil {
-		t.Error("expected payment required error in non-stub mode; got nil")
+	if !errors.Is(err, ErrTherapyPaymentRequired) {
+		t.Errorf("expected payment required error in non-stub mode without credits; got %v", err)
 	}
 }
 

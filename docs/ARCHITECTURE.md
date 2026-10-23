@@ -137,6 +137,8 @@ users
                                 -- local row (migration 000044)
   streak_freeze_count INT DEFAULT 0
   streak_freeze_granted_week DATE
+  therapy_credits INT DEFAULT 0 -- prepaid therapy sessions (CHECK >= 0); only changed together with a
+                                -- therapy_credit_ledger row (migration 000047)
   created_at, updated_at TIMESTAMPTZ
 
 entries
@@ -322,12 +324,23 @@ payments                        -- purchase records for plan upgrades; one row p
   id UUID PK
   user_id UUID FK → users
   transaction_id TEXT UNIQUE    -- store transaction ID (Apple transaction_id / Play orderId); unique for replay protection
-  plan TEXT                     -- plan granted: plus | pro
+  plan TEXT                     -- plan granted: plus | pro, or 'therapy' for a session-credit purchase (migration 000047)
   amount BIGINT                 -- 0 for IAP rows (price is store-managed); legacy Stripe rows kept their amount
   currency TEXT                 -- '' for IAP rows; legacy Stripe rows: 'inr' | 'usd'
   store TEXT                    -- 'apple' | 'google' ('stripe' on legacy rows)
   product_id TEXT               -- IAP product identifier, e.g. "com.talktoode.app.plus.monthly"
   country CHAR(2)               -- ISO 3166-1 alpha-2, e.g. "IN" | "US" (migration 000029)
+  environment TEXT              -- 'production' | 'sandbox' (migration 000039)
+  granted_at TIMESTAMPTZ        -- set once the plan/credit grant committed (migration 000039)
+  created_at TIMESTAMPTZ
+
+therapy_credit_ledger           -- audit trail of every therapy credit balance change (migration 000047)
+  id UUID PK
+  user_id UUID FK → users       -- ON DELETE CASCADE
+  delta INT                     -- +N purchase / dev_grant, -1 per session started with a credit
+  reason TEXT                   -- purchase | session | dev_grant
+  transaction_id TEXT NULL      -- store transaction (purchases); partial UNIQUE: credits once
+  session_id UUID FK → therapy_sessions NULL -- the session a credit paid for
   created_at TIMESTAMPTZ
 
 analytics_events                -- append-only product event stream (migration 000028); privacy-safe (IDs/metadata only)

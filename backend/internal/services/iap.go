@@ -50,6 +50,37 @@ var IAPCatalog = map[string]IAPProduct{
 	IAPProductProAnnual:   {Plan: models.PlanPro, Period: "annual"},
 }
 
+// Therapy session credits (pay-per-use, docs/PRICING.md): one consumable SKU
+// per price point, each granting one session credit. Session packs were
+// dropped from the pricing model, so there is no multi-credit SKU.
+//
+//	single - standalone price (₹499 / $7.99), any plan including Free
+//	member - Pro member price (₹299 / $4.99); only redeemable while the
+//	         account's effective plan is Pro (or B2B, which includes Pro)
+//
+// Prices are store-managed; the server only decides how many credits a
+// verified purchase grants.
+const (
+	IAPProductTherapySingle = "com.talktoode.app.therapy.single"
+	IAPProductTherapyMember = "com.talktoode.app.therapy.member"
+)
+
+// IAPTherapyProduct describes what a therapy-credit product grants.
+type IAPTherapyProduct struct {
+	Credits int
+	// MemberPrice products are sold at the Pro member price and may only be
+	// redeemed by Pro (or higher) accounts.
+	MemberPrice bool
+}
+
+// IAPTherapyCatalog maps therapy-credit product IDs to what they grant. Kept
+// separate from IAPCatalog so a credit SKU can never grant a plan (or a plan
+// SKU credits).
+var IAPTherapyCatalog = map[string]IAPTherapyProduct{
+	IAPProductTherapySingle: {Credits: 1},
+	IAPProductTherapyMember: {Credits: 1, MemberPrice: true},
+}
+
 // Sentinel errors let the handler distinguish a bad purchase (client's fault,
 // 402/400) from the verification service being unreachable (500).
 var (

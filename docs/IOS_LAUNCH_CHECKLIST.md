@@ -87,8 +87,9 @@ Legend: ✅ done · 🔴 blocker (build fails or store rejects) · 🟡 required
       While unset, `/billing/upgrade` grants plans WITHOUT verification — do not launch without it
 - [x] ✅ **Therapy pay-per-use gap defused for v1 (2026-07-20):** the unbuyable "Single Session" card is
       hidden on `app/therapy/pricing.tsx` — therapy ships as free-first-session + Pro-only.
-      🟢 Fast follow: wire a therapy-session consumable SKU through the IAP verification path
-      (`computeBilling` still 402s for pay-per-use in prod, which is now unreachable from the UI)
+      ✅ 2026-10-23: session SKUs wired through IAP (`POST /billing/therapy-credits`), the pricing
+      screen sells single sessions again. 🔴 Create the consumables `com.talktoode.app.therapy.single`
+      and `com.talktoode.app.therapy.member` in App Store Connect before release
 - [ ] 🟡 Sandbox test end-to-end: buy Plus monthly with a sandbox tester, verify `payments` row +
       `plan_expires_at` ≈ +30 days; kill the app mid-purchase and confirm store re-delivery
 - [ ] 🟢 Enroll in the App Store Small Business Program (15% commission)

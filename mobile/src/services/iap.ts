@@ -17,6 +17,24 @@ export const IAP_PRODUCT_IDS: Record<'plus' | 'pro', Record<BillingPeriod, strin
   },
 };
 
+// Therapy session credits (pay-per-use): one consumable SKU per price point,
+// each granting one prepaid session. Must match IAPTherapyCatalog in
+// backend/internal/services/iap.go. `member` is the Pro member price and is
+// only redeemable while the account is on Pro - offer it to Pro users only.
+export type TherapyCreditKind = 'single' | 'member';
+export const THERAPY_CREDIT_PRODUCT_IDS: Record<TherapyCreditKind, string> = {
+  single: 'com.talktoode.app.therapy.single',
+  member: 'com.talktoode.app.therapy.member',
+};
+
+// Maps a store SKU back to the therapy credit it buys, or null.
+export function therapyCreditForSku(sku: string): TherapyCreditKind | null {
+  for (const kind of ['single', 'member'] as const) {
+    if (THERAPY_CREDIT_PRODUCT_IDS[kind] === sku) return kind;
+  }
+  return null;
+}
+
 // What the backend needs to verify the purchase server-side, plus the raw
 // store purchase so it can be finished after the backend grants the plan.
 export interface StorePurchase {
@@ -81,8 +99,24 @@ export async function purchasePlanPass(
   if (!iap) return null;
 
   await ensureConnected(iap);
-  const sku = IAP_PRODUCT_IDS[plan][period];
+  return buySku(iap, IAP_PRODUCT_IDS[plan][period], accountToken);
+}
 
+// Launches the store purchase sheet for one prepaid therapy session. Same
+// contract as purchasePlanPass: null when IAP is unavailable (the dev backend
+// then grants without verification), throws on store errors / cancellation.
+export async function purchaseTherapyCredit(
+  kind: TherapyCreditKind,
+  accountToken?: string,
+): Promise<StorePurchase | null> {
+  const iap = loadIap();
+  if (!iap) return null;
+
+  await ensureConnected(iap);
+  return buySku(iap, THERAPY_CREDIT_PRODUCT_IDS[kind], accountToken);
+}
+
+async function buySku(iap: IapModule, sku: string, accountToken?: string): Promise<StorePurchase> {
   const result = await iap.requestPurchase({
     type: 'in-app',
     // The account token binds the purchase to this account (Apple
@@ -160,13 +194,17 @@ let recovering = false;
 
 // Re-redeems purchases the store still holds as unfinished - the app was killed
 // or the network dropped between the store charging the user and the backend
-// granting the plan. Call on launch once the user is signed in. Each purchase
-// is redeemed through `redeem` (POST /billing/upgrade, idempotent for the same
-// user) and finished only after it succeeds. Fail-silent: anything that fails
-// stays unfinished and is retried on the next launch.
+// granting the plan. Call on launch once the user is signed in. Plan passes
+// are redeemed through `redeem` (POST /billing/upgrade) and therapy credits
+// through `redeemTherapyCredit` (POST /billing/therapy-credits) - both
+// idempotent for the same user - and each purchase is finished only after its
+// redeem succeeds. Fail-silent: anything that fails stays unfinished and is
+// retried on the next launch. Without `redeemTherapyCredit`, therapy purchases
+// are left unfinished for a caller that can redeem them.
 export async function recoverUnfinishedPurchases(
   redeem: (purchase: StorePurchase, plan: 'plus' | 'pro', period: BillingPeriod) => Promise<void>,
   accountToken?: string,
+  redeemTherapyCredit?: (purchase: StorePurchase, kind: TherapyCreditKind) => Promise<void>,
 ): Promise<void> {
   const iap = loadIap();
   if (!iap || recovering) return;
@@ -176,7 +214,8 @@ export async function recoverUnfinishedPurchases(
     const pending = await iap.getAvailablePurchases();
     for (const purchase of pending ?? []) {
       const target = planForSku(purchase.productId);
-      if (!target) continue;
+      const creditKind = therapyCreditForSku(purchase.productId);
+      if (!target && !(creditKind && redeemTherapyCredit)) continue;
       // A purchase made by another account on this device (a sign-in switch)
       // stays unfinished for its owner instead of being granted to whoever
       // is signed in now (N17). Untagged purchases predate tagging.
@@ -184,7 +223,11 @@ export async function recoverUnfinishedPurchases(
       if (owner && accountToken && owner.toLowerCase() !== accountToken.toLowerCase()) continue;
       try {
         const storePurchase = await toStorePurchase(iap, purchase, purchase.productId);
-        await redeem(storePurchase, target.plan, target.period);
+        if (target) {
+          await redeem(storePurchase, target.plan, target.period);
+        } else if (creditKind && redeemTherapyCredit) {
+          await redeemTherapyCredit(storePurchase, creditKind);
+        }
         await finishPurchase(storePurchase);
       } catch {
         // Leave it unfinished - retried next launch, and on Android an

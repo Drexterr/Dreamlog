@@ -247,7 +247,14 @@ function RootLayout() {
           purchase_token: p.purchaseToken,
           transaction_id: p.transactionId,
         });
-      }, purchase_account_token))
+      }, purchase_account_token, async (p) => {
+        await api.buyTherapyCredits({
+          platform: p.platform,
+          product_id: p.productId,
+          purchase_token: p.purchaseToken,
+          transaction_id: p.transactionId,
+        });
+      }))
       .catch(() => {});
   }, [ready, hasToken]);
 

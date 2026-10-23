@@ -311,8 +311,10 @@ export const T = {
 
   // ── Therapy pricing (app/therapy/pricing.tsx) ──
   therapyPricing: {
-    screen: 'therapy-pricing-screen',
-    back:   'therapy-pricing-back',
+    screen:    'therapy-pricing-screen',
+    back:      'therapy-pricing-back',
+    credits:   'therapy-pricing-credits',
+    useCredit: 'therapy-pricing-use-credit',
   },
 
   // ── Therapy post-session summary (app/therapy/summary/[id].tsx) ──

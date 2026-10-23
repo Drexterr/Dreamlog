@@ -105,3 +105,78 @@ describe('purchase account binding', () => {
     expect(mockIap.finishTransaction).toHaveBeenCalledTimes(3);
   });
 });
+
+// Therapy pay-per-use: session credits are their own consumable SKUs.
+describe('therapy session credits', () => {
+  it('maps credit SKUs, and keeps them apart from plan SKUs', () => {
+    const { therapyCreditForSku, planForSku, THERAPY_CREDIT_PRODUCT_IDS } = loadIap();
+    expect(therapyCreditForSku(THERAPY_CREDIT_PRODUCT_IDS.single)).toBe('single');
+    expect(therapyCreditForSku(THERAPY_CREDIT_PRODUCT_IDS.member)).toBe('member');
+    expect(therapyCreditForSku('com.talktoode.app.plus.monthly')).toBeNull();
+    expect(planForSku(THERAPY_CREDIT_PRODUCT_IDS.single)).toBeNull();
+  });
+
+  it('buys a credit tagged with the account token', async () => {
+    const { purchaseTherapyCredit, THERAPY_CREDIT_PRODUCT_IDS } = loadIap();
+    const sku = THERAPY_CREDIT_PRODUCT_IDS.member;
+    mockIap.requestPurchase.mockResolvedValue([purchase(sku)]);
+    const p = await purchaseTherapyCredit('member', 'acct-1');
+    expect(mockIap.requestPurchase).toHaveBeenCalledWith(expect.objectContaining({
+      type: 'in-app',
+      request: {
+        apple: { sku, appAccountToken: 'acct-1' },
+        google: { skus: [sku], obfuscatedAccountId: 'acct-1' },
+      },
+    }));
+    expect(p?.productId).toBe(sku);
+    // The purchase is NOT finished here - only after the backend grants it.
+    expect(mockIap.finishTransaction).not.toHaveBeenCalled();
+  });
+
+  it('throws when the store returns no purchase', async () => {
+    const { purchaseTherapyCredit } = loadIap();
+    mockIap.requestPurchase.mockResolvedValue([]);
+    await expect(purchaseTherapyCredit('single')).rejects.toThrow('did not return a purchase');
+  });
+
+  it('recovery routes credit SKUs to the credit redeemer and finishes only successes', async () => {
+    const { recoverUnfinishedPurchases, IAP_PRODUCT_IDS, THERAPY_CREDIT_PRODUCT_IDS } = loadIap();
+    mockIap.getAvailablePurchases.mockResolvedValue([
+      purchase(THERAPY_CREDIT_PRODUCT_IDS.single, 'tx-credit-ok'),
+      purchase(IAP_PRODUCT_IDS.plus.monthly, 'tx-plan'),
+      purchase(THERAPY_CREDIT_PRODUCT_IDS.member, 'tx-credit-fail'),
+    ]);
+    const plans: string[] = [];
+    const creditsRedeemed: string[] = [];
+    await recoverUnfinishedPurchases(
+      async (p) => { plans.push(p.raw.id); },
+      undefined,
+      async (p, kind) => {
+        creditsRedeemed.push(`${p.raw.id}:${kind}`);
+        if (kind === 'member') throw new Error('403 not on Pro');
+      },
+    );
+    expect(plans).toEqual(['tx-plan']);
+    expect(creditsRedeemed).toEqual(['tx-credit-ok:single', 'tx-credit-fail:member']);
+    expect(mockIap.finishTransaction).toHaveBeenCalledTimes(2);
+  });
+
+  it('leaves credit purchases unfinished when no credit redeemer is given', async () => {
+    const { recoverUnfinishedPurchases, THERAPY_CREDIT_PRODUCT_IDS } = loadIap();
+    mockIap.getAvailablePurchases.mockResolvedValue([purchase(THERAPY_CREDIT_PRODUCT_IDS.single)]);
+    const redeem = jest.fn();
+    await recoverUnfinishedPurchases(redeem);
+    expect(redeem).not.toHaveBeenCalled();
+    expect(mockIap.finishTransaction).not.toHaveBeenCalled();
+  });
+
+  it('never redeems another account\'s credit purchase', async () => {
+    const { recoverUnfinishedPurchases, THERAPY_CREDIT_PRODUCT_IDS } = loadIap();
+    mockIap.getAvailablePurchases.mockResolvedValue([
+      { ...purchase(THERAPY_CREDIT_PRODUCT_IDS.single, 'tx-other'), appAccountToken: 'acct-other' },
+    ]);
+    const redeemCredit = jest.fn();
+    await recoverUnfinishedPurchases(jest.fn(), 'acct-me', redeemCredit);
+    expect(redeemCredit).not.toHaveBeenCalled();
+  });
+});

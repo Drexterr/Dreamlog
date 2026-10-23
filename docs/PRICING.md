@@ -289,9 +289,14 @@ Code/doc changes to land the new pricing:
 - [ ] Create the 4 products in App Store Connect + Play Console
       (`com.talktoode.app.{plus,pro}.{monthly,annual}`) at the list prices above
 - [ ] Enroll: App Store Small Business Program + Play 15% tier
-- [ ] Therapy pay-per-use charge server-side (`computeBilling` still returns 402 in
-      prod for non-included sessions - wire a therapy-session consumable SKU through
-      the same IAP verification path)
+- [x] Therapy pay-per-use: prepaid session credits bought as consumable IAPs through
+      the same verification path (`POST /billing/therapy-credits`, migration 000047),
+      consumed atomically at session start ✅ 2026-10-23. Two SKUs, one per price point
+      (no packs): `com.talktoode.app.therapy.single` (standalone ₹499 / $7.99 / €7.99) and
+      `com.talktoode.app.therapy.member` (Pro member ₹299 / $4.99 / €4.99). The server
+      only grants the member SKU to accounts whose effective plan is Pro (or B2B); a
+      credit, once granted, does not expire and survives a lapsed Pro pass.
+- [ ] Create the 2 therapy-session consumables in App Store Connect + Play Console
 - [x] `analytics_events` migration (000028) + `services/analytics.go` + `repositories/analytics.go` wired via `handlers/router.go` ✅ 2026-06-11
 - [x] Extend `payments` table: `store`, `product_id`, `country` — migration 000029 ✅ 2026-06-11
 - [x] Annual passes: backend `period` on `/billing/upgrade` (365-day server-set

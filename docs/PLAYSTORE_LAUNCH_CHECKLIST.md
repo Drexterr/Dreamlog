@@ -74,7 +74,9 @@ store content drafted (`docs/STORE_SUBMISSION.md`) · confirmed **Railway is pro
       Optional `GOOGLE_PLAY_PACKAGE_NAME` (defaults to `com.talktoode.app`).
       While unset, `/billing/upgrade` grants plans WITHOUT verification — do not launch without it
 - [x] ✅ **Therapy pay-per-use gap defused for v1 (2026-07-20)**: unbuyable "Single Session" card hidden;
-      therapy ships free-first-session + Pro-only. 🟢 Fast follow: wire a session consumable SKU through IAP
+      therapy ships free-first-session + Pro-only. ✅ Session SKUs wired 2026-10-23 (`POST /billing/therapy-credits`);
+      the pricing screen sells single sessions again. 🔴 Create the consumables
+      `com.talktoode.app.therapy.single` + `com.talktoode.app.therapy.member` (In-app products) before release
 - [ ] 🟡 Test end-to-end with **license testers** on the internal track: buy Plus monthly, verify
       `payments` row (store='google', orderId) + expiry ≈ +30 days; kill the app mid-flow and
       confirm Play re-delivers the unconsumed purchase
@@ -144,7 +146,7 @@ store content drafted (`docs/STORE_SUBMISSION.md`) · confirmed **Railway is pro
 
 | Feature | State | Android impact |
 |---|---|---|
-| Therapy pay-per-use purchase | ✅ Hidden from UI 2026-07-20 (Pro-only v1); SKU wiring is a fast follow | None for launch |
+| Therapy pay-per-use purchase | ✅ Wired 2026-10-23 (prepaid credits via IAP) | Needs the 2 therapy consumables created in Play Console |
 | Google Fit mindfulness sync | **Stub** (`src/services/health.ts` — `writeGoogleFitSession` is a no-op) | Silent no-op; not a blocker, but don't claim Fit sync in the listing |
 | DLQ admin endpoint | Not built | Ops fast-follow |
 | Privacy/Terms links in Settings | ✅ Added 2026-07-20 | Domain must serve the pages |

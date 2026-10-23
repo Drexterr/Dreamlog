@@ -486,6 +486,22 @@ export interface BillingPlanResponse {
   // Opaque per-account id attached to every store purchase, so a purchase can
   // only be redeemed by the account that made it.
   purchase_account_token?: string;
+  // Prepaid therapy sessions (bought via POST /billing/therapy-credits).
+  therapy_credits?: number;
+}
+
+// POST /billing/therapy-credits request: product_id always; the store fields
+// are required by a production backend (omitted only against the dev stub).
+export interface TherapyCreditPurchase {
+  product_id: string;
+  platform?: 'ios' | 'android';
+  purchase_token?: string;
+  transaction_id?: string;
+}
+
+export interface TherapyCreditsResponse {
+  therapy_credits: number;  // balance after the grant
+  credits_granted: number;  // 0 when this purchase was already redeemed
 }
 
 // Server-side IAP verification payload sent with POST /billing/upgrade.

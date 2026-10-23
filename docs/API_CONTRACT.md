@@ -104,8 +104,9 @@ Response `200`:
     "price": "₹0 · $0"
   },
   "all_plans": { /* same structure for free, plus, pro, b2b */ },
-  "purchase_account_token": "uuid"  // opaque per-account id; the app sets it as Apple
+  "purchase_account_token": "uuid", // opaque per-account id; the app sets it as Apple
                                     // appAccountToken / Play obfuscatedAccountId on purchases
+  "therapy_credits": 0              // prepaid therapy sessions (POST /billing/therapy-credits)
 }
 ```
 
@@ -171,6 +172,56 @@ Rules:
 - Dev mode (no `APPLE_SHARED_SECRET` / `GOOGLE_PLAY_CREDENTIALS_JSON`):
   verification is skipped; paid plans are granted with a server-set 30- or
   365-day expiry so the local stack needs no external APIs.
+
+### POST /billing/therapy-credits
+Called after a therapy-session In-App Purchase completes in the store SDK.
+Grants prepaid therapy session credits, which `POST /therapy/sessions` spends
+once the free first session and Pro's monthly allowance are used up. Same
+verification as `POST /billing/upgrade`: the purchase is verified with the store
+server-side, must be tagged with this account's `purchase_account_token`,
+sandbox purchases count only for allowlisted verified emails, and each store
+transaction grants credits exactly once (`payments` row, unique
+`transaction_id`; the grant and ledger entry commit in one locked transaction).
+
+```json
+// Request
+{
+  "platform":       "ios | android",
+  "product_id":     "com.talktoode.app.therapy.single",
+  "purchase_token": "...",  // iOS: base64 app receipt · Android: Play purchase token
+  "transaction_id": "..."   // iOS, optional: the exact store transaction being redeemed
+}
+
+// Response 200
+{
+  "therapy_credits": 2,   // balance after the grant
+  "credits_granted": 1    // 0 when this transaction was already redeemed by this user
+}
+
+// Errors
+400 - unknown product_id (plan SKUs are not credits); missing/invalid platform or purchase_token
+402 - the store rejected the purchase, or a sandbox purchase from a non-allowlisted / unverified account
+403 - the member-price SKU redeemed by an account whose effective plan is below Pro
+      (the payment stays recorded and is granted if the store re-delivers it after the user is on Pro)
+409 - the transaction was already used by ANOTHER user, or is tagged for another account
+500 - store verification unavailable, or the grant failed (the store re-delivers the purchase)
+```
+
+Same-user replays are idempotent (200, `credits_granted: 0`). The app finishes
+(consumes) the store transaction only after this endpoint succeeds, and launch
+recovery re-redeems unfinished therapy purchases here. Dev mode (no store
+credentials) grants without verification; `product_id` is still required and the
+member-price rule still applies.
+
+**Therapy credit catalogue** (must match `IAPTherapyCatalog` in
+`backend/internal/services/iap.go` and `mobile/src/services/iap.ts`):
+| Product ID | Grants | Who |
+|---|---|---|
+| `com.talktoode.app.therapy.single` | 1 session credit | anyone (standalone price ₹499 / $7.99) |
+| `com.talktoode.app.therapy.member` | 1 session credit | effective plan Pro or B2B (member price ₹299 / $4.99) |
+
+Credits do not expire and are not tied to a plan: a member-price credit bought
+on Pro stays spendable after the Pro pass lapses.
 
 **Plan gating:**
 
@@ -1360,7 +1411,7 @@ Register or update FCM token. Upserts on `fcm_token`.
 
 Real-time AI-assisted voice/text conversation sessions. Sessions are standalone - not tied to a journal entry. Crisis detection runs on every user message.
 
-**Billing:** first session ever is free. Pro plan includes 1 session/month; beyond that Pro members pay the member price (₹299/session) and everyone else pays the standalone price (₹499/session), charged at session start. `402` returned if no sessions remaining and no session credits.
+**Billing:** first session ever is free. Pro plan includes 1 session/month; beyond that each session spends one prepaid session credit (bought via `POST /billing/therapy-credits`: Pro members at the member price ₹299, everyone else at the standalone price ₹499). The credit is consumed atomically with the session insert - a failed start never spends it, and concurrent starts never spend more credits than sessions created. `billing_amount_paise` records the price tier (49900 standalone, 29900 Pro member, 0 included). `402` returned when a paid session is requested with no credits.
 
 ### POST /therapy/sessions
 Start a new therapy session. Loads the user's journal context (last 30d mood avg, top emotions, top topics, last 5 entry summaries, last 3 past session summaries) and snapshots it for the session.
@@ -1384,7 +1435,7 @@ Start a new therapy session. Loads the user's journal context (last 30d mood avg
 }
 
 // Errors
-402 - no session credits and not on Pro plan
+402 - a paid session (beyond the free first session and the Pro allowance) with no therapy credits
 400 - invalid persona value
 ```
 

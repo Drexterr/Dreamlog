@@ -65,11 +65,20 @@ func planDuration(period string) time.Duration {
 	return monthlyPlanDuration
 }
 
+// therapyCreditStore is what BillingHandler needs for therapy session credits
+// (implemented by PaymentRepository).
+type therapyCreditStore interface {
+	TherapyCredits(ctx context.Context, userID uuid.UUID) (int, error)
+	GrantTherapyCredits(ctx context.Context, transactionID string, userID uuid.UUID, credits int) (balance int, granted bool, err error)
+	DevGrantTherapyCredits(ctx context.Context, userID uuid.UUID, credits int) (int, error)
+}
+
 type BillingHandler struct {
 	svc       planManager
 	payments  paymentRecorder
 	analytics analyticsTracker
 	iap       purchaseVerifier
+	credits   therapyCreditStore
 }
 
 // analyticsTracker is the subset of AnalyticsService used by BillingHandler.
@@ -77,12 +86,13 @@ type analyticsTracker interface {
 	TrackUser(ctx context.Context, userID uuid.UUID, event string, props map[string]any)
 }
 
-func NewBillingHandler(svc planManager, payments paymentRecorder, analytics analyticsTracker, iap purchaseVerifier) *BillingHandler {
+func NewBillingHandler(svc planManager, payments paymentRecorder, analytics analyticsTracker, iap purchaseVerifier, credits therapyCreditStore) *BillingHandler {
 	return &BillingHandler{
 		svc:       svc,
 		payments:  payments,
 		analytics: analytics,
 		iap:       iap,
+		credits:   credits,
 	}
 }
 
@@ -96,6 +106,15 @@ func (h *BillingHandler) GetPlan(c *gin.Context) {
 	// Report the effective plan: an expired paid plan is shown (and gated) as free.
 	plan := user.EffectivePlan()
 	limits := h.svc.GetPlanDetails(plan)
+	credits := 0
+	if h.credits != nil {
+		n, err := h.credits.TherapyCredits(c.Request.Context(), user.ID)
+		if err != nil {
+			_ = c.Error(apierr.InternalErr("failed to load therapy credits", err))
+			return
+		}
+		credits = n
+	}
 	c.JSON(http.StatusOK, gin.H{
 		"plan":            plan,
 		"plan_expires_at": user.PlanExpiresAt,
@@ -104,7 +123,151 @@ func (h *BillingHandler) GetPlan(c *gin.Context) {
 		// Attached by the app to every store purchase so it can only be
 		// redeemed by this account (N17).
 		"purchase_account_token": services.PurchaseAccountToken(user.ID),
+		// Prepaid therapy sessions (POST /billing/therapy-credits).
+		"therapy_credits": credits,
 	})
+}
+
+// POST /billing/therapy-credits - grants therapy session credits after
+// server-side verification of a consumable In-App Purchase.
+//
+// Same security model as POST /billing/upgrade: the purchase is verified with
+// the store, must be tagged for this account (N17), sandbox purchases only
+// count for allowlisted verified emails (N6), and each store transaction
+// grants credits exactly once (payments.transaction_id UNIQUE + a locked grant
+// transaction, N5). A same-user replay of a granted purchase is idempotent
+// (credits_granted = 0). The member-price SKU is only redeemable by Pro
+// accounts. Dev (no store credentials) grants without verification.
+func (h *BillingHandler) BuyTherapyCredits(c *gin.Context) {
+	ctx := c.Request.Context()
+	userID := middleware.UserIDFromCtx(ctx)
+	currentUser := middleware.UserFromCtx(ctx)
+
+	var req struct {
+		Platform      string `json:"platform"`       // "ios" | "android"
+		ProductID     string `json:"product_id"`     // e.g. com.talktoode.app.therapy.single
+		PurchaseToken string `json:"purchase_token"` // iOS: base64 receipt; Android: Play purchase token
+		TransactionID string `json:"transaction_id"` // iOS, optional: the exact transaction redeemed
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		_ = c.Error(apierr.BadRequest("invalid request body", err.Error()))
+		return
+	}
+	product, known := services.IAPTherapyCatalog[req.ProductID]
+	if !known {
+		_ = c.Error(apierr.BadRequest("unknown product_id"))
+		return
+	}
+	if h.credits == nil {
+		_ = c.Error(apierr.Internal("therapy credits unavailable"))
+		return
+	}
+	memberAllowed := currentUser != nil && currentUser.EffectivePlan().AtLeast(models.PlanPro)
+
+	if h.iap == nil || !h.iap.Configured() {
+		// Dev stub: production refuses to start without store credentials.
+		if product.MemberPrice && !memberAllowed {
+			_ = c.Error(apierr.Forbidden("the member session price is only available on Ode Pro"))
+			return
+		}
+		balance, err := h.credits.DevGrantTherapyCredits(ctx, userID, product.Credits)
+		if err != nil {
+			_ = c.Error(apierr.InternalErr("failed to grant therapy credits", err))
+			return
+		}
+		h.respondCreditsGranted(c, userID, req.ProductID, balance, product.Credits)
+		return
+	}
+
+	if req.Platform != "ios" && req.Platform != "android" {
+		_ = c.Error(apierr.BadRequest("platform must be ios or android"))
+		return
+	}
+	if req.PurchaseToken == "" {
+		_ = c.Error(apierr.BadRequest("product_id and purchase_token are required"))
+		return
+	}
+
+	verified, err := h.iap.VerifyPurchase(ctx, req.Platform, req.ProductID, req.PurchaseToken, req.TransactionID)
+	if err != nil {
+		if errors.Is(err, services.ErrPurchaseInvalid) {
+			_ = c.Error(apierr.New(http.StatusPaymentRequired, "purchase could not be verified"))
+			return
+		}
+		_ = c.Error(apierr.InternalErr("purchase verification unavailable", err))
+		return
+	}
+	if !verified.AccountMatches(userID) {
+		_ = c.Error(apierr.Conflict("this purchase belongs to another account"))
+		return
+	}
+	if verified.Sandbox && (currentUser == nil || !currentUser.EmailVerified || !h.iap.SandboxAllowed(currentUser.Email)) {
+		_ = c.Error(apierr.New(http.StatusPaymentRequired, "test purchases are not accepted for this account"))
+		return
+	}
+
+	store := "apple"
+	if req.Platform == "android" {
+		store = "google"
+	}
+	rec, err := h.payments.Record(ctx, userID, verified.TransactionID, models.PaymentItemTherapyCredit, store, req.ProductID, verified.Sandbox)
+	if err != nil {
+		_ = c.Error(apierr.InternalErr("failed to record purchase", err))
+		return
+	}
+	if !rec.Inserted {
+		if rec.OwnerID != userID {
+			_ = c.Error(apierr.Conflict("this purchase has already been used"))
+			return
+		}
+		if rec.Granted {
+			// Same-user replay (the app died before finishing the
+			// transaction): idempotent, nothing is credited twice.
+			balance, err := h.credits.TherapyCredits(ctx, userID)
+			if err != nil {
+				_ = c.Error(apierr.InternalErr("failed to load therapy credits", err))
+				return
+			}
+			c.JSON(http.StatusOK, gin.H{"therapy_credits": balance, "credits_granted": 0})
+			return
+		}
+		// Recorded but never granted: fall through and grant now.
+	}
+
+	// Checked after recording so a charged purchase is never lost: if the
+	// account regains Pro, the store re-delivers it and the grant succeeds.
+	if product.MemberPrice && !memberAllowed {
+		_ = c.Error(apierr.Forbidden("the member session price is only available on Ode Pro"))
+		return
+	}
+
+	balance, granted, err := h.credits.GrantTherapyCredits(ctx, verified.TransactionID, userID, product.Credits)
+	if errors.Is(err, repositories.ErrPaymentNotOwned) || errors.Is(err, repositories.ErrPaymentWrongKind) {
+		_ = c.Error(apierr.Conflict("this purchase has already been used"))
+		return
+	}
+	if err != nil {
+		// Verified and recorded, but not credited: must be traceable. The
+		// store re-delivers the unfinished transaction for a retry.
+		_ = c.Error(apierr.InternalErr("failed to grant therapy credits", err))
+		return
+	}
+	if !granted {
+		c.JSON(http.StatusOK, gin.H{"therapy_credits": balance, "credits_granted": 0})
+		return
+	}
+	h.respondCreditsGranted(c, userID, req.ProductID, balance, product.Credits)
+}
+
+func (h *BillingHandler) respondCreditsGranted(c *gin.Context, userID uuid.UUID, productID string, balance, granted int) {
+	if h.analytics != nil {
+		h.analytics.TrackUser(c.Request.Context(), userID, services.EventPurchaseCompleted, map[string]any{
+			"kind":       "therapy_credits",
+			"product_id": productID,
+			"credits":    granted,
+		})
+	}
+	c.JSON(http.StatusOK, gin.H{"therapy_credits": balance, "credits_granted": granted})
 }
 
 // POST /billing/upgrade - sets the user's plan after server-side IAP verification.
@@ -261,7 +424,7 @@ func (h *BillingHandler) Upgrade(c *gin.Context) {
 		// days are lost; switching plans starts the new pass now (the mobile
 		// upgrade screen warns before a switch).
 		user, _, err := h.payments.GrantPlan(c.Request.Context(), transactionID, userID, req.Plan, planDuration(period))
-		if errors.Is(err, repositories.ErrPaymentNotOwned) {
+		if errors.Is(err, repositories.ErrPaymentNotOwned) || errors.Is(err, repositories.ErrPaymentWrongKind) {
 			_ = c.Error(apierr.Conflict("this purchase has already been used"))
 			return
 		}
