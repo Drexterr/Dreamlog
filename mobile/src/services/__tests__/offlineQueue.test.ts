@@ -1,8 +1,10 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { discardItem, enqueue, flush, getFailedItems, getQueue, removeItem, retryItem } from '../offlineQueue';
 import { uploadRecording } from '../upload';
+import { uploadBreadcrumb } from '../telemetry';
 
 jest.mock('../upload', () => ({ uploadRecording: jest.fn() }));
+jest.mock('../telemetry', () => ({ ...jest.requireActual('../telemetry'), uploadBreadcrumb: jest.fn() }));
 const upload = uploadRecording as jest.Mock;
 const item = (id = 'a') => ({ id, localUri: `${id}.m4a`, durationSec: 3, sizeBytes: 100, createdAt: '2026-10-12T00:00:00Z', mode: 'dream' as const });
 
@@ -120,5 +122,57 @@ describe('uploaded key persistence', () => {
     await enqueue(item()); upload.mockRejectedValueOnce(new Error('offline'));
     await flush();
     expect((await getQueue())[0].uploadedKey).toBeUndefined();
+  });
+});
+
+// Sentry breadcrumbs for queue outcomes - counts, attempts and status only.
+describe('offline queue breadcrumbs', () => {
+  const crumbs = () => (uploadBreadcrumb as jest.Mock).mock.calls.map(([message, data, level]) => ({ message, data, level }));
+
+  it('records enqueue with mode and size bucket, never the file path', async () => {
+    await enqueue(item());
+    expect(crumbs()).toEqual([{ message: 'offline queue: recording queued', data: { phase: 'queue', mode: 'dream', size: '<100KB', resumed: false }, level: undefined }]);
+    expect(JSON.stringify(crumbs())).not.toContain('a.m4a');
+  });
+
+  it('records flush start, per-item outcomes and the summary', async () => {
+    await enqueue(item('a')); await enqueue(item('b'));
+    (uploadBreadcrumb as jest.Mock).mockClear();
+    upload.mockResolvedValueOnce({ entry: { id: 'e' } })
+      .mockRejectedValueOnce(Object.assign(new Error('Recording file not found: /data/user/b.m4a'), { response: { status: 503 } }));
+    await flush();
+    expect(crumbs()).toEqual([
+      { message: 'offline queue: flush started', data: { phase: 'queue', count: 2 }, level: undefined },
+      { message: 'offline queue: item uploaded', data: { phase: 'queue', attempt: 1, mode: 'dream' }, level: undefined },
+      { message: 'offline queue: item failed', data: { phase: 'queue', attempt: 1, status: 503, permanent: false, resumed: false }, level: 'warning' },
+      { message: 'offline queue: flush finished', data: { phase: 'queue', uploaded: 1, remaining: 1 }, level: 'warning' },
+    ]);
+    const serialized = JSON.stringify(crumbs());
+    expect(serialized).not.toContain('b.m4a');
+    expect(serialized).not.toContain('/data/');
+  });
+
+  it('records a permanent failure at error level, and keeps the resumed flag', async () => {
+    await enqueue(item());
+    (uploadBreadcrumb as jest.Mock).mockClear();
+    upload.mockImplementation(async (_uri: string, _d: number, _p: unknown, _m: string, resume: { onUploaded: (k: string) => void }) => {
+      resume.onUploaded('audio/u/key.aac');
+      throw Object.assign(new Error('quota'), { response: { status: 409 } });
+    });
+    await flush();
+    expect(crumbs()).toContainEqual({ message: 'offline queue: item failed', data: { phase: 'queue', attempt: 1, status: 409, permanent: true, resumed: true }, level: 'error' });
+    expect(JSON.stringify(crumbs())).not.toContain('audio/u/');
+  });
+
+  it('records user retry and discard of failed recordings', async () => {
+    await enqueue(item());
+    (uploadBreadcrumb as jest.Mock).mockClear();
+    await retryItem('a'); await discardItem('a');
+    expect(crumbs().map(c => c.message)).toEqual(['offline queue: user retried a failed recording', 'offline queue: user discarded a recording']);
+  });
+
+  it('records nothing for an empty flush', async () => {
+    await flush();
+    expect(uploadBreadcrumb).not.toHaveBeenCalled();
   });
 });

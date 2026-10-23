@@ -296,8 +296,11 @@ can't capture on-device crashes and would duplicate weeks of what these tools gi
 
 - [ ] Crash-free baseline: run the production EAS build through TestFlight / internal testing
       track for at least a week before public release.
-- [ ] Add Sentry breadcrumbs around the upload flow (presign → PUT → register) — it's the most
-      failure-prone user path (network, large files).
+- [x] Sentry breadcrumbs around the upload flow ✅ 2026-10-23: category `upload` for every
+      phase (presign → PUT → register), retry, resumed key, failure status, note-photo PUTs
+      and offline-queue enqueue/flush outcomes (`mobile/src/services/telemetry.ts`). Data is
+      allowlisted - phase, attempt, HTTP status, size bucket, mode - never audio keys, URLs,
+      file paths or transcripts; a no-op without `EXPO_PUBLIC_SENTRY_DSN`.
 - [ ] Backend structured-log retention: Railway logs are ephemeral; consider shipping zap logs
       to a free tier of Better Stack / Axiom if debugging needs history.
 - [ ] Load-test the worker with concurrent entries (`make scale-worker N=3` exists; verify on prod infra).

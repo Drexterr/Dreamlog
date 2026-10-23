@@ -7,12 +7,16 @@
  *   3. POST /entries to create DB record + queue transcription job
  *
  * Retry policy: up to 3 attempts with exponential backoff (1s, 2s, 4s).
+ *
+ * Every phase leaves a Sentry breadcrumb (category 'upload', see
+ * telemetry.ts) - phase, attempt, HTTP status, size bucket and mode only.
  */
 
 import { File } from 'expo-file-system/next';
 import * as FileSystem from 'expo-file-system/legacy';
 import { api, isApiError } from '../api/client';
 import { Entry, EntryMode } from '../types';
+import { errorStatus, sizeBucket, uploadBreadcrumb } from './telemetry';
 
 const MAX_UPLOAD_ATTEMPTS = 3;
 
@@ -37,6 +41,13 @@ export interface UploadProgress {
   totalBytes?: number;
 }
 
+/** Storage PUT returned a non-2xx status. */
+class StorageUploadError extends Error {
+  constructor(public readonly status: number, body: string) {
+    super(`Storage upload failed with status ${status}: ${body}`);
+  }
+}
+
 export async function uploadRecording(
   localUri: string,
   durationSec: number,
@@ -46,9 +57,11 @@ export async function uploadRecording(
 ): Promise<UploadResult> {
   const file = new File(localUri);
   if (!file.exists) {
+    uploadBreadcrumb('upload: recording file missing', { mode }, 'error');
     throw new Error('Recording file not found: ' + localUri);
   }
   const sizeBytes = file.size ?? 0;
+  const size = sizeBucket(sizeBytes);
 
   let lastError: Error | null = null;
   // Set once the audio is safely in storage. Retries then only re-run the step
@@ -60,21 +73,29 @@ export async function uploadRecording(
   // then upload once more instead of failing for good.
   let resumedKey = uploadedKey !== null;
 
+  uploadBreadcrumb('upload: started', { mode, size, resumed: resumedKey });
+
   for (let attempt = 0; attempt < MAX_UPLOAD_ATTEMPTS; attempt++) {
+    const attemptNo = attempt + 1;
     if (attempt > 0) {
       const backoffMs = Math.pow(2, attempt - 1) * 1000;
+      uploadBreadcrumb('upload: retrying', { attempt: attemptNo, mode });
       await sleep(backoffMs);
     }
 
+    let phase: 'presign' | 'put' | 'register' = 'presign';
     try {
       if (!uploadedKey) {
         // Step 1: Get upload URL from backend.
         onProgress?.({ phase: 'presigning' });
+        uploadBreadcrumb('upload: presign', { phase, attempt: attemptNo });
         const { upload_url, audio_key } = await api.presign();
 
         // Step 2: Upload via native HTTP (bypasses whatwg-fetch polyfill which
         // doesn't handle binary bodies correctly in React Native).
+        phase = 'put';
         onProgress?.({ phase: 'uploading', uploadedBytes: 0, totalBytes: sizeBytes });
+        uploadBreadcrumb('upload: storage put', { phase, attempt: attemptNo, size });
 
         const uploadResult = await FileSystem.uploadAsync(upload_url, localUri, {
           httpMethod: 'PUT',
@@ -83,16 +104,20 @@ export async function uploadRecording(
         });
 
         if (uploadResult.status < 200 || uploadResult.status >= 300) {
-          throw new Error(`Storage upload failed with status ${uploadResult.status}: ${uploadResult.body}`);
+          throw new StorageUploadError(uploadResult.status, uploadResult.body);
         }
 
         onProgress?.({ phase: 'uploading', uploadedBytes: sizeBytes, totalBytes: sizeBytes });
         uploadedKey = audio_key;
         resume?.onUploaded?.(audio_key);
+      } else {
+        uploadBreadcrumb('upload: reusing audio already in storage', { attempt: attemptNo, resumed: resumedKey });
       }
 
       // Step 3: Notify backend - creates DB row + queues transcription job.
+      phase = 'register';
       onProgress?.({ phase: 'registering' });
+      uploadBreadcrumb('upload: register entry', { phase, attempt: attemptNo });
       const entry = await api.createEntry({
         audio_key: uploadedKey,
         audio_size_bytes: sizeBytes,
@@ -101,11 +126,15 @@ export async function uploadRecording(
       });
 
       onProgress?.({ phase: 'done' });
+      uploadBreadcrumb('upload: done', { attempt: attemptNo, mode, size });
       return { entry };
     } catch (err) {
       lastError = err instanceof Error ? err : new Error(String(err));
+      const status = err instanceof StorageUploadError ? err.status : errorStatus(err);
+      uploadBreadcrumb('upload: attempt failed', { phase, attempt: attemptNo, status }, 'warning');
 
       if (resumedKey && isMissingAudio(err)) {
+        uploadBreadcrumb('upload: resumed audio missing from storage, uploading again', { attempt: attemptNo, status }, 'warning');
         resumedKey = false;
         uploadedKey = null;
         continue;
@@ -113,11 +142,13 @@ export async function uploadRecording(
 
       // Do not retry on known non-recoverable errors (e.g., 4xx from backend).
       if (isApiError(err) && err.response && err.response.status < 500) {
+        uploadBreadcrumb('upload: not retryable', { phase, attempt: attemptNo, status }, 'error');
         throw withUploadedKey(lastError, uploadedKey);
       }
     }
   }
 
+  uploadBreadcrumb('upload: failed after retries', { attempt: MAX_UPLOAD_ATTEMPTS, resumed: uploadedKey !== null }, 'error');
   throw withUploadedKey(lastError ?? new Error('Upload failed after max retries'), uploadedKey);
 }
 
@@ -141,14 +172,23 @@ function isMissingAudio(err: unknown): boolean {
  * React Native). Throws on a non-2xx response. Used for therapist note photos.
  */
 export async function putFileToPresignedUrl(uploadUrl: string, localUri: string, contentType: string): Promise<void> {
-  const result = await FileSystem.uploadAsync(uploadUrl, localUri, {
-    httpMethod: 'PUT',
-    uploadType: FileSystem.FileSystemUploadType.BINARY_CONTENT,
-    headers: { 'Content-Type': contentType },
-  });
+  uploadBreadcrumb('upload: note photo put', { phase: 'note_put' });
+  let result;
+  try {
+    result = await FileSystem.uploadAsync(uploadUrl, localUri, {
+      httpMethod: 'PUT',
+      uploadType: FileSystem.FileSystemUploadType.BINARY_CONTENT,
+      headers: { 'Content-Type': contentType },
+    });
+  } catch (err) {
+    uploadBreadcrumb('upload: note photo put failed', { phase: 'note_put' }, 'error');
+    throw err;
+  }
   if (result.status < 200 || result.status >= 300) {
+    uploadBreadcrumb('upload: note photo put failed', { phase: 'note_put', status: result.status }, 'error');
     throw new Error(`Storage upload failed with status ${result.status}`);
   }
+  uploadBreadcrumb('upload: note photo put done', { phase: 'note_put', status: result.status });
 }
 
 const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));

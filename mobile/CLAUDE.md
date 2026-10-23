@@ -31,6 +31,7 @@ src/
   services/upload.ts        presign → PUT → POST orchestration with backoff
   services/offlineQueue.ts  AsyncStorage-based retry queue
   services/push.ts          FCM push registration (fail-silent) - wired in app/_layout.tsx
+  services/telemetry.ts     Sentry breadcrumbs (upload path) - allowlisted, PII-free data; no-op when Sentry is off
   theme.ts                  design tokens - always import from here
   types/index.ts            shared TypeScript types
   screens/                  screen-level components (used by app/ routes)

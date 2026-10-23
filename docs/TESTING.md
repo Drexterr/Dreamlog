@@ -1,5 +1,14 @@
 # DreamLog Testing Strategy
 
+## Upload breadcrumbs (23 October 2026)
+
+- `src/services/__tests__/telemetry.test.ts`: category/level, data allowlist (keys, URLs,
+  paths and NaN dropped), no-op without a DSN, with a missing native module or a throwing
+  Sentry, size buckets.
+- `upload.test.ts` / `offlineQueue.test.ts` "breadcrumbs" blocks: every phase, retry,
+  resumed key, failure status, note-photo PUTs and queue outcomes - and no audio key,
+  URL, file path or response body in any breadcrumb.
+
 ## DLQ admin endpoints (23 October 2026)
 
 - `services/dlq_admin_test.go`: newest-first paging, no transcript/key/user id in

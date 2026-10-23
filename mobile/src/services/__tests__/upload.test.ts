@@ -2,10 +2,12 @@ import { uploadRecording } from '../upload';
 import { api } from '../../api/client';
 import { File } from 'expo-file-system/next';
 import * as FileSystem from 'expo-file-system/legacy';
+import { uploadBreadcrumb } from '../telemetry';
 
 jest.mock('../../api/client', () => ({ api: { presign: jest.fn(), createEntry: jest.fn() }, isApiError: (e: { response?: unknown }) => Boolean(e.response) }));
 jest.mock('expo-file-system/next', () => ({ File: jest.fn() }));
 jest.mock('expo-file-system/legacy', () => ({ uploadAsync: jest.fn(), FileSystemUploadType: { BINARY_CONTENT: 0 } }));
+jest.mock('../telemetry', () => ({ ...jest.requireActual('../telemetry'), uploadBreadcrumb: jest.fn() }));
 const presign = api.presign as jest.Mock;
 const register = api.createEntry as jest.Mock;
 const put = FileSystem.uploadAsync as jest.Mock;
@@ -94,5 +96,90 @@ describe('putFileToPresignedUrl', () => {
     const { putFileToPresignedUrl } = jest.requireActual('../upload') as typeof import('../upload');
     put.mockResolvedValue({ status: 403 });
     await expect(putFileToPresignedUrl('https://fixture.invalid/put', 'file:///photo.jpg', 'image/png')).rejects.toThrow('403');
+  });
+});
+
+// Sentry breadcrumbs (category 'upload'): every phase, retry and failure is
+// recorded with phase / attempt / status / size bucket / mode only.
+describe('upload breadcrumbs', () => {
+  const crumbs = () => (uploadBreadcrumb as jest.Mock).mock.calls.map(([message, data, level]) => ({ message, data, level }));
+  const messages = () => crumbs().map(c => c.message);
+  const expectNoPII = () => {
+    const all = JSON.stringify(crumbs());
+    for (const secret of ['owned/clip', 'fixture.invalid', 'clip.m4a', 'audio/u/', 'photo.jpg', 'unavailable']) {
+      expect(all).not.toContain(secret);
+    }
+  };
+
+  it('records each phase of a successful upload', async () => {
+    await uploadRecording('clip.m4a', 3, undefined, 'dream');
+    expect(messages()).toEqual([
+      'upload: started', 'upload: presign', 'upload: storage put', 'upload: register entry', 'upload: done',
+    ]);
+    expect(crumbs()[0].data).toEqual({ mode: 'dream', size: '<100KB', resumed: false });
+    expect(crumbs()[2].data).toEqual({ phase: 'put', attempt: 1, size: '<100KB' });
+    expectNoPII();
+  });
+
+  it('records the storage status and the retry', async () => {
+    put.mockResolvedValueOnce({ status: 503, body: 'unavailable' });
+    const result = uploadRecording('clip.m4a', 3);
+    await jest.runAllTimersAsync(); await result;
+    const failed = crumbs().find(c => c.message === 'upload: attempt failed');
+    expect(failed).toEqual({ message: 'upload: attempt failed', data: { phase: 'put', attempt: 1, status: 503 }, level: 'warning' });
+    expect(crumbs()).toContainEqual({ message: 'upload: retrying', data: { attempt: 2, mode: 'processing' }, level: undefined });
+    expect(messages()[messages().length - 1]).toBe('upload: done');
+    expectNoPII();
+  });
+
+  it('records a non-retryable API failure with its status and phase', async () => {
+    register.mockRejectedValue(Object.assign(new Error('quota'), { response: { status: 409, data: {} } }));
+    await uploadRecording('clip.m4a', 3).catch(() => undefined);
+    expect(crumbs()).toContainEqual({ message: 'upload: not retryable', data: { phase: 'register', attempt: 1, status: 409 }, level: 'error' });
+    expectNoPII();
+  });
+
+  it('records exhausting all retries', async () => {
+    put.mockResolvedValue({ status: 500, body: 'unavailable' });
+    const outcome = uploadRecording('clip.m4a', 3).catch(() => undefined);
+    await jest.runAllTimersAsync(); await outcome;
+    expect(crumbs().filter(c => c.message === 'upload: attempt failed')).toHaveLength(3);
+    expect(crumbs()[crumbs().length - 1]).toEqual({ message: 'upload: failed after retries', data: { attempt: 3, resumed: false }, level: 'error' });
+  });
+
+  it('records a resumed key, and its re-upload when the object expired', async () => {
+    register.mockRejectedValueOnce(Object.assign(new Error('missing'), { response: { status: 400, data: { message: 'audio file not found in storage' } } }));
+    const result = uploadRecording('clip.m4a', 3, undefined, 'processing', { uploadedKey: 'audio/u/old.aac' });
+    await jest.runAllTimersAsync(); await result;
+    expect(crumbs()[0].data).toEqual(expect.objectContaining({ resumed: true }));
+    expect(messages()).toContain('upload: reusing audio already in storage');
+    expect(messages()).toContain('upload: resumed audio missing from storage, uploading again');
+    expectNoPII();
+  });
+
+  it('records a missing recording file', async () => {
+    (File as unknown as jest.Mock).mockImplementation(() => ({ exists: false }));
+    await uploadRecording('clip.m4a', 3).catch(() => undefined);
+    expect(crumbs()).toEqual([{ message: 'upload: recording file missing', data: { mode: 'processing' }, level: 'error' }]);
+  });
+
+  it('records note photo PUTs, including the failure status', async () => {
+    const { putFileToPresignedUrl } = jest.requireActual('../upload') as typeof import('../upload');
+    put.mockResolvedValueOnce({ status: 200 });
+    await putFileToPresignedUrl('https://fixture.invalid/put', 'file:///photo.jpg', 'image/jpeg');
+    put.mockResolvedValueOnce({ status: 403 });
+    await putFileToPresignedUrl('https://fixture.invalid/put', 'file:///photo.jpg', 'image/jpeg').catch(() => undefined);
+    put.mockRejectedValueOnce(new Error('network'));
+    await putFileToPresignedUrl('https://fixture.invalid/put', 'file:///photo.jpg', 'image/jpeg').catch(() => undefined);
+    expect(crumbs()).toContainEqual({ message: 'upload: note photo put done', data: { phase: 'note_put', status: 200 }, level: undefined });
+    expect(crumbs()).toContainEqual({ message: 'upload: note photo put failed', data: { phase: 'note_put', status: 403 }, level: 'error' });
+    expect(crumbs()).toContainEqual({ message: 'upload: note photo put failed', data: { phase: 'note_put' }, level: 'error' });
+    expectNoPII();
+  });
+
+  it('uploads normally with the real (Sentry-disabled) telemetry', async () => {
+    (uploadBreadcrumb as jest.Mock).mockImplementation((...args: Parameters<typeof uploadBreadcrumb>) =>
+      (jest.requireActual('../telemetry') as typeof import('../telemetry')).uploadBreadcrumb(...args));
+    await expect(uploadRecording('clip.m4a', 3)).resolves.toEqual({ entry: { id: 'entry' } });
   });
 });

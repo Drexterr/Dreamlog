@@ -17,6 +17,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as FileSystem from 'expo-file-system/legacy';
 import { OfflineQueueItem } from '../types';
 import { uploadRecording } from './upload';
+import { errorStatus, sizeBucket, uploadBreadcrumb } from './telemetry';
 
 const QUEUE_KEY = 'dreamlog:offline_queue';
 const MAX_ITEM_ATTEMPTS = 5;
@@ -83,6 +84,9 @@ function isPermanentFailure(err: unknown): boolean {
 export async function enqueue(item: Omit<OfflineQueueItem, 'attempts'>): Promise<void> {
   const localUri = await persistRecording(item.id, item.localUri);
   await mutateQueue(queue => [...queue, { ...item, localUri, attempts: 0 }]);
+  uploadBreadcrumb('offline queue: recording queued', {
+    phase: 'queue', mode: item.mode ?? 'processing', size: sizeBucket(item.sizeBytes), resumed: Boolean(item.uploadedKey),
+  });
 }
 
 export async function removeItem(id: string): Promise<void> {
@@ -101,6 +105,7 @@ export async function getFailedItems(): Promise<OfflineQueueItem[]> {
 /** Puts a failed recording back into automatic retry. */
 export async function retryItem(id: string): Promise<void> {
   await mutateQueue(queue => queue.map(i => (i.id === id ? { ...i, failed: false, attempts: 0, lastError: undefined } : i)));
+  uploadBreadcrumb('offline queue: user retried a failed recording', { phase: 'queue' });
 }
 
 /** Permanently discards a recording the user chose not to keep. */
@@ -108,6 +113,7 @@ export async function discardItem(id: string): Promise<void> {
   const item = (await readQueue()).find(i => i.id === id);
   await removeItem(id);
   if (item) await deleteRecording(item.localUri);
+  uploadBreadcrumb('offline queue: user discarded a recording', { phase: 'queue' }, 'warning');
 }
 
 /**
@@ -131,6 +137,7 @@ export async function flush(
     const queue = await readQueue();
     const pending = queue.filter(i => !i.failed);
     if (pending.length === 0) return;
+    uploadBreadcrumb('offline queue: flush started', { phase: 'queue', count: pending.length });
 
     const remaining: OfflineQueueItem[] = [];
     const uploaded: OfflineQueueItem[] = [];
@@ -143,6 +150,7 @@ export async function flush(
           onUploaded: (key) => { uploadedKey = key; },
         });
         uploaded.push(item);
+        uploadBreadcrumb('offline queue: item uploaded', { phase: 'queue', attempt: item.attempts + 1, mode: item.mode ?? 'processing' });
         onItemUploaded?.(item);
         // Remove from queue by NOT adding to remaining[].
       } catch (err) {
@@ -157,6 +165,13 @@ export async function flush(
           // it instead of uploading (and orphaning) another copy (N7).
           uploadedKey,
         };
+        uploadBreadcrumb('offline queue: item failed', {
+          phase: 'queue',
+          attempt: attempts,
+          status: errorStatus(err),
+          permanent: Boolean(updated.failed),
+          resumed: Boolean(uploadedKey),
+        }, updated.failed ? 'error' : 'warning');
         onItemFailed?.(updated, error);
         remaining.push(updated);
       }
@@ -172,6 +187,9 @@ export async function flush(
     });
 
     for (const item of uploaded) await deleteRecording(item.localUri);
+    uploadBreadcrumb('offline queue: flush finished', {
+      phase: 'queue', uploaded: uploaded.length, remaining: remaining.length,
+    }, remaining.length > 0 ? 'warning' : 'info');
   } finally {
     flushInFlight = false;
   }
