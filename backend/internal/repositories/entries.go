@@ -66,12 +66,12 @@ func (r *EntryRepository) CreateOnce(ctx context.Context, userID uuid.UUID, audi
 // CreateText atomically inserts a transcript without creating an audio object.
 func (r *EntryRepository) CreateText(ctx context.Context, userID uuid.UUID, input *models.CreateTextEntryInput) (*models.Entry, bool, error) {
 	id := models.TextEntryID(userID, input.RequestID)
-	const q = `INSERT INTO entries (id, user_id, audio_key, audio_size_bytes, duration_sec, status, mode, transcript)
-		VALUES ($1, $2, $3, 0, 0, 'pending', $4, $5) ON CONFLICT (id) DO NOTHING
+	const q = `INSERT INTO entries (id, user_id, audio_key, audio_size_bytes, duration_sec, status, mode, transcript, language)
+		VALUES ($1, $2, $3, 0, 0, 'pending', $4, $5, NULLIF($6, '')) ON CONFLICT (id) DO NOTHING
 		RETURNING id, user_id, audio_key, audio_size_bytes, duration_sec, status, mode,
 		transcript, language, error_msg, retry_count, created_at, updated_at`
 	e := &models.Entry{}
-	err := r.db.QueryRow(ctx, q, id, userID, "text/"+userID.String()+"/"+input.RequestID, string(input.Mode), input.Content).Scan(
+	err := r.db.QueryRow(ctx, q, id, userID, "text/"+userID.String()+"/"+input.RequestID, string(input.Mode), input.Content, input.Language).Scan(
 		&e.ID, &e.UserID, &e.AudioKey, &e.AudioSizeBytes, &e.DurationSec, &e.Status, &e.Mode,
 		&e.Transcript, &e.Language, &e.ErrorMsg, &e.RetryCount, &e.CreatedAt, &e.UpdatedAt,
 	)

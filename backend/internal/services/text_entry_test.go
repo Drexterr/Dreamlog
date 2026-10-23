@@ -14,9 +14,11 @@ type textRepoFake struct {
 	created  bool
 	err      error
 	conflict bool
+	language string // language the service passed in
 }
 
 func (f *textRepoFake) CreateText(_ context.Context, user uuid.UUID, in *models.CreateTextEntryInput) (*models.Entry, bool, error) {
+	f.language = in.Language
 	content := in.Content
 	if f.conflict {
 		content = "different journal"
@@ -87,5 +89,23 @@ func TestCreateTextEntryRejectsConflictAndPersistenceFailure(t *testing.T) {
 				t.Fatal("enqueued failed entry")
 			}
 		})
+	}
+}
+
+// N11: the service detects a typed journal's language from its script, so a
+// Devanagari journal is stored as Hindi like the same words spoken.
+func TestCreateTextEntry_DetectsLanguage(t *testing.T) {
+	for content, want := range map[string]string{
+		"आज मैं बहुत थका हुआ हूँ": "hindi",
+		"A quiet, ordinary day":    "english",
+	} {
+		repo := &textRepoFake{created: true}
+		svc := &EntryService{repo: repo, queue: &textQueueFake{}}
+		if _, err := svc.CreateText(context.Background(), uuid.New(), &models.CreateTextEntryInput{Content: content, RequestID: uuid.NewString()}, ""); err != nil {
+			t.Fatal(err)
+		}
+		if repo.language != want {
+			t.Errorf("%q: language %q, want %q", content, repo.language, want)
+		}
 	}
 }

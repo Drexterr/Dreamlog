@@ -61,3 +61,19 @@ func TestIntegration_TypedEntryAtomicRetryAndOwnership(t *testing.T) {
 		t.Fatal("a conflicting retry replaced the original journal")
 	}
 }
+
+// N11: the detected language is stored on a typed journal.
+func TestIntegration_TextEntry_StoresLanguage(t *testing.T) {
+	db := regressionDB(t)
+	ctx := context.Background()
+	owner := regressionUser(t, db)
+	r := NewEntryRepository(db)
+	input := models.CreateTextEntryInput{Content: "आज मैं बहुत थका हुआ हूँ", RequestID: uuid.NewString(), Mode: models.EntryModeProcessing, Language: "hindi"}
+	entry, fresh, err := r.CreateText(ctx, owner, &input)
+	if err != nil || !fresh {
+		t.Fatalf("create: %v %v", fresh, err)
+	}
+	if entry.Language == nil || *entry.Language != "hindi" {
+		t.Fatalf("language not stored: %v", entry.Language)
+	}
+}

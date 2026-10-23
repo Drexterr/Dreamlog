@@ -536,3 +536,20 @@ func TestBuildSystemPromptForMode_DreamIgnoresLanguage(t *testing.T) {
 		t.Error("dream mode prompt must be identical regardless of language")
 	}
 }
+
+// N11: Whisper's full language names count, and with no language at all
+// (typed journals) the script decides.
+func TestDetectScriptLanguage_FullNamesAndTypedText(t *testing.T) {
+	cases := []struct{ lang, text, want string }{
+		{"hindi", "आज मैं बहुत थका हुआ हूँ", "hi"},
+		{"Hindi", "aaj main bahut thaka hua hoon yaar", "hinglish"},
+		{"", "आज मैं बहुत थका हुआ हूँ", "hi"},
+		{"", "A quiet, ordinary day", "en"},
+		{"english", "आज", "en"},
+	}
+	for _, tc := range cases {
+		if got := detectScriptLanguage(tc.lang, tc.text); got != tc.want {
+			t.Errorf("detectScriptLanguage(%q, %q) = %q, want %q", tc.lang, tc.text, got, tc.want)
+		}
+	}
+}

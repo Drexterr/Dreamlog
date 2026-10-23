@@ -13,6 +13,10 @@ type CreateTextEntryInput struct {
 	Content   string    `json:"content" binding:"required"`
 	RequestID string    `json:"request_id" binding:"required"`
 	Mode      EntryMode `json:"mode"`
+	// Language is detected server-side from the text (never client-supplied)
+	// and stored like Whisper's language, so typed Hindi journals get the
+	// Hindi prompt (N11).
+	Language string `json:"-"`
 }
 
 func (in *CreateTextEntryInput) Validate() error {

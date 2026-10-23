@@ -33,11 +33,18 @@ var goalGuidance = map[string]string{
 	"trauma":        "This person journals to process difficult past experiences. Ensure a sense of absolute safety: be gentle, non-triggering, low-arousal, and non-judgmental.",
 }
 
-// detectScriptLanguage maps a Whisper language code + transcript to one of
+// detectScriptLanguage maps a Whisper language + transcript to one of
 // "en", "hi" (pure Hindi / Devanagari), or "hinglish" (romanised Hindi-English mix).
-// Hinglish is identified when Whisper reports "hi" but the transcript is predominantly Latin.
+// Whisper reports either a code ("hi") or a full name ("hindi", OpenAI's
+// verbose_json); both count. With no language (a typed journal stored before
+// detection existed) Devanagari text is Hindi (N11). Hinglish is identified
+// when the language is Hindi but the transcript is predominantly Latin.
 func detectScriptLanguage(whisperLang, transcript string) string {
-	if whisperLang != "hi" {
+	lang := strings.ToLower(strings.TrimSpace(whisperLang))
+	if lang == "" && DetectTextLanguage(transcript) == "hindi" {
+		lang = "hi"
+	}
+	if lang != "hi" && lang != "hindi" {
 		return "en"
 	}
 	var latin, total int

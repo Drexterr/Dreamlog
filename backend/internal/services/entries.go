@@ -130,6 +130,7 @@ func (s *EntryService) CreateText(ctx context.Context, userID uuid.UUID, input *
 	if err := input.Validate(); err != nil {
 		return nil, err
 	}
+	input.Language = DetectTextLanguage(input.Content)
 	entry, created, err := s.repo.CreateText(ctx, userID, input)
 	if err != nil || entry == nil {
 		return nil, apierr.InternalErr("could not save journal", err)
