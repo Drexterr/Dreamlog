@@ -296,6 +296,10 @@ func TestBlackboxExploreB2B(t *testing.T) {
 	exploreSeed(t, h, `INSERT INTO company_members(company_id,user_id,role) VALUES($1,$2,'admin')`, foreign, h.otherID)
 	path := "/b2b/companies/" + slug
 	h.request(t, "b2b_nonmember_dashboard_denied", "GET", path+"/mood", "", h.other, 403)
+	// N6: the harness users signed up through local /auth/register, so their
+	// addresses are unverified and may not prove company membership.
+	h.request(t, "b2b_join_unverified_email_denied", "POST", path+"/join", `{}`, h.other, 403)
+	exploreSeed(t, h, `UPDATE users SET email_verified = true WHERE id IN ($1,$2)`, h.ownerID, h.otherID)
 	joined := h.request(t, "b2b_join", "POST", path+"/join", `{}`, h.other, 200)
 	exploreEqual(t, joined, "company_id", company.String())
 	exploreEqual(t, joined, "role", "member")
