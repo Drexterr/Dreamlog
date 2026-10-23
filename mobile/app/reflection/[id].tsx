@@ -19,7 +19,8 @@ import { useTheme } from '../../src/context/ThemeContext';
 import { T } from '../../src/testIDs';
 import type { Entry, EntryAnalysis } from '../../src/types';
 import { detectUserCountry } from '../../src/services/region';
-import { helplinesForCountry, helplineHref, type CountryHelplines } from '../../src/services/helplines';
+import { helplinesForCountry, type CountryHelplines } from '../../src/services/helplines';
+import { HelplineCards } from '../../src/components/HelplineCards';
 import type { ThemeColors } from '../../src/theme';
 
 // ── Crisis Care Card ──────────────────────────────────────────────────────────
@@ -56,31 +57,7 @@ function CrisisCareView({
       </Text>
 
       {/* Hotline cards - localised to the user's country */}
-      <Text style={[styles.resourceSectionLabel, { color: colors.textMuted }]}>
-        CRISIS HELPLINES{resource.code !== 'INTL' ? ` · ${resource.countryName.toUpperCase()}` : ''}
-      </Text>
-      <View style={styles.hotlineList}>
-        {resource.lines.map((h) => (
-          <TouchableOpacity
-            key={h.name}
-            style={[styles.hotlineCard, { backgroundColor: colors.card, borderColor: colors.borderFaint }]}
-            onPress={() => openURL(helplineHref(h.action))}
-            activeOpacity={0.75}
-          >
-            <View style={{ flex: 1 }}>
-              <Text style={[styles.hotlineName, { color: colors.textPrimary }]}>{h.name}</Text>
-              <Text style={[styles.hotlineHours, { color: colors.textMuted }]}>
-                {h.hours ? `${h.detail} · ${h.hours}` : h.detail}
-              </Text>
-            </View>
-            <View style={[styles.callPill, { backgroundColor: `${colors.brand}22`, borderColor: `${colors.brand}55` }]}>
-              <Text style={[styles.callPillText, { color: colors.brand }]}>
-                {h.action.kind === 'link' ? '🔗 Open' : h.action.kind === 'text' ? '💬 Text' : '📞 Call'}
-              </Text>
-            </View>
-          </TouchableOpacity>
-        ))}
-      </View>
+      <HelplineCards resource={resource} colors={colors} />
 
       {resource.emergency ? (
         <Text style={[styles.crisisSubtext, { color: colors.textMuted, marginTop: -14, marginBottom: 24 }]}>

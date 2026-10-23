@@ -17,6 +17,9 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { api } from '../../src/api/client';
 import { useTheme } from '../../src/context/ThemeContext';
 import type { Conversation, ConversationMessage } from '../../src/types';
+import { HelplineCards } from '../../src/components/HelplineCards';
+import { helplinesForCountry } from '../../src/services/helplines';
+import { detectUserCountry } from '../../src/services/region';
 import { T } from '../../src/testIDs';
 import type { ThemeColors } from '../../src/theme';
 
@@ -56,6 +59,11 @@ export default function FollowUpScreen() {
   const { colors } = useTheme();
 
   const [conversation, setConversation] = useState<Conversation | null>(null);
+  // Localises the crisis helplines; fail-silent (international fallback).
+  const [country, setCountry] = useState<string | null>(null);
+  useEffect(() => {
+    detectUserCountry().then(setCountry).catch(() => setCountry(null));
+  }, []);
   const [messages, setMessages] = useState<ConversationMessage[]>([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
@@ -176,7 +184,14 @@ export default function FollowUpScreen() {
           maxToRenderPerBatch={10}
           windowSize={5}
           renderItem={({ item }) => <MessageBubble message={item} colors={colors} />}
-          ListFooterComponent={loading ? <TypingBubble colors={colors} /> : null}
+          ListFooterComponent={
+            loading ? <TypingBubble colors={colors} />
+              : conversation?.is_crisis ? (
+                <View style={styles.crisisCards}>
+                  <HelplineCards testID={T.followup.helplines} resource={helplinesForCountry(country)} colors={colors} />
+                </View>
+              ) : null
+          }
         />
 
         {/* Input / closed banner */}
@@ -233,6 +248,7 @@ export default function FollowUpScreen() {
 }
 
 const styles = StyleSheet.create({
+  crisisCards: { marginTop: 12 },
   container: { flex: 1 },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
 

@@ -454,6 +454,8 @@ Response `200` or `201`:
   "turn_count": 0,
   "is_closed": false,
   "messages": [],             // array of existing messages if conversation existed
+  "is_crisis": true,          // present when the conversation was closed by crisis screening
+                              // (persisted - reopening shows the crisis resources again)
   "created_at": "RFC3339"
 }
 ```

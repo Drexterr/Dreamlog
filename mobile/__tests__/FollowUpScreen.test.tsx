@@ -7,6 +7,7 @@ const mockReplace=jest.fn(), mockBack=jest.fn();
 jest.mock('expo-router',()=>({useRouter:()=>({replace:mockReplace,back:mockBack}),useLocalSearchParams:()=>({id:'entry'})}));
 jest.mock('../src/context/ThemeContext',()=>({useTheme:()=>({colors:require('../src/theme').THEMES.curious})}));
 jest.mock('../src/api/client',()=>({api:{getOrCreateConversation:jest.fn(),sendConversationMessage:jest.fn()}}));
+jest.mock('../src/services/region',()=>({detectUserCountry:jest.fn().mockResolvedValue('IN')}));
 const get=api.getOrCreateConversation as jest.Mock,send=api.sendConversationMessage as jest.Mock;
 const conversation=(extra={})=>({id:'conversation',turn_count:0,is_closed:false,messages:[],...extra});
 beforeEach(()=>{jest.useFakeTimers();jest.clearAllMocks();get.mockReset();send.mockReset();get.mockResolvedValue(conversation());send.mockResolvedValue(conversation({turn_count:1,messages:[{id:'u',role:'user',content:'My message'},{id:'a',role:'assistant',content:'A grounded reply'}]}));});
@@ -21,4 +22,9 @@ describe('follow-up replies',()=>{
   it('shows closed banner and returns home',async()=>{get.mockResolvedValue(conversation({turn_count:3,is_closed:true}));const view=await screen();expect(view.queryByTestId(T.followup.input)).toBeNull();fireEvent.press(view.getByTestId(T.followup.goodnight));expect(mockReplace).toHaveBeenCalledWith('/(tabs)');});
   it('does not send a fourth turn through keyboard if closure flag is delayed',async()=>{get.mockResolvedValue(conversation({turn_count:3,is_closed:false}));const view=await screen();fireEvent.changeText(view.getByTestId(T.followup.input),'Fourth turn');fireEvent(view.getByTestId(T.followup.input),'submitEditing');expect(send).not.toHaveBeenCalled();});
   it('Done returns to previous screen',async()=>{const view=await screen();fireEvent.press(view.getByTestId(T.followup.closeButton));expect(mockBack).toHaveBeenCalledTimes(1);});
+  // N12: a conversation closed by crisis screening shows tap-to-call helplines,
+  // also when it is reopened later (is_crisis is persisted server-side).
+  it('shows helpline cards when a reopened conversation ended in crisis',async()=>{get.mockResolvedValue(conversation({turn_count:1,is_closed:true,is_crisis:true,messages:[{id:'c',role:'assistant',content:'Please reach out'}]}));const view=await screen();await waitFor(()=>expect(view.getByTestId(T.followup.helplines)).toBeTruthy());expect(view.getByText('iCall')).toBeTruthy();expect(view.queryByText("You've reached the end of this conversation.")).toBeNull();});
+  it('shows helpline cards right after a message triggers crisis screening',async()=>{send.mockResolvedValue(conversation({turn_count:1,is_closed:true,is_crisis:true,messages:[{id:'u',role:'user',content:'help'},{id:'c',role:'assistant',content:'Please reach out'}]}));const view=await screen();fireEvent.changeText(view.getByTestId(T.followup.input),'help');fireEvent.press(view.getByTestId(T.followup.sendButton));await waitFor(()=>expect(view.getByTestId(T.followup.helplines)).toBeTruthy());});
+  it('shows no helplines for an ordinary closed conversation',async()=>{get.mockResolvedValue(conversation({turn_count:3,is_closed:true}));const view=await screen();expect(view.queryByTestId(T.followup.helplines)).toBeNull();});
 });

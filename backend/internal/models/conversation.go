@@ -13,9 +13,10 @@ type Conversation struct {
 	UserID    uuid.UUID             `json:"user_id"`
 	TurnCount int                   `json:"turn_count"`
 	IsClosed  bool                  `json:"is_closed"`
-	// IsCrisis is set on the SendMessage response when the user's message
-	// triggered crisis screening: the reply holds crisis resources and the
-	// conversation is now closed. The client renders hotline cards.
+	// IsCrisis is true once a user message in this conversation triggered
+	// crisis screening: the reply holds crisis resources and the conversation
+	// is closed. Persisted (migration 000046), so reopening the conversation
+	// still renders hotline cards (N12).
 	IsCrisis  bool                  `json:"is_crisis,omitempty"`
 	Messages  []ConversationMessage `json:"messages"`
 	CreatedAt time.Time             `json:"created_at"`

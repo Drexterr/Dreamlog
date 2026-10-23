@@ -292,6 +292,7 @@ export const T = {
     input:       'followup-input',
     sendButton:  'followup-send',
     closeButton: 'followup-close',
+    helplines: 'followup-helplines',
     goodnight:   'followup-goodnight',
   },
 

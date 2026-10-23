@@ -27,11 +27,11 @@ func (r *ConversationRepository) GetOrCreate(ctx context.Context, entryID, userI
 		SELECT id, $2 FROM entries WHERE id = $1 AND user_id = $2
 		ON CONFLICT (entry_id) DO UPDATE SET updated_at = NOW()
 		WHERE conversations.user_id = $2
-		RETURNING id, entry_id, user_id, turn_count, is_closed, created_at, updated_at`
+		RETURNING id, entry_id, user_id, turn_count, is_closed, is_crisis, created_at, updated_at`
 
 	c := &models.Conversation{}
 	err := r.db.QueryRow(ctx, upsertQ, entryID, userID).Scan(
-		&c.ID, &c.EntryID, &c.UserID, &c.TurnCount, &c.IsClosed, &c.CreatedAt, &c.UpdatedAt,
+		&c.ID, &c.EntryID, &c.UserID, &c.TurnCount, &c.IsClosed, &c.IsCrisis, &c.CreatedAt, &c.UpdatedAt,
 	)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return nil, apierr.NotFound("entry")
@@ -45,13 +45,13 @@ func (r *ConversationRepository) GetOrCreate(ctx context.Context, entryID, userI
 // GetByID returns a conversation by its own ID, verifying user ownership.
 func (r *ConversationRepository) GetByID(ctx context.Context, id, userID uuid.UUID) (*models.Conversation, error) {
 	const q = `
-		SELECT id, entry_id, user_id, turn_count, is_closed, created_at, updated_at
+		SELECT id, entry_id, user_id, turn_count, is_closed, is_crisis, created_at, updated_at
 		FROM conversations
 		WHERE id = $1 AND user_id = $2`
 
 	c := &models.Conversation{}
 	err := r.db.QueryRow(ctx, q, id, userID).Scan(
-		&c.ID, &c.EntryID, &c.UserID, &c.TurnCount, &c.IsClosed, &c.CreatedAt, &c.UpdatedAt,
+		&c.ID, &c.EntryID, &c.UserID, &c.TurnCount, &c.IsClosed, &c.IsCrisis, &c.CreatedAt, &c.UpdatedAt,
 	)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return nil, nil
@@ -111,18 +111,18 @@ func (r *ConversationRepository) AddMessage(ctx context.Context, convID uuid.UUI
 			    is_closed  = (turn_count + 1 >= $2),
 			    updated_at = NOW()
 			WHERE id = $1 AND NOT is_closed AND turn_count < $2
-			RETURNING id, entry_id, user_id, turn_count, is_closed, created_at, updated_at`,
+			RETURNING id, entry_id, user_id, turn_count, is_closed, is_crisis, created_at, updated_at`,
 			convID, models.MaxConversationTurns)
 	} else {
 		row = tx.QueryRow(ctx, `
 			UPDATE conversations
 			SET updated_at = NOW()
 			WHERE id = $1
-			RETURNING id, entry_id, user_id, turn_count, is_closed, created_at, updated_at`,
+			RETURNING id, entry_id, user_id, turn_count, is_closed, is_crisis, created_at, updated_at`,
 			convID)
 	}
 	err = row.Scan(
-		&conv.ID, &conv.EntryID, &conv.UserID, &conv.TurnCount, &conv.IsClosed,
+		&conv.ID, &conv.EntryID, &conv.UserID, &conv.TurnCount, &conv.IsClosed, &conv.IsCrisis,
 		&conv.CreatedAt, &conv.UpdatedAt,
 	)
 	if errors.Is(err, pgx.ErrNoRows) && role == "user" {
@@ -148,15 +148,16 @@ func (r *ConversationRepository) AddMessage(ctx context.Context, convID uuid.UUI
 	return conv, msg, nil
 }
 
-// Close marks a conversation closed (used after a crisis reply).
+// Close marks a conversation closed after a crisis reply and records that it
+// ended in crisis, so reopening it shows the crisis resources again (N12).
 func (r *ConversationRepository) Close(ctx context.Context, convID uuid.UUID) (*models.Conversation, error) {
 	conv := &models.Conversation{}
 	err := r.db.QueryRow(ctx, `
-		UPDATE conversations SET is_closed = true, updated_at = NOW()
+		UPDATE conversations SET is_closed = true, is_crisis = true, updated_at = NOW()
 		WHERE id = $1
-		RETURNING id, entry_id, user_id, turn_count, is_closed, created_at, updated_at`,
+		RETURNING id, entry_id, user_id, turn_count, is_closed, is_crisis, created_at, updated_at`,
 		convID,
-	).Scan(&conv.ID, &conv.EntryID, &conv.UserID, &conv.TurnCount, &conv.IsClosed, &conv.CreatedAt, &conv.UpdatedAt)
+	).Scan(&conv.ID, &conv.EntryID, &conv.UserID, &conv.TurnCount, &conv.IsClosed, &conv.IsCrisis, &conv.CreatedAt, &conv.UpdatedAt)
 	if err != nil {
 		return nil, fmt.Errorf("conv.Close: %w", err)
 	}
