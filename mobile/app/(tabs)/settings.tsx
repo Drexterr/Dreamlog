@@ -30,7 +30,7 @@ import { T } from '../../src/testIDs';
 import type { AgeRange, Plan, User, UserGoal, VoiceLanguage } from '../../src/types';
 import { cacheUserCountry, detectUserCountry } from '../../src/services/region';
 import { helplinesForCountry, helplineHref } from '../../src/services/helplines';
-import { Palette, PlanColors } from '../../src/theme';
+import { Palette, PlanColors, THEMES } from '../../src/theme';
 
 // dreamlog.app is not yet DNS-pointed at the Firebase Hosting site - use the
 // working *.web.app URL until that's done (see docs/LAUNCH_CHECKLIST.md).
@@ -378,7 +378,7 @@ export default function SettingsScreen() {
     );
   };
 
-  // ── Goal selection: full-screen flood fill via ThemeContext ─────────────────
+  // Close the native sheet before capturing the screen for the palette crossfade.
   const handleGoalSelectFromModal = (goal: UserGoal, pageX: number, pageY: number) => {
     setShowGoalModal(false);
     if (goal === theme) return;
@@ -386,12 +386,9 @@ export default function SettingsScreen() {
     // Optimistically update the goal label immediately.
     setUser(prev => prev ? { ...prev, goal } : prev);
 
-    // Wait for the modal slide-down, then trigger the global flood fill.
-    // ThemeContext's overlay renders above everything (tab bar included), so
-    // no element snaps when setTheme fires at the end of the animation.
-    setTimeout(() => {
-      setThemeWithBubble(goal, pageX, pageY);
-    }, 300);
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => setThemeWithBubble(goal, pageX, pageY));
+    });
   };
 
   const effectiveGoal = (user?.goal || theme) as UserGoal;
@@ -930,7 +927,7 @@ export default function SettingsScreen() {
       <Modal
         visible={showGoalModal}
         transparent
-        animationType="slide"
+        animationType="none"
         onRequestClose={() => setShowGoalModal(false)}
       >
         <BlurView intensity={55} tint="dark" style={styles.modalOverlay}>
@@ -954,6 +951,9 @@ export default function SettingsScreen() {
                 return (
                   <TouchableOpacity
                     key={g.key}
+                    accessibilityRole="radio"
+                    accessibilityState={{ selected: isSelected }}
+                    accessibilityLabel={g.label}
                     style={[
                       styles.goalPickerCard,
                       {
@@ -965,6 +965,7 @@ export default function SettingsScreen() {
                     activeOpacity={0.7}
                   >
                     <View style={styles.goalPickerRow}>
+                      <View style={{ width: 9, height: 9, borderRadius: 5, marginRight: 10, backgroundColor: THEMES[g.key].brand }} />
                       <Text style={[styles.goalPickerLabel, { color: isSelected ? colors.purple300 : colors.textPrimary }]}>
                         {g.label}
                       </Text>

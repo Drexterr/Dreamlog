@@ -11,8 +11,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
-import { api } from '../src/api/client';
-import { Fonts } from '../src/theme';
+import { Fonts, THEMES } from '../src/theme';
 import { useTheme } from '../src/context/ThemeContext';
 import type { UserGoal } from '../src/types';
 import { T, changeGoalID } from '../src/testIDs';
@@ -35,23 +34,18 @@ export default function ChangeGoalScreen() {
   const { theme, colors, setThemeWithBubble } = useTheme();
   const [saving, setSaving] = useState<UserGoal | null>(null);
 
-  const handleSelect = async (goal: UserGoal, pageX: number, pageY: number) => {
-    if (saving || goal === theme) {
+  const handleSelect = (goal: UserGoal, pageX: number, pageY: number) => {
+    if (saving) return;
+    if (goal === theme) {
       router.back();
       return;
     }
 
     setSaving(goal);
-    setThemeWithBubble(goal, pageX || SW / 2, pageY || SH / 2);
-
-    try {
-      await api.updateMe({ goal });
-    } catch {
-      // theme already changed optimistically - don't revert the visual
-    } finally {
+    setThemeWithBubble(goal, pageX || SW / 2, pageY || SH / 2, () => {
       setSaving(null);
       router.back();
-    }
+    });
   };
 
   return (
@@ -82,6 +76,9 @@ export default function ChangeGoalScreen() {
                 <TouchableOpacity
                   key={g.key}
                   testID={changeGoalID(g.key)}
+                  accessibilityRole="radio"
+                  accessibilityState={{ selected: isSelected, disabled: !!saving }}
+                  accessibilityLabel={g.label}
                   style={[
                     styles.goalCard,
                     {
@@ -94,6 +91,7 @@ export default function ChangeGoalScreen() {
                   activeOpacity={0.7}
                 >
                   <View style={styles.goalHeaderRow}>
+                    <View style={[styles.goalSwatch, { backgroundColor: THEMES[g.key].brand }]} />
                     <Text style={[styles.goalLabel, { color: isSelected ? colors.purple300 : colors.textPrimary }]}>
                       {g.label}
                     </Text>
@@ -166,7 +164,9 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 4,
+    gap: 10,
   },
+  goalSwatch: { width: 9, height: 9, borderRadius: 5 },
   goalLabel: {
     fontFamily: Fonts.sansSB,
     fontSize: 15,

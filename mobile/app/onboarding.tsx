@@ -8,13 +8,12 @@ import {
   ScrollView,
   KeyboardAvoidingView,
   Platform,
-  Dimensions,
   Animated,
   Easing,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { Fonts, THEMES, Palette } from '../src/theme';
+import { Fonts, Palette } from '../src/theme';
 import { useTheme } from '../src/context/ThemeContext';
 import type { ThemeColors } from '../src/theme';
 import {
@@ -26,10 +25,6 @@ import { setRegionFromCountry } from '../src/services/region';
 import { logQaOnboardingStep } from '../src/services/qaDiagnostics';
 import { T, onboardingGoalID, onboardingAgeID } from '../src/testIDs';
 import type { AgeRange, UserGoal } from '../src/types';
-
-const { width: SW, height: SH } = Dimensions.get('window');
-const FLOOD_D = 100;
-const FLOOD_R = FLOOD_D / 2;
 
 // ── Intro slides data ─────────────────────────────────────────────────────────
 
@@ -196,7 +191,7 @@ const COUNTRIES: { code: string; name: string; flag: string }[] = [
 // Step map:
 //   0       = welcome
 //   'intro' = feature intro slides (new)
-//   1       = goal (flood fill)
+//   1       = goal
 //   2       = reveal
 //   3       = name
 //   4       = age range
@@ -206,7 +201,7 @@ type Step = 0 | 'intro' | 1 | 2 | 3 | 4 | 5 | 6;
 
 export default function OnboardingScreen() {
   const router = useRouter();
-  const { colors, setTheme } = useTheme();
+  const { colors, setThemeWithTransition } = useTheme();
 
   const [step, setStep] = useState<Step>(0);
   useEffect(() => { logQaOnboardingStep(step); }, [step]);
@@ -221,20 +216,13 @@ export default function OnboardingScreen() {
   const introAnim    = useRef(new Animated.Value(0)).current;
   const introStarted = useRef(false);
 
-  // Reveal screen entrance animations (step 2)
-  const revealLineAnim  = useRef(new Animated.Value(0)).current;
-  const revealLabelAnim = useRef(new Animated.Value(0)).current;
-  const revealMsgAnim   = useRef(new Animated.Value(0)).current;
-  const revealSubAnim   = useRef(new Animated.Value(0)).current;
-  const revealBtnAnim   = useRef(new Animated.Value(0)).current;
-
-  // Flood fill state (step 1 → 2)
-  const floodAnim      = useRef(new Animated.Value(0)).current;
-  const contentOpacity = useRef(new Animated.Value(1)).current;
-  const floodActive    = useRef(false);
-  const floodColor     = useRef(colors.bg);
-  const floodOriginX   = useRef(SW / 2);
-  const floodOriginY   = useRef(SH / 2);
+  // The shared crossfade reveals the complete next screen without extra movement.
+  const revealLineAnim  = useRef(new Animated.Value(1)).current;
+  const revealLabelAnim = useRef(new Animated.Value(1)).current;
+  const revealMsgAnim   = useRef(new Animated.Value(1)).current;
+  const revealSubAnim   = useRef(new Animated.Value(1)).current;
+  const revealBtnAnim   = useRef(new Animated.Value(1)).current;
+  const goalTransitionActive = useRef(false);
 
   // Welcome screen entrance
   const welcomeAnim    = useRef(new Animated.Value(0)).current;
@@ -270,53 +258,14 @@ export default function OnboardingScreen() {
       )
     : COUNTRIES;
 
-  // ── Goal tap: flood fill then advance ──────────────────────────────────────
-  function handleGoalSelect(goal: UserGoal, pageX: number, pageY: number) {
-    if (floodActive.current) return;
-    floodActive.current = true;
+  function handleGoalSelect(goal: UserGoal) {
+    if (goalTransitionActive.current) return;
+    goalTransitionActive.current = true;
     setSelectedGoal(goal);
-
-    const targetBg       = THEMES[goal].bg;
-    floodColor.current   = targetBg;
-    floodOriginX.current = pageX > 0 ? pageX : SW / 2;
-    floodOriginY.current = pageY > 0 ? pageY : SH / 2;
-    floodAnim.setValue(0);
-    contentOpacity.setValue(1);
-
-    const dx = Math.max(floodOriginX.current, SW - floodOriginX.current);
-    const dy = Math.max(floodOriginY.current, SH - floodOriginY.current);
-    const targetScale = (Math.sqrt(dx * dx + dy * dy) / FLOOD_R) * 1.15;
-
-    Animated.parallel([
-      Animated.timing(floodAnim, {
-        toValue: targetScale,
-        duration: 1250,
-        easing: Easing.bezier(0.35, 0.01, 0.08, 1),
-        useNativeDriver: true,
-      }),
-      Animated.sequence([
-        Animated.delay(800),
-        Animated.timing(contentOpacity, {
-          toValue: 0,
-          duration: 450,
-          easing: Easing.out(Easing.quad),
-          useNativeDriver: true,
-        }),
-      ]),
-    ]).start(() => {
-      setTheme(goal);
-      contentOpacity.setValue(1);
-      floodActive.current = false;
-      // Reset & play reveal entrance
-      [revealLineAnim, revealLabelAnim, revealMsgAnim, revealSubAnim, revealBtnAnim].forEach((a) => a.setValue(0));
-      setStep(2);
-      Animated.stagger(90, [
-        Animated.timing(revealLineAnim,  { toValue: 1, duration: 400, useNativeDriver: false }),
-        Animated.timing(revealLabelAnim, { toValue: 1, duration: 320, useNativeDriver: true }),
-        Animated.timing(revealMsgAnim,   { toValue: 1, duration: 380, useNativeDriver: true }),
-        Animated.timing(revealSubAnim,   { toValue: 1, duration: 340, useNativeDriver: true }),
-        Animated.timing(revealBtnAnim,   { toValue: 1, duration: 300, useNativeDriver: true }),
-      ]).start();
+    setThemeWithTransition(goal, {
+      syncAccount: false,
+      onApply: () => setStep(2),
+      onComplete: () => { goalTransitionActive.current = false; },
     });
   }
 
@@ -465,28 +414,15 @@ export default function OnboardingScreen() {
         </Animated.View>
       )}
 
-      {/* ── Step 1: Goal selection (flood fill) ── */}
+      {/* ── Step 1: Goal selection ── */}
       {step === 1 && (
-        <View style={styles.floodContainer}>
-          <Animated.View
-            pointerEvents="none"
-            style={[
-              styles.floodCircle,
-              {
-                backgroundColor: floodColor.current,
-                left: floodOriginX.current - FLOOD_R,
-                top: floodOriginY.current - FLOOD_R,
-                transform: [{ scale: floodAnim }],
-              },
-            ]}
-          />
-          <Animated.ScrollView
+        <View style={styles.goalContainer}>
+          <ScrollView
             contentContainerStyle={styles.scroll}
             keyboardShouldPersistTaps="handled"
-            style={[styles.scrollLayer, { opacity: contentOpacity }]}
           >
             <Text style={[styles.wordmark, { color: colors.purple300 }]}>Ode</Text>
-            <TouchableOpacity testID={T.onboarding.back} accessibilityLabel="Back" style={styles.backTop} onPress={() => setStep(0)}>
+            <TouchableOpacity testID={T.onboarding.back} accessibilityLabel="Back" disabled={selectedGoal !== null} style={styles.backTop} onPress={() => setStep(0)}>
               <Text style={[styles.backTopText, { color: colors.textMuted }]}>← Back</Text>
             </TouchableOpacity>
             <Text style={[styles.heading, { color: colors.textPrimary }]}>What brings you here?</Text>
@@ -501,12 +437,14 @@ export default function OnboardingScreen() {
                     key={g.key}
                     testID={onboardingGoalID(g.key)}
                     accessibilityLabel={g.label}
+                    accessibilityRole="radio"
+                    accessibilityState={{ checked: isSelected }}
                     style={[
                       styles.goalCard,
                       { backgroundColor: colors.card, borderColor: isSelected ? colors.brand : colors.border },
                       isSelected && { backgroundColor: colors.brandGlow },
                     ]}
-                    onPress={(e) => handleGoalSelect(g.key, e.nativeEvent.pageX, e.nativeEvent.pageY)}
+                    onPress={() => handleGoalSelect(g.key)}
                     activeOpacity={0.7}
                   >
                     <Text style={[styles.goalLabel, { color: isSelected ? colors.purple300 : colors.textPrimary }]}>
@@ -517,7 +455,7 @@ export default function OnboardingScreen() {
                 );
               })}
             </View>
-          </Animated.ScrollView>
+          </ScrollView>
         </View>
       )}
 
@@ -914,16 +852,7 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
   },
 
-  // Flood fill
-  floodContainer: { flex: 1, position: 'relative' },
-  floodCircle: {
-    position: 'absolute',
-    width: FLOOD_D,
-    height: FLOOD_D,
-    borderRadius: FLOOD_R,
-    zIndex: 1,
-  },
-  scrollLayer: { flex: 1, zIndex: 2 },
+  goalContainer: { flex: 1 },
 
   // Reveal — editorial, no glows
   revealWrap: { flex: 1, justifyContent: 'center' },
