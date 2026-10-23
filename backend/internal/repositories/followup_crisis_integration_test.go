@@ -23,7 +23,7 @@ func followupEntry(t *testing.T, db *pgxpool.Pool, user uuid.UUID, at time.Time,
 		t.Fatal(err)
 	}
 	tone := `[{"emotion":"` + marker + `-emotion","intensity":0.9}]`
-	if _, err := db.Exec(ctx, `INSERT INTO entry_analysis(entry_id,mood_score,is_crisis,summary,reflection,emotional_tone,topics,key_quotes) VALUES($1,$2,false,$3,$4,$5::jsonb,ARRAY[$6],ARRAY['quote'])`,
+	if _, err := db.Exec(ctx, `INSERT INTO entry_analysis(entry_id,mood_score,is_crisis,summary,reflection,morning_nudge,emotional_tone,topics,key_quotes) VALUES($1,$2,false,$3,$4,'nudge',$5::jsonb,ARRAY[$6],ARRAY['quote'])`,
 		id, mood, marker+"-summary", marker+"-reflection", tone, marker+"-topic"); err != nil {
 		t.Fatal(err)
 	}

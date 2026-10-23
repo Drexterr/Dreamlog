@@ -53,11 +53,22 @@ func TestIntegration_Migration042_PurgesLegacySoftDeletedUsers(t *testing.T) {
 		t.Fatalf("soft-delete columns must be dropped: %d %v", cols, err)
 	}
 
-	clients, err := NewTherapistRepository(db).ListClients(ctx, therapist)
+	// Checked in SQL rather than through TherapistRepository: the schema here
+	// stops at 000042, and repository queries track the latest schema.
+	var linked []uuid.UUID
+	rows, err := db.Query(ctx, `SELECT client_id FROM client_therapist_links WHERE therapist_id = $1 AND status = 'active'`, therapist)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(clients) != 1 || clients[0].ClientID != active {
-		t.Fatalf("therapist must only see the active client, got %+v", clients)
+	for rows.Next() {
+		var id uuid.UUID
+		if err := rows.Scan(&id); err != nil {
+			t.Fatal(err)
+		}
+		linked = append(linked, id)
+	}
+	rows.Close()
+	if len(linked) != 1 || linked[0] != active {
+		t.Fatalf("therapist must only see the active client, got %v", linked)
 	}
 }
