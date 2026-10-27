@@ -75,3 +75,8 @@ test-results/
 /artifacts/*.apk
 mobile/android/.kotlin/
 mobile/android/app/src/main/assets/modules.json
+
+# Scratch output from local/AI sessions
+/tmp/
+supabase/.temp/
+mobile/supabase/.temp/
