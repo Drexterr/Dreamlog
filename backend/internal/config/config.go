@@ -231,7 +231,7 @@ func Load() (*Config, error) {
 		Anthropic: AnthropicConfig{
 			APIKey:       getEnv("ANTHROPIC_API_KEY", ""),
 			BaseURL:      getEnv("ANTHROPIC_BASE_URL", "https://api.anthropic.com"),
-			Model:        getEnv("ANTHROPIC_MODEL", "claude-sonnet-4-6"),
+			Model:        getEnv("ANTHROPIC_MODEL", "claude-sonnet-5-5"),
 			StubAnalysis: parseBool("STUB_AI_ANALYSIS", false),
 		},
 		FCM: FCMConfig{

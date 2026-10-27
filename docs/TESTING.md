@@ -1,5 +1,34 @@
 # DreamLog Testing Strategy
 
+## Changing ANTHROPIC_MODEL (23 October 2026)
+
+A model swap can silently change the safety-critical crisis classifier (ADR-002) and
+the reflection JSON, which no unit test covers (they use stubs). Before changing the
+model on Railway, run the live checks with the platform-injected key (never paste it):
+
+```bash
+railway run --service Dreamlog -- env ANTHROPIC_MODEL=<candidate> go test -tags live -count=1 -run TestLiveModel -v ./internal/services/
+```
+
+`TestLiveModel_CrisisClassifier` must catch every genuine signal (English, Hinglish,
+Hindi); over-triggering on metaphors is only logged because Stage 2 fails safe.
+`TestLiveModel_ReflectionJSON` must parse into the required structure. Run it for the
+current and the candidate model and compare. The tests carry the `live` build tag, so CI
+never runs them.
+
+## Launch waitlist and journal journey (26 October 2026)
+
+`waitlist_test.go` checks validation, normalization, privacy-safe failures,
+honeypot handling, body limits and per-IP throttling. With the isolated local
+regression database, `TestIntegrationWaitlistConcurrentJoin` applies migration
+000049 and checks concurrent deduplication and RLS. Run the existing portal
+Postman simulation, then `node scripts/test-waitlist-ui.cjs` to exercise the
+actual React form over HTTP for success, duplicate, 429 and 503. Run the
+production website export and `node scripts/check-website-export.cjs` to check
+all links and assets. Browser inspection verifies the three journal beats at
+different scroll positions plus mobile and reduced-motion layouts.
+
+
 ## Upload breadcrumbs (23 October 2026)
 
 - `src/services/__tests__/telemetry.test.ts`: category/level, data allowlist (keys, URLs,

@@ -15,46 +15,47 @@ import (
 var _ analyticsTracker = (*services.AnalyticsService)(nil)
 
 type Deps struct {
-	UserSvc              *services.UserService
-	AuthSvc              *services.AuthService
-	EntrySvc             *services.EntryService
-	StorageSvc           *services.StorageService
-	ConvSvc              *services.ConversationService
-	SubscriptionSvc      *services.SubscriptionService
-	TherapySvc           *services.TherapyService
-	TherapistNotesSvc    *services.TherapistNotesService
-	TherapistNotesRepo   *repositories.TherapistNotesRepository
-	EntryRepo            *repositories.EntryRepository
-	AnalysisRepo         *repositories.AnalysisRepository
-	NudgeRepo            *repositories.NudgeRepository
-	UserRepo             *repositories.UserRepository
-	WeeklyReviewRepo     *repositories.WeeklyReviewRepository
-	ShareRepo            *repositories.ShareRepository
-	CompanyRepo          *repositories.CompanyRepository
-	TherapistRepo        *repositories.TherapistRepository
-	InsightShareRepo     *repositories.InsightShareRepository
-	JourneyRepo          *repositories.JourneyRepository
-	AnnualReviewRepo     *repositories.AnnualReviewRepository
-	LifeChapterRepo      *repositories.LifeChapterRepository
-	RelationshipRepo     *repositories.RelationshipRepository
-	PaymentRepo          *repositories.PaymentRepository
-	AnalyticsRepo        *repositories.AnalyticsRepository
-	AnalyticsSvc         *services.AnalyticsService
-	ClaudeSvc            *services.ClaudeService
-	IAPSvc               *services.IAPService
-	DLQAdminSvc          *services.DLQAdminService // nil = no /admin routes
-	AdminEmails          []string                  // ADMIN_EMAILS (verified emails only)
-	JWTSecret            string
-	SupabaseJWKSURL      string
-	AppBaseURL           string
-	MinimumAppVersion    string
-	AndroidStoreURL      string
-	IOSStoreURL          string
-	StorageProxyBaseURL  string
-	TrustedProxies       []string // CIDRs whose X-Forwarded-For hops are trusted
-	TrustedPlatform      string   // optional client-IP header set by the platform edge
-	CORSAllowedOrigins   []string // browser-origin allowlist
-	Log                  *zap.Logger
+	WaitlistSvc         *services.WaitlistService
+	UserSvc             *services.UserService
+	AuthSvc             *services.AuthService
+	EntrySvc            *services.EntryService
+	StorageSvc          *services.StorageService
+	ConvSvc             *services.ConversationService
+	SubscriptionSvc     *services.SubscriptionService
+	TherapySvc          *services.TherapyService
+	TherapistNotesSvc   *services.TherapistNotesService
+	TherapistNotesRepo  *repositories.TherapistNotesRepository
+	EntryRepo           *repositories.EntryRepository
+	AnalysisRepo        *repositories.AnalysisRepository
+	NudgeRepo           *repositories.NudgeRepository
+	UserRepo            *repositories.UserRepository
+	WeeklyReviewRepo    *repositories.WeeklyReviewRepository
+	ShareRepo           *repositories.ShareRepository
+	CompanyRepo         *repositories.CompanyRepository
+	TherapistRepo       *repositories.TherapistRepository
+	InsightShareRepo    *repositories.InsightShareRepository
+	JourneyRepo         *repositories.JourneyRepository
+	AnnualReviewRepo    *repositories.AnnualReviewRepository
+	LifeChapterRepo     *repositories.LifeChapterRepository
+	RelationshipRepo    *repositories.RelationshipRepository
+	PaymentRepo         *repositories.PaymentRepository
+	AnalyticsRepo       *repositories.AnalyticsRepository
+	AnalyticsSvc        *services.AnalyticsService
+	ClaudeSvc           *services.ClaudeService
+	IAPSvc              *services.IAPService
+	DLQAdminSvc         *services.DLQAdminService // nil = no /admin routes
+	AdminEmails         []string                  // ADMIN_EMAILS (verified emails only)
+	JWTSecret           string
+	SupabaseJWKSURL     string
+	AppBaseURL          string
+	MinimumAppVersion   string
+	AndroidStoreURL     string
+	IOSStoreURL         string
+	StorageProxyBaseURL string
+	TrustedProxies      []string // CIDRs whose X-Forwarded-For hops are trusted
+	TrustedPlatform     string   // optional client-IP header set by the platform edge
+	CORSAllowedOrigins  []string // browser-origin allowlist
+	Log                 *zap.Logger
 }
 
 func NewRouter(deps Deps) http.Handler {
@@ -101,6 +102,10 @@ func NewRouter(deps Deps) http.Handler {
 	authHandler := NewAuthHandler(deps.AuthSvc)
 	r.POST("/auth/register", authLimiter.Middleware(), authHandler.Register)
 	r.POST("/auth/login", authLimiter.Middleware(), authHandler.Login)
+	if deps.WaitlistSvc != nil {
+		waitlistLimiter := middleware.NewRateLimiter(1.0/60, 3, deps.Log)
+		r.POST("/waitlist", waitlistLimiter.Middleware(), NewWaitlistHandler(deps.WaitlistSvc).Join)
+	}
 
 	auth := r.Group("/", middleware.AuthMiddleware(deps.JWTSecret, deps.SupabaseJWKSURL, deps.UserSvc, deps.Log))
 
