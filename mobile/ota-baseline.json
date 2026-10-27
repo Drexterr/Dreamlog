@@ -1,5 +1,5 @@
 {
   "runtimeVersion": "1.0.1",
-  "nativeBaselineCommit": "c4508bc81738615c507297ba63631c3ab94afb72",
+  "nativeBaselineCommit": "d110eb81985ec19f1f2f3af99af502536fe635db",
   "note": "Commit the store binaries for runtimeVersion 1.0.1 were built from. An OTA update may only ship while nothing native-affecting changed since then (scripts/check-ota-safe.cjs). After a native change: bump runtimeVersion in app.json and android strings.xml, build and release new binaries, then set both fields here to the new runtime and its build commit."
 }
