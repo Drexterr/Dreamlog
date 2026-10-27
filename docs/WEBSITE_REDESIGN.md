@@ -79,6 +79,26 @@ homepage.
 
 ## Deployment
 
+### Journal journey and launch waitlist (26 October 2026)
+
+The existing ScrollCraft three-beat journal scene is pinned on roomy desktop
+viewports; compact and reduced-motion layouts keep all three beats readable in
+ordinary order. A late CSS override had previously flattened the desktop scene.
+
+The hero and final launch actions open one goal-themed waitlist dialog. It asks
+only for email and states the launch-email purpose. `POST /waitlist` writes the
+normalized email to `launch_waitlist` in the existing Supabase PostgreSQL database.
+The goal stays in browser storage. The table has RLS enabled, no anonymous or
+authenticated role grant, no public list endpoint, and an API-only unique key.
+Duplicates return the same confirmation. The API uses a per-IP limiter and an
+unadvertised honeypot. Migration 000049 is applied at API startup after backend
+deployment. The privacy page explains collection, retention, and removal by email.
+Test with `go test ./internal/handlers ./internal/services ./internal/repositories`
+and the isolated integration database; the local Postman simulation exercises
+the real React submit path and failure recovery. No launch emails are sent by
+this change; sending the notice is an operational step at store launch.
+
+
 From `therapist-portal`, build with
 `NEXT_PUBLIC_API_URL=https://dreamlog-production-f9e2.up.railway.app` and run
 `firebase deploy --only hosting --project dreamlog-48f94` after checks pass.

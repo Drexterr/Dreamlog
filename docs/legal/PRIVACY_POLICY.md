@@ -13,7 +13,7 @@ Before the legal detail: here is what actually happens to your data, in plain En
 - You speak. Your audio is uploaded to a secure server, transcribed, then **permanently deleted**. We never keep your audio.
 - Your transcript is stored **encrypted** on our servers. We cannot read it without your account credentials.
 - To generate your AI reflection, your transcript is sent to **Anthropic** (makers of Claude). Anthropic does not use your data to train their models and does not retain it after processing under our zero-retention agreement.
-- Your mood scores, reflections, and journal history are stored encrypted on our servers and **auto-deleted after 180 days** unless you choose to keep them longer.
+- Your mood scores, reflections, and journal history are stored encrypted on our servers until you delete your account.
 - We will never sell your data. We will never show you ads. We will never share your journal with your employer, insurer, or any third party - including in our B2B corporate wellness product.
 - You can delete everything, permanently, at any time from Settings → Delete my account.
 
@@ -36,8 +36,8 @@ For privacy questions, contact us at: **privacy@dreamlog.app**
 | Name and email address | Account creation and identification | Account deletion |
 | Password (bcrypt hashed - we cannot reverse it) | Authentication | Account deletion |
 | Audio recordings | Transcription only - deleted immediately after | **Deleted within minutes of upload** |
-| Voice journal transcripts | AI analysis and your personal history | 180 days (configurable) or account deletion |
-| Follow-up conversation messages | AI responses and your conversation history | 180 days or account deletion |
+| Voice journal transcripts | AI analysis and your personal history | Account deletion |
+| Follow-up conversation messages | AI responses and your conversation history | Account deletion |
 | User goal and preferences | Personalising AI reflections | Account deletion |
 | Timezone and nudge preferences | Scheduling morning notifications | Account deletion |
 
@@ -45,8 +45,8 @@ For privacy questions, contact us at: **privacy@dreamlog.app**
 
 | Data | Purpose | Retained Until |
 |---|---|---|
-| Mood scores and emotional tone analysis | Mood tracking and trend visualisation | 180 days or account deletion |
-| AI-generated reflections and summaries | Display in app | 180 days or account deletion |
+| Mood scores and emotional tone analysis | Mood tracking and trend visualisation | Account deletion |
+| AI-generated reflections and summaries | Display in app | Account deletion |
 | FCM device tokens | Push notifications | Until you unregister the device or delete account |
 | IP address and request logs | Security, abuse prevention | 30 days |
 | App crash reports | Bug fixing | 30 days |
@@ -126,8 +126,8 @@ All purchases are processed as In-App Purchases by Apple (App Store) or Google (
 | Data Type | Default Retention | User Control |
 |---|---|---|
 | Audio recordings | Deleted within minutes | N/A |
-| Transcripts and reflections | 180 days | Adjustable in Settings; or delete anytime |
-| Mood and analysis data | 180 days | Adjustable in Settings |
+| Transcripts and reflections | Until account deletion | Delete account in Settings |
+| Mood and analysis data | Until account deletion | Delete account in Settings |
 | Account information | Until account deletion | Delete account in Settings |
 | Security logs | 30 days | Not configurable (legal requirement) |
 

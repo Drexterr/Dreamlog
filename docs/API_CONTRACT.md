@@ -1,13 +1,27 @@
 # Ode API Contract
 
 **Base URL (dev):** `http://localhost:8080`
-**Auth:** All endpoints except `/health`, `/version`, `/auth/register`, `/auth/login`, `GET /share/:token`, and `GET /journeys` require `Authorization: Bearer <jwt>`
+**Auth:** All endpoints except `/health`, `/version`, `/waitlist`, `/auth/register`, `/auth/login`, `GET /share/:token`, and `GET /journeys` require `Authorization: Bearer <jwt>`
 
 Claude: Read this file before touching any handler in `backend/internal/handlers/`. The request/response shapes here are the contract the mobile app is built against - do not change field names or types without updating both sides.
 
 ---
 
 ## Health
+
+### POST /waitlist
+Public launch notifications. JSON `{ "email": "you@example.com" }`; optional
+`website` is a honeypot and must be blank. Email is trimmed/lowercased, max 254
+characters. No name, account, goal, journal or device information is collected.
+Joining authorizes the launch email described beside the submit button.
+Returns `200` `{ "message": "You're on the list. We'll email you when Ode launches." }`
+for new/duplicate addresses and honeypot submissions. Duplicates never change the
+original consent timestamp. No read/list endpoint exists. Invalid JSON/email or
+oversized body returns `400`; write failure `500`; per-IP burst 3, refill 1/minute
+returns `429` plus `Retry-After`. Responses never include submitted emails.
+Migration 000049 creates the API-only Supabase PostgreSQL `launch_waitlist` table
+with RLS enabled and no access for `anon` or `authenticated` roles.
+
 
 ### GET /health
 No auth required.
