@@ -14,6 +14,14 @@ http.createServer(async (req,res) => {
  const url = new URL(req.url,'http://localhost');
  const p = url.pathname.replace(/^\/ode(?=\/)/,'');
  const answer = (code,body) => {res.writeHead(code,{'Content-Type':'application/json'});res.end(body===undefined?'':JSON.stringify(body));};
+ if (p==='/waitlist' && req.method==='POST') {
+   if (req.body?.email==='failure@example.test') return answer(503,{message:'Unavailable'});
+   if (req.body?.email==='limited@example.test') return answer(429,{message:'Too many requests'});
+   if (!req.body?.email?.includes('@')) return answer(400,{message:'Enter a valid email address.'});
+   const emails = await pm.state.get('ode.waitlist') || [];
+   if (!req.body.website && !emails.includes(req.body.email)) { emails.push(req.body.email); await pm.state.set('ode.waitlist',emails); }
+   return answer(200,{message:"You're on the list. We'll email you when Ode launches."});
+ }
  if (p==='/auth/login' && req.method==='POST') return req.body?.password==='fixture-only' ? answer(200,{token:'fictional-token',user:{id:user,name:therapist.name,email:therapist.email}}):answer(401,{error:'invalid credentials'});
  if (p==='/auth/register' && req.method==='POST') return answer(201,{token:'fictional-token',user:{id:user,name:req.body.name,email:req.body.email}});
  if(!req.headers.authorization?.startsWith('Bearer '))return answer(401,{error:'authentication required'});

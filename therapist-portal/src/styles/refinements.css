@@ -62,3 +62,107 @@
   .ode-site .stats-strip { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
   .ode-site .stats-strip span { font-size: 12px; }
 }
+/* Keep the journal journey pinned until all three chapters have played. */
+@media (prefers-reduced-motion: no-preference) {
+  .ode-landing.journey-motion .proof { height: 360vh !important; }
+  .ode-landing.journey-motion .proof-stage { position: sticky; top: 0; height: 100svh !important; overflow: hidden; }
+  .ode-landing.journey-motion .proof-stage::before {
+    transform: translate3d(var(--journey-glow-x, 0), 0, 0) scale(1.08);
+    will-change: transform;
+  }
+  .ode-landing.journey-motion .proof-shell { height: 100%; padding: 0; }
+  .ode-landing.journey-motion .proof-top { position: absolute; top: 4vh; }
+  .ode-landing.journey-motion .proof-progress { position: absolute; bottom: 4vh; }
+  .ode-landing.journey-motion .proof-beat {
+    position: absolute; inset: 0; min-height: 0;
+    opacity: var(--journey-opacity, 0) !important;
+    transform: none !important;
+    border-bottom: 0;
+  }
+  .ode-landing.journey-motion .proof-copy {
+    transform: translate3d(var(--journey-copy-x, 0), var(--journey-copy-y, 0), 0);
+    will-change: transform;
+  }
+  .ode-landing.journey-motion .proof-media {
+    transform: translate3d(0, var(--journey-media-y, 0), 0) scale(var(--journey-media-scale, 1));
+    transform-origin: center;
+    will-change: transform;
+  }
+  .ode-landing.journey-motion .proof-media::before {
+    transform: rotate(var(--journey-ring-rotate, -14deg)) scaleX(.83);
+    will-change: transform;
+  }
+  .ode-landing.journey-motion .proof-phone {
+    transform: rotate(var(--journey-phone-tilt, 0deg)) !important;
+    transform-origin: 50% 72%;
+    will-change: transform;
+  }
+  .ode-landing.journey-motion .proof-progress span {
+    opacity: .42;
+    will-change: transform, opacity;
+  }
+  .ode-landing.journey-motion .proof-progress span.is-active { color: var(--amber); }
+  .ode-landing.journey-motion.journey-active .goal-bubble { opacity: 0; pointer-events: none; }
+}
+
+@media (min-width: 861px) and (min-height: 650px) and (prefers-reduced-motion: no-preference) {
+  .ode-landing.journey-motion .proof-beat { padding: 12vh 0 13vh; }
+  .ode-landing.journey-motion .proof-copy h2 { font-size: clamp(48px, 5.2vw, 80px); }
+  .ode-landing.journey-motion .proof-media { height: min(68vh,620px); min-height: 0; }
+}
+
+@media (max-width: 860px) and (prefers-reduced-motion: no-preference) {
+  .ode-landing.journey-motion .proof { height: 380vh !important; }
+  .ode-landing.journey-motion .proof-shell { width: min(calc(100% - 32px), 640px); }
+  .ode-landing.journey-motion .proof-top { top: max(18px, env(safe-area-inset-top)); }
+  .ode-landing.journey-motion .proof-top span:last-child { display: none; }
+  .ode-landing.journey-motion .proof-beat {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(104px, .42fr);
+    gap: clamp(14px, 4vw, 24px);
+    align-items: center;
+    padding: 72px 0 58px;
+  }
+  .ode-landing.journey-motion .proof-step { margin-bottom: 12px; font-size: 10px; }
+  .ode-landing.journey-motion .proof-copy h2 { font-size: clamp(35px, 10vw, 48px); margin-bottom: 14px; }
+  .ode-landing.journey-motion .proof-copy p { font-size: clamp(12px, 3.45vw, 15px); line-height: 1.52; }
+  .ode-landing.journey-motion .proof-media { height: min(58svh, 360px); min-height: 0; padding: 0; gap: 0; }
+  .ode-landing.journey-motion .proof-media::before { width: min(38vw, 168px); }
+  .ode-landing.journey-motion .proof-phone { width: min(29vw, 132px); border-width: 4px; border-radius: 22px; }
+  .ode-landing.journey-motion .proof-badge {
+    position: absolute; right: -2px; bottom: 8%;
+    padding: 7px 8px; font-size: 8px; text-align: left;
+  }
+  .ode-landing.journey-motion .proof-progress { bottom: max(16px, env(safe-area-inset-bottom)); gap: 8px; margin: 0; }
+  .ode-landing.journey-motion .proof-progress span { padding-top: 8px; font-size: 8px; }
+}
+
+@media (min-width: 861px) and (max-height: 649px) and (prefers-reduced-motion: no-preference) {
+  .ode-landing.journey-motion .proof-beat { padding: 70px 4vw 58px; }
+  .ode-landing.journey-motion .proof-copy h2 { font-size: clamp(38px, 4.6vw, 58px); margin-bottom: 14px; }
+  .ode-landing.journey-motion .proof-copy p { font-size: 14px; }
+  .ode-landing.journey-motion .proof-media { height: min(62svh, 390px); min-height: 0; }
+  .ode-landing.journey-motion .proof-phone { width: min(210px, calc((100svh - 125px) * .45)); }
+}
+.ode-landing .waitlist-dialog {
+  inset: 0; margin: auto; width: min(480px, calc(100% - 32px)); max-height: calc(100svh - 32px);
+  overflow: auto; padding: clamp(26px, 5vw, 40px); border: 1px solid color-mix(in srgb, var(--goal-text) 24%, transparent);
+  border-radius: 16px; color: var(--goal-text); background: var(--goal-bg); font-family: 'Hanken Grotesk', Arial, sans-serif;
+}
+.ode-landing .waitlist-dialog::backdrop { background: rgb(0 0 0 / .65); }
+.ode-landing .waitlist-brand { display: block; color: var(--amber); font-size: 22px; margin-bottom: 28px; }
+.ode-landing .waitlist-dialog h2 { font-size: clamp(34px, 7vw, 44px); line-height: 1.12; margin: 0 0 18px; }
+.ode-landing .waitlist-dialog p { font-size: 16px; line-height: 1.65; margin: 0 0 24px; }
+.ode-landing .waitlist-close { position: absolute; top: 12px; right: 12px; width: 44px; height: 44px; padding: 0; border: 0; color: inherit; background: transparent; font-size: 26px; cursor: pointer; }
+.ode-landing .waitlist-dialog label { display: block; font-size: 14px; margin-bottom: 10px; }
+.ode-landing .waitlist-dialog input { width: 100%; min-width: 0; min-height: 52px; padding: 12px 14px; border: 1px solid color-mix(in srgb, var(--goal-text) 50%, transparent); border-radius: 6px; background: transparent; color: inherit; font: inherit; font-size: 16px; }
+.ode-landing .waitlist-dialog input::placeholder { color: color-mix(in srgb, var(--goal-text) 74%, var(--goal-bg)); }
+.ode-landing .waitlist-dialog .button { width: 100%; justify-content: center; margin: 0 0 18px; min-height: 48px; }
+.ode-landing .waitlist-dialog .button:disabled { cursor: wait; opacity: .7; }
+.ode-landing .waitlist-dialog .waitlist-error { margin: 10px 0 16px; font-size: 14px; }
+.ode-landing .waitlist-dialog .waitlist-error:empty { margin: 0; min-height: 22px; }
+.ode-landing .waitlist-dialog .waitlist-note { font-size: 12px; line-height: 1.6; margin: 0; }
+.ode-landing .waitlist-note a { text-decoration: underline; text-underline-offset: 3px; }
+.ode-landing .waitlist-honey { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+.ode-landing:has(.waitlist-dialog[open]) .goal-bubble { visibility: hidden; }
+html:has(.waitlist-dialog[open]) { overflow: hidden; }

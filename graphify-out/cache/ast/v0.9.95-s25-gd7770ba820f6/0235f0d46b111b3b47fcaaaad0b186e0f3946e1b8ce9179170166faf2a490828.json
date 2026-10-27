@@ -1,0 +1,1 @@
+{"nodes": [{"id": "$graphify-root$_backend_migrations_000012_insight_shares_down_sql", "label": "000012_insight_shares.down.sql", "file_type": "code", "source_file": "backend/migrations/000012_insight_shares.down.sql", "source_location": null}], "edges": []}

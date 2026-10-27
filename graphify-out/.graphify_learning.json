@@ -1,0 +1,107 @@
+{
+  "generated_at": "2026-10-27T05:43:10.618280+00:00",
+  "nodes": {
+    "backend_internal_services_account_delete_test": {
+      "code_fingerprint": "720cf11571908432462d9f5faed52e11aae8ae191ee678cfac233aaec6956e97",
+      "label": "account_delete_test.go",
+      "last": "2026-10-27T05:34:06.358006+00:00",
+      "provenance": [
+        {
+          "date": "2026-10-27T05:34:06.358006+00:00",
+          "outcome": "useful",
+          "q": "check code base for retention and deletion and tell me what we are doing in the code"
+        }
+      ],
+      "score": 0.999854466,
+      "source_file": "backend/internal/services/account_delete_test.go",
+      "status": "tentative",
+      "uses": 1
+    },
+    "backend_migrations_000001_init_up_entries": {
+      "code_fingerprint": "29a791d6aac35be1209049e2360eb61e22d09eaa59182447be1f87c2fc1ebab9",
+      "label": "entries",
+      "last": "2026-10-27T05:34:06.358006+00:00",
+      "provenance": [
+        {
+          "date": "2026-10-27T05:34:06.358006+00:00",
+          "outcome": "useful",
+          "q": "check code base for retention and deletion and tell me what we are doing in the code"
+        }
+      ],
+      "score": 0.999854466,
+      "source_file": "backend/migrations/000001_init.up.sql",
+      "status": "tentative",
+      "uses": 1
+    },
+    "docs_legal_privacy_policy": {
+      "code_fingerprint": "54398a0073949ec129febbcbf8da534296c54779c4ebd76e77fd56b84efc9a37",
+      "label": "DreamLog Privacy Policy",
+      "last": "2026-10-27T05:41:58.903497+00:00",
+      "provenance": [
+        {
+          "date": "2026-10-27T05:41:58.903497+00:00",
+          "outcome": "useful",
+          "q": "Remove the unsupported 180-day retention remark and verify the privacy policy does not promise individual-entry deletion or configurable retention"
+        }
+      ],
+      "score": 0.999980822,
+      "source_file": "docs/legal/PRIVACY_POLICY.md",
+      "status": "tentative",
+      "uses": 1
+    },
+    "docs_legal_privacy_policy_audio_deletion": {
+      "code_fingerprint": "54398a0073949ec129febbcbf8da534296c54779c4ebd76e77fd56b84efc9a37",
+      "label": "Audio Deletion Policy",
+      "last": "2026-10-27T05:41:58.903497+00:00",
+      "provenance": [
+        {
+          "date": "2026-10-27T05:41:58.903497+00:00",
+          "outcome": "useful",
+          "q": "Remove the unsupported 180-day retention remark and verify the privacy policy does not promise individual-entry deletion or configurable retention"
+        },
+        {
+          "date": "2026-10-27T05:34:06.358006+00:00",
+          "outcome": "useful",
+          "q": "check code base for retention and deletion and tell me what we are doing in the code"
+        }
+      ],
+      "score": 1.999835288,
+      "source_file": "docs/legal/PRIVACY_POLICY.md",
+      "status": "preferred",
+      "uses": 2
+    },
+    "storage_lifecyclerule": {
+      "code_fingerprint": "3f249a2973dd550f41dee215a67817f7d86de9355ea709b0ef9cf6414bb28f28",
+      "label": "LifecycleRule",
+      "last": "2026-10-27T05:34:06.358006+00:00",
+      "provenance": [
+        {
+          "date": "2026-10-27T05:34:06.358006+00:00",
+          "outcome": "useful",
+          "q": "check code base for retention and deletion and tell me what we are doing in the code"
+        }
+      ],
+      "score": 0.999854466,
+      "source_file": "backend/pkg/storage/s3.go",
+      "status": "tentative",
+      "uses": 1
+    },
+    "workers_transcriptionworker": {
+      "code_fingerprint": "c4f51d5f5a127eea76da1cf54d6bd90a3e6a9ff0181240c1d6bf3e646429e567",
+      "label": "TranscriptionWorker",
+      "last": "2026-10-27T05:34:06.358006+00:00",
+      "provenance": [
+        {
+          "date": "2026-10-27T05:34:06.358006+00:00",
+          "outcome": "useful",
+          "q": "check code base for retention and deletion and tell me what we are doing in the code"
+        }
+      ],
+      "score": 0.999854466,
+      "source_file": "backend/internal/workers/transcription.go",
+      "status": "tentative",
+      "uses": 1
+    }
+  },
+  "version": 1
+}

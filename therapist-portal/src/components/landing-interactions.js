@@ -348,6 +348,7 @@ let goalNavigationObserver;
         clipTravel: pinned && el.getAttribute('data-sc-clip-map') === 'travel',
         p: 0, raw: 0, top: 0, height: 0, live: false,
         cues: [], parallax: [], reveals: [], counts: [],
+        journeyProgress: [], journeyProgressIndex: -1,
         video: null, seq: null, rail: null
       };
 
@@ -399,6 +400,13 @@ let goalNavigationObserver;
         if (isNaN(cue.rise)) cue.rise = 1;
         act.cues.push(cue);
       });
+
+      // The journal journey uses the same scroll playhead as its cue sequence.
+      // Keep its labels in the runtime so the active chapter and subtle label
+      // motion remain perfectly synchronized with the pinned story.
+      if (el.classList.contains('proof')) {
+        act.journeyProgress = Array.prototype.slice.call(el.querySelectorAll('.proof-progress span'));
+      }
 
       // parallax
       Array.prototype.forEach.call(el.querySelectorAll('[data-sc-parallax]'), function (c) {
@@ -887,6 +895,9 @@ let goalNavigationObserver;
           a.vp = a.dwell ? dwell(vraw, a.dwell) : vraw;
         }
         a.live = (y > a.top - vh * 1.25) && (y < a.top + a.height + vh * 1.25);
+        if (a.journeyProgress.length) {
+          root.classList.toggle('journey-active', y >= a.top - 2 && y <= a.top + a.height - vh + 2);
+        }
         a.el.style.setProperty('--sc-p', a.p.toFixed(4));
 
         // Fetch earlier than we drive. A 1080p clip is megabytes, and a reader
@@ -919,6 +930,7 @@ let goalNavigationObserver;
             for (var z = 0; z < a.cues.length; z++) {
               var pq = a.cues[z];
               pq.el.style.opacity = '0';
+              if (pq.el.classList.contains('proof-beat')) pq.el.style.setProperty('--journey-opacity', '0');
               pq.el.style.pointerEvents = 'none';
               pq.state = 0;
               if (pq.units) for (var zu = 0; zu < pq.units.length; zu++) pq.units[zu].style.opacity = '0';
@@ -944,6 +956,30 @@ let goalNavigationObserver;
             else vis = smooth(1 - (a.p - outStart) / Math.max(q.to - outStart, 0.001));
           }
           vis = clamp01(vis);
+          if (q.el.classList.contains('proof-beat')) {
+            // Use a short, complementary crossfade between the three chapters.
+            // The authored cue windows stay available to the generic runtime,
+            // while this signature section avoids two large headlines sitting
+            // on top of each other for a long portion of the scroll.
+            var fade = 0.009;
+            var firstMix = smooth((a.p - (1 / 3 - fade)) / (fade * 2));
+            var secondMix = smooth((a.p - (2 / 3 - fade)) / (fade * 2));
+            vis = c === 0 ? 1 - firstMix : c === 1 ? firstMix * (1 - secondMix) : secondMix;
+            var sharpened = vis * vis;
+            vis = sharpened / Math.max(sharpened + (1 - vis) * (1 - vis), 0.001);
+            vis = clamp01(vis);
+            var cueCenter = c === 0 ? 1 / 6 : c === 1 ? 0.5 : 5 / 6;
+            var direction = a.p < cueCenter ? 1 : -1;
+            var motion = 1 - vis;
+            q.el.style.setProperty('--journey-opacity', vis.toFixed(3));
+            q.el.style.setProperty('--journey-copy-x', (direction * motion * 104).toFixed(2) + 'px');
+            q.el.style.setProperty('--journey-copy-y', (motion * 18).toFixed(2) + 'px');
+            q.el.style.setProperty('--journey-media-y', (motion * 28).toFixed(2) + 'px');
+            q.el.style.setProperty('--journey-media-scale', (0.965 + vis * 0.035).toFixed(4));
+            q.el.style.setProperty('--journey-phone-tilt', (direction * motion * 3).toFixed(2) + 'deg');
+            q.el.style.setProperty('--journey-ring-rotate', (-14 + direction * motion * 10).toFixed(2) + 'deg');
+            q.el.inert = matchMedia('(prefers-reduced-motion: no-preference)').matches && vis <= 0.5;
+          }
 
           if (q.kinetic) {
             if (!q.units) q.units = splitText(q.el, q.kinetic);
@@ -967,6 +1003,20 @@ let goalNavigationObserver;
           }
           var on = vis > 0.5;
           if (on !== (q.state === 1)) { q.state = on ? 1 : 0; q.el.style.pointerEvents = on ? 'auto' : 'none'; }
+        }
+
+        if (a.journeyProgress.length) {
+          a.el.style.setProperty('--journey-glow-x', ((a.p - 0.5) * 12).toFixed(2) + '%');
+          var journeyIndex = Math.min(a.journeyProgress.length - 1, Math.floor(a.p * a.journeyProgress.length));
+          for (var jp = 0; jp < a.journeyProgress.length; jp++) {
+            var item = a.journeyProgress[jp];
+            var labelCenter = (jp + 0.5) / a.journeyProgress.length;
+            var labelFocus = clamp01(1 - Math.abs(a.p - labelCenter) * a.journeyProgress.length * 1.7);
+            item.style.opacity = (0.42 + labelFocus * 0.58).toFixed(3);
+            item.style.transform = reduce ? 'none' : 'translate3d(0,' + ((1 - labelFocus) * 4).toFixed(2) + 'px,0)';
+            item.classList.toggle('is-active', jp === journeyIndex);
+          }
+          a.journeyProgressIndex = journeyIndex;
         }
 
         // parallax
@@ -1289,8 +1339,10 @@ let goalNavigationObserver;
 
   try {
     if (!window.ScrollCraft) throw new Error('ScrollCraft unavailable');
+    root.classList.add('journey-motion');
     window.ScrollCraft.mount(root);
   } catch (error) {
+    root.classList.remove('journey-motion');
     document.documentElement.classList.add('motion-fallback');
     document.querySelectorAll('[data-sc-in], [data-sc-stagger] > *').forEach(function (element) {
       element.classList.add('sc-in');
@@ -1430,5 +1482,5 @@ let goalNavigationObserver;
     });
   })();
 
-return () => { if (goalNavigationObserver) goalNavigationObserver.disconnect(); if (window.ScrollCraft) window.ScrollCraft.instances.slice().forEach(instance => instance.destroy()); root.querySelectorAll('dialog[open]').forEach(dialog => dialog.close()); document.documentElement.style.overflow = overflow; document.documentElement.classList.remove('motion-fallback'); };
+return () => { if (goalNavigationObserver) goalNavigationObserver.disconnect(); if (window.ScrollCraft) window.ScrollCraft.instances.slice().forEach(instance => instance.destroy()); root.querySelectorAll('dialog[open]').forEach(dialog => dialog.close()); root.classList.remove('journey-active'); document.documentElement.style.overflow = overflow; document.documentElement.classList.remove('motion-fallback'); };
 }
